@@ -1,36 +1,36 @@
-"use client"
+'use client';
 
-import type React from "react"
+import { formatDistanceToNow } from 'date-fns';
+import { Loader, Plus, TriangleAlert } from 'lucide-react';
+import Link from 'next/link';
+import type React from 'react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
-import { Loader, Plus, TriangleAlert } from "lucide-react"
-import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info"
-import { useWorkspaceId } from "@/hooks/use-workspace-id"
-import { useGetBoards } from "@/features/todos/api/use-get-boards"
-import { useCreateBoard } from "@/features/todos/api/use-create-board"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { useState } from "react"
-import { toast } from "sonner"
-import Link from "next/link"
-import { formatDistanceToNow } from "date-fns"
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useCreateBoard } from '@/features/todos/api/use-create-board';
+import { useGetBoards } from '@/features/todos/api/use-get-boards';
+import { useGetWorkspaceInfo } from '@/features/workspaces/api/use-get-workspace-info';
+import { useWorkspaceId } from '@/hooks/use-workspace-id';
 
 const TodoWorkspacePage = () => {
-  const workspaceId = useWorkspaceId()
-  const { data: workspace, isLoading: workspaceLoading } = useGetWorkspaceInfo({ id: workspaceId })
-  const { data: boards, isLoading: boardsLoading } = useGetBoards({ workspaceId })
-  const { mutate: createBoard, isPending } = useCreateBoard()
+  const workspaceId = useWorkspaceId();
+  const { data: workspace, isLoading: workspaceLoading } = useGetWorkspaceInfo({ id: workspaceId });
+  const { data: boards, isLoading: boardsLoading } = useGetBoards({ workspaceId });
+  const { mutate: createBoard, isPending } = useCreateBoard();
 
-  const [open, setOpen] = useState(false)
-  const [name, setName] = useState("")
-  const [description, setDescription] = useState("")
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!name.trim()) return
+    e.preventDefault();
+    if (!name.trim()) return;
 
     createBoard(
       {
@@ -40,24 +40,24 @@ const TodoWorkspacePage = () => {
       },
       {
         onSuccess: () => {
-          toast.success("Board created successfully!")
-          setOpen(false)
-          setName("")
-          setDescription("")
+          toast.success('Board created successfully!');
+          setOpen(false);
+          setName('');
+          setDescription('');
         },
         onError: (error) => {
-          toast.error(error.message || "Failed to create board")
+          toast.error(error.message || 'Failed to create board');
         },
       },
-    )
-  }
+    );
+  };
 
   if (workspaceLoading || boardsLoading) {
     return (
       <div className="flex h-full flex-1 flex-col items-center justify-center gap-2">
         <Loader className="size-5 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   if (!workspace) {
@@ -66,7 +66,7 @@ const TodoWorkspacePage = () => {
         <TriangleAlert className="size-5 text-muted-foreground" />
         <span className="text-sm text-muted-foreground">Workspace not found.</span>
       </div>
-    )
+    );
   }
 
   return (
@@ -116,7 +116,7 @@ const TodoWorkspacePage = () => {
                       Creating...
                     </>
                   ) : (
-                    "Create Board"
+                    'Create Board'
                   )}
                 </Button>
               </div>
@@ -149,9 +149,7 @@ const TodoWorkspacePage = () => {
                   <Card className="hover:shadow-md transition-shadow cursor-pointer">
                     <CardHeader>
                       <CardTitle className="text-base">{board.name}</CardTitle>
-                      {board.description && (
-                        <CardDescription className="line-clamp-2">{board.description}</CardDescription>
-                      )}
+                      {board.description && <CardDescription className="line-clamp-2">{board.description}</CardDescription>}
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -167,7 +165,7 @@ const TodoWorkspacePage = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default TodoWorkspacePage
+export default TodoWorkspacePage;

@@ -1,42 +1,42 @@
-"use client"
+'use client';
 
-import type React from "react"
+import { Archive, CheckSquare, Folder, Star } from 'lucide-react';
+import Link from 'next/link';
+import type React from 'react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
-import { useState } from "react"
-import { CheckSquare, Archive, Folder, Star } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { WorkspaceSection } from "@/app/workspace/[workspaceId]/workspace-section"
-import { useGetBoards } from "@/features/todos/api/use-get-boards"
-import { useCreateBoard } from "@/features/todos/api/use-create-board"
-import { useGetRecentCards } from "@/features/todos/api/use-get-recent-cards"
-import { useWorkspaceId } from "@/hooks/use-workspace-id"
-import { toast } from "sonner"
-import Link from "next/link"
+import { WorkspaceSection } from '@/app/workspace/[workspaceId]/workspace-section';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useCreateBoard } from '@/features/todos/api/use-create-board';
+import { useGetBoards } from '@/features/todos/api/use-get-boards';
+import { useGetRecentCards } from '@/features/todos/api/use-get-recent-cards';
+import { useWorkspaceId } from '@/hooks/use-workspace-id';
 
 export const WorkspaceSidebarContent = () => {
-  const workspaceId = useWorkspaceId()
-  const [open, setOpen] = useState(false)
-  const [name, setName] = useState("")
-  const [description, setDescription] = useState("")
-  const [showArchived, setShowArchived] = useState(false)
+  const workspaceId = useWorkspaceId();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [showArchived, setShowArchived] = useState(false);
 
   const { data: boards, isLoading: boardsLoading } = useGetBoards({
     workspaceId,
     includeArchived: showArchived,
-  })
-  const { data: recentCards } = useGetRecentCards({ workspaceId, limit: 5 })
-  const { mutate: createBoard, isPending } = useCreateBoard()
+  });
+  const { data: recentCards } = useGetRecentCards({ workspaceId, limit: 5 });
+  const { mutate: createBoard, isPending } = useCreateBoard();
 
-  const activeBoards = boards?.filter((board) => !board.isArchived) || []
-  const archivedBoards = boards?.filter((board) => board.isArchived) || []
+  const activeBoards = boards?.filter((board) => !board.isArchived) || [];
+  const archivedBoards = boards?.filter((board) => board.isArchived) || [];
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!name.trim()) return
+    e.preventDefault();
+    if (!name.trim()) return;
 
     createBoard(
       {
@@ -46,17 +46,17 @@ export const WorkspaceSidebarContent = () => {
       },
       {
         onSuccess: () => {
-          toast.success("Board created successfully!")
-          setOpen(false)
-          setName("")
-          setDescription("")
+          toast.success('Board created successfully!');
+          setOpen(false);
+          setName('');
+          setDescription('');
         },
         onError: (error) => {
-          toast.error(error.message || "Failed to create board")
+          toast.error(error.message || 'Failed to create board');
         },
       },
-    )
-  }
+    );
+  };
 
   return (
     <>
@@ -73,7 +73,7 @@ export const WorkspaceSidebarContent = () => {
           onClick={() => setShowArchived(!showArchived)}
         >
           <Archive className="mr-1 size-3.5 shrink-0" />
-          <span className="truncate text-sm">{showArchived ? "Hide Archived" : "Show Archived"}</span>
+          <span className="truncate text-sm">{showArchived ? 'Hide Archived' : 'Show Archived'}</span>
         </Button>
       </div>
 
@@ -103,10 +103,7 @@ export const WorkspaceSidebarContent = () => {
         ) : (
           activeBoards.map((board) => (
             <Link key={board._id} href={`/todo/${workspaceId}/board/${board._id}`}>
-              <Button
-                variant="transparent"
-                className="h-7 justify-start px-[18px] text-sm text-[#f9EDFFCC] w-full group"
-              >
+              <Button variant="transparent" className="h-7 justify-start px-[18px] text-sm text-[#f9EDFFCC] w-full group">
                 <Folder className="mr-1 size-3.5 shrink-0" />
                 <span className="truncate text-sm flex-1 text-left">{board.name}</span>
                 {board.isStarred && <Star className="size-3 text-yellow-400" />}
@@ -162,12 +159,12 @@ export const WorkspaceSidebarContent = () => {
                 Cancel
               </Button>
               <Button type="submit" disabled={isPending || !name.trim()}>
-                {isPending ? "Creating..." : "Create Board"}
+                {isPending ? 'Creating...' : 'Create Board'}
               </Button>
             </div>
           </form>
         </DialogContent>
       </Dialog>
     </>
-  )
-}
+  );
+};

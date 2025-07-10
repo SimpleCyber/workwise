@@ -1,19 +1,20 @@
-"use client"
+'use client';
 
-import { Loader, TriangleAlert } from "lucide-react"
-import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info"
-import { useWorkspaceId } from "@/hooks/use-workspace-id"
+import { Loader, TriangleAlert } from 'lucide-react';
+
+import { useGetWorkspaceInfo } from '@/features/workspaces/api/use-get-workspace-info';
+import { useWorkspaceId } from '@/hooks/use-workspace-id';
 
 const BoardWorkspacePage = () => {
-  const workspaceId = useWorkspaceId()
-  const { data: workspace, isLoading } = useGetWorkspaceInfo({ id: workspaceId })
+  const workspaceId = useWorkspaceId();
+  const { data: workspace, isLoading } = useGetWorkspaceInfo({ id: workspaceId });
 
   if (isLoading) {
     return (
       <div className="flex h-full flex-1 flex-col items-center justify-center gap-2">
         <Loader className="size-5 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   if (!workspace) {
@@ -22,7 +23,7 @@ const BoardWorkspacePage = () => {
         <TriangleAlert className="size-5 text-muted-foreground" />
         <span className="text-sm text-muted-foreground">Workspace not found.</span>
       </div>
-    )
+    );
   }
 
   return (
@@ -73,7 +74,7 @@ const BoardWorkspacePage = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default BoardWorkspacePage
+export default BoardWorkspacePage;

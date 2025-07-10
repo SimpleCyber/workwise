@@ -1,39 +1,40 @@
-"use client"
+'use client';
 
-import type React from "react"
-import { useState } from "react"
-import { FolderKanban, Archive, Folder, Star } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { WorkspaceSection } from "@/app/workspace/[workspaceId]/workspace-section"
-import { useGetProjectBoards } from "@/features/projects/api/use-get-project-boards"
-import { useCreateProjectBoard } from "@/features/projects/api/use-create-project-board"
-import { useWorkspaceId } from "@/hooks/use-workspace-id"
-import { toast } from "sonner"
-import Link from "next/link"
+import { Archive, Folder, FolderKanban, Star } from 'lucide-react';
+import Link from 'next/link';
+import type React from 'react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+
+import { WorkspaceSection } from '@/app/workspace/[workspaceId]/workspace-section';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useCreateProjectBoard } from '@/features/projects/api/use-create-project-board';
+import { useGetProjectBoards } from '@/features/projects/api/use-get-project-boards';
+import { useWorkspaceId } from '@/hooks/use-workspace-id';
 
 export const WorkspaceSidebarContent = () => {
-  const workspaceId = useWorkspaceId()
-  const [open, setOpen] = useState(false)
-  const [name, setName] = useState("")
-  const [description, setDescription] = useState("")
-  const [showArchived, setShowArchived] = useState(false)
+  const workspaceId = useWorkspaceId();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [showArchived, setShowArchived] = useState(false);
 
   const { data: boards, isLoading: boardsLoading } = useGetProjectBoards({
     workspaceId,
     includeArchived: showArchived,
-  })
-  const { mutate: createBoard, isPending } = useCreateProjectBoard()
+  });
+  const { mutate: createBoard, isPending } = useCreateProjectBoard();
 
-  const activeBoards = boards?.filter((board) => !board.isArchived) || []
-  const archivedBoards = boards?.filter((board) => board.isArchived) || []
+  const activeBoards = boards?.filter((board) => !board.isArchived) || [];
+  const archivedBoards = boards?.filter((board) => board.isArchived) || [];
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!name.trim()) return
+    e.preventDefault();
+    if (!name.trim()) return;
 
     createBoard(
       {
@@ -43,17 +44,17 @@ export const WorkspaceSidebarContent = () => {
       },
       {
         onSuccess: () => {
-          toast.success("Project board created successfully!")
-          setOpen(false)
-          setName("")
-          setDescription("")
+          toast.success('Project board created successfully!');
+          setOpen(false);
+          setName('');
+          setDescription('');
         },
         onError: (error) => {
-          toast.error(error.message || "Failed to create project board")
+          toast.error(error.message || 'Failed to create project board');
         },
       },
-    )
-  }
+    );
+  };
 
   return (
     <>
@@ -70,7 +71,7 @@ export const WorkspaceSidebarContent = () => {
           onClick={() => setShowArchived(!showArchived)}
         >
           <Archive className="mr-1 size-3.5 shrink-0" />
-          <span className="truncate text-sm">{showArchived ? "Hide Archived" : "Show Archived"}</span>
+          <span className="truncate text-sm">{showArchived ? 'Hide Archived' : 'Show Archived'}</span>
         </Button>
       </div>
 
@@ -87,10 +88,7 @@ export const WorkspaceSidebarContent = () => {
         ) : (
           activeBoards.map((board) => (
             <Link key={board._id} href={`/projects/${workspaceId}/board/${board._id}`}>
-              <Button
-                variant="transparent"
-                className="h-7 justify-start px-[18px] text-sm text-[#f9EDFFCC] w-full group"
-              >
+              <Button variant="transparent" className="h-7 justify-start px-[18px] text-sm text-[#f9EDFFCC] w-full group">
                 <Folder className="mr-1 size-3.5 shrink-0" />
                 <span className="truncate text-sm flex-1 text-left">{board.name}</span>
                 <span className="text-xs text-[#f9EDFFCC]/60 ml-1">{board.boardCode}</span>
@@ -148,12 +146,12 @@ export const WorkspaceSidebarContent = () => {
                 Cancel
               </Button>
               <Button type="submit" disabled={isPending || !name.trim()}>
-                {isPending ? "Creating..." : "Create Project Board"}
+                {isPending ? 'Creating...' : 'Create Project Board'}
               </Button>
             </div>
           </form>
         </DialogContent>
       </Dialog>
     </>
-  )
-}
+  );
+};

@@ -1,9 +1,9 @@
-"use client"
+'use client';
 
-import type { PropsWithChildren } from "react"
+import type { PropsWithChildren } from 'react';
 
 const CalendarLayout = ({ children }: Readonly<PropsWithChildren>) => {
-  return <>{children}</>
-}
+  return <>{children}</>;
+};
 
-export default CalendarLayout
+export default CalendarLayout;

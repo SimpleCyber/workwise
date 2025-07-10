@@ -1,117 +1,119 @@
-"use client"
+'use client';
 
-import { useState, useEffect } from "react"
-import { Save, X } from "lucide-react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useUpdateProjectTask } from "@/features/projects/api/use-update-project-task"
-import { useGetWorkspaceMembers } from "@/features/projects/api/use-get-workspace-members"
-import { toast } from "sonner"
-import { format } from "date-fns"
-import type { Id } from "../../../../convex/_generated/dataModel"
+import { format } from 'date-fns';
+import { Save, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { useGetWorkspaceMembers } from '@/features/projects/api/use-get-workspace-members';
+import { useUpdateProjectTask } from '@/features/projects/api/use-update-project-task';
+
+import type { Id } from '../../../../convex/_generated/dataModel';
 
 interface ProjectTaskDetailModalProps {
   task: {
-    _id: Id<"projectTasks">
-    title: string
-    description?: string
-    taskCode: string
-    listId: Id<"projectLists">
-    boardId: Id<"projectBoards">
-    createdById: Id<"members">
-    assignedToId: Id<"members">
-    assignedById: Id<"members">
-    workspaceId: Id<"workspaces">
-    position: number
-    priority: "low" | "medium" | "high" | "urgent"
-    dueDate?: number
-    isCompleted?: boolean
-    isArchived?: boolean
-    labels?: string[]
-    attachments?: Id<"_storage">[]
-    createdAt: number
-    updatedAt: number
-    assignedAt: number
+    _id: Id<'projectTasks'>;
+    title: string;
+    description?: string;
+    taskCode: string;
+    listId: Id<'projectLists'>;
+    boardId: Id<'projectBoards'>;
+    createdById: Id<'members'>;
+    assignedToId: Id<'members'>;
+    assignedById: Id<'members'>;
+    workspaceId: Id<'workspaces'>;
+    position: number;
+    priority: 'low' | 'medium' | 'high' | 'urgent';
+    dueDate?: number;
+    isCompleted?: boolean;
+    isArchived?: boolean;
+    labels?: string[];
+    attachments?: Id<'_storage'>[];
+    createdAt: number;
+    updatedAt: number;
+    assignedAt: number;
     assignedTo: {
-      _id: Id<"members">
-      userId: Id<"users">
-      workspaceId: Id<"workspaces">
-      role: "admin" | "member" | "lead"
+      _id: Id<'members'>;
+      userId: Id<'users'>;
+      workspaceId: Id<'workspaces'>;
+      role: 'admin' | 'member' | 'lead';
       user: {
-        _id: Id<"users">
-        name?: string
-        email?: string
-        image?: string
-      } | null
-    } | null
+        _id: Id<'users'>;
+        name?: string;
+        email?: string;
+        image?: string;
+      } | null;
+    } | null;
     assignedBy: {
-      _id: Id<"members">
-      userId: Id<"users">
-      workspaceId: Id<"workspaces">
-      role: "admin" | "member" | "lead"
+      _id: Id<'members'>;
+      userId: Id<'users'>;
+      workspaceId: Id<'workspaces'>;
+      role: 'admin' | 'member' | 'lead';
       user: {
-        _id: Id<"users">
-        name?: string
-        email?: string
-        image?: string
-      } | null
-    } | null
+        _id: Id<'users'>;
+        name?: string;
+        email?: string;
+        image?: string;
+      } | null;
+    } | null;
     createdBy: {
-      _id: Id<"members">
-      userId: Id<"users">
-      workspaceId: Id<"workspaces">
-      role: "admin" | "member" | "lead"
+      _id: Id<'members'>;
+      userId: Id<'users'>;
+      workspaceId: Id<'workspaces'>;
+      role: 'admin' | 'member' | 'lead';
       user: {
-        _id: Id<"users">
-        name?: string
-        email?: string
-        image?: string
-      } | null
-    } | null
-  } | null
-  open: boolean
-  onOpenChange: (open: boolean) => void
+        _id: Id<'users'>;
+        name?: string;
+        email?: string;
+        image?: string;
+      } | null;
+    } | null;
+  } | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 const priorityColors = {
-  low: "bg-green-100 text-green-800",
-  medium: "bg-blue-100 text-blue-800",
-  high: "bg-orange-100 text-orange-800",
-  urgent: "bg-red-100 text-red-800",
-}
+  low: 'bg-green-100 text-green-800',
+  medium: 'bg-blue-100 text-blue-800',
+  high: 'bg-orange-100 text-orange-800',
+  urgent: 'bg-red-100 text-red-800',
+};
 
 export const ProjectTaskDetailModal = ({ task, open, onOpenChange }: ProjectTaskDetailModalProps) => {
-  const [title, setTitle] = useState("")
-  const [description, setDescription] = useState("")
-  const [priority, setPriority] = useState<"low" | "medium" | "high" | "urgent">("medium")
-  const [assignedToId, setAssignedToId] = useState<Id<"members"> | undefined>(undefined)
-  const [dueDate, setDueDate] = useState("")
-  const [isCompleted, setIsCompleted] = useState(false)
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('medium');
+  const [assignedToId, setAssignedToId] = useState<Id<'members'> | undefined>(undefined);
+  const [dueDate, setDueDate] = useState('');
+  const [isCompleted, setIsCompleted] = useState(false);
 
-  const { mutate: updateTask, isPending } = useUpdateProjectTask()
+  const { mutate: updateTask, isPending } = useUpdateProjectTask();
   const { data: members } = useGetWorkspaceMembers({
     workspaceId: task?.workspaceId,
-  })
+  });
 
   useEffect(() => {
     if (task) {
-      setTitle(task.title)
-      setDescription(task.description || "")
-      setPriority(task.priority)
-      setAssignedToId(task.assignedToId)
-      setDueDate(task.dueDate ? format(task.dueDate, "yyyy-MM-dd") : "")
-      setIsCompleted(task.isCompleted || false)
+      setTitle(task.title);
+      setDescription(task.description || '');
+      setPriority(task.priority);
+      setAssignedToId(task.assignedToId);
+      setDueDate(task.dueDate ? format(task.dueDate, 'yyyy-MM-dd') : '');
+      setIsCompleted(task.isCompleted || false);
     }
-  }, [task])
+  }, [task]);
 
   const handleSave = () => {
-    if (!task || !title.trim()) return
+    if (!task || !title.trim()) return;
 
     const updates: any = {
       taskId: task._id,
@@ -120,24 +122,24 @@ export const ProjectTaskDetailModal = ({ task, open, onOpenChange }: ProjectTask
       priority,
       assignedToId,
       isCompleted,
-    }
+    };
 
     if (dueDate) {
-      updates.dueDate = new Date(dueDate).getTime()
+      updates.dueDate = new Date(dueDate).getTime();
     }
 
     updateTask(updates, {
       onSuccess: () => {
-        toast.success("Task updated successfully!")
-        onOpenChange(false)
+        toast.success('Task updated successfully!');
+        onOpenChange(false);
       },
       onError: (error) => {
-        toast.error(error.message || "Failed to update task")
+        toast.error(error.message || 'Failed to update task');
       },
-    })
-  }
+    });
+  };
 
-  if (!task) return null
+  if (!task) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -186,10 +188,7 @@ export const ProjectTaskDetailModal = ({ task, open, onOpenChange }: ProjectTask
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Priority</Label>
-              <Select
-                value={priority}
-                onValueChange={(value: "low" | "medium" | "high" | "urgent") => setPriority(value)}
-              >
+              <Select value={priority} onValueChange={(value: 'low' | 'medium' | 'high' | 'urgent') => setPriority(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -213,10 +212,8 @@ export const ProjectTaskDetailModal = ({ task, open, onOpenChange }: ProjectTask
                     <SelectItem key={member._id} value={member._id}>
                       <div className="flex items-center gap-2">
                         <Avatar className="w-5 h-5">
-                          <AvatarImage src={member.user?.image || "/placeholder.svg"} />
-                          <AvatarFallback className="text-xs">
-                            {member.user?.name?.charAt(0).toUpperCase()}
-                          </AvatarFallback>
+                          <AvatarImage src={member.user?.image || '/placeholder.svg'} />
+                          <AvatarFallback className="text-xs">{member.user?.name?.charAt(0).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <span>{member.user?.name}</span>
                       </div>
@@ -231,21 +228,12 @@ export const ProjectTaskDetailModal = ({ task, open, onOpenChange }: ProjectTask
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="dueDate">Due Date</Label>
-              <Input
-                id="dueDate"
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                disabled={isPending}
-              />
+              <Input id="dueDate" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} disabled={isPending} />
             </div>
 
             <div className="space-y-2">
               <Label>Status</Label>
-              <Select
-                value={isCompleted ? "completed" : "pending"}
-                onValueChange={(value) => setIsCompleted(value === "completed")}
-              >
+              <Select value={isCompleted ? 'completed' : 'pending'} onValueChange={(value) => setIsCompleted(value === 'completed')}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -267,10 +255,8 @@ export const ProjectTaskDetailModal = ({ task, open, onOpenChange }: ProjectTask
                   {task.createdBy?.user && (
                     <>
                       <Avatar className="w-5 h-5">
-                        <AvatarImage src={task.createdBy.user.image || "/placeholder.svg"} />
-                        <AvatarFallback className="text-xs">
-                          {task.createdBy.user.name?.charAt(0).toUpperCase()}
-                        </AvatarFallback>
+                        <AvatarImage src={task.createdBy.user.image || '/placeholder.svg'} />
+                        <AvatarFallback className="text-xs">{task.createdBy.user.name?.charAt(0).toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <span>{task.createdBy.user.name}</span>
                     </>
@@ -306,5 +292,5 @@ export const ProjectTaskDetailModal = ({ task, open, onOpenChange }: ProjectTask
         </div>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};

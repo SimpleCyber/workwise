@@ -1,29 +1,31 @@
-"use client"
+'use client';
 
-import { Loader, TriangleAlert } from "lucide-react"
-import { useGetBoard } from "@/features/todos/api/use-get-board"
-import { useGetLists } from "@/features/todos/api/use-get-lists"
-import { KanbanBoard } from "@/features/todos/components/kanban-board"
-import type { Id } from "../../../../../../convex/_generated/dataModel"
+import { Loader, TriangleAlert } from 'lucide-react';
+
+import { useGetBoard } from '@/features/todos/api/use-get-board';
+import { useGetLists } from '@/features/todos/api/use-get-lists';
+import { KanbanBoard } from '@/features/todos/components/kanban-board';
+
+import type { Id } from '../../../../../../convex/_generated/dataModel';
 
 interface BoardPageProps {
   params: {
-    workspaceId: string
-    boardId: string
-  }
+    workspaceId: string;
+    boardId: string;
+  };
 }
 
 const BoardPage = ({ params }: BoardPageProps) => {
-  const boardId = params.boardId as Id<"todoBoards">
-  const { data: board, isLoading: boardLoading } = useGetBoard({ boardId })
-  const { data: lists, isLoading: listsLoading } = useGetLists({ boardId })
+  const boardId = params.boardId as Id<'todoBoards'>;
+  const { data: board, isLoading: boardLoading } = useGetBoard({ boardId });
+  const { data: lists, isLoading: listsLoading } = useGetLists({ boardId });
 
   if (boardLoading || listsLoading) {
     return (
       <div className="flex h-full flex-1 flex-col items-center justify-center gap-2">
         <Loader className="size-5 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   if (!board) {
@@ -32,7 +34,7 @@ const BoardPage = ({ params }: BoardPageProps) => {
         <TriangleAlert className="size-5 text-muted-foreground" />
         <span className="text-sm text-muted-foreground">Board not found.</span>
       </div>
-    )
+    );
   }
 
   return (
@@ -45,7 +47,7 @@ const BoardPage = ({ params }: BoardPageProps) => {
         <KanbanBoard boardId={boardId} lists={lists || []} />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default BoardPage
+export default BoardPage;

@@ -1,51 +1,52 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Copy, RefreshCw } from "lucide-react"
-import { toast } from "sonner"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useNewJoinCode } from "@/features/workspaces/api/use-new-join-code"
-import type { Id } from "@/../convex/_generated/dataModel"
+import { Copy, RefreshCw } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+
+import type { Id } from '@/../convex/_generated/dataModel';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useNewJoinCode } from '@/features/workspaces/api/use-new-join-code';
 
 interface InviteModalProps {
-  open: boolean
-  setOpen: (open: boolean) => void
-  workspaceId: Id<"workspaces">
-  name: string
-  joinCode: string
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  workspaceId: Id<'workspaces'>;
+  name: string;
+  joinCode: string;
 }
 
 export const InviteModal = ({ open, setOpen, workspaceId, name, joinCode }: InviteModalProps) => {
-  const [isPending, setIsPending] = useState(false)
-  const { mutate: newJoinCode } = useNewJoinCode()
+  const [isPending, setIsPending] = useState(false);
+  const { mutate: newJoinCode } = useNewJoinCode();
 
   const handleNewCode = async () => {
-    setIsPending(true)
+    setIsPending(true);
     await newJoinCode(
       { workspaceId },
       {
         onSuccess: () => {
-          toast.success("New invite code generated!")
+          toast.success('New invite code generated!');
         },
         onError: () => {
-          toast.error("Failed to generate new code")
+          toast.error('Failed to generate new code');
         },
         onSettled: () => {
-          setIsPending(false)
+          setIsPending(false);
         },
       },
-    )
-  }
+    );
+  };
 
   const handleCopy = () => {
-    const inviteLink = `${window.location.origin}/join/${workspaceId}`
+    const inviteLink = `${window.location.origin}/join/${workspaceId}`;
     navigator.clipboard.writeText(inviteLink).then(() => {
-      toast.success("Invite link copied to clipboard!")
-    })
-  }
+      toast.success('Invite link copied to clipboard!');
+    });
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -79,5 +80,5 @@ export const InviteModal = ({ open, setOpen, workspaceId, name, joinCode }: Invi
         </div>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};

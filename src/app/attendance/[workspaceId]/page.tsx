@@ -1,23 +1,24 @@
-"use client"
+'use client';
 
-import { Loader, TriangleAlert } from "lucide-react"
-import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info"
-import { useCurrentMember } from "@/features/members/api/use-current-member"
-import { useWorkspaceId } from "@/hooks/use-workspace-id"
-import { CheckInOut } from "@/features/attendance/components/check-in-out"
-import { CleanAdminDashboard } from "@/features/attendance/components/admin-dashboard"
+import { Loader, TriangleAlert } from 'lucide-react';
+
+import { CleanAdminDashboard } from '@/features/attendance/components/admin-dashboard';
+import { CheckInOut } from '@/features/attendance/components/check-in-out';
+import { useCurrentMember } from '@/features/members/api/use-current-member';
+import { useGetWorkspaceInfo } from '@/features/workspaces/api/use-get-workspace-info';
+import { useWorkspaceId } from '@/hooks/use-workspace-id';
 
 const AttendanceWorkspacePage = () => {
-  const workspaceId = useWorkspaceId()
-  const { data: workspace, isLoading: workspaceLoading } = useGetWorkspaceInfo({ id: workspaceId })
-  const { data: member, isLoading: memberLoading } = useCurrentMember({ workspaceId })
+  const workspaceId = useWorkspaceId();
+  const { data: workspace, isLoading: workspaceLoading } = useGetWorkspaceInfo({ id: workspaceId });
+  const { data: member, isLoading: memberLoading } = useCurrentMember({ workspaceId });
 
   if (workspaceLoading || memberLoading) {
     return (
       <div className="flex h-full flex-1 flex-col items-center justify-center gap-2">
         <Loader className="size-5 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   if (!workspace || !member) {
@@ -26,11 +27,11 @@ const AttendanceWorkspacePage = () => {
         <TriangleAlert className="size-5 text-muted-foreground" />
         <span className="text-sm text-muted-foreground">Workspace not found.</span>
       </div>
-    )
+    );
   }
 
   // Show admin dashboard by default for admins
-  if (member.role === "admin") {
+  if (member.role === 'admin') {
     return (
       <div className="flex h-full flex-col">
         <div className="flex h-[49px] items-center border-b bg-white px-4">
@@ -40,7 +41,7 @@ const AttendanceWorkspacePage = () => {
           <CleanAdminDashboard workspaceId={workspaceId} />
         </div>
       </div>
-    )
+    );
   }
 
   // Show check-in/out for regular users
@@ -53,7 +54,7 @@ const AttendanceWorkspacePage = () => {
         <CheckInOut workspaceId={workspaceId} />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AttendanceWorkspacePage
+export default AttendanceWorkspacePage;

@@ -1,11 +1,13 @@
-"use client"
+'use client';
 
-import type { PropsWithChildren } from "react"
-import { Sidebar } from "@/components/sidebar/sidebar"
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
-import { Toolbar } from "@/components/toolbar/toolbar"
-import { WorkspaceSidebar } from "@/components/workspace-header/workspace-sidebar"
-import { WorkspaceSidebarContent } from "./workspace-sidebar-content"
+import type { PropsWithChildren } from 'react';
+
+import { Sidebar } from '@/components/sidebar/sidebar';
+import { Toolbar } from '@/components/toolbar/toolbar';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { WorkspaceSidebar } from '@/components/workspace-header/workspace-sidebar';
+
+import { WorkspaceSidebarContent } from './workspace-sidebar-content';
 
 const AttendanceWorkspaceLayout = ({ children }: Readonly<PropsWithChildren>) => {
   return (
@@ -26,7 +28,7 @@ const AttendanceWorkspaceLayout = ({ children }: Readonly<PropsWithChildren>) =>
         </ResizablePanelGroup>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AttendanceWorkspaceLayout
+export default AttendanceWorkspaceLayout;

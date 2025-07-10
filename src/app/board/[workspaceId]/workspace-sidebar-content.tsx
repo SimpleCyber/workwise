@@ -1,8 +1,9 @@
-"use client"
+'use client';
 
-import { Kanban, Filter, Archive } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { WorkspaceSection } from "@/app/workspace/[workspaceId]/workspace-section"
+import { Archive, Filter, Kanban } from 'lucide-react';
+
+import { WorkspaceSection } from '@/app/workspace/[workspaceId]/workspace-section';
+import { Button } from '@/components/ui/button';
 
 export const WorkspaceSidebarContent = () => {
   return (
@@ -31,5 +32,5 @@ export const WorkspaceSidebarContent = () => {
         </Button>
       </WorkspaceSection>
     </>
-  )
-}
+  );
+};

@@ -1,36 +1,37 @@
-"use client"
+'use client';
 
-import type React from "react"
-import { Loader, Plus, TriangleAlert } from "lucide-react"
-import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info"
-import { useWorkspaceId } from "@/hooks/use-workspace-id"
-import { useGetProjectBoards } from "@/features/projects/api/use-get-project-boards"
-import { useCreateProjectBoard } from "@/features/projects/api/use-create-project-board"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { useState } from "react"
-import { toast } from "sonner"
-import Link from "next/link"
-import { formatDistanceToNow } from "date-fns"
+import { formatDistanceToNow } from 'date-fns';
+import { Loader, Plus, TriangleAlert } from 'lucide-react';
+import Link from 'next/link';
+import type React from 'react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useCreateProjectBoard } from '@/features/projects/api/use-create-project-board';
+import { useGetProjectBoards } from '@/features/projects/api/use-get-project-boards';
+import { useGetWorkspaceInfo } from '@/features/workspaces/api/use-get-workspace-info';
+import { useWorkspaceId } from '@/hooks/use-workspace-id';
 
 const ProjectsWorkspacePage = () => {
-  const workspaceId = useWorkspaceId()
-  const { data: workspace, isLoading: workspaceLoading } = useGetWorkspaceInfo({ id: workspaceId })
-  const { data: boards, isLoading: boardsLoading } = useGetProjectBoards({ workspaceId })
-  const { mutate: createBoard, isPending } = useCreateProjectBoard()
+  const workspaceId = useWorkspaceId();
+  const { data: workspace, isLoading: workspaceLoading } = useGetWorkspaceInfo({ id: workspaceId });
+  const { data: boards, isLoading: boardsLoading } = useGetProjectBoards({ workspaceId });
+  const { mutate: createBoard, isPending } = useCreateProjectBoard();
 
-  const [open, setOpen] = useState(false)
-  const [name, setName] = useState("")
-  const [description, setDescription] = useState("")
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!name.trim()) return
+    e.preventDefault();
+    if (!name.trim()) return;
 
     createBoard(
       {
@@ -40,24 +41,24 @@ const ProjectsWorkspacePage = () => {
       },
       {
         onSuccess: () => {
-          toast.success("Project board created successfully!")
-          setOpen(false)
-          setName("")
-          setDescription("")
+          toast.success('Project board created successfully!');
+          setOpen(false);
+          setName('');
+          setDescription('');
         },
         onError: (error) => {
-          toast.error(error.message || "Failed to create project board")
+          toast.error(error.message || 'Failed to create project board');
         },
       },
-    )
-  }
+    );
+  };
 
   if (workspaceLoading || boardsLoading) {
     return (
       <div className="flex h-full flex-1 flex-col items-center justify-center gap-2">
         <Loader className="size-5 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   if (!workspace) {
@@ -66,7 +67,7 @@ const ProjectsWorkspacePage = () => {
         <TriangleAlert className="size-5 text-muted-foreground" />
         <span className="text-sm text-muted-foreground">Workspace not found.</span>
       </div>
-    )
+    );
   }
 
   return (
@@ -116,7 +117,7 @@ const ProjectsWorkspacePage = () => {
                       Creating...
                     </>
                   ) : (
-                    "Create Project Board"
+                    'Create Project Board'
                   )}
                 </Button>
               </div>
@@ -131,9 +132,7 @@ const ProjectsWorkspacePage = () => {
             <div className="flex flex-col items-center justify-center py-12">
               <div className="text-center">
                 <h3 className="text-lg font-semibold mb-2">No project boards yet</h3>
-                <p className="text-muted-foreground mb-4">
-                  Create your first project board to start managing team tasks
-                </p>
+                <p className="text-muted-foreground mb-4">Create your first project board to start managing team tasks</p>
                 <Dialog open={open} onOpenChange={setOpen}>
                   <DialogTrigger asChild>
                     <Button>
@@ -156,9 +155,7 @@ const ProjectsWorkspacePage = () => {
                           {board.boardCode}
                         </Badge>
                       </div>
-                      {board.description && (
-                        <CardDescription className="line-clamp-2">{board.description}</CardDescription>
-                      )}
+                      {board.description && <CardDescription className="line-clamp-2">{board.description}</CardDescription>}
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -174,7 +171,7 @@ const ProjectsWorkspacePage = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ProjectsWorkspacePage
+export default ProjectsWorkspacePage;

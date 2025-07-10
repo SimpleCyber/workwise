@@ -1,29 +1,31 @@
-"use client"
+'use client';
 
-import { Loader, TriangleAlert } from "lucide-react"
-import { useGetProjectBoard } from "@/features/projects/api/use-get-project-board"
-import { useGetProjectLists } from "@/features/projects/api/use-get-project-lists"
-import { ProjectKanbanBoard } from "@/features/projects/components/project-kanban-board"
-import type { Id } from "../../../../../../convex/_generated/dataModel"
+import { Loader, TriangleAlert } from 'lucide-react';
+
+import { useGetProjectBoard } from '@/features/projects/api/use-get-project-board';
+import { useGetProjectLists } from '@/features/projects/api/use-get-project-lists';
+import { ProjectKanbanBoard } from '@/features/projects/components/project-kanban-board';
+
+import type { Id } from '../../../../../../convex/_generated/dataModel';
 
 interface ProjectBoardPageProps {
   params: {
-    workspaceId: string
-    boardId: string
-  }
+    workspaceId: string;
+    boardId: string;
+  };
 }
 
 const ProjectBoardPage = ({ params }: ProjectBoardPageProps) => {
-  const boardId = params.boardId as Id<"projectBoards">
-  const { data: board, isLoading: boardLoading } = useGetProjectBoard({ boardId })
-  const { data: lists, isLoading: listsLoading } = useGetProjectLists({ boardId })
+  const boardId = params.boardId as Id<'projectBoards'>;
+  const { data: board, isLoading: boardLoading } = useGetProjectBoard({ boardId });
+  const { data: lists, isLoading: listsLoading } = useGetProjectLists({ boardId });
 
   if (boardLoading || listsLoading) {
     return (
       <div className="flex h-full flex-1 flex-col items-center justify-center gap-2">
         <Loader className="size-5 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   if (!board) {
@@ -32,7 +34,7 @@ const ProjectBoardPage = ({ params }: ProjectBoardPageProps) => {
         <TriangleAlert className="size-5 text-muted-foreground" />
         <span className="text-sm text-muted-foreground">Project board not found.</span>
       </div>
-    )
+    );
   }
 
   return (
@@ -48,7 +50,7 @@ const ProjectBoardPage = ({ params }: ProjectBoardPageProps) => {
         <ProjectKanbanBoard boardId={boardId} lists={lists || []} />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ProjectBoardPage
+export default ProjectBoardPage;
