@@ -14,10 +14,11 @@ type RequestType = {
   isCompleted?: boolean;
   labels?: string[];
   listId?: Id<"todoLists">;
+  isArchived?: boolean;
   position?: number;
 };
 
-type ResponseType = void;
+type ResponseType = void | null;
 
 type Options = {
   onSuccess?: (data: ResponseType) => void;
