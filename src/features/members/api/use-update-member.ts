@@ -29,7 +29,8 @@ export const useUpdateMember = () => {
   const isError = useMemo(() => status === "error", [status]);
   const isSettled = useMemo(() => status === "settled", [status]);
 
-  const mutation = useMutation(api.members.update);
+  const mutation = useMutation(api.members.updateRole);
+
 
   const mutate = useCallback(
     async (values: RequestType, options?: Options) => {
@@ -38,7 +39,11 @@ export const useUpdateMember = () => {
         setError(null);
         setStatus("pending");
 
-        const response = await mutation(values);
+        const response = await mutation({
+          memberId: values.id,
+          role: values.role,
+        });
+
         options?.onSuccess?.(response);
 
         return response;
