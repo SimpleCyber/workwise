@@ -33,7 +33,6 @@ export const siteConfig: Metadata = {
     "real-time-messaging",
     "collaboration",
     "ui/ux",
-    "slack-clone",
 
     "date-fns",
     "cn",
