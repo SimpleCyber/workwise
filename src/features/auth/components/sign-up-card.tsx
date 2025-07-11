@@ -54,7 +54,7 @@ export const SignUpCard = ({ setState }: SignUpCardProps) => {
 
     if (!validateEmail(email)) return setError("Invalid Email.");
     if (password !== confirmPassword)
-      return setError("Password and Confirm Password doesn't match.");
+      return setError("Password and Confirm Password doesnot match.");
     if (!validatePassword(password))
       return setError("Password must be strong.");
 

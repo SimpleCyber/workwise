@@ -43,7 +43,7 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
   );
   const [UpdateDialog, confirmUpdate] = useConfirm(
     "Change role",
-    "Are you sure you want to change this member's role?",
+    "Are you sure you want to change this member role?",
   );
   const [RemoveDialog, confirmRemove] = useConfirm(
     "Remove member",

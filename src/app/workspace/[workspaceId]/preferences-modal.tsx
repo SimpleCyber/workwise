@@ -38,7 +38,7 @@ export const PreferencesModal = ({
   const workspaceId = useWorkspaceId();
   const [ConfirmDialog, confirmDeleteWorkspace] = useConfirm(
     "Are you sure?",
-    "This action can't be undone.",
+    "This action cannot be undone.",
   );
 
   const [value, setValue] = useState(initialValue);
