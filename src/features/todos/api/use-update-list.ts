@@ -13,7 +13,7 @@ type RequestType = {
   isArchived?: boolean;
 };
 
-type ResponseType = void;
+type ResponseType = void | null;
 
 type Options = {
   onSuccess?: (data: ResponseType) => void;

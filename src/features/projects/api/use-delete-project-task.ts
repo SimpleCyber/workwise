@@ -10,7 +10,7 @@ type RequestType = {
   taskId: Id<"projectTasks">;
 };
 
-type ResponseType = void;
+type ResponseType = void | null;
 
 type Options = {
   onSuccess?: (data: ResponseType) => void;

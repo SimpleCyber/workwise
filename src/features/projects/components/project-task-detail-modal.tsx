@@ -233,26 +233,34 @@ export const ProjectTaskDetailModal = ({
 
             <div className="space-y-2">
               <Label>Assigned To</Label>
-              <Select value={assignedToId} onValueChange={setAssignedToId}>
+              <Select
+                value={assignedToId}
+                onValueChange={(value) => setAssignedToId(value as Id<"members">)}
+              >
+
                 <SelectTrigger>
                   <SelectValue placeholder="Select assignee..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {members.map((member) => (
-                    <SelectItem key={member._id} value={member._id}>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="w-5 h-5">
-                          <AvatarImage
-                            src={member.user?.image || "/placeholder.svg"}
-                          />
-                          <AvatarFallback className="text-xs">
-                            {member.user?.name?.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span>{member.user?.name}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
+                 {members
+                    ?.filter((member): member is NonNullable<typeof member> => member !== null)
+                    .map((member) => (
+                      <SelectItem key={member._id} value={member._id}>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="w-5 h-5">
+                            <AvatarImage
+                              src={member.user?.image || "/placeholder.svg"}
+                              alt={member.user?.name || "Avatar"}
+                            />
+                            <AvatarFallback className="text-xs">
+                              {member.user?.name?.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span>{member.user?.name || "Unnamed Member"}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+
                 </SelectContent>
               </Select>
             </div>

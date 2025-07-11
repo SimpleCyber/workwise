@@ -42,7 +42,7 @@ import { useCreateProjectTask } from "@/features/projects/api/use-create-project
 import { useDeleteProjectList } from "@/features/projects/api/use-delete-project-list";
 import { useDeleteProjectTask } from "@/features/projects/api/use-delete-project-task";
 import { useGetProjectTasks } from "@/features/projects/api/use-get-project-tasks";
-import { useGetWorkspaceMembers } from "@/features/projects/api/use-get-workspace-members";
+import { useGetWorkspaceMembers, WorkspaceMember } from "@/features/projects/api/use-get-workspace-members";
 import { useUpdateProjectList } from "@/features/projects/api/use-update-project-list";
 import { useUpdateProjectTask } from "@/features/projects/api/use-update-project-task";
 
@@ -291,6 +291,8 @@ export const ProjectKanbanBoard = ({
     .filter((list) => !list.isArchived)
     .sort((a, b) => a.position - b.position);
 
+
+
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <Droppable droppableId="board" type="list" direction="horizontal">
@@ -416,18 +418,7 @@ interface ProjectKanbanListProps {
   setNewTaskTitle: (title: string) => void;
   selectedAssignee: Id<"members"> | undefined;
   setSelectedAssignee: (memberId: Id<"members"> | undefined) => void;
-  members: Array<{
-    _id: Id<"members">;
-    userId: Id<"users">;
-    workspaceId: Id<"workspaces">;
-    role: "admin" | "member" | "lead";
-    user: {
-      _id: Id<"users">;
-      name?: string;
-      email?: string;
-      image?: string;
-    } | null;
-  }>;
+  members: WorkspaceMember[];
   onAddTask: () => void;
   onCancelAddTask: () => void;
   onCreateTask: () => void;

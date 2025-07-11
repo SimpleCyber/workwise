@@ -175,3 +175,18 @@ export const getStats = query({
 });
 
 
+export const getById = query({
+  args: { memberId: v.id("members") },
+  handler: async (ctx, args) => {
+    const member = await ctx.db.get(args.memberId);
+    if (!member) return null;
+
+    const user = await ctx.db.get(member.userId);
+    if (!user) return null;
+
+    return {
+      ...member,
+      user,
+    };
+  },
+});
