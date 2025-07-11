@@ -42,7 +42,10 @@ import { useCreateProjectTask } from "@/features/projects/api/use-create-project
 import { useDeleteProjectList } from "@/features/projects/api/use-delete-project-list";
 import { useDeleteProjectTask } from "@/features/projects/api/use-delete-project-task";
 import { useGetProjectTasks } from "@/features/projects/api/use-get-project-tasks";
-import { useGetWorkspaceMembers, WorkspaceMember } from "@/features/projects/api/use-get-workspace-members";
+import {
+  useGetWorkspaceMembers,
+  WorkspaceMember,
+} from "@/features/projects/api/use-get-workspace-members";
 import { useUpdateProjectList } from "@/features/projects/api/use-update-project-list";
 import { useUpdateProjectTask } from "@/features/projects/api/use-update-project-task";
 
@@ -290,8 +293,6 @@ export const ProjectKanbanBoard = ({
   const sortedLists = [...lists]
     .filter((list) => !list.isArchived)
     .sort((a, b) => a.position - b.position);
-
-
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>

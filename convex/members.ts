@@ -174,7 +174,6 @@ export const getStats = query({
   },
 });
 
-
 export const getById = query({
   args: { memberId: v.id("members") },
   handler: async (ctx, args) => {

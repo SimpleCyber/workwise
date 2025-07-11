@@ -26,7 +26,10 @@ export type WorkspaceMember = {
 
 export const useGetWorkspaceMembers = ({
   workspaceId,
-}: UseGetWorkspaceMembersProps): { data: WorkspaceMember[]; isLoading: boolean } => {
+}: UseGetWorkspaceMembersProps): {
+  data: WorkspaceMember[];
+  isLoading: boolean;
+} => {
   const data = useQuery(
     api.projects.getWorkspaceMembers,
     workspaceId ? { workspaceId } : "skip",
@@ -34,8 +37,8 @@ export const useGetWorkspaceMembers = ({
 
   const isLoading = data === undefined && !!workspaceId;
 
-  return { 
-    data: (data as WorkspaceMember[]) || [], 
-    isLoading 
+  return {
+    data: (data as WorkspaceMember[]) || [],
+    isLoading,
   };
 };

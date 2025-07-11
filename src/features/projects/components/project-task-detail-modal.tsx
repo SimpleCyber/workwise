@@ -235,15 +235,19 @@ export const ProjectTaskDetailModal = ({
               <Label>Assigned To</Label>
               <Select
                 value={assignedToId}
-                onValueChange={(value) => setAssignedToId(value as Id<"members">)}
+                onValueChange={(value) =>
+                  setAssignedToId(value as Id<"members">)
+                }
               >
-
                 <SelectTrigger>
                   <SelectValue placeholder="Select assignee..." />
                 </SelectTrigger>
                 <SelectContent>
-                 {members
-                    ?.filter((member): member is NonNullable<typeof member> => member !== null)
+                  {members
+                    ?.filter(
+                      (member): member is NonNullable<typeof member> =>
+                        member !== null,
+                    )
                     .map((member) => (
                       <SelectItem key={member._id} value={member._id}>
                         <div className="flex items-center gap-2">
@@ -260,7 +264,6 @@ export const ProjectTaskDetailModal = ({
                         </div>
                       </SelectItem>
                     ))}
-
                 </SelectContent>
               </Select>
             </div>
