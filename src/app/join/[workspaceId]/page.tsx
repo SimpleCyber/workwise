@@ -21,7 +21,10 @@ const JoinWorkspaceIdPage = () => {
   const { mutate, isPending } = useJoin();
   const { data, isLoading } = useGetWorkspaceInfo({ id: workspaceId });
 
-  const isMember = useMemo(() => data?.isMember, [data?.isMember]);
+  const isMember = useMemo(
+  () => data?.role === "admin" || data?.role === "member" || data?.role === "lead",
+  [data?.role]
+);
 
   useEffect(() => {
     if (isMember) router.push(`/workspace/${workspaceId}`);
