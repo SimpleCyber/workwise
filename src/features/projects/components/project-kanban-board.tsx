@@ -615,8 +615,10 @@ const ProjectKanbanList = ({
                       />
                       <div className="flex items-center gap-2">
                         <Select
-                          value={selectedAssignee}
-                          onValueChange={setSelectedAssignee}
+                          value={selectedAssignee ?? ""} // must be string
+                          onValueChange={(value) =>
+                            setSelectedAssignee(value as Id<"members">)
+                          } // cast it back
                         >
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Assign to..." />

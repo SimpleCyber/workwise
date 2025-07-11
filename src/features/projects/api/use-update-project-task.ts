@@ -16,9 +16,10 @@ type RequestType = {
   isCompleted?: boolean;
   listId?: Id<"projectLists">;
   position?: number;
+  isArchived?: boolean;
 };
 
-type ResponseType = void;
+type ResponseType = void | null;
 
 type Options = {
   onSuccess?: (data: ResponseType) => void;

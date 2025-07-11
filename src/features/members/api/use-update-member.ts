@@ -31,7 +31,6 @@ export const useUpdateMember = () => {
 
   const mutation = useMutation(api.members.updateRole);
 
-
   const mutate = useCallback(
     async (values: RequestType, options?: Options) => {
       try {
