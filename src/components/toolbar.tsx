@@ -1,9 +1,9 @@
-import { MessageSquareText, Pencil, Smile, Trash } from 'lucide-react';
+import { MessageSquareText, Pencil, Smile, Trash } from "lucide-react";
 
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 
-import { EmojiPopover } from './emoji-popover';
-import { Hint } from './hint';
+import { EmojiPopover } from "./emoji-popover";
+import { Hint } from "./hint";
 
 interface ToolbarProps {
   isAuthor: boolean;
@@ -35,7 +35,12 @@ export const Toolbar = ({
 
         {!hideThreadButton && (
           <Hint label="Reply in thread">
-            <Button onClick={handleThread} variant="ghost" size="iconSm" disabled={isPending}>
+            <Button
+              onClick={handleThread}
+              variant="ghost"
+              size="iconSm"
+              disabled={isPending}
+            >
               <MessageSquareText className="size-4" />
             </Button>
           </Hint>
@@ -43,7 +48,12 @@ export const Toolbar = ({
 
         {isAuthor && (
           <Hint label="Edit message">
-            <Button onClick={handleEdit} variant="ghost" size="iconSm" disabled={isPending}>
+            <Button
+              onClick={handleEdit}
+              variant="ghost"
+              size="iconSm"
+              disabled={isPending}
+            >
               <Pencil className="size-4" />
             </Button>
           </Hint>
@@ -51,7 +61,12 @@ export const Toolbar = ({
 
         {isAuthor && (
           <Hint label="Delete message">
-            <Button onClick={handleDelete} variant="ghost" size="iconSm" disabled={isPending}>
+            <Button
+              onClick={handleDelete}
+              variant="ghost"
+              size="iconSm"
+              disabled={isPending}
+            >
               <Trash className="size-4" />
             </Button>
           </Hint>

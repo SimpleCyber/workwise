@@ -1,39 +1,53 @@
-'use client';
+"use client";
 
-import { DragDropContext, Draggable, type DropResult, Droppable } from '@hello-pangea/dnd';
-import { Archive, Edit, GripVertical, Loader, MoreHorizontal, Plus, Trash2, X } from 'lucide-react';
-import { useState } from 'react';
-import { toast } from 'sonner';
+import {
+  DragDropContext,
+  Draggable,
+  type DropResult,
+  Droppable,
+} from "@hello-pangea/dnd";
+import {
+  Archive,
+  Edit,
+  GripVertical,
+  Loader,
+  MoreHorizontal,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { useCreateCard } from '@/features/todos/api/use-create-card';
-import { useCreateList } from '@/features/todos/api/use-create-list';
-import { useDeleteList } from '@/features/todos/api/use-delete-list';
-import { useGetCards } from '@/features/todos/api/use-get-cards';
-import { useUpdateCard } from '@/features/todos/api/use-update-card';
-import { useUpdateList } from '@/features/todos/api/use-update-list';
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { useCreateCard } from "@/features/todos/api/use-create-card";
+import { useCreateList } from "@/features/todos/api/use-create-list";
+import { useDeleteList } from "@/features/todos/api/use-delete-list";
+import { useGetCards } from "@/features/todos/api/use-get-cards";
+import { useUpdateCard } from "@/features/todos/api/use-update-card";
+import { useUpdateList } from "@/features/todos/api/use-update-list";
 
-import type { Id } from '../../../../convex/_generated/dataModel';
-import { KanbanCard } from './kanban-card';
+import type { Id } from "../../../../convex/_generated/dataModel";
+import { KanbanCard } from "./kanban-card";
 
 interface KanbanBoardProps {
-  boardId: Id<'todoBoards'>;
+  boardId: Id<"todoBoards">;
   lists: Array<{
-    _id: Id<'todoLists'>;
+    _id: Id<"todoLists">;
     name: string;
     position: number;
-    boardId: Id<'todoBoards'>;
-    memberId: Id<'members'>;
-    workspaceId: Id<'workspaces'>;
+    boardId: Id<"todoBoards">;
+    memberId: Id<"members">;
+    workspaceId: Id<"workspaces">;
     isArchived?: boolean;
     createdAt: number;
     updatedAt: number;
@@ -42,11 +56,12 @@ interface KanbanBoardProps {
 
 export const KanbanBoard = ({ boardId, lists }: KanbanBoardProps) => {
   const [isAddingList, setIsAddingList] = useState(false);
-  const [newListName, setNewListName] = useState('');
-  const [addingCardToList, setAddingCardToList] = useState<Id<'todoLists'> | null>(null);
-  const [newCardTitle, setNewCardTitle] = useState('');
-  const [editingList, setEditingList] = useState<Id<'todoLists'> | null>(null);
-  const [editListName, setEditListName] = useState('');
+  const [newListName, setNewListName] = useState("");
+  const [addingCardToList, setAddingCardToList] =
+    useState<Id<"todoLists"> | null>(null);
+  const [newCardTitle, setNewCardTitle] = useState("");
+  const [editingList, setEditingList] = useState<Id<"todoLists"> | null>(null);
+  const [editListName, setEditListName] = useState("");
 
   const { mutate: createList, isPending: isCreatingList } = useCreateList();
   const { mutate: createCard, isPending: isCreatingCard } = useCreateCard();
@@ -64,18 +79,18 @@ export const KanbanBoard = ({ boardId, lists }: KanbanBoardProps) => {
       },
       {
         onSuccess: () => {
-          setNewListName('');
+          setNewListName("");
           setIsAddingList(false);
-          toast.success('List created successfully!');
+          toast.success("List created successfully!");
         },
         onError: (error) => {
-          toast.error(error.message || 'Failed to create list');
+          toast.error(error.message || "Failed to create list");
         },
       },
     );
   };
 
-  const handleCreateCard = (listId: Id<'todoLists'>) => {
+  const handleCreateCard = (listId: Id<"todoLists">) => {
     if (!newCardTitle.trim()) return;
 
     createCard(
@@ -85,18 +100,18 @@ export const KanbanBoard = ({ boardId, lists }: KanbanBoardProps) => {
       },
       {
         onSuccess: () => {
-          setNewCardTitle('');
+          setNewCardTitle("");
           setAddingCardToList(null);
-          toast.success('Card created successfully!');
+          toast.success("Card created successfully!");
         },
         onError: (error) => {
-          toast.error(error.message || 'Failed to create card');
+          toast.error(error.message || "Failed to create card");
         },
       },
     );
   };
 
-  const handleEditList = (listId: Id<'todoLists'>, currentName: string) => {
+  const handleEditList = (listId: Id<"todoLists">, currentName: string) => {
     setEditingList(listId);
     setEditListName(currentName);
   };
@@ -112,17 +127,17 @@ export const KanbanBoard = ({ boardId, lists }: KanbanBoardProps) => {
       {
         onSuccess: () => {
           setEditingList(null);
-          setEditListName('');
-          toast.success('List renamed successfully!');
+          setEditListName("");
+          toast.success("List renamed successfully!");
         },
         onError: (error) => {
-          toast.error(error.message || 'Failed to rename list');
+          toast.error(error.message || "Failed to rename list");
         },
       },
     );
   };
 
-  const handleArchiveList = (listId: Id<'todoLists'>) => {
+  const handleArchiveList = (listId: Id<"todoLists">) => {
     updateList(
       {
         listId,
@@ -130,25 +145,29 @@ export const KanbanBoard = ({ boardId, lists }: KanbanBoardProps) => {
       },
       {
         onSuccess: () => {
-          toast.success('List archived successfully!');
+          toast.success("List archived successfully!");
         },
         onError: (error) => {
-          toast.error(error.message || 'Failed to archive list');
+          toast.error(error.message || "Failed to archive list");
         },
       },
     );
   };
 
-  const handleDeleteList = (listId: Id<'todoLists'>) => {
-    if (confirm('Are you sure you want to delete this list? This will also delete all cards in this list. This action cannot be undone.')) {
+  const handleDeleteList = (listId: Id<"todoLists">) => {
+    if (
+      confirm(
+        "Are you sure you want to delete this list? This will also delete all cards in this list. This action cannot be undone.",
+      )
+    ) {
       deleteList(
         { listId },
         {
           onSuccess: () => {
-            toast.success('List deleted successfully!');
+            toast.success("List deleted successfully!");
           },
           onError: (error) => {
-            toast.error(error.message || 'Failed to delete list');
+            toast.error(error.message || "Failed to delete list");
           },
         },
       );
@@ -159,13 +178,16 @@ export const KanbanBoard = ({ boardId, lists }: KanbanBoardProps) => {
     const { destination, source, draggableId, type } = result;
 
     if (!destination) return;
-    if (destination.droppableId === source.droppableId && destination.index === source.index) {
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
       return;
     }
 
     // Handle list reordering
-    if (type === 'list') {
-      const listId = draggableId as Id<'todoLists'>;
+    if (type === "list") {
+      const listId = draggableId as Id<"todoLists">;
       updateList(
         {
           listId,
@@ -173,7 +195,7 @@ export const KanbanBoard = ({ boardId, lists }: KanbanBoardProps) => {
         },
         {
           onError: (error) => {
-            toast.error(error.message || 'Failed to reorder list');
+            toast.error(error.message || "Failed to reorder list");
           },
         },
       );
@@ -182,8 +204,8 @@ export const KanbanBoard = ({ boardId, lists }: KanbanBoardProps) => {
 
     // Handle card movement between lists
     if (source.droppableId !== destination.droppableId) {
-      const cardId = draggableId as Id<'todoCards'>;
-      const newListId = destination.droppableId as Id<'todoLists'>;
+      const cardId = draggableId as Id<"todoCards">;
+      const newListId = destination.droppableId as Id<"todoLists">;
 
       updateCard(
         {
@@ -193,13 +215,13 @@ export const KanbanBoard = ({ boardId, lists }: KanbanBoardProps) => {
         },
         {
           onError: (error) => {
-            toast.error(error.message || 'Failed to move card');
+            toast.error(error.message || "Failed to move card");
           },
         },
       );
     } else {
       // Handle card reordering within the same list
-      const cardId = draggableId as Id<'todoCards'>;
+      const cardId = draggableId as Id<"todoCards">;
       updateCard(
         {
           cardId,
@@ -207,28 +229,34 @@ export const KanbanBoard = ({ boardId, lists }: KanbanBoardProps) => {
         },
         {
           onError: (error) => {
-            toast.error(error.message || 'Failed to reorder card');
+            toast.error(error.message || "Failed to reorder card");
           },
         },
       );
     }
   };
 
-  const sortedLists = [...lists].filter((list) => !list.isArchived).sort((a, b) => a.position - b.position);
+  const sortedLists = [...lists]
+    .filter((list) => !list.isArchived)
+    .sort((a, b) => a.position - b.position);
 
   return (
     <>
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable droppableId="board" type="list" direction="horizontal">
           {(provided) => (
-            <div ref={provided.innerRef} {...provided.droppableProps} className="flex h-full gap-4 p-4 overflow-x-auto">
+            <div
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              className="flex h-full gap-4 p-4 overflow-x-auto"
+            >
               {sortedLists.map((list, index) => (
                 <Draggable key={list._id} draggableId={list._id} index={index}>
                   {(provided, snapshot) => (
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}
-                      className={`flex-shrink-0 ${snapshot.isDragging ? 'rotate-2' : ''}`}
+                      className={`flex-shrink-0 ${snapshot.isDragging ? "rotate-2" : ""}`}
                     >
                       <KanbanList
                         list={list}
@@ -249,7 +277,7 @@ export const KanbanBoard = ({ boardId, lists }: KanbanBoardProps) => {
                         onSaveEdit={handleSaveListName}
                         onCancelEdit={() => {
                           setEditingList(null);
-                          setEditListName('');
+                          setEditListName("");
                         }}
                       />
                     </div>
@@ -268,18 +296,22 @@ export const KanbanBoard = ({ boardId, lists }: KanbanBoardProps) => {
                         onChange={(e) => setNewListName(e.target.value)}
                         placeholder="Enter list title..."
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
+                          if (e.key === "Enter") {
                             handleCreateList();
-                          } else if (e.key === 'Escape') {
+                          } else if (e.key === "Escape") {
                             setIsAddingList(false);
-                            setNewListName('');
+                            setNewListName("");
                           }
                         }}
                         autoFocus
                         disabled={isCreatingList}
                       />
                       <div className="flex gap-2 mt-2">
-                        <Button size="sm" onClick={handleCreateList} disabled={!newListName.trim() || isCreatingList}>
+                        <Button
+                          size="sm"
+                          onClick={handleCreateList}
+                          disabled={!newListName.trim() || isCreatingList}
+                        >
                           Add List
                         </Button>
                         <Button
@@ -287,7 +319,7 @@ export const KanbanBoard = ({ boardId, lists }: KanbanBoardProps) => {
                           variant="ghost"
                           onClick={() => {
                             setIsAddingList(false);
-                            setNewListName('');
+                            setNewListName("");
                           }}
                           disabled={isCreatingList}
                         >
@@ -317,12 +349,12 @@ export const KanbanBoard = ({ boardId, lists }: KanbanBoardProps) => {
 
 interface KanbanListProps {
   list: {
-    _id: Id<'todoLists'>;
+    _id: Id<"todoLists">;
     name: string;
     position: number;
-    boardId: Id<'todoBoards'>;
-    memberId: Id<'members'>;
-    workspaceId: Id<'workspaces'>;
+    boardId: Id<"todoBoards">;
+    memberId: Id<"members">;
+    workspaceId: Id<"workspaces">;
     isArchived?: boolean;
     createdAt: number;
     updatedAt: number;
@@ -335,9 +367,9 @@ interface KanbanListProps {
   onCancelAddCard: () => void;
   onCreateCard: () => void;
   isCreatingCard: boolean;
-  onEditList: (listId: Id<'todoLists'>, currentName: string) => void;
-  onArchiveList: (listId: Id<'todoLists'>) => void;
-  onDeleteList: (listId: Id<'todoLists'>) => void;
+  onEditList: (listId: Id<"todoLists">, currentName: string) => void;
+  onArchiveList: (listId: Id<"todoLists">) => void;
+  onDeleteList: (listId: Id<"todoLists">) => void;
   isEditing: boolean;
   editName: string;
   setEditName: (name: string) => void;
@@ -365,7 +397,11 @@ const KanbanList = ({
   onCancelEdit,
 }: KanbanListProps) => {
   const { data: cards, isLoading } = useGetCards({ listId: list._id });
-  const sortedCards = cards ? [...cards].filter((card) => !card.isArchived).sort((a, b) => a.position - b.position) : [];
+  const sortedCards = cards
+    ? [...cards]
+        .filter((card) => !card.isArchived)
+        .sort((a, b) => a.position - b.position)
+    : [];
 
   return (
     <div className="w-72">
@@ -373,7 +409,10 @@ const KanbanList = ({
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 flex-1">
-              <div {...dragHandleProps} className="cursor-grab active:cursor-grabbing">
+              <div
+                {...dragHandleProps}
+                className="cursor-grab active:cursor-grabbing"
+              >
                 <GripVertical className="size-4 text-muted-foreground hover:text-foreground" />
               </div>
               {isEditing ? (
@@ -381,9 +420,9 @@ const KanbanList = ({
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
+                    if (e.key === "Enter") {
                       onSaveEdit();
-                    } else if (e.key === 'Escape') {
+                    } else if (e.key === "Escape") {
                       onCancelEdit();
                     }
                   }}
@@ -402,7 +441,9 @@ const KanbanList = ({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onEditList(list._id, list.name)}>
+                <DropdownMenuItem
+                  onClick={() => onEditList(list._id, list.name)}
+                >
                   <Edit className="size-4 mr-2" />
                   Rename List
                 </DropdownMenuItem>
@@ -411,7 +452,10 @@ const KanbanList = ({
                   <Archive className="size-4 mr-2" />
                   Archive List
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDeleteList(list._id)} className="text-destructive focus:text-destructive">
+                <DropdownMenuItem
+                  onClick={() => onDeleteList(list._id)}
+                  className="text-destructive focus:text-destructive"
+                >
                   <Trash2 className="size-4 mr-2" />
                   Delete List
                 </DropdownMenuItem>
@@ -420,7 +464,7 @@ const KanbanList = ({
           </div>
           {sortedCards.length > 0 && (
             <div className="text-xs text-muted-foreground">
-              {sortedCards.length} card{sortedCards.length !== 1 ? 's' : ''}
+              {sortedCards.length} card{sortedCards.length !== 1 ? "s" : ""}
             </div>
           )}
         </CardHeader>
@@ -429,7 +473,7 @@ const KanbanList = ({
             <CardContent
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className={`space-y-2 min-h-[100px] ${snapshot.isDraggingOver ? 'bg-muted/50' : ''}`}
+              className={`space-y-2 min-h-[100px] ${snapshot.isDraggingOver ? "bg-muted/50" : ""}`}
             >
               {isLoading ? (
                 <div className="flex justify-center py-4">
@@ -437,13 +481,17 @@ const KanbanList = ({
                 </div>
               ) : (
                 sortedCards.map((card, index) => (
-                  <Draggable key={card._id} draggableId={card._id} index={index}>
+                  <Draggable
+                    key={card._id}
+                    draggableId={card._id}
+                    index={index}
+                  >
                     {(provided, snapshot) => (
                       <div
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
-                        className={snapshot.isDragging ? 'rotate-2' : ''}
+                        className={snapshot.isDragging ? "rotate-2" : ""}
                       >
                         <KanbanCard card={card} />
                       </div>
@@ -460,9 +508,9 @@ const KanbanList = ({
                     onChange={(e) => setNewCardTitle(e.target.value)}
                     placeholder="Enter a title for this card..."
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
+                      if (e.key === "Enter") {
                         onCreateCard();
-                      } else if (e.key === 'Escape') {
+                      } else if (e.key === "Escape") {
                         onCancelAddCard();
                       }
                     }}
@@ -470,10 +518,19 @@ const KanbanList = ({
                     disabled={isCreatingCard}
                   />
                   <div className="flex gap-2">
-                    <Button size="sm" onClick={onCreateCard} disabled={!newCardTitle.trim() || isCreatingCard}>
+                    <Button
+                      size="sm"
+                      onClick={onCreateCard}
+                      disabled={!newCardTitle.trim() || isCreatingCard}
+                    >
                       Add card
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={onCancelAddCard} disabled={isCreatingCard}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={onCancelAddCard}
+                      disabled={isCreatingCard}
+                    >
                       <X className="size-4" />
                     </Button>
                   </div>

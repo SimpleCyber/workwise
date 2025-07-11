@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { Loader } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useMemo } from 'react';
+import { Loader } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo } from "react";
 
-import { useGetWorkspaces } from '@/features/workspaces/api/use-get-workspaces';
-import { useCreateWorkspaceModal } from '@/features/workspaces/store/use-create-workspace-modal';
+import { useGetWorkspaces } from "@/features/workspaces/api/use-get-workspaces";
+import { useCreateWorkspaceModal } from "@/features/workspaces/store/use-create-workspace-modal";
 
 const HomePage = () => {
   const router = useRouter();

@@ -1,13 +1,18 @@
-'use client';
+"use client";
 
-import { useAuthActions } from '@convex-dev/auth/react';
-import { Loader, LogOut } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useAuthActions } from "@convex-dev/auth/react";
+import { Loader, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-import { useCurrentUser } from '../api/use-current-user';
+import { useCurrentUser } from "../api/use-current-user";
 
 export const UserButton = () => {
   const router = useRouter();
@@ -32,7 +37,9 @@ export const UserButton = () => {
         <Avatar className="size-10 transition hover:opacity-75">
           <AvatarImage alt={name} src={image} />
 
-          <AvatarFallback className="text-base">{avatarFallback}</AvatarFallback>
+          <AvatarFallback className="text-base">
+            {avatarFallback}
+          </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
 
@@ -41,7 +48,7 @@ export const UserButton = () => {
           onClick={async () => {
             await signOut();
 
-            router.replace('/auth');
+            router.replace("/auth");
           }}
           className="h-10"
         >

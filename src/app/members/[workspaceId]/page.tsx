@@ -1,8 +1,16 @@
-'use client';
+"use client";
 
-import { Crown, Loader, MoreHorizontal, Search, Shield, TriangleAlert, UserPlus } from 'lucide-react';
-import { useState } from 'react';
-import { toast } from 'sonner';
+import {
+  Crown,
+  Loader,
+  MoreHorizontal,
+  Search,
+  Shield,
+  TriangleAlert,
+  UserPlus,
+} from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 import {
   AlertDialog,
@@ -13,39 +21,44 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+} from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { useCurrentMember } from '@/features/members/api/use-current-member';
-import { useGetMemberStats } from '@/features/members/api/use-get-member-stats';
-import { useGetMembers } from '@/features/members/api/use-get-members';
-import { useRemoveMember } from '@/features/members/api/use-remove-member';
-import { useUpdateMemberRole } from '@/features/members/api/use-update-member-role';
-import { InviteModal } from '@/features/members/components/invite-modal';
-import { useGetWorkspaceInfo } from '@/features/workspaces/api/use-get-workspace-info';
-import { useWorkspaceId } from '@/hooks/use-workspace-id';
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { useCurrentMember } from "@/features/members/api/use-current-member";
+import { useGetMemberStats } from "@/features/members/api/use-get-member-stats";
+import { useGetMembers } from "@/features/members/api/use-get-members";
+import { useRemoveMember } from "@/features/members/api/use-remove-member";
+import { useUpdateMemberRole } from "@/features/members/api/use-update-member-role";
+import { InviteModal } from "@/features/members/components/invite-modal";
+import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info";
+import { useWorkspaceId } from "@/hooks/use-workspace-id";
 
 const MembersWorkspacePage = () => {
   const workspaceId = useWorkspaceId();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<string | null>(null);
 
-  const { data: workspace, isLoading: workspaceLoading } = useGetWorkspaceInfo({ id: workspaceId });
-  const { data: members, isLoading: membersLoading } = useGetMembers({ workspaceId });
+  const { data: workspace, isLoading: workspaceLoading } = useGetWorkspaceInfo({
+    id: workspaceId,
+  });
+  const { data: members, isLoading: membersLoading } = useGetMembers({
+    workspaceId,
+  });
   const { data: currentMember } = useCurrentMember({ workspaceId });
   const { data: stats } = useGetMemberStats({ workspaceId });
-  const { mutate: updateRole, isPending: isUpdatingRole } = useUpdateMemberRole();
+  const { mutate: updateRole, isPending: isUpdatingRole } =
+    useUpdateMemberRole();
   const { mutate: removeMember, isPending: isRemoving } = useRemoveMember();
 
   if (workspaceLoading || membersLoading) {
@@ -60,12 +73,17 @@ const MembersWorkspacePage = () => {
     return (
       <div className="flex h-full flex-1 flex-col items-center justify-center gap-2">
         <TriangleAlert className="size-5 text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">Workspace not found.</span>
+        <span className="text-sm text-muted-foreground">
+          Workspace not found.
+        </span>
       </div>
     );
   }
 
-  const handleRoleUpdate = async (memberId: string, newRole: 'admin' | 'member' | 'lead') => {
+  const handleRoleUpdate = async (
+    memberId: string,
+    newRole: "admin" | "member" | "lead",
+  ) => {
     await updateRole(
       { memberId: memberId as any, role: newRole },
       {
@@ -73,7 +91,7 @@ const MembersWorkspacePage = () => {
           toast.success(`Member role updated to ${newRole}`);
         },
         onError: (error) => {
-          toast.error(error.message || 'Failed to update member role');
+          toast.error(error.message || "Failed to update member role");
         },
       },
     );
@@ -86,11 +104,11 @@ const MembersWorkspacePage = () => {
       { memberId: memberToRemove as any },
       {
         onSuccess: () => {
-          toast.success('Member removed successfully');
+          toast.success("Member removed successfully");
           setMemberToRemove(null);
         },
         onError: (error) => {
-          toast.error(error.message || 'Failed to remove member');
+          toast.error(error.message || "Failed to remove member");
         },
       },
     );
@@ -98,14 +116,14 @@ const MembersWorkspacePage = () => {
 
   const getRoleBadge = (role: string) => {
     switch (role) {
-      case 'admin':
+      case "admin":
         return (
           <Badge className="bg-red-100 text-red-800">
             <Shield className="w-3 h-3 mr-1" />
             Admin
           </Badge>
         );
-      case 'lead':
+      case "lead":
         return (
           <Badge className="bg-blue-100 text-blue-800">
             <Crown className="w-3 h-3 mr-1" />
@@ -124,7 +142,7 @@ const MembersWorkspacePage = () => {
         member.user.email?.toLowerCase().includes(searchTerm.toLowerCase()),
     ) || [];
 
-  const canManageMembers = currentMember?.role === 'admin';
+  const canManageMembers = currentMember?.role === "admin";
 
   return (
     <div className="flex h-full flex-col">
@@ -143,7 +161,10 @@ const MembersWorkspacePage = () => {
           {/* Header */}
           <div>
             <h2 className="text-2xl font-bold">Team Members</h2>
-            <p className="text-muted-foreground">Manage team members and their roles in the {workspace.name} workspace.</p>
+            <p className="text-muted-foreground">
+              Manage team members and their roles in the {workspace.name}{" "}
+              workspace.
+            </p>
           </div>
 
           {/* Stats Cards */}
@@ -157,7 +178,9 @@ const MembersWorkspacePage = () => {
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{stats.total}</p>
-                      <p className="text-xs text-muted-foreground">Total Members</p>
+                      <p className="text-xs text-muted-foreground">
+                        Total Members
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -183,7 +206,9 @@ const MembersWorkspacePage = () => {
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{stats.leads}</p>
-                      <p className="text-xs text-muted-foreground">Team Leads</p>
+                      <p className="text-xs text-muted-foreground">
+                        Team Leads
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -196,7 +221,9 @@ const MembersWorkspacePage = () => {
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{stats.members}</p>
-                      <p className="text-xs text-muted-foreground">Regular Members</p>
+                      <p className="text-xs text-muted-foreground">
+                        Regular Members
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -207,7 +234,12 @@ const MembersWorkspacePage = () => {
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input placeholder="Search members..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
+            <Input
+              placeholder="Search members..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
           </div>
 
           {/* Members List */}
@@ -224,40 +256,70 @@ const MembersWorkspacePage = () => {
                   >
                     <div className="flex items-center gap-4">
                       <Avatar className="w-12 h-12">
-                        <AvatarImage src={member.user.image || '/placeholder.svg'} />
-                        <AvatarFallback>{member.user.name?.charAt(0).toUpperCase()}</AvatarFallback>
+                        <AvatarImage
+                          src={member.user.image || "/placeholder.svg"}
+                        />
+                        <AvatarFallback>
+                          {member.user.name?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-medium text-lg">{member.user.name}</p>
-                        <p className="text-sm text-muted-foreground">{member.user.email}</p>
+                        <p className="font-medium text-lg">
+                          {member.user.name}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {member.user.email}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
                       {getRoleBadge(member.role)}
-                      {canManageMembers && member._id !== currentMember?._id && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" disabled={isUpdatingRole || isRemoving}>
-                              <MoreHorizontal className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleRoleUpdate(member._id, 'member')}>Make Member</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleRoleUpdate(member._id, 'lead')}>
-                              <Crown className="w-4 h-4 mr-2" />
-                              Make Lead
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleRoleUpdate(member._id, 'admin')}>
-                              <Shield className="w-4 h-4 mr-2" />
-                              Make Admin
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => setMemberToRemove(member._id)} className="text-red-600 focus:text-red-600">
-                              Remove Member
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
+                      {canManageMembers &&
+                        member._id !== currentMember?._id && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                disabled={isUpdatingRole || isRemoving}
+                              >
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleRoleUpdate(member._id, "member")
+                                }
+                              >
+                                Make Member
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleRoleUpdate(member._id, "lead")
+                                }
+                              >
+                                <Crown className="w-4 h-4 mr-2" />
+                                Make Lead
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleRoleUpdate(member._id, "admin")
+                                }
+                              >
+                                <Shield className="w-4 h-4 mr-2" />
+                                Make Admin
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => setMemberToRemove(member._id)}
+                                className="text-red-600 focus:text-red-600"
+                              >
+                                Remove Member
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                     </div>
                   </div>
                 ))}
@@ -286,16 +348,25 @@ const MembersWorkspacePage = () => {
       )}
 
       {/* Remove Member Confirmation */}
-      <AlertDialog open={!!memberToRemove} onOpenChange={() => setMemberToRemove(null)}>
+      <AlertDialog
+        open={!!memberToRemove}
+        onOpenChange={() => setMemberToRemove(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Remove Member</AlertDialogTitle>
-            <AlertDialogDescription>Are you sure you want to remove this member? This action cannot be undone.</AlertDialogDescription>
+            <AlertDialogDescription>
+              Are you sure you want to remove this member? This action cannot be
+              undone.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRemoveMember} disabled={isRemoving}>
-              {isRemoving ? 'Removing...' : 'Remove'}
+            <AlertDialogAction
+              onClick={handleRemoveMember}
+              disabled={isRemoving}
+            >
+              {isRemoving ? "Removing..." : "Remove"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

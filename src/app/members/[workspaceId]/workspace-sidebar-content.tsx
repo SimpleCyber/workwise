@@ -1,12 +1,20 @@
-'use client';
+"use client";
 
-import { Clock, Crown, Settings, Shield, UserCheck, UserPlus, Users } from 'lucide-react';
-import { usePathname, useRouter } from 'next/navigation';
+import {
+  Clock,
+  Crown,
+  Settings,
+  Shield,
+  UserCheck,
+  UserPlus,
+  Users,
+} from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 
-import { WorkspaceSection } from '@/app/workspace/[workspaceId]/workspace-section';
-import { Button } from '@/components/ui/button';
-import { useCurrentMember } from '@/features/members/api/use-current-member';
-import { useWorkspaceId } from '@/hooks/use-workspace-id';
+import { WorkspaceSection } from "@/app/workspace/[workspaceId]/workspace-section";
+import { Button } from "@/components/ui/button";
+import { useCurrentMember } from "@/features/members/api/use-current-member";
+import { useWorkspaceId } from "@/hooks/use-workspace-id";
 
 export const WorkspaceSidebarContent = () => {
   const router = useRouter();
@@ -15,16 +23,22 @@ export const WorkspaceSidebarContent = () => {
   const { data: member } = useCurrentMember({ workspaceId });
 
   const navigateTo = (path: string) => {
-    const fullPath = path === '' ? `/members/${workspaceId}` : `/members/${workspaceId}${path}`;
+    const fullPath =
+      path === ""
+        ? `/members/${workspaceId}`
+        : `/members/${workspaceId}${path}`;
     router.push(fullPath);
   };
 
   const isActive = (path: string) => {
     const currentPath = pathname;
-    const targetPath = path === '' ? `/members/${workspaceId}` : `/members/${workspaceId}${path}`;
+    const targetPath =
+      path === ""
+        ? `/members/${workspaceId}`
+        : `/members/${workspaceId}${path}`;
 
-    if (path === '' && currentPath === `/members/${workspaceId}`) return true;
-    if (path !== '' && currentPath.includes(path)) return true;
+    if (path === "" && currentPath === `/members/${workspaceId}`) return true;
+    if (path !== "" && currentPath.includes(path)) return true;
     return false;
   };
 
@@ -33,33 +47,37 @@ export const WorkspaceSidebarContent = () => {
       <div className="mt-3 flex flex-col px-2">
         <Button
           variant="transparent"
-          className={`h-7 justify-start px-[18px] text-sm ${isActive('') ? 'bg-white/10 text-white' : 'text-[#f9EDFFCC] hover:bg-white/5'}`}
-          onClick={() => navigateTo('')}
+          className={`h-7 justify-start px-[18px] text-sm ${isActive("") ? "bg-white/10 text-white" : "text-[#f9EDFFCC] hover:bg-white/5"}`}
+          onClick={() => navigateTo("")}
         >
           <Users className="mr-1 size-3.5 shrink-0" />
           <span className="truncate text-sm">All Members</span>
         </Button>
 
-        {(member?.role === 'admin' || member?.role === 'lead') && (
+        {(member?.role === "admin" || member?.role === "lead") && (
           <Button
             variant="transparent"
             className={`h-7 justify-start px-[18px] text-sm ${
-              isActive('/admins') ? 'bg-white/10 text-white' : 'text-[#f9EDFFCC] hover:bg-white/5'
+              isActive("/admins")
+                ? "bg-white/10 text-white"
+                : "text-[#f9EDFFCC] hover:bg-white/5"
             }`}
-            onClick={() => navigateTo('/admins')}
+            onClick={() => navigateTo("/admins")}
           >
             <Shield className="mr-1 size-3.5 shrink-0" />
             <span className="truncate text-sm">Admins</span>
           </Button>
         )}
 
-        {(member?.role === 'admin' || member?.role === 'lead') && (
+        {(member?.role === "admin" || member?.role === "lead") && (
           <Button
             variant="transparent"
             className={`h-7 justify-start px-[18px] text-sm ${
-              isActive('/leads') ? 'bg-white/10 text-white' : 'text-[#f9EDFFCC] hover:bg-white/5'
+              isActive("/leads")
+                ? "bg-white/10 text-white"
+                : "text-[#f9EDFFCC] hover:bg-white/5"
             }`}
-            onClick={() => navigateTo('/leads')}
+            onClick={() => navigateTo("/leads")}
           >
             <Crown className="mr-1 size-3.5 shrink-0" />
             <span className="truncate text-sm">Team Leads</span>
@@ -69,9 +87,11 @@ export const WorkspaceSidebarContent = () => {
         <Button
           variant="transparent"
           className={`h-7 justify-start px-[18px] text-sm ${
-            isActive('/active') ? 'bg-white/10 text-white' : 'text-[#f9EDFFCC] hover:bg-white/5'
+            isActive("/active")
+              ? "bg-white/10 text-white"
+              : "text-[#f9EDFFCC] hover:bg-white/5"
           }`}
-          onClick={() => navigateTo('/active')}
+          onClick={() => navigateTo("/active")}
         >
           <UserCheck className="mr-1 size-3.5 shrink-0" />
           <span className="truncate text-sm">Active Members</span>
@@ -80,21 +100,25 @@ export const WorkspaceSidebarContent = () => {
         <Button
           variant="transparent"
           className={`h-7 justify-start px-[18px] text-sm ${
-            isActive('/recent') ? 'bg-white/10 text-white' : 'text-[#f9EDFFCC] hover:bg-white/5'
+            isActive("/recent")
+              ? "bg-white/10 text-white"
+              : "text-[#f9EDFFCC] hover:bg-white/5"
           }`}
-          onClick={() => navigateTo('/recent')}
+          onClick={() => navigateTo("/recent")}
         >
           <Clock className="mr-1 size-3.5 shrink-0" />
           <span className="truncate text-sm">Recently Joined</span>
         </Button>
 
-        {member?.role === 'admin' && (
+        {member?.role === "admin" && (
           <Button
             variant="transparent"
             className={`h-7 justify-start px-[18px] text-sm ${
-              isActive('/invite') ? 'bg-white/10 text-white' : 'text-[#f9EDFFCC] hover:bg-white/5'
+              isActive("/invite")
+                ? "bg-white/10 text-white"
+                : "text-[#f9EDFFCC] hover:bg-white/5"
             }`}
-            onClick={() => navigateTo('/invite')}
+            onClick={() => navigateTo("/invite")}
           >
             <UserPlus className="mr-1 size-3.5 shrink-0" />
             <span className="truncate text-sm">Invite Members</span>
@@ -103,11 +127,11 @@ export const WorkspaceSidebarContent = () => {
       </div>
 
       <WorkspaceSection label="Quick Actions" hint="Manage" onNew={() => {}}>
-        {member?.role === 'admin' && (
+        {member?.role === "admin" && (
           <Button
             variant="transparent"
             className="h-7 justify-start px-[18px] text-sm text-[#f9EDFFCC] hover:bg-white/5"
-            onClick={() => navigateTo('/settings')}
+            onClick={() => navigateTo("/settings")}
           >
             <Settings className="mr-1 size-3.5 shrink-0" />
             <span className="truncate text-sm">Member Settings</span>
@@ -117,7 +141,7 @@ export const WorkspaceSidebarContent = () => {
         <Button
           variant="transparent"
           className="h-7 justify-start px-[18px] text-sm text-[#f9EDFFCC] hover:bg-white/5"
-          onClick={() => navigateTo('/teams')}
+          onClick={() => navigateTo("/teams")}
         >
           <Users className="mr-1 size-3.5 shrink-0" />
           <span className="truncate text-sm">Teams</span>

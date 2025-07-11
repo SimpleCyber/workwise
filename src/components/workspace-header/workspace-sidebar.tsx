@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { AlertTriangle, Loader } from 'lucide-react';
-import { useCurrentMember } from '@/features/members/api/use-current-member';
-import { useGetWorkspace } from '@/features/workspaces/api/use-get-workspace';
-import { useWorkspaceId } from '@/hooks/use-workspace-id';
-import { WorkspaceHeader } from './workspace-header';
+import { AlertTriangle, Loader } from "lucide-react";
+import { useCurrentMember } from "@/features/members/api/use-current-member";
+import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace";
+import { useWorkspaceId } from "@/hooks/use-workspace-id";
+import { WorkspaceHeader } from "./workspace-header";
 
 interface WorkspaceSidebarProps {
   children: React.ReactNode;
@@ -13,8 +13,12 @@ interface WorkspaceSidebarProps {
 export const WorkspaceSidebar = ({ children }: WorkspaceSidebarProps) => {
   const workspaceId = useWorkspaceId();
 
-  const { data: member, isLoading: memberLoading } = useCurrentMember({ workspaceId });
-  const { data: workspace, isLoading: workspaceLoading } = useGetWorkspace({ id: workspaceId });
+  const { data: member, isLoading: memberLoading } = useCurrentMember({
+    workspaceId,
+  });
+  const { data: workspace, isLoading: workspaceLoading } = useGetWorkspace({
+    id: workspaceId,
+  });
 
   if (memberLoading || workspaceLoading) {
     return (
@@ -35,7 +39,10 @@ export const WorkspaceSidebar = ({ children }: WorkspaceSidebarProps) => {
 
   return (
     <div className="flex h-full flex-col gap-y-2 bg-[#5E2C5F] rounded-md">
-      <WorkspaceHeader workspace={workspace} isAdmin={member.role === 'admin'} />
+      <WorkspaceHeader
+        workspace={workspace}
+        isAdmin={member.role === "admin"}
+      />
       {children}
     </div>
   );

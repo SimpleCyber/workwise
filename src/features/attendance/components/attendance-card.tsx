@@ -1,16 +1,22 @@
-'use client';
+"use client";
 
-import { CheckCircle, MapPin, MessageSquare, UserX, XCircle } from 'lucide-react';
+import {
+  CheckCircle,
+  MapPin,
+  MessageSquare,
+  UserX,
+  XCircle,
+} from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface AttendanceCardProps {
   record: any;
   onViewDetails: (record: any) => void;
-  onQuickAction?: (id: string, action: 'approve' | 'reject') => void;
+  onQuickAction?: (id: string, action: "approve" | "reject") => void;
   showQuickActions?: boolean;
   compact?: boolean;
 }
@@ -22,22 +28,25 @@ export const AttendanceCard = ({
   showQuickActions = false,
   compact = false,
 }: AttendanceCardProps) => {
-  const isAbsent = record.status === 'absent' || record.checkInTime === 0;
-  const isPending = record.status === 'pending';
-  const isApproved = record.status === 'approved';
-  const isRejected = record.status === 'rejected';
+  const isAbsent = record.status === "absent" || record.checkInTime === 0;
+  const isPending = record.status === "pending";
+  const isApproved = record.status === "approved";
+  const isRejected = record.status === "rejected";
 
   const formatTime = (timestamp: number) => {
-    if (timestamp === 0) return 'Absent';
-    return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (timestamp === 0) return "Absent";
+    return new Date(timestamp).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   const getStatusColor = () => {
-    if (isAbsent) return 'text-gray-500';
-    if (isPending) return 'text-yellow-500';
-    if (isApproved) return 'text-green-500';
-    if (isRejected) return 'text-red-500';
-    return 'text-gray-500';
+    if (isAbsent) return "text-gray-500";
+    if (isPending) return "text-yellow-500";
+    if (isApproved) return "text-green-500";
+    if (isRejected) return "text-red-500";
+    return "text-gray-500";
   };
 
   const getStatusBadge = () => {
@@ -49,19 +58,28 @@ export const AttendanceCard = ({
       );
     if (isPending)
       return (
-        <Badge variant="outline" className="text-xs border-yellow-500 text-yellow-700">
+        <Badge
+          variant="outline"
+          className="text-xs border-yellow-500 text-yellow-700"
+        >
           Pending
         </Badge>
       );
     if (isApproved)
       return (
-        <Badge variant="outline" className="text-xs border-green-500 text-green-700">
+        <Badge
+          variant="outline"
+          className="text-xs border-green-500 text-green-700"
+        >
           Approved
         </Badge>
       );
     if (isRejected)
       return (
-        <Badge variant="outline" className="text-xs border-red-500 text-red-700">
+        <Badge
+          variant="outline"
+          className="text-xs border-red-500 text-red-700"
+        >
           Rejected
         </Badge>
       );
@@ -69,20 +87,28 @@ export const AttendanceCard = ({
   };
 
   return (
-    <Card className={`group hover:shadow-md transition-all duration-200 cursor-pointer ${compact ? 'h-auto' : ''}`}>
-      <CardContent className={`${compact ? 'p-4' : 'p-6'}`}>
+    <Card
+      className={`group hover:shadow-md transition-all duration-200 cursor-pointer ${compact ? "h-auto" : ""}`}
+    >
+      <CardContent className={`${compact ? "p-4" : "p-6"}`}>
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
-            <Avatar className={compact ? 'w-8 h-8' : 'w-10 h-10'}>
-              <AvatarImage src={record.user?.image || '/placeholder.svg'} />
+            <Avatar className={compact ? "w-8 h-8" : "w-10 h-10"}>
+              <AvatarImage src={record.user?.image || "/placeholder.svg"} />
               <AvatarFallback className="bg-primary/10 text-primary font-medium">
                 {record.user?.name?.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className={`font-medium ${compact ? 'text-sm' : 'text-base'}`}>{record.user?.name}</p>
-              {!compact && <p className="text-xs text-muted-foreground">{record.user?.email}</p>}
+              <p className={`font-medium ${compact ? "text-sm" : "text-base"}`}>
+                {record.user?.name}
+              </p>
+              {!compact && (
+                <p className="text-xs text-muted-foreground">
+                  {record.user?.email}
+                </p>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -115,13 +141,19 @@ export const AttendanceCard = ({
               {/* Check In */}
               <div className="flex items-center justify-between py-2 px-3 bg-muted/30 rounded-lg">
                 <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${getStatusColor().replace('text-', 'bg-')}`} />
-                  <span className="text-sm">In: {formatTime(record.checkInTime)}</span>
+                  <div
+                    className={`w-2 h-2 rounded-full ${getStatusColor().replace("text-", "bg-")}`}
+                  />
+                  <span className="text-sm">
+                    In: {formatTime(record.checkInTime)}
+                  </span>
                 </div>
                 {!compact && record.workLocation && (
                   <div className="flex items-center gap-1">
                     <MapPin className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">{record.workLocation === 'home' ? 'WFH' : 'Office'}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {record.workLocation === "home" ? "WFH" : "Office"}
+                    </span>
                   </div>
                 )}
               </div>
@@ -130,9 +162,14 @@ export const AttendanceCard = ({
               <div className="flex items-center justify-between py-2 px-3 bg-muted/30 rounded-lg">
                 <div className="flex items-center gap-2">
                   <div
-                    className={`w-2 h-2 rounded-full ${record.checkOutTime ? getStatusColor().replace('text-', 'bg-') : 'bg-gray-300'}`}
+                    className={`w-2 h-2 rounded-full ${record.checkOutTime ? getStatusColor().replace("text-", "bg-") : "bg-gray-300"}`}
                   />
-                  <span className="text-sm">Out: {record.checkOutTime ? formatTime(record.checkOutTime) : 'Not checked out'}</span>
+                  <span className="text-sm">
+                    Out:{" "}
+                    {record.checkOutTime
+                      ? formatTime(record.checkOutTime)
+                      : "Not checked out"}
+                  </span>
                 </div>
               </div>
             </>
@@ -147,7 +184,7 @@ export const AttendanceCard = ({
                 className="flex-1 h-8 text-xs bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onQuickAction(record._id, 'approve');
+                  onQuickAction(record._id, "approve");
                 }}
               >
                 <CheckCircle className="w-3 h-3 mr-1" />
@@ -159,7 +196,7 @@ export const AttendanceCard = ({
                 className="flex-1 h-8 text-xs bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onQuickAction(record._id, 'reject');
+                  onQuickAction(record._id, "reject");
                 }}
               >
                 <XCircle className="w-3 h-3 mr-1" />
@@ -176,8 +213,17 @@ export const AttendanceCard = ({
               <span>{new Date(record.date).toLocaleDateString()}</span>
               {record.checkOutTime && record.checkInTime > 0 && (
                 <span>
-                  {Math.floor((record.checkOutTime - record.checkInTime) / (1000 * 60 * 60))}h{' '}
-                  {Math.floor(((record.checkOutTime - record.checkInTime) % (1000 * 60 * 60)) / (1000 * 60))}m
+                  {Math.floor(
+                    (record.checkOutTime - record.checkInTime) /
+                      (1000 * 60 * 60),
+                  )}
+                  h{" "}
+                  {Math.floor(
+                    ((record.checkOutTime - record.checkInTime) %
+                      (1000 * 60 * 60)) /
+                      (1000 * 60),
+                  )}
+                  m
                 </span>
               )}
             </div>

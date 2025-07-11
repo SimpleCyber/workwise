@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useQuery } from 'convex/react';
+import { useQuery } from "convex/react";
 
-import { api } from '@/../convex/_generated/api';
-import type { Id } from '@/../convex/_generated/dataModel';
+import { api } from "@/../convex/_generated/api";
+import type { Id } from "@/../convex/_generated/dataModel";
 
 interface UseGetMembersProps {
-  workspaceId: Id<'workspaces'>;
+  workspaceId: Id<"workspaces">;
 }
 
 export const useGetMembers = ({ workspaceId }: UseGetMembersProps) => {

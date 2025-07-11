@@ -1,15 +1,15 @@
-import { differenceInMinutes, format, isToday, isYesterday } from 'date-fns';
-import { Loader } from 'lucide-react';
-import { useState } from 'react';
+import { differenceInMinutes, format, isToday, isYesterday } from "date-fns";
+import { Loader } from "lucide-react";
+import { useState } from "react";
 
-import { useCurrentMember } from '@/features/members/api/use-current-member';
-import type { GetMessagesReturnType } from '@/features/messages/api/use-get-messages';
-import { useWorkspaceId } from '@/hooks/use-workspace-id';
+import { useCurrentMember } from "@/features/members/api/use-current-member";
+import type { GetMessagesReturnType } from "@/features/messages/api/use-get-messages";
+import { useWorkspaceId } from "@/hooks/use-workspace-id";
 
-import { Id } from '../../convex/_generated/dataModel';
-import { ChannelHero } from './channel-hero';
-import { ConversationHero } from './conversation-hero';
-import { Message } from './message';
+import { Id } from "../../convex/_generated/dataModel";
+import { ChannelHero } from "./channel-hero";
+import { ConversationHero } from "./conversation-hero";
+import { Message } from "./message";
 
 const TIME_THRESHOLD = 5;
 
@@ -18,7 +18,7 @@ interface MessageListProps {
   memberImage?: string;
   channelName?: string;
   channelCreationTime?: number;
-  variant?: 'channel' | 'thread' | 'conversation';
+  variant?: "channel" | "thread" | "conversation";
   data: GetMessagesReturnType | undefined;
   loadMore: () => void;
   isLoadingMore: boolean;
@@ -28,10 +28,10 @@ interface MessageListProps {
 const formatDateLabel = (dateStr: string) => {
   const date = new Date(dateStr);
 
-  if (isToday(date)) return 'Today';
-  if (isYesterday(date)) return 'Yesterday';
+  if (isToday(date)) return "Today";
+  if (isYesterday(date)) return "Yesterday";
 
-  return format(date, 'EEEE, MMMM d');
+  return format(date, "EEEE, MMMM d");
 };
 
 export const MessageList = ({
@@ -40,12 +40,12 @@ export const MessageList = ({
   channelName,
   channelCreationTime,
   data,
-  variant = 'channel',
+  variant = "channel",
   loadMore,
   isLoadingMore,
   canLoadMore,
 }: MessageListProps) => {
-  const [editingId, setEditingId] = useState<Id<'messages'> | null>(null);
+  const [editingId, setEditingId] = useState<Id<"messages"> | null>(null);
 
   const workspaceId = useWorkspaceId();
 
@@ -54,7 +54,7 @@ export const MessageList = ({
   const groupedMessages = data?.reduce(
     (groups, message) => {
       const date = new Date(message._creationTime);
-      const dateKey = format(date, 'yyyy-MM-dd');
+      const dateKey = format(date, "yyyy-MM-dd");
 
       if (!groups[dateKey]) {
         groups[dateKey] = [];
@@ -84,7 +84,10 @@ export const MessageList = ({
             const isCompact =
               prevMessage &&
               prevMessage.user._id === message.user._id &&
-              differenceInMinutes(new Date(message._creationTime), new Date(prevMessage._creationTime)) < TIME_THRESHOLD;
+              differenceInMinutes(
+                new Date(message._creationTime),
+                new Date(prevMessage._creationTime),
+              ) < TIME_THRESHOLD;
 
             return (
               <Message
@@ -106,7 +109,7 @@ export const MessageList = ({
                 isEditing={editingId === message._id}
                 setEditingId={setEditingId}
                 isCompact={isCompact}
-                hideThreadButton={variant === 'thread'}
+                hideThreadButton={variant === "thread"}
               />
             );
           })}
@@ -141,8 +144,12 @@ export const MessageList = ({
         </div>
       )}
 
-      {variant === 'channel' && channelName && channelCreationTime && <ChannelHero name={channelName} creationTime={channelCreationTime} />}
-      {variant === 'conversation' && <ConversationHero name={memberName} image={memberImage} />}
+      {variant === "channel" && channelName && channelCreationTime && (
+        <ChannelHero name={channelName} creationTime={channelCreationTime} />
+      )}
+      {variant === "conversation" && (
+        <ConversationHero name={memberName} image={memberImage} />
+      )}
     </div>
   );
 };

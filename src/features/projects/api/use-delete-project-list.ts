@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useMutation } from 'convex/react';
-import { useCallback, useMemo, useState } from 'react';
+import { useMutation } from "convex/react";
+import { useCallback, useMemo, useState } from "react";
 
-import { api } from '../../../../convex/_generated/api';
-import type { Id } from '../../../../convex/_generated/dataModel';
+import { api } from "../../../../convex/_generated/api";
+import type { Id } from "../../../../convex/_generated/dataModel";
 
 type RequestType = {
-  listId: Id<'projectLists'>;
+  listId: Id<"projectLists">;
 };
 
 type ResponseType = void;
@@ -22,12 +22,14 @@ type Options = {
 export const useDeleteProjectList = () => {
   const [data, setData] = useState<ResponseType>(undefined);
   const [error, setError] = useState<Error | null>(null);
-  const [status, setStatus] = useState<'success' | 'error' | 'settled' | 'pending' | null>(null);
+  const [status, setStatus] = useState<
+    "success" | "error" | "settled" | "pending" | null
+  >(null);
 
-  const isPending = useMemo(() => status === 'pending', [status]);
-  const isSuccess = useMemo(() => status === 'success', [status]);
-  const isError = useMemo(() => status === 'error', [status]);
-  const isSettled = useMemo(() => status === 'settled', [status]);
+  const isPending = useMemo(() => status === "pending", [status]);
+  const isSuccess = useMemo(() => status === "success", [status]);
+  const isError = useMemo(() => status === "error", [status]);
+  const isSettled = useMemo(() => status === "settled", [status]);
 
   const mutation = useMutation(api.projects.deleteProjectList);
 
@@ -36,15 +38,15 @@ export const useDeleteProjectList = () => {
       try {
         setData(undefined);
         setError(null);
-        setStatus('pending');
+        setStatus("pending");
 
         const response = await mutation(values);
         setData(response);
-        setStatus('success');
+        setStatus("success");
         options?.onSuccess?.(response);
         return response;
       } catch (error) {
-        setStatus('error');
+        setStatus("error");
         const err = error as Error;
         setError(err);
         options?.onError?.(err);
@@ -52,7 +54,7 @@ export const useDeleteProjectList = () => {
           throw error;
         }
       } finally {
-        setStatus('settled');
+        setStatus("settled");
         options?.onSettled?.();
       }
     },

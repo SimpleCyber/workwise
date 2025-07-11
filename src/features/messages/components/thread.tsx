@@ -1,22 +1,22 @@
-import { differenceInMinutes, format, isToday, isYesterday } from 'date-fns';
-import { AlertTriangle, Loader, XIcon } from 'lucide-react';
-import dynamic from 'next/dynamic';
-import type Quill from 'quill';
-import { useRef, useState } from 'react';
-import { toast } from 'sonner';
+import { differenceInMinutes, format, isToday, isYesterday } from "date-fns";
+import { AlertTriangle, Loader, XIcon } from "lucide-react";
+import dynamic from "next/dynamic";
+import type Quill from "quill";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
 
-import type { Id } from '@/../convex/_generated/dataModel';
-import { Message } from '@/components/message';
-import { Button } from '@/components/ui/button';
-import { useCurrentMember } from '@/features/members/api/use-current-member';
-import { useCreateMessage } from '@/features/messages/api/use-create-message';
-import { useGetMessage } from '@/features/messages/api/use-get-message';
-import { useGetMessages } from '@/features/messages/api/use-get-messages';
-import { useGenerateUploadUrl } from '@/features/upload/api/use-generate-upload-url';
-import { useChannelId } from '@/hooks/use-channel-id';
-import { useWorkspaceId } from '@/hooks/use-workspace-id';
+import type { Id } from "@/../convex/_generated/dataModel";
+import { Message } from "@/components/message";
+import { Button } from "@/components/ui/button";
+import { useCurrentMember } from "@/features/members/api/use-current-member";
+import { useCreateMessage } from "@/features/messages/api/use-create-message";
+import { useGetMessage } from "@/features/messages/api/use-get-message";
+import { useGetMessages } from "@/features/messages/api/use-get-messages";
+import { useGenerateUploadUrl } from "@/features/upload/api/use-generate-upload-url";
+import { useChannelId } from "@/hooks/use-channel-id";
+import { useWorkspaceId } from "@/hooks/use-workspace-id";
 
-const Editor = dynamic(() => import('@/components/editor'), {
+const Editor = dynamic(() => import("@/components/editor"), {
   ssr: false,
   loading: () => (
     <div className="flex h-full items-center justify-center">
@@ -30,22 +30,22 @@ const TIME_THRESHOLD = 5;
 const formatDateLabel = (dateStr: string) => {
   const date = new Date(dateStr);
 
-  if (isToday(date)) return 'Today';
-  if (isYesterday(date)) return 'Yesterday';
+  if (isToday(date)) return "Today";
+  if (isYesterday(date)) return "Yesterday";
 
-  return format(date, 'EEEE, MMMM d');
+  return format(date, "EEEE, MMMM d");
 };
 
 type CreateMessageValues = {
-  channelId: Id<'channels'>;
-  workspaceId: Id<'workspaces'>;
-  parentMessageId: Id<'messages'>;
+  channelId: Id<"channels">;
+  workspaceId: Id<"workspaces">;
+  parentMessageId: Id<"messages">;
   body: string;
-  image?: Id<'_storage'>;
+  image?: Id<"_storage">;
 };
 
 interface ThreadProps {
-  messageId: Id<'messages'>;
+  messageId: Id<"messages">;
   onClose: () => void;
 }
 
@@ -53,14 +53,16 @@ export const Thread = ({ messageId, onClose }: ThreadProps) => {
   const channelId = useChannelId();
   const workspaceId = useWorkspaceId();
 
-  const [editingId, setEditingId] = useState<Id<'messages'> | null>(null);
+  const [editingId, setEditingId] = useState<Id<"messages"> | null>(null);
   const [editorKey, setEditorKey] = useState(0);
   const [isPending, setIsPending] = useState(false);
 
   const innerRef = useRef<Quill | null>(null);
 
   const { data: currentMember } = useCurrentMember({ workspaceId });
-  const { data: message, isLoading: isMessageLoading } = useGetMessage({ id: messageId });
+  const { data: message, isLoading: isMessageLoading } = useGetMessage({
+    id: messageId,
+  });
 
   const { mutate: createMessage } = useCreateMessage();
   const { mutate: generateUploadUrl } = useGenerateUploadUrl();
@@ -69,10 +71,16 @@ export const Thread = ({ messageId, onClose }: ThreadProps) => {
     parentMessageId: messageId,
   });
 
-  const canLoadMore = status === 'CanLoadMore';
-  const isLoadingMore = status === 'LoadingMore';
+  const canLoadMore = status === "CanLoadMore";
+  const isLoadingMore = status === "LoadingMore";
 
-  const handleSubmit = async ({ body, image }: { body: string; image: File | null }) => {
+  const handleSubmit = async ({
+    body,
+    image,
+  }: {
+    body: string;
+    image: File | null;
+  }) => {
     try {
       setIsPending(true);
       innerRef.current?.enable(false);
@@ -93,15 +101,15 @@ export const Thread = ({ messageId, onClose }: ThreadProps) => {
           },
         );
 
-        if (!url) throw new Error('URL not found.');
+        if (!url) throw new Error("URL not found.");
 
         const result = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-type': image.type },
+          method: "POST",
+          headers: { "Content-type": image.type },
           body: image,
         });
 
-        if (!result.ok) throw new Error('Failed to upload image.');
+        if (!result.ok) throw new Error("Failed to upload image.");
 
         const { storageId } = await result.json();
 
@@ -112,7 +120,7 @@ export const Thread = ({ messageId, onClose }: ThreadProps) => {
 
       setEditorKey((prevKey) => prevKey + 1);
     } catch (error) {
-      toast.error('Failed to send message.');
+      toast.error("Failed to send message.");
     } finally {
       setIsPending(false);
       innerRef?.current?.enable(true);
@@ -122,7 +130,7 @@ export const Thread = ({ messageId, onClose }: ThreadProps) => {
   const groupedMessages = results?.reduce(
     (groups, message) => {
       const date = new Date(message._creationTime);
-      const dateKey = format(date, 'yyyy-MM-dd');
+      const dateKey = format(date, "yyyy-MM-dd");
 
       if (!groups[dateKey]) {
         groups[dateKey] = [];
@@ -135,7 +143,7 @@ export const Thread = ({ messageId, onClose }: ThreadProps) => {
     {} as Record<string, typeof results>,
   );
 
-  if (isMessageLoading || status === 'LoadingFirstPage') {
+  if (isMessageLoading || status === "LoadingFirstPage") {
     return (
       <div className="flex h-full flex-col">
         <div className="flex h-[49px] items-center justify-between border-b px-4">
@@ -198,7 +206,10 @@ export const Thread = ({ messageId, onClose }: ThreadProps) => {
               const isCompact =
                 prevMessage &&
                 prevMessage.user._id === message.user._id &&
-                differenceInMinutes(new Date(message._creationTime), new Date(prevMessage._creationTime)) < TIME_THRESHOLD;
+                differenceInMinutes(
+                  new Date(message._creationTime),
+                  new Date(prevMessage._creationTime),
+                ) < TIME_THRESHOLD;
 
               return (
                 <Message
@@ -273,7 +284,13 @@ export const Thread = ({ messageId, onClose }: ThreadProps) => {
       </div>
 
       <div className="px-4">
-        <Editor key={editorKey} onSubmit={handleSubmit} innerRef={innerRef} disabled={isPending} placeholder="Reply..." />
+        <Editor
+          key={editorKey}
+          onSubmit={handleSubmit}
+          innerRef={innerRef}
+          disabled={isPending}
+          placeholder="Reply..."
+        />
       </div>
     </div>
   );

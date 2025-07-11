@@ -1,54 +1,61 @@
-'use client';
+"use client";
 
-import { format } from 'date-fns';
-import { Archive, Calendar, CheckSquare, Edit, MoreHorizontal, Trash2 } from 'lucide-react';
-import type React from 'react';
-import { useState } from 'react';
-import { toast } from 'sonner';
+import { format } from "date-fns";
+import {
+  Archive,
+  Calendar,
+  CheckSquare,
+  Edit,
+  MoreHorizontal,
+  Trash2,
+} from "lucide-react";
+import type React from "react";
+import { useState } from "react";
+import { toast } from "sonner";
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useDeleteCard } from '@/features/todos/api/use-delete-card';
-import { useUpdateCard } from '@/features/todos/api/use-update-card';
+} from "@/components/ui/dropdown-menu";
+import { useDeleteCard } from "@/features/todos/api/use-delete-card";
+import { useUpdateCard } from "@/features/todos/api/use-update-card";
 
-import type { Id } from '../../../../convex/_generated/dataModel';
-import { CardDetailModal } from './card-detail-modal';
+import type { Id } from "../../../../convex/_generated/dataModel";
+import { CardDetailModal } from "./card-detail-modal";
 
 interface KanbanCardProps {
   card: {
-    _id: Id<'todoCards'>;
+    _id: Id<"todoCards">;
     title: string;
     description?: string;
-    listId: Id<'todoLists'>;
-    boardId: Id<'todoBoards'>;
-    memberId: Id<'members'>;
-    workspaceId: Id<'workspaces'>;
+    listId: Id<"todoLists">;
+    boardId: Id<"todoBoards">;
+    memberId: Id<"members">;
+    workspaceId: Id<"workspaces">;
     position: number;
     dueDate?: number;
     isCompleted?: boolean;
     isArchived?: boolean;
     labels?: string[];
-    attachments?: Id<'_storage'>[];
+    attachments?: Id<"_storage">[];
     createdAt: number;
     updatedAt: number;
   };
 }
 
 const labelColors = [
-  'bg-red-100 text-red-800',
-  'bg-blue-100 text-blue-800',
-  'bg-green-100 text-green-800',
-  'bg-yellow-100 text-yellow-800',
-  'bg-purple-100 text-purple-800',
-  'bg-pink-100 text-pink-800',
+  "bg-red-100 text-red-800",
+  "bg-blue-100 text-blue-800",
+  "bg-green-100 text-green-800",
+  "bg-yellow-100 text-yellow-800",
+  "bg-purple-100 text-purple-800",
+  "bg-pink-100 text-pink-800",
 ];
 
 export const KanbanCard = ({ card }: KanbanCardProps) => {
@@ -56,7 +63,8 @@ export const KanbanCard = ({ card }: KanbanCardProps) => {
   const { mutate: updateCard } = useUpdateCard();
   const { mutate: deleteCard, isPending: isDeleting } = useDeleteCard();
 
-  const isDueSoon = card.dueDate && card.dueDate < Date.now() + 24 * 60 * 60 * 1000;
+  const isDueSoon =
+    card.dueDate && card.dueDate < Date.now() + 24 * 60 * 60 * 1000;
   const isOverdue = card.dueDate && card.dueDate < Date.now();
 
   const handleArchive = (e: React.MouseEvent) => {
@@ -68,10 +76,10 @@ export const KanbanCard = ({ card }: KanbanCardProps) => {
       },
       {
         onSuccess: () => {
-          toast.success('Card archived successfully');
+          toast.success("Card archived successfully");
         },
         onError: (error) => {
-          toast.error(error.message || 'Failed to archive card');
+          toast.error(error.message || "Failed to archive card");
         },
       },
     );
@@ -79,15 +87,19 @@ export const KanbanCard = ({ card }: KanbanCardProps) => {
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm('Are you sure you want to delete this card? This action cannot be undone.')) {
+    if (
+      confirm(
+        "Are you sure you want to delete this card? This action cannot be undone.",
+      )
+    ) {
       deleteCard(
         { cardId: card._id },
         {
           onSuccess: () => {
-            toast.success('Card deleted successfully');
+            toast.success("Card deleted successfully");
           },
           onError: (error) => {
-            toast.error(error.message || 'Failed to delete card');
+            toast.error(error.message || "Failed to delete card");
           },
         },
       );
@@ -103,10 +115,14 @@ export const KanbanCard = ({ card }: KanbanCardProps) => {
       },
       {
         onSuccess: () => {
-          toast.success(card.isCompleted ? 'Card marked as incomplete' : 'Card marked as complete');
+          toast.success(
+            card.isCompleted
+              ? "Card marked as incomplete"
+              : "Card marked as complete",
+          );
         },
         onError: (error) => {
-          toast.error(error.message || 'Failed to update card');
+          toast.error(error.message || "Failed to update card");
         },
       },
     );
@@ -114,11 +130,16 @@ export const KanbanCard = ({ card }: KanbanCardProps) => {
 
   return (
     <>
-      <Card className="cursor-pointer hover:shadow-md transition-shadow bg-white group" onClick={() => setIsModalOpen(true)}>
+      <Card
+        className="cursor-pointer hover:shadow-md transition-shadow bg-white group"
+        onClick={() => setIsModalOpen(true)}
+      >
         <CardContent className="p-3 space-y-2">
           <div className="flex items-start justify-between">
             {/* Title */}
-            <h4 className="text-sm font-medium leading-tight flex-1">{card.title}</h4>
+            <h4 className="text-sm font-medium leading-tight flex-1">
+              {card.title}
+            </h4>
 
             {/* Actions dropdown */}
             <DropdownMenu>
@@ -144,14 +165,18 @@ export const KanbanCard = ({ card }: KanbanCardProps) => {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleToggleComplete}>
                   <CheckSquare className="size-4 mr-2" />
-                  {card.isCompleted ? 'Mark Incomplete' : 'Mark Complete'}
+                  {card.isCompleted ? "Mark Incomplete" : "Mark Complete"}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleArchive}>
                   <Archive className="size-4 mr-2" />
                   Archive
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive" disabled={isDeleting}>
+                <DropdownMenuItem
+                  onClick={handleDelete}
+                  className="text-destructive focus:text-destructive"
+                  disabled={isDeleting}
+                >
                   <Trash2 className="size-4 mr-2" />
                   Delete
                 </DropdownMenuItem>
@@ -160,7 +185,11 @@ export const KanbanCard = ({ card }: KanbanCardProps) => {
           </div>
 
           {/* Description preview */}
-          {card.description && <p className="text-xs text-muted-foreground line-clamp-2">{card.description}</p>}
+          {card.description && (
+            <p className="text-xs text-muted-foreground line-clamp-2">
+              {card.description}
+            </p>
+          )}
 
           {/* Due date */}
           {card.dueDate && (
@@ -168,10 +197,14 @@ export const KanbanCard = ({ card }: KanbanCardProps) => {
               <Calendar className="size-3" />
               <span
                 className={`text-xs ${
-                  isOverdue ? 'text-red-600 font-medium' : isDueSoon ? 'text-yellow-600 font-medium' : 'text-muted-foreground'
+                  isOverdue
+                    ? "text-red-600 font-medium"
+                    : isDueSoon
+                      ? "text-yellow-600 font-medium"
+                      : "text-muted-foreground"
                 }`}
               >
-                {format(card.dueDate, 'MMM d')}
+                {format(card.dueDate, "MMM d")}
               </span>
             </div>
           )}
@@ -181,7 +214,11 @@ export const KanbanCard = ({ card }: KanbanCardProps) => {
             {card.labels && card.labels.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {card.labels.slice(0, 3).map((label, index) => (
-                  <Badge key={label} variant="secondary" className={`text-xs px-2 py-0.5 ${labelColors[index % labelColors.length]}`}>
+                  <Badge
+                    key={label}
+                    variant="secondary"
+                    className={`text-xs px-2 py-0.5 ${labelColors[index % labelColors.length]}`}
+                  >
                     {label}
                   </Badge>
                 ))}
@@ -193,12 +230,18 @@ export const KanbanCard = ({ card }: KanbanCardProps) => {
               </div>
             )}
 
-            {card.isCompleted && <CheckSquare className="size-4 text-green-600" />}
+            {card.isCompleted && (
+              <CheckSquare className="size-4 text-green-600" />
+            )}
           </div>
         </CardContent>
       </Card>
 
-      <CardDetailModal card={card} open={isModalOpen} onOpenChange={setIsModalOpen} />
+      <CardDetailModal
+        card={card}
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+      />
     </>
   );
 };

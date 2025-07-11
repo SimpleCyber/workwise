@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { Loader, TriangleAlert } from 'lucide-react';
+import { Loader, TriangleAlert } from "lucide-react";
 
-import { useGetBoard } from '@/features/todos/api/use-get-board';
-import { useGetLists } from '@/features/todos/api/use-get-lists';
-import { KanbanBoard } from '@/features/todos/components/kanban-board';
+import { useGetBoard } from "@/features/todos/api/use-get-board";
+import { useGetLists } from "@/features/todos/api/use-get-lists";
+import { KanbanBoard } from "@/features/todos/components/kanban-board";
 
-import type { Id } from '../../../../../../convex/_generated/dataModel';
+import type { Id } from "../../../../../../convex/_generated/dataModel";
 
 interface BoardPageProps {
   params: {
@@ -16,7 +16,7 @@ interface BoardPageProps {
 }
 
 const BoardPage = ({ params }: BoardPageProps) => {
-  const boardId = params.boardId as Id<'todoBoards'>;
+  const boardId = params.boardId as Id<"todoBoards">;
   const { data: board, isLoading: boardLoading } = useGetBoard({ boardId });
   const { data: lists, isLoading: listsLoading } = useGetLists({ boardId });
 
@@ -41,7 +41,11 @@ const BoardPage = ({ params }: BoardPageProps) => {
     <div className="flex h-full flex-col">
       <div className="flex h-[49px] items-center border-b bg-white px-4">
         <h1 className="text-lg font-semibold">{board.name}</h1>
-        {board.description && <span className="ml-4 text-sm text-muted-foreground">{board.description}</span>}
+        {board.description && (
+          <span className="ml-4 text-sm text-muted-foreground">
+            {board.description}
+          </span>
+        )}
       </div>
       <div className="flex-1 overflow-hidden">
         <KanbanBoard boardId={boardId} lists={lists || []} />

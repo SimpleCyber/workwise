@@ -1,40 +1,56 @@
-'use client';
+"use client";
 
-import { ChevronDown, ListFilter, SquarePen } from 'lucide-react';
-import { useState } from 'react';
+import { ChevronDown, ListFilter, SquarePen } from "lucide-react";
+import { useState } from "react";
 
-import { Doc } from '@/../convex/_generated/dataModel';
-import { Hint } from '@/components/hint';
-import { Button } from '@/components/ui/button';
+import { Doc } from "@/../convex/_generated/dataModel";
+import { Hint } from "@/components/hint";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 
-import { InviteModal } from '../../app/workspace/[workspaceId]/invite-modal';
-import { PreferencesModal } from '../../app/workspace/[workspaceId]/preferences-modal';
+import { InviteModal } from "../../app/workspace/[workspaceId]/invite-modal";
+import { PreferencesModal } from "../../app/workspace/[workspaceId]/preferences-modal";
 
 interface WorkspaceHeaderProps {
-  workspace: Doc<'workspaces'>;
+  workspace: Doc<"workspaces">;
   isAdmin: boolean;
 }
 
-export const WorkspaceHeader = ({ workspace, isAdmin }: WorkspaceHeaderProps) => {
+export const WorkspaceHeader = ({
+  workspace,
+  isAdmin,
+}: WorkspaceHeaderProps) => {
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
 
   return (
     <>
-      <PreferencesModal open={preferencesOpen} setOpen={setPreferencesOpen} initialValue={workspace.name} />
-      <InviteModal open={inviteOpen} setOpen={setInviteOpen} name={workspace.name} joinCode={workspace.joinCode} />
+      <PreferencesModal
+        open={preferencesOpen}
+        setOpen={setPreferencesOpen}
+        initialValue={workspace.name}
+      />
+      <InviteModal
+        open={inviteOpen}
+        setOpen={setInviteOpen}
+        name={workspace.name}
+        joinCode={workspace.joinCode}
+      />
 
       <div className="flex h-[49px] items-center justify-between gap-0.5 px-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="transparent" className="w-auto overflow-hidden p-1.5 text-lg font-semibold" size="sm">
+            <Button
+              variant="transparent"
+              className="w-auto overflow-hidden p-1.5 text-lg font-semibold"
+              size="sm"
+            >
               <span className="truncate">{workspace.name}</span>
               <ChevronDown className="ml-1 size-4 shrink-0" />
             </Button>
@@ -48,7 +64,9 @@ export const WorkspaceHeader = ({ workspace, isAdmin }: WorkspaceHeaderProps) =>
 
               <div className="flex flex-col items-start">
                 <p className="font-bold">{workspace.name}</p>
-                <p className="text-xs text-muted-foreground">Active workspace</p>
+                <p className="text-xs text-muted-foreground">
+                  Active workspace
+                </p>
               </div>
             </DropdownMenuItem>
 
@@ -56,13 +74,19 @@ export const WorkspaceHeader = ({ workspace, isAdmin }: WorkspaceHeaderProps) =>
               <>
                 <DropdownMenuSeparator />
 
-                <DropdownMenuItem className="cursor-pointer py-2" onClick={() => setInviteOpen(true)}>
+                <DropdownMenuItem
+                  className="cursor-pointer py-2"
+                  onClick={() => setInviteOpen(true)}
+                >
                   Invite people to {workspace.name}
                 </DropdownMenuItem>
 
                 <DropdownMenuSeparator />
 
-                <DropdownMenuItem className="cursor-pointer py-2" onClick={() => setPreferencesOpen(true)}>
+                <DropdownMenuItem
+                  className="cursor-pointer py-2"
+                  onClick={() => setPreferencesOpen(true)}
+                >
                   Preferences
                 </DropdownMenuItem>
               </>

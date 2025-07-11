@@ -1,17 +1,23 @@
-import { ImageIcon, Smile, XIcon } from 'lucide-react';
-import Image from 'next/image';
-import Quill, { type QuillOptions } from 'quill';
-import type { Delta, Op } from 'quill/core';
-import 'quill/dist/quill.snow.css';
-import { type MutableRefObject, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { MdSend } from 'react-icons/md';
-import { PiTextAa } from 'react-icons/pi';
+import { ImageIcon, Smile, XIcon } from "lucide-react";
+import Image from "next/image";
+import Quill, { type QuillOptions } from "quill";
+import type { Delta, Op } from "quill/core";
+import "quill/dist/quill.snow.css";
+import {
+  type MutableRefObject,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import { MdSend } from "react-icons/md";
+import { PiTextAa } from "react-icons/pi";
 
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-import { EmojiPopover } from './emoji-popover';
-import { Hint } from './hint';
+import { EmojiPopover } from "./emoji-popover";
+import { Hint } from "./hint";
 
 type EditorValue = {
   image: File | null;
@@ -25,19 +31,19 @@ interface EditorProps {
   defaultValue?: Delta | Op[];
   disabled?: boolean;
   innerRef?: MutableRefObject<Quill | null>;
-  variant?: 'create' | 'update';
+  variant?: "create" | "update";
 }
 
 const Editor = ({
   onCancel,
   onSubmit,
-  placeholder = 'Write something...',
+  placeholder = "Write something...",
   defaultValue = [],
   disabled = false,
   innerRef,
-  variant = 'create',
+  variant = "create",
 }: EditorProps) => {
-  const [text, setText] = useState('');
+  const [text, setText] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [isToolbarVisible, setIsToolbarVisible] = useState(true);
 
@@ -61,18 +67,20 @@ const Editor = ({
     if (!containerRef.current) return;
 
     const container = containerRef.current;
-    const editorContainer = container.appendChild(container.ownerDocument.createElement('div'));
+    const editorContainer = container.appendChild(
+      container.ownerDocument.createElement("div"),
+    );
 
     const options: QuillOptions = {
       modules: {
         toolbar: [
-          ['bold', 'italic', 'strike'],
-          [{ list: 'ordered' }, { list: 'bullet' }],
+          ["bold", "italic", "strike"],
+          [{ list: "ordered" }, { list: "bullet" }],
         ],
         keyboard: {
           bindings: {
             enter: {
-              key: 'Enter',
+              key: "Enter",
               handler: () => {
                 const text = quill.getText();
 
@@ -80,7 +88,9 @@ const Editor = ({
 
                 const addedImage = imageElementRef.current.files?.[0] || null;
 
-                const isEmpty = !addedImage && text.replace(/<(.|\n)*?>/g, '').trim().length === 0;
+                const isEmpty =
+                  !addedImage &&
+                  text.replace(/<(.|\n)*?>/g, "").trim().length === 0;
 
                 if (isEmpty) return;
 
@@ -90,17 +100,17 @@ const Editor = ({
               },
             },
             shift_enter: {
-              key: 'Enter',
+              key: "Enter",
               shiftKey: true,
               handler: () => {
-                quill.insertText(quill.getSelection()?.index || 0, '\n');
+                quill.insertText(quill.getSelection()?.index || 0, "\n");
               },
             },
           },
         },
       },
       placeholder: placeholderRef.current,
-      theme: 'snow',
+      theme: "snow",
     };
 
     const quill = new Quill(editorContainer, options);
@@ -118,7 +128,7 @@ const Editor = ({
     });
 
     return () => {
-      if (container) container.innerHTML = '';
+      if (container) container.innerHTML = "";
 
       quill.off(Quill.events.TEXT_CHANGE);
 
@@ -130,9 +140,9 @@ const Editor = ({
   const toggleToolbar = () => {
     setIsToolbarVisible((current) => !current);
 
-    const toolbarElement = containerRef.current?.querySelector('.ql-toolbar');
+    const toolbarElement = containerRef.current?.querySelector(".ql-toolbar");
 
-    if (toolbarElement) toolbarElement.classList.toggle('hidden');
+    if (toolbarElement) toolbarElement.classList.toggle("hidden");
   };
 
   const onEmojiSelect = (emoji: string) => {
@@ -145,16 +155,22 @@ const Editor = ({
 
   const isIOS = /iPad|iPhone|iPod|Mac/.test(navigator.userAgent);
 
-  const isEmpty = !image && text.replace(/<(.|\n)*?>/g, '').trim().length === 0;
+  const isEmpty = !image && text.replace(/<(.|\n)*?>/g, "").trim().length === 0;
 
   return (
     <div className="flex flex-col">
-      <input type="file" accept="image/*" ref={imageElementRef} onChange={(e) => setImage(e.target.files![0])} className="hidden" />
+      <input
+        type="file"
+        accept="image/*"
+        ref={imageElementRef}
+        onChange={(e) => setImage(e.target.files![0])}
+        className="hidden"
+      />
 
       <div
         className={cn(
-          'flex flex-col overflow-hidden rounded-md border border-slate-200 bg-white transition focus-within:border-slate-300 focus-within:shadow-sm',
-          disabled && 'opacity-50',
+          "flex flex-col overflow-hidden rounded-md border border-slate-200 bg-white transition focus-within:border-slate-300 focus-within:shadow-sm",
+          disabled && "opacity-50",
         )}
       >
         <div ref={containerRef} className="h-full" />
@@ -167,7 +183,7 @@ const Editor = ({
                   onClick={() => {
                     setImage(null);
 
-                    imageElementRef.current!.value = '';
+                    imageElementRef.current!.value = "";
                   }}
                   className="absolute -right-2.5 -top-2.5 z-[4] hidden size-6 items-center justify-center rounded-full border-2 border-white bg-black/70 text-white hover:bg-black group-hover/image:flex"
                 >
@@ -186,8 +202,15 @@ const Editor = ({
         )}
 
         <div className="z-[5] flex px-2 pb-2">
-          <Hint label={isToolbarVisible ? 'Hide formatting' : 'Show formatting'}>
-            <Button disabled={disabled} size="iconSm" variant="ghost" onClick={toggleToolbar}>
+          <Hint
+            label={isToolbarVisible ? "Hide formatting" : "Show formatting"}
+          >
+            <Button
+              disabled={disabled}
+              size="iconSm"
+              variant="ghost"
+              onClick={toggleToolbar}
+            >
               <PiTextAa className="size-4" />
             </Button>
           </Hint>
@@ -198,17 +221,27 @@ const Editor = ({
             </Button>
           </EmojiPopover>
 
-          {variant === 'create' && (
+          {variant === "create" && (
             <Hint label="Image">
-              <Button disabled={disabled} size="iconSm" variant="ghost" onClick={() => imageElementRef.current?.click()}>
+              <Button
+                disabled={disabled}
+                size="iconSm"
+                variant="ghost"
+                onClick={() => imageElementRef.current?.click()}
+              >
                 <ImageIcon className="size-4" />
               </Button>
             </Hint>
           )}
 
-          {variant === 'update' && (
+          {variant === "update" && (
             <div className="ml-auto flex items-center gap-x-2">
-              <Button variant="outline" size="sm" onClick={onCancel} disabled={disabled}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onCancel}
+                disabled={disabled}
+              >
                 Cancel
               </Button>
 
@@ -230,7 +263,7 @@ const Editor = ({
             </div>
           )}
 
-          {variant === 'create' && (
+          {variant === "create" && (
             <Button
               title="Send Message"
               disabled={disabled || isEmpty}
@@ -243,8 +276,10 @@ const Editor = ({
                 });
               }}
               className={cn(
-                'ml-auto',
-                isEmpty ? 'bg-white text-muted-foreground hover:bg-white/80' : 'bg-[#007a5a] text-white hover:bg-[#007a5a]/80',
+                "ml-auto",
+                isEmpty
+                  ? "bg-white text-muted-foreground hover:bg-white/80"
+                  : "bg-[#007a5a] text-white hover:bg-[#007a5a]/80",
               )}
               size="iconSm"
             >
@@ -254,10 +289,16 @@ const Editor = ({
         </div>
       </div>
 
-      {variant === 'create' && (
-        <div className={cn('flex justify-end p-2 text-[10px] text-muted-foreground opacity-0 transition', !isEmpty && 'opacity-100')}>
+      {variant === "create" && (
+        <div
+          className={cn(
+            "flex justify-end p-2 text-[10px] text-muted-foreground opacity-0 transition",
+            !isEmpty && "opacity-100",
+          )}
+        >
           <p>
-            <strong>Shift + {isIOS ? 'Return' : 'Enter'}</strong> to add a new line.
+            <strong>Shift + {isIOS ? "Return" : "Enter"}</strong> to add a new
+            line.
           </p>
         </div>
       )}

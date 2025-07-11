@@ -1,6 +1,6 @@
-import { getAuthUserId } from '@convex-dev/auth/server';
+import { getAuthUserId } from "@convex-dev/auth/server";
 
-import { query } from './_generated/server';
+import { query } from "./_generated/server";
 
 export const current = query({
   args: {},

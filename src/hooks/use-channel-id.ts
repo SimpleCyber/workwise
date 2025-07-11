@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useParams } from 'next/navigation';
+import { useParams } from "next/navigation";
 
-import type { Id } from '../../convex/_generated/dataModel';
+import type { Id } from "../../convex/_generated/dataModel";
 
 type ChannelIdParams = {
-  channelId: Id<'channels'>;
+  channelId: Id<"channels">;
 };
 
 export const useChannelId = () => {

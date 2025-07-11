@@ -1,59 +1,81 @@
-'use client';
+"use client";
 
-import { Building, CheckCircle, Clock, Home, ImageIcon, MessageSquare, Send, X, XCircle } from 'lucide-react';
-import dynamic from 'next/dynamic';
-import type Quill from 'quill';
-import type React from 'react';
-import { useRef, useState } from 'react';
-import { toast } from 'sonner';
+import {
+  Building,
+  CheckCircle,
+  Clock,
+  Home,
+  ImageIcon,
+  MessageSquare,
+  Send,
+  X,
+  XCircle,
+} from "lucide-react";
+import dynamic from "next/dynamic";
+import type Quill from "quill";
+import type React from "react";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
 
-import type { Id } from '@/../convex/_generated/dataModel';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Textarea } from '@/components/ui/textarea';
-import { useCurrentMember } from '@/features/members/api/use-current-member';
-import { useGenerateUploadUrl } from '@/features/upload/api/use-generate-upload-url';
+import type { Id } from "@/../convex/_generated/dataModel";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
+import { useCurrentMember } from "@/features/members/api/use-current-member";
+import { useGenerateUploadUrl } from "@/features/upload/api/use-generate-upload-url";
 
-import { useAddComment } from '../api/use-add-comment';
-import { useCheckIn } from '../api/use-check-in';
-import { useCheckOut } from '../api/use-check-out';
-import { useGetComments } from '../api/use-get-comments';
-import { useGetTodayAttendance } from '../api/use-get-today-attendance';
+import { useAddComment } from "../api/use-add-comment";
+import { useCheckIn } from "../api/use-check-in";
+import { useCheckOut } from "../api/use-check-out";
+import { useGetComments } from "../api/use-get-comments";
+import { useGetTodayAttendance } from "../api/use-get-today-attendance";
 
-const Editor = dynamic(() => import('@/components/editor'), {
+const Editor = dynamic(() => import("@/components/editor"), {
   ssr: false,
 });
 
 interface CheckInOutProps {
-  workspaceId: Id<'workspaces'>;
+  workspaceId: Id<"workspaces">;
 }
 
 export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
-  const [workLocation, setWorkLocation] = useState<'office' | 'home'>('office');
-  const [location, setLocation] = useState('');
-  const [notes, setNotes] = useState('');
-  const [tasks, setTasks] = useState('');
+  const [workLocation, setWorkLocation] = useState<"office" | "home">("office");
+  const [location, setLocation] = useState("");
+  const [notes, setNotes] = useState("");
+  const [tasks, setTasks] = useState("");
   const [taskImage, setTaskImage] = useState<File | null>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [comment, setComment] = useState('');
+  const [comment, setComment] = useState("");
   const [commentImage, setCommentImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const editorRef = useRef<Quill | null>(null);
 
-  const { data: todayAttendance, isLoading } = useGetTodayAttendance({ workspaceId });
+  const { data: todayAttendance, isLoading } = useGetTodayAttendance({
+    workspaceId,
+  });
   const { mutate: checkIn, isPending: isCheckingIn } = useCheckIn();
   const { mutate: checkOut, isPending: isCheckingOutPending } = useCheckOut();
   const { mutate: generateUploadUrl } = useGenerateUploadUrl();
   const { data: comments, isLoading: commentsLoading } = useGetComments({
-    attendanceId: todayAttendance?._id || '',
+    attendanceId: todayAttendance?._id || "",
   });
   const { data: currentMember } = useCurrentMember({ workspaceId });
   const { mutate: addComment, isPending: isAddingComment } = useAddComment();
@@ -70,19 +92,19 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
     if (!todayAttendance) return;
 
     try {
-      let imageId: Id<'_storage'> | undefined;
+      let imageId: Id<"_storage"> | undefined;
 
       if (commentImage) {
         const url = await generateUploadUrl({}, { throwError: true });
-        if (!url) throw new Error('Failed to get upload URL');
+        if (!url) throw new Error("Failed to get upload URL");
 
         const result = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': commentImage.type },
+          method: "POST",
+          headers: { "Content-Type": commentImage.type },
           body: commentImage,
         });
 
-        if (!result.ok) throw new Error('Failed to upload image');
+        if (!result.ok) throw new Error("Failed to upload image");
         const { storageId } = await result.json();
         imageId = storageId;
       }
@@ -95,17 +117,17 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
         },
         {
           onSuccess: () => {
-            setComment('');
+            setComment("");
             setCommentImage(null);
-            toast.success('Comment added successfully!');
+            toast.success("Comment added successfully!");
           },
           onError: (error) => {
-            toast.error(error.message || 'Failed to add comment');
+            toast.error(error.message || "Failed to add comment");
           },
         },
       );
     } catch (error) {
-      toast.error('Failed to add comment');
+      toast.error("Failed to add comment");
     }
   };
 
@@ -115,12 +137,14 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
       let currentLocation = location;
       if (!currentLocation && navigator.geolocation) {
         try {
-          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject);
-          });
+          const position = await new Promise<GeolocationPosition>(
+            (resolve, reject) => {
+              navigator.geolocation.getCurrentPosition(resolve, reject);
+            },
+          );
           currentLocation = `${position.coords.latitude}, ${position.coords.longitude}`;
         } catch (error) {
-          console.log('Location access denied');
+          console.log("Location access denied");
         }
       }
 
@@ -133,37 +157,43 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
         },
         {
           onSuccess: () => {
-            toast.success('Checked in successfully!');
-            setNotes('');
-            setLocation('');
+            toast.success("Checked in successfully!");
+            setNotes("");
+            setLocation("");
           },
           onError: (error) => {
-            toast.error(error.message || 'Failed to check in');
+            toast.error(error.message || "Failed to check in");
           },
         },
       );
     } catch (error) {
-      toast.error('Failed to check in');
+      toast.error("Failed to check in");
     }
   };
 
-  const handleCheckOut = async ({ body, image }: { body: string; image: File | null }) => {
+  const handleCheckOut = async ({
+    body,
+    image,
+  }: {
+    body: string;
+    image: File | null;
+  }) => {
     if (!todayAttendance) return;
 
     try {
-      let imageId: Id<'_storage'> | undefined;
+      let imageId: Id<"_storage"> | undefined;
 
       if (image) {
         const url = await generateUploadUrl({}, { throwError: true });
-        if (!url) throw new Error('Failed to get upload URL');
+        if (!url) throw new Error("Failed to get upload URL");
 
         const result = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': image.type },
+          method: "POST",
+          headers: { "Content-Type": image.type },
           body: image,
         });
 
-        if (!result.ok) throw new Error('Failed to upload image');
+        if (!result.ok) throw new Error("Failed to upload image");
         const { storageId } = await result.json();
         imageId = storageId;
       }
@@ -176,16 +206,16 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
         },
         {
           onSuccess: () => {
-            toast.success('Checked out successfully!');
+            toast.success("Checked out successfully!");
             setIsCheckingOut(false);
           },
           onError: (error) => {
-            toast.error(error.message || 'Failed to check out');
+            toast.error(error.message || "Failed to check out");
           },
         },
       );
     } catch (error) {
-      toast.error('Failed to check out');
+      toast.error("Failed to check out");
     }
   };
 
@@ -199,21 +229,21 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'approved':
+      case "approved":
         return (
           <Badge className="bg-green-100 text-green-800">
             <CheckCircle className="w-3 h-3 mr-1" />
             Approved
           </Badge>
         );
-      case 'rejected':
+      case "rejected":
         return (
           <Badge className="bg-red-100 text-red-800">
             <XCircle className="w-3 h-3 mr-1" />
             Rejected
           </Badge>
         );
-      case 'pending':
+      case "pending":
         return (
           <Badge className="bg-yellow-100 text-yellow-800">
             <Clock className="w-3 h-3 mr-1" />
@@ -243,13 +273,25 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Check In</p>
-                    <p className="font-medium">{new Date(todayAttendance.checkInTime).toLocaleTimeString()}</p>
-                    <p className="text-xs text-muted-foreground">{todayAttendance.workLocation === 'home' ? 'Work from Home' : 'Office'}</p>
+                    <p className="font-medium">
+                      {new Date(
+                        todayAttendance.checkInTime,
+                      ).toLocaleTimeString()}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {todayAttendance.workLocation === "home"
+                        ? "Work from Home"
+                        : "Office"}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Check Out</p>
                     <p className="font-medium">
-                      {todayAttendance.checkOutTime ? new Date(todayAttendance.checkOutTime).toLocaleTimeString() : 'Not checked out'}
+                      {todayAttendance.checkOutTime
+                        ? new Date(
+                            todayAttendance.checkOutTime,
+                          ).toLocaleTimeString()
+                        : "Not checked out"}
                     </p>
                   </div>
                   <div>
@@ -269,15 +311,26 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
                   <Clock className="w-5 h-5" />
                   Check In
                 </CardTitle>
-                <CardDescription>Start your workday by checking in</CardDescription>
+                <CardDescription>
+                  Start your workday by checking in
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
                   <Label className="text-base font-medium">Work Location</Label>
-                  <RadioGroup value={workLocation} onValueChange={(value) => setWorkLocation(value as 'office' | 'home')} className="mt-2">
+                  <RadioGroup
+                    value={workLocation}
+                    onValueChange={(value) =>
+                      setWorkLocation(value as "office" | "home")
+                    }
+                    className="mt-2"
+                  >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="office" id="office" />
-                      <Label htmlFor="office" className="flex items-center gap-2">
+                      <Label
+                        htmlFor="office"
+                        className="flex items-center gap-2"
+                      >
                         <Building className="w-4 h-4" />
                         Office
                       </Label>
@@ -313,8 +366,12 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
                   />
                 </div>
 
-                <Button onClick={handleCheckIn} disabled={isCheckingIn} className="w-full">
-                  {isCheckingIn ? 'Checking In...' : 'Check In'}
+                <Button
+                  onClick={handleCheckIn}
+                  disabled={isCheckingIn}
+                  className="w-full"
+                >
+                  {isCheckingIn ? "Checking In..." : "Check In"}
                 </Button>
               </CardContent>
             </Card>
@@ -328,19 +385,27 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
                   <Clock className="w-5 h-5" />
                   Check Out
                 </CardTitle>
-                <CardDescription>End your workday by checking out and submitting your tasks</CardDescription>
+                <CardDescription>
+                  End your workday by checking out and submitting your tasks
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {!isCheckingOut ? (
-                  <Button onClick={() => setIsCheckingOut(true)} className="w-full">
+                  <Button
+                    onClick={() => setIsCheckingOut(true)}
+                    className="w-full"
+                  >
                     Check Out
                   </Button>
                 ) : (
                   <div className="space-y-4">
                     <div>
-                      <Label className="text-base font-medium">Today's Tasks & Accomplishments</Label>
+                      <Label className="text-base font-medium">
+                        Today's Tasks & Accomplishments
+                      </Label>
                       <p className="text-sm text-muted-foreground mb-2">
-                        Describe what you accomplished today. You can format text and attach images.
+                        Describe what you accomplished today. You can format
+                        text and attach images.
                       </p>
                       <Editor
                         placeholder="Describe your tasks and accomplishments for today..."
@@ -363,14 +428,19 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
                   <CheckCircle className="w-5 h-5" />
                   Work Day Complete
                 </CardTitle>
-                <CardDescription>You have successfully completed your work day</CardDescription>
+                <CardDescription>
+                  You have successfully completed your work day
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Checked out at {new Date(todayAttendance.checkOutTime).toLocaleTimeString()}
+                  Checked out at{" "}
+                  {new Date(todayAttendance.checkOutTime).toLocaleTimeString()}
                 </p>
-                {todayAttendance.status === 'pending' && (
-                  <p className="text-sm text-yellow-600 mt-2">Your attendance is pending admin approval.</p>
+                {todayAttendance.status === "pending" && (
+                  <p className="text-sm text-yellow-600 mt-2">
+                    Your attendance is pending admin approval.
+                  </p>
                 )}
               </CardContent>
             </Card>
@@ -394,7 +464,9 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
           <ScrollArea className="flex-1 p-4">
             <div className="space-y-4">
               {!todayAttendance ? (
-                <p className="text-sm text-muted-foreground text-center py-8">Check in first to start commenting</p>
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  Check in first to start commenting
+                </p>
               ) : commentsLoading ? (
                 <div className="flex items-center justify-center p-4">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
@@ -403,15 +475,25 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
                 comments.map((comment) => (
                   <div key={comment._id} className="flex gap-3">
                     <Avatar className="w-8 h-8">
-                      <AvatarImage src={comment.user?.image || '/placeholder.svg'} />
-                      <AvatarFallback>{comment.user?.name?.charAt(0).toUpperCase()}</AvatarFallback>
+                      <AvatarImage
+                        src={comment.user?.image || "/placeholder.svg"}
+                      />
+                      <AvatarFallback>
+                        {comment.user?.name?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-medium">{comment.user?.name}</span>
-                        <span className="text-xs text-muted-foreground">{new Date(comment.createdAt).toLocaleTimeString()}</span>
+                        <span className="text-sm font-medium">
+                          {comment.user?.name}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(comment.createdAt).toLocaleTimeString()}
+                        </span>
                       </div>
-                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">{comment.content}</p>
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                        {comment.content}
+                      </p>
                       {comment.image && (
                         <img
                           src={`${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${comment.image}`}
@@ -419,7 +501,10 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
                           className="mt-2 max-w-full h-auto rounded border cursor-pointer hover:opacity-80 transition-opacity"
                           crossOrigin="anonymous"
                           onClick={() => {
-                            window.open(`${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${comment.image}`, '_blank');
+                            window.open(
+                              `${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${comment.image}`,
+                              "_blank",
+                            );
                           }}
                         />
                       )}
@@ -427,7 +512,9 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-8">No comments yet</p>
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  No comments yet
+                </p>
               )}
             </div>
           </ScrollArea>
@@ -446,25 +533,48 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
                 {commentImage && (
                   <div className="relative">
                     <img
-                      src={URL.createObjectURL(commentImage) || '/placeholder.svg'}
+                      src={
+                        URL.createObjectURL(commentImage) || "/placeholder.svg"
+                      }
                       alt="Preview"
                       className="max-w-full h-20 object-cover rounded border"
                     />
-                    <Button variant="ghost" size="sm" className="absolute top-1 right-1" onClick={() => setCommentImage(null)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute top-1 right-1"
+                      onClick={() => setCommentImage(null)}
+                    >
                       <X className="w-3 h-3" />
                     </Button>
                   </div>
                 )}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <input type="file" ref={fileInputRef} onChange={handleImageSelect} accept="image/*" className="hidden" />
-                    <Button variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} disabled={isAddingComment}>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleImageSelect}
+                      accept="image/*"
+                      className="hidden"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isAddingComment}
+                    >
                       <ImageIcon className="w-4 h-4" />
                     </Button>
                   </div>
-                  <Button onClick={handleAddComment} disabled={isAddingComment || (!comment.trim() && !commentImage)}>
+                  <Button
+                    onClick={handleAddComment}
+                    disabled={
+                      isAddingComment || (!comment.trim() && !commentImage)
+                    }
+                  >
                     <Send className="w-4 h-4 mr-2" />
-                    {isAddingComment ? 'Sending...' : 'Send'}
+                    {isAddingComment ? "Sending..." : "Send"}
                   </Button>
                 </div>
               </div>

@@ -1,12 +1,18 @@
-'use client';
+"use client";
 
-import { AlertCircle, BarChart3, Calendar, CheckSquare, Clock } from 'lucide-react';
-import { usePathname, useRouter } from 'next/navigation';
+import {
+  AlertCircle,
+  BarChart3,
+  Calendar,
+  CheckSquare,
+  Clock,
+} from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 
-import { WorkspaceSection } from '@/app/workspace/[workspaceId]/workspace-section';
-import { Button } from '@/components/ui/button';
-import { useCurrentMember } from '@/features/members/api/use-current-member';
-import { useWorkspaceId } from '@/hooks/use-workspace-id';
+import { WorkspaceSection } from "@/app/workspace/[workspaceId]/workspace-section";
+import { Button } from "@/components/ui/button";
+import { useCurrentMember } from "@/features/members/api/use-current-member";
+import { useWorkspaceId } from "@/hooks/use-workspace-id";
 
 export const WorkspaceSidebarContent = () => {
   const router = useRouter();
@@ -15,30 +21,39 @@ export const WorkspaceSidebarContent = () => {
   const { data: member } = useCurrentMember({ workspaceId });
 
   const navigateTo = (path: string) => {
-    const fullPath = path === '' ? `/attendance/${workspaceId}` : `/attendance/${workspaceId}${path}`;
+    const fullPath =
+      path === ""
+        ? `/attendance/${workspaceId}`
+        : `/attendance/${workspaceId}${path}`;
     router.push(fullPath);
   };
 
   const isActive = (path: string) => {
     const currentPath = pathname;
-    const targetPath = path === '' ? `/attendance/${workspaceId}` : `/attendance/${workspaceId}${path}`;
+    const targetPath =
+      path === ""
+        ? `/attendance/${workspaceId}`
+        : `/attendance/${workspaceId}${path}`;
 
-    if (path === '' && currentPath === `/attendance/${workspaceId}`) return true;
-    if (path !== '' && currentPath.includes(path)) return true;
+    if (path === "" && currentPath === `/attendance/${workspaceId}`)
+      return true;
+    if (path !== "" && currentPath.includes(path)) return true;
     return false;
   };
 
   return (
     <>
       <div className="mt-3 flex flex-col px-2">
-        {member?.role === 'admin' ? (
+        {member?.role === "admin" ? (
           <>
             <Button
               variant="transparent"
               className={`h-7 justify-start px-[18px] text-sm ${
-                isActive('') ? 'bg-white/10 text-white' : 'text-[#f9EDFFCC] hover:bg-white/5'
+                isActive("")
+                  ? "bg-white/10 text-white"
+                  : "text-[#f9EDFFCC] hover:bg-white/5"
               }`}
-              onClick={() => navigateTo('')}
+              onClick={() => navigateTo("")}
             >
               <BarChart3 className="mr-1 size-3.5 shrink-0" />
               <span className="truncate text-sm">Admin Dashboard</span>
@@ -46,9 +61,11 @@ export const WorkspaceSidebarContent = () => {
             <Button
               variant="transparent"
               className={`h-7 justify-start px-[18px] text-sm ${
-                isActive('/checkin') ? 'bg-white/10 text-white' : 'text-[#f9EDFFCC] hover:bg-white/5'
+                isActive("/checkin")
+                  ? "bg-white/10 text-white"
+                  : "text-[#f9EDFFCC] hover:bg-white/5"
               }`}
-              onClick={() => navigateTo('/checkin')}
+              onClick={() => navigateTo("/checkin")}
             >
               <Clock className="mr-1 size-3.5 shrink-0" />
               <span className="truncate text-sm">Check In/Out</span>
@@ -56,9 +73,11 @@ export const WorkspaceSidebarContent = () => {
             <Button
               variant="transparent"
               className={`h-7 justify-start px-[18px] text-sm ${
-                isActive('/calendar') ? 'bg-white/10 text-white' : 'text-[#f9EDFFCC] hover:bg-white/5'
+                isActive("/calendar")
+                  ? "bg-white/10 text-white"
+                  : "text-[#f9EDFFCC] hover:bg-white/5"
               }`}
-              onClick={() => navigateTo('/calendar')}
+              onClick={() => navigateTo("/calendar")}
             >
               <Calendar className="mr-1 size-3.5 shrink-0" />
               <span className="truncate text-sm">My Calendar</span>
@@ -69,9 +88,11 @@ export const WorkspaceSidebarContent = () => {
             <Button
               variant="transparent"
               className={`h-7 justify-start px-[18px] text-sm ${
-                isActive('') ? 'bg-white/10 text-white' : 'text-[#f9EDFFCC] hover:bg-white/5'
+                isActive("")
+                  ? "bg-white/10 text-white"
+                  : "text-[#f9EDFFCC] hover:bg-white/5"
               }`}
-              onClick={() => navigateTo('')}
+              onClick={() => navigateTo("")}
             >
               <Clock className="mr-1 size-3.5 shrink-0" />
               <span className="truncate text-sm">Check In/Out</span>
@@ -79,9 +100,11 @@ export const WorkspaceSidebarContent = () => {
             <Button
               variant="transparent"
               className={`h-7 justify-start px-[18px] text-sm ${
-                isActive('/calendar') ? 'bg-white/10 text-white' : 'text-[#f9EDFFCC] hover:bg-white/5'
+                isActive("/calendar")
+                  ? "bg-white/10 text-white"
+                  : "text-[#f9EDFFCC] hover:bg-white/5"
               }`}
-              onClick={() => navigateTo('/calendar')}
+              onClick={() => navigateTo("/calendar")}
             >
               <Calendar className="mr-1 size-3.5 shrink-0" />
               <span className="truncate text-sm">My Calendar</span>
@@ -90,13 +113,17 @@ export const WorkspaceSidebarContent = () => {
         )}
       </div>
 
-      <WorkspaceSection label="Quick Actions" hint="New Request" onNew={() => {}}>
+      <WorkspaceSection
+        label="Quick Actions"
+        hint="New Request"
+        onNew={() => {}}
+      >
         <Button
           variant="transparent"
           className="h-7 justify-start px-[18px] text-sm text-[#f9EDFFCC] hover:bg-white/5"
           onClick={() => {
             // TODO: Implement leave request functionality
-            console.log('Leave request clicked');
+            console.log("Leave request clicked");
           }}
         >
           <AlertCircle className="mr-1 size-3.5 shrink-0" />
@@ -105,7 +132,7 @@ export const WorkspaceSidebarContent = () => {
         <Button
           variant="transparent"
           className="h-7 justify-start px-[18px] text-sm text-[#f9EDFFCC] hover:bg-white/5"
-          onClick={() => navigateTo('/calendar')}
+          onClick={() => navigateTo("/calendar")}
         >
           <CheckSquare className="mr-1 size-3.5 shrink-0" />
           <span className="truncate text-sm">My Records</span>

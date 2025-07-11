@@ -1,11 +1,14 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface ConversationHeroProps {
   name?: string;
   image?: string;
 }
 
-export const ConversationHero = ({ name = 'Member', image }: ConversationHeroProps) => {
+export const ConversationHero = ({
+  name = "Member",
+  image,
+}: ConversationHeroProps) => {
   const avatarFallback = name.charAt(0).toUpperCase();
 
   return (

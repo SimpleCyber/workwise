@@ -1,10 +1,10 @@
-import { useQuery } from 'convex/react';
+import { useQuery } from "convex/react";
 
-import { api } from '../../../../convex/_generated/api';
-import type { Id } from '../../../../convex/_generated/dataModel';
+import { api } from "../../../../convex/_generated/api";
+import type { Id } from "../../../../convex/_generated/dataModel";
 
 interface UseGetChecklistsProps {
-  cardId: Id<'todoCards'>;
+  cardId: Id<"todoCards">;
 }
 
 export const useGetChecklists = ({ cardId }: UseGetChecklistsProps) => {

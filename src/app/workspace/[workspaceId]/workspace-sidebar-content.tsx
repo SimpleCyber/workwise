@@ -1,17 +1,22 @@
-'use client';
+"use client";
 
-import { HashIcon, MessageSquareText, SendHorizonal, Loader } from 'lucide-react';
-import { useGetChannels } from '@/features/channels/api/use-get-channels';
-import { useCreateChannelModal } from '@/features/channels/store/use-create-channel-modal';
-import { useCurrentMember } from '@/features/members/api/use-current-member';
-import { useGetMembers } from '@/features/members/api/use-get-members';
-import { useChannelId } from '@/hooks/use-channel-id';
-import { useMemberId } from '@/hooks/use-member-id';
-import { useWorkspaceId } from '@/hooks/use-workspace-id';
+import {
+  HashIcon,
+  MessageSquareText,
+  SendHorizonal,
+  Loader,
+} from "lucide-react";
+import { useGetChannels } from "@/features/channels/api/use-get-channels";
+import { useCreateChannelModal } from "@/features/channels/store/use-create-channel-modal";
+import { useCurrentMember } from "@/features/members/api/use-current-member";
+import { useGetMembers } from "@/features/members/api/use-get-members";
+import { useChannelId } from "@/hooks/use-channel-id";
+import { useMemberId } from "@/hooks/use-member-id";
+import { useWorkspaceId } from "@/hooks/use-workspace-id";
 
-import { SidebarItem } from '@/app/workspace/[workspaceId]/sidebar-item';
-import { UserItem } from '@/app/workspace/[workspaceId]/user-item';
-import { WorkspaceSection } from '@/app/workspace/[workspaceId]/workspace-section';
+import { SidebarItem } from "@/app/workspace/[workspaceId]/sidebar-item";
+import { UserItem } from "@/app/workspace/[workspaceId]/user-item";
+import { WorkspaceSection } from "@/app/workspace/[workspaceId]/workspace-section";
 
 export const WorkspaceSidebarContent = () => {
   const workspaceId = useWorkspaceId();
@@ -21,8 +26,12 @@ export const WorkspaceSidebarContent = () => {
   const [_open, setOpen] = useCreateChannelModal();
 
   const { data: member } = useCurrentMember({ workspaceId });
-  const { data: channels, isLoading: channelsLoading } = useGetChannels({ workspaceId });
-  const { data: members, isLoading: membersLoading } = useGetMembers({ workspaceId });
+  const { data: channels, isLoading: channelsLoading } = useGetChannels({
+    workspaceId,
+  });
+  const { data: members, isLoading: membersLoading } = useGetMembers({
+    workspaceId,
+  });
 
   if (channelsLoading || membersLoading) {
     return (
@@ -40,10 +49,14 @@ export const WorkspaceSidebarContent = () => {
       </div>
 
       {channels && channels.length !== 0 && (
-        <WorkspaceSection label="Channels" hint="New Channel" onNew={member?.role === 'admin' ? () => setOpen(true) : undefined}>
+        <WorkspaceSection
+          label="Channels"
+          hint="New Channel"
+          onNew={member?.role === "admin" ? () => setOpen(true) : undefined}
+        >
           {channels?.map((item) => (
             <SidebarItem
-              variant={channelId === item._id ? 'active' : 'default'}
+              variant={channelId === item._id ? "active" : "default"}
               key={item._id}
               id={item._id}
               icon={HashIcon}
@@ -54,14 +67,18 @@ export const WorkspaceSidebarContent = () => {
       )}
 
       {members && members.length !== 0 && (
-        <WorkspaceSection label="Direct Messages" hint="New Direct Message" onNew={member?.role === 'admin' ? () => {} : undefined}>
+        <WorkspaceSection
+          label="Direct Messages"
+          hint="New Direct Message"
+          onNew={member?.role === "admin" ? () => {} : undefined}
+        >
           {members?.map((item) => (
             <UserItem
               key={item._id}
               id={item._id}
               label={item.user.name}
               image={item.user.image}
-              variant={item._id === memberId ? 'active' : 'default'}
+              variant={item._id === memberId ? "active" : "default"}
             />
           ))}
         </WorkspaceSection>

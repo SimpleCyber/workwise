@@ -1,32 +1,38 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { toast } from 'sonner';
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { useWorkspaceId } from '@/hooks/use-workspace-id';
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { useWorkspaceId } from "@/hooks/use-workspace-id";
 
-import { useCreateChannel } from '../api/use-create-channel';
-import { useCreateChannelModal } from '../store/use-create-channel-modal';
+import { useCreateChannel } from "../api/use-create-channel";
+import { useCreateChannelModal } from "../store/use-create-channel-modal";
 
 export const CreateChannelModal = () => {
   const router = useRouter();
   const workspaceId = useWorkspaceId();
   const [open, setOpen] = useCreateChannelModal();
-  const [name, setName] = useState('');
+  const [name, setName] = useState("");
 
   const { mutate, isPending } = useCreateChannel();
 
   const handleClose = () => {
-    setName('');
+    setName("");
     setOpen(false);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\s+/g, '-').toLowerCase();
+    const value = e.target.value.replace(/\s+/g, "-").toLowerCase();
 
     setName(value);
   };
@@ -41,13 +47,13 @@ export const CreateChannelModal = () => {
       },
       {
         onSuccess: (id) => {
-          toast.success('Channel created.');
+          toast.success("Channel created.");
 
           router.push(`/workspace/${workspaceId}/channel/${id}`);
           handleClose();
         },
         onError: () => {
-          toast.error('Failed to create channel.');
+          toast.error("Failed to create channel.");
         },
       },
     );
@@ -58,7 +64,10 @@ export const CreateChannelModal = () => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add a channel</DialogTitle>
-          <DialogDescription>Channels are where your team communicates. They&apos;re best when organized around a topic.</DialogDescription>
+          <DialogDescription>
+            Channels are where your team communicates. They&apos;re best when
+            organized around a topic.
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">

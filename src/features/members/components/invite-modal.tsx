@@ -1,25 +1,37 @@
-'use client';
+"use client";
 
-import { Copy, RefreshCw } from 'lucide-react';
-import { useState } from 'react';
-import { toast } from 'sonner';
+import { Copy, RefreshCw } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
-import type { Id } from '@/../convex/_generated/dataModel';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useNewJoinCode } from '@/features/workspaces/api/use-new-join-code';
+import type { Id } from "@/../convex/_generated/dataModel";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useNewJoinCode } from "@/features/workspaces/api/use-new-join-code";
 
 interface InviteModalProps {
   open: boolean;
   setOpen: (open: boolean) => void;
-  workspaceId: Id<'workspaces'>;
+  workspaceId: Id<"workspaces">;
   name: string;
   joinCode: string;
 }
 
-export const InviteModal = ({ open, setOpen, workspaceId, name, joinCode }: InviteModalProps) => {
+export const InviteModal = ({
+  open,
+  setOpen,
+  workspaceId,
+  name,
+  joinCode,
+}: InviteModalProps) => {
   const [isPending, setIsPending] = useState(false);
   const { mutate: newJoinCode } = useNewJoinCode();
 
@@ -29,10 +41,10 @@ export const InviteModal = ({ open, setOpen, workspaceId, name, joinCode }: Invi
       { workspaceId },
       {
         onSuccess: () => {
-          toast.success('New invite code generated!');
+          toast.success("New invite code generated!");
         },
         onError: () => {
-          toast.error('Failed to generate new code');
+          toast.error("Failed to generate new code");
         },
         onSettled: () => {
           setIsPending(false);
@@ -44,7 +56,7 @@ export const InviteModal = ({ open, setOpen, workspaceId, name, joinCode }: Invi
   const handleCopy = () => {
     const inviteLink = `${window.location.origin}/join/${workspaceId}`;
     navigator.clipboard.writeText(inviteLink).then(() => {
-      toast.success('Invite link copied to clipboard!');
+      toast.success("Invite link copied to clipboard!");
     });
   };
 
@@ -53,7 +65,9 @@ export const InviteModal = ({ open, setOpen, workspaceId, name, joinCode }: Invi
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Invite people to {name}</DialogTitle>
-          <DialogDescription>Use the invite code below to invite people to your workspace</DialogDescription>
+          <DialogDescription>
+            Use the invite code below to invite people to your workspace
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
@@ -63,7 +77,12 @@ export const InviteModal = ({ open, setOpen, workspaceId, name, joinCode }: Invi
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>Invite code</Label>
-              <Button onClick={handleNewCode} disabled={isPending} variant="ghost" size="sm">
+              <Button
+                onClick={handleNewCode}
+                disabled={isPending}
+                variant="ghost"
+                size="sm"
+              >
                 <RefreshCw className="size-4 mr-2" />
                 New code
               </Button>
@@ -76,7 +95,9 @@ export const InviteModal = ({ open, setOpen, workspaceId, name, joinCode }: Invi
               </Button>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">Anyone with this code can join your workspace</p>
+          <p className="text-xs text-muted-foreground">
+            Anyone with this code can join your workspace
+          </p>
         </div>
       </DialogContent>
     </Dialog>

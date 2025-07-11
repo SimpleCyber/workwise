@@ -1,33 +1,49 @@
-'use client';
+"use client";
 
-import { formatDistanceToNow } from 'date-fns';
-import { Loader, Plus, TriangleAlert } from 'lucide-react';
-import Link from 'next/link';
-import type React from 'react';
-import { useState } from 'react';
-import { toast } from 'sonner';
+import { formatDistanceToNow } from "date-fns";
+import { Loader, Plus, TriangleAlert } from "lucide-react";
+import Link from "next/link";
+import type React from "react";
+import { useState } from "react";
+import { toast } from "sonner";
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { useCreateProjectBoard } from '@/features/projects/api/use-create-project-board';
-import { useGetProjectBoards } from '@/features/projects/api/use-get-project-boards';
-import { useGetWorkspaceInfo } from '@/features/workspaces/api/use-get-workspace-info';
-import { useWorkspaceId } from '@/hooks/use-workspace-id';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useCreateProjectBoard } from "@/features/projects/api/use-create-project-board";
+import { useGetProjectBoards } from "@/features/projects/api/use-get-project-boards";
+import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info";
+import { useWorkspaceId } from "@/hooks/use-workspace-id";
 
 const ProjectsWorkspacePage = () => {
   const workspaceId = useWorkspaceId();
-  const { data: workspace, isLoading: workspaceLoading } = useGetWorkspaceInfo({ id: workspaceId });
-  const { data: boards, isLoading: boardsLoading } = useGetProjectBoards({ workspaceId });
+  const { data: workspace, isLoading: workspaceLoading } = useGetWorkspaceInfo({
+    id: workspaceId,
+  });
+  const { data: boards, isLoading: boardsLoading } = useGetProjectBoards({
+    workspaceId,
+  });
   const { mutate: createBoard, isPending } = useCreateProjectBoard();
 
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,13 +57,13 @@ const ProjectsWorkspacePage = () => {
       },
       {
         onSuccess: () => {
-          toast.success('Project board created successfully!');
+          toast.success("Project board created successfully!");
           setOpen(false);
-          setName('');
-          setDescription('');
+          setName("");
+          setDescription("");
         },
         onError: (error) => {
-          toast.error(error.message || 'Failed to create project board');
+          toast.error(error.message || "Failed to create project board");
         },
       },
     );
@@ -65,7 +81,9 @@ const ProjectsWorkspacePage = () => {
     return (
       <div className="flex h-full flex-1 flex-col items-center justify-center gap-2">
         <TriangleAlert className="size-5 text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">Workspace not found.</span>
+        <span className="text-sm text-muted-foreground">
+          Workspace not found.
+        </span>
       </div>
     );
   }
@@ -73,7 +91,9 @@ const ProjectsWorkspacePage = () => {
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-[49px] items-center justify-between border-b bg-white px-4">
-        <h1 className="text-lg font-semibold">Project Boards - {workspace.name}</h1>
+        <h1 className="text-lg font-semibold">
+          Project Boards - {workspace.name}
+        </h1>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button size="sm">
@@ -107,7 +127,12 @@ const ProjectsWorkspacePage = () => {
                 />
               </div>
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isPending}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setOpen(false)}
+                  disabled={isPending}
+                >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isPending || !name.trim()}>
@@ -117,7 +142,7 @@ const ProjectsWorkspacePage = () => {
                       Creating...
                     </>
                   ) : (
-                    'Create Project Board'
+                    "Create Project Board"
                   )}
                 </Button>
               </div>
@@ -131,8 +156,12 @@ const ProjectsWorkspacePage = () => {
           {!boards || boards.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
               <div className="text-center">
-                <h3 className="text-lg font-semibold mb-2">No project boards yet</h3>
-                <p className="text-muted-foreground mb-4">Create your first project board to start managing team tasks</p>
+                <h3 className="text-lg font-semibold mb-2">
+                  No project boards yet
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  Create your first project board to start managing team tasks
+                </p>
                 <Dialog open={open} onOpenChange={setOpen}>
                   <DialogTrigger asChild>
                     <Button>
@@ -146,21 +175,37 @@ const ProjectsWorkspacePage = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {boards.map((board) => (
-                <Link key={board._id} href={`/projects/${workspaceId}/board/${board._id}`}>
+                <Link
+                  key={board._id}
+                  href={`/projects/${workspaceId}/board/${board._id}`}
+                >
                   <Card className="hover:shadow-md transition-shadow cursor-pointer">
                     <CardHeader>
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-base">{board.name}</CardTitle>
+                        <CardTitle className="text-base">
+                          {board.name}
+                        </CardTitle>
                         <Badge variant="outline" className="text-xs font-mono">
                           {board.boardCode}
                         </Badge>
                       </div>
-                      {board.description && <CardDescription className="line-clamp-2">{board.description}</CardDescription>}
+                      {board.description && (
+                        <CardDescription className="line-clamp-2">
+                          {board.description}
+                        </CardDescription>
+                      )}
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Created {formatDistanceToNow(board.createdAt, { addSuffix: true })}</span>
-                        {board.isStarred && <span className="text-yellow-500">⭐</span>}
+                        <span>
+                          Created{" "}
+                          {formatDistanceToNow(board.createdAt, {
+                            addSuffix: true,
+                          })}
+                        </span>
+                        {board.isStarred && (
+                          <span className="text-yellow-500">⭐</span>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

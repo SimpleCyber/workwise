@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import { useMutation } from 'convex/react';
-import { useCallback, useMemo, useState } from 'react';
+import { useMutation } from "convex/react";
+import { useCallback, useMemo, useState } from "react";
 
-import { api } from '../../../../convex/_generated/api';
-import type { Id } from '../../../../convex/_generated/dataModel';
+import { api } from "../../../../convex/_generated/api";
+import type { Id } from "../../../../convex/_generated/dataModel";
 
 type RequestType = {
-  taskId: Id<'projectTasks'>;
+  taskId: Id<"projectTasks">;
   title?: string;
   description?: string;
-  assignedToId?: Id<'members'>;
-  priority?: 'low' | 'medium' | 'high' | 'urgent';
+  assignedToId?: Id<"members">;
+  priority?: "low" | "medium" | "high" | "urgent";
   dueDate?: number;
   isCompleted?: boolean;
-  listId?: Id<'projectLists'>;
+  listId?: Id<"projectLists">;
   position?: number;
 };
 
@@ -30,12 +30,14 @@ type Options = {
 export const useUpdateProjectTask = () => {
   const [data, setData] = useState<ResponseType>(undefined);
   const [error, setError] = useState<Error | null>(null);
-  const [status, setStatus] = useState<'success' | 'error' | 'settled' | 'pending' | null>(null);
+  const [status, setStatus] = useState<
+    "success" | "error" | "settled" | "pending" | null
+  >(null);
 
-  const isPending = useMemo(() => status === 'pending', [status]);
-  const isSuccess = useMemo(() => status === 'success', [status]);
-  const isError = useMemo(() => status === 'error', [status]);
-  const isSettled = useMemo(() => status === 'settled', [status]);
+  const isPending = useMemo(() => status === "pending", [status]);
+  const isSuccess = useMemo(() => status === "success", [status]);
+  const isError = useMemo(() => status === "error", [status]);
+  const isSettled = useMemo(() => status === "settled", [status]);
 
   const mutation = useMutation(api.projects.updateProjectTask);
 
@@ -44,15 +46,15 @@ export const useUpdateProjectTask = () => {
       try {
         setData(undefined);
         setError(null);
-        setStatus('pending');
+        setStatus("pending");
 
         const response = await mutation(values);
         setData(response);
-        setStatus('success');
+        setStatus("success");
         options?.onSuccess?.(response);
         return response;
       } catch (error) {
-        setStatus('error');
+        setStatus("error");
         const err = error as Error;
         setError(err);
         options?.onError?.(err);
@@ -60,7 +62,7 @@ export const useUpdateProjectTask = () => {
           throw error;
         }
       } finally {
-        setStatus('settled');
+        setStatus("settled");
         options?.onSettled?.();
       }
     },

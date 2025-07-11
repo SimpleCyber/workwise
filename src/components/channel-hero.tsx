@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+import { format } from "date-fns";
 
 interface ChannelHeroProps {
   name: string;
@@ -11,8 +11,9 @@ export const ChannelHero = ({ name, creationTime }: ChannelHeroProps) => {
       <p className="mb-2 flex items-center text-2xl font-bold"># {name}</p>
 
       <p className="mb-4 text-base font-normal text-slate-800">
-        This channel was created on {format(new Date(creationTime), 'MMMM do, yyyy')}. This is the very beginning of the{' '}
-        <strong>{name}</strong> channel.
+        This channel was created on{" "}
+        {format(new Date(creationTime), "MMMM do, yyyy")}. This is the very
+        beginning of the <strong>{name}</strong> channel.
       </p>
     </div>
   );
