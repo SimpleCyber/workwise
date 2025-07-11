@@ -218,7 +218,7 @@ export const AttendanceDetailWithChat = ({
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-6 h-6 text-green-500" />
                   <h1 className="text-2xl font-bold">
-                    Today Task: {attendance.user?.name}'s Attendance -{" "}
+                    Today Task: {attendance.user?.name} Attendance -{" "}
                     {new Date(attendance.date).toLocaleDateString()}
                   </h1>
                 </div>

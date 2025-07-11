@@ -178,7 +178,7 @@ export const AttendanceDetailModal = ({
             <div className="flex items-center justify-between">
               <DialogTitle className="flex items-center gap-3">
                 <User className="w-5 h-5" />
-                {attendance.user?.name}'s Attendance
+                {attendance.user?.name} Attendance
                 {getStatusBadge(attendance.status)}
               </DialogTitle>
               <p className="text-sm text-muted-foreground">

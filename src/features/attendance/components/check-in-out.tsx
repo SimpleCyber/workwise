@@ -266,7 +266,7 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Clock className="w-5 h-5" />
-                  Today's Attendance
+                  Today Attendance
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -401,7 +401,7 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
                   <div className="space-y-4">
                     <div>
                       <Label className="text-base font-medium">
-                        Today's Tasks & Accomplishments
+                        Today Tasks & Accomplishments
                       </Label>
                       <p className="text-sm text-muted-foreground mb-2">
                         Describe what you accomplished today. You can format
