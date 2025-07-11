@@ -55,7 +55,7 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
       workspaceId,
     });
   const { data: member, isLoading: isMemberLoading } = useGetMember({
-    id: memberId
+    id: memberId,
   });
 
   const { mutate: updateMember, isPending: isUpdatingMember } =
@@ -65,10 +65,7 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
 
   const onRemove = async () => {
     const ok = await confirmRemove();
-
     if (!ok) return;
-
-    
     removeMember(
       {  memberId },
       {
