@@ -68,6 +68,7 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
 
     if (!ok) return;
 
+    
     removeMember(
       {  memberId },
       {
