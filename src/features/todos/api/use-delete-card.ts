@@ -10,7 +10,7 @@ type RequestType = {
   cardId: Id<"todoCards">;
 };
 
-type ResponseType = void;
+type ResponseType = void | null;
 
 type Options = {
   onSuccess?: (data: ResponseType) => void;
