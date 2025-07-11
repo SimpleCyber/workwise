@@ -1,7 +1,4 @@
-"use client";
-
 import { useQuery } from "convex/react";
-
 import { api } from "@/../convex/_generated/api";
 import type { Id } from "@/../convex/_generated/dataModel";
 
@@ -10,7 +7,7 @@ interface UseGetMemberProps {
 }
 
 export const useGetMember = ({ id }: UseGetMemberProps) => {
-  const data = useQuery(api.members.getById, { id });
+  const data = useQuery(api.members.getById, { memberId: id });
 
   const isLoading = data === undefined;
 

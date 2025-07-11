@@ -43,7 +43,7 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
   );
   const [UpdateDialog, confirmUpdate] = useConfirm(
     "Change role",
-    "Are you sure you want to change this member role?",
+    "Are you sure you want to change this member's role?",
   );
   const [RemoveDialog, confirmRemove] = useConfirm(
     "Remove member",
@@ -55,7 +55,7 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
       workspaceId,
     });
   const { data: member, isLoading: isMemberLoading } = useGetMember({
-    id: memberId,
+    id: memberId
   });
 
   const { mutate: updateMember, isPending: isUpdatingMember } =
@@ -69,7 +69,7 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
     if (!ok) return;
 
     removeMember(
-      { id: memberId },
+      {  memberId },
       {
         onSuccess: () => {
           toast.success("Member removed.");
@@ -86,7 +86,7 @@ export const Profile = ({ memberId, onClose }: ProfileProps) => {
     if (!ok) return;
 
     removeMember(
-      { id: memberId },
+      {  memberId },
       {
         onSuccess: () => {
           toast.success("You left the workspace.");

@@ -5,6 +5,7 @@ import type { Id } from "../../../../convex/_generated/dataModel";
 
 interface UseGetBoardsProps {
   workspaceId: Id<"workspaces">;
+  includeArchived?: boolean;
 }
 
 export const useGetBoards = ({ workspaceId }: UseGetBoardsProps) => {
