@@ -46,6 +46,7 @@ import { useCheckIn } from "../api/use-check-in";
 import { useCheckOut } from "../api/use-check-out";
 import { useGetComments } from "../api/use-get-comments";
 import { useGetTodayAttendance } from "../api/use-get-today-attendance";
+import Image from "next/image";
 
 const Editor = dynamic(() => import("@/components/editor"), {
   ssr: false,
@@ -495,7 +496,7 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
                         {comment.content}
                       </p>
                       {comment.image && (
-                        <img
+                        <Image 
                           src={`${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${comment.image}`}
                           alt="Comment attachment"
                           className="mt-2 max-w-full h-auto rounded border cursor-pointer hover:opacity-80 transition-opacity"
@@ -532,7 +533,7 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
                 />
                 {commentImage && (
                   <div className="relative">
-                    <img
+                    <Image 
                       src={
                         URL.createObjectURL(commentImage) || "/placeholder.svg"
                       }

@@ -33,6 +33,7 @@ import { useGenerateUploadUrl } from "@/features/upload/api/use-generate-upload-
 import { useAddComment } from "../api/use-add-comment";
 import { useGetComments } from "../api/use-get-comments";
 import { useUpdateAttendanceStatus } from "../api/use-update-attendance-status";
+import Image from "next/image";
 
 interface AttendanceDetailModalProps {
   attendance: any;
@@ -291,7 +292,7 @@ export const AttendanceDetailModal = ({
                         </div>
                         {attendance.taskImage && (
                           <div className="mt-3">
-                            <img
+                            <Image 
                               src={`${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${attendance.taskImage}`}
                               alt="Task attachment"
                               className="max-w-full h-auto rounded border cursor-pointer hover:opacity-80 transition-opacity"
@@ -413,7 +414,7 @@ export const AttendanceDetailModal = ({
                         {comment.content}
                       </p>
                       {comment.image && (
-                        <img
+                        <Image 
                           src={`${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${comment.image}`}
                           alt="Comment attachment"
                           className="mt-2 max-w-full h-auto rounded border cursor-pointer hover:opacity-80 transition-opacity"
@@ -449,7 +450,7 @@ export const AttendanceDetailModal = ({
               />
               {commentImage && (
                 <div className="relative">
-                  <img
+                  <Image 
                     src={
                       URL.createObjectURL(commentImage) || "/placeholder.svg"
                     }
