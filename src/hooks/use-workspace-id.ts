@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useParams } from "next/navigation"
-import type { Id } from "../../convex/_generated/dataModel"
+import { useParams } from "next/navigation";
+import type { Id } from "../../convex/_generated/dataModel";
 
 export const useWorkspaceId = () => {
-  const params = useParams()
-  return params.workspaceId as Id<"workspaces">
-}
+  const params = useParams();
+  return params.workspaceId as Id<"workspaces">;
+};

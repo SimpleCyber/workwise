@@ -1,17 +1,24 @@
-"use client"
+"use client";
 
-import { Kanban, ListTodo, MessagesSquare, Presentation, UserRoundSearch, Calendar } from "lucide-react"
-import { usePathname, useRouter } from "next/navigation"
-import { UserButton } from "@/features/auth/components/user-button"
-import { SidebarButton } from "./sidebar-button"
-import { WorkspaceSwitcher } from "../workspace-header/workspace-switcher"
-import { useWorkspaceId } from "@/hooks/use-workspace-id"
+import {
+  Kanban,
+  ListTodo,
+  MessagesSquare,
+  Presentation,
+  UserRoundSearch,
+  Calendar,
+} from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { UserButton } from "@/features/auth/components/user-button";
+import { SidebarButton } from "./sidebar-button";
+import { WorkspaceSwitcher } from "../workspace-header/workspace-switcher";
+import { useWorkspaceId } from "@/hooks/use-workspace-id";
 
 export const Sidebar = () => {
-  const pathname = usePathname()
-  const router = useRouter()
+  const pathname = usePathname();
+  const router = useRouter();
   // Use the current workspace ID from URL instead of always using the first one
-  const workspaceId = useWorkspaceId()
+  const workspaceId = useWorkspaceId();
 
   const navigationItems = [
     { icon: Kanban, label: "ToDo", path: `/todo/${workspaceId}` },
@@ -24,14 +31,14 @@ export const Sidebar = () => {
       path: `/members/${workspaceId}`,
     },
     { icon: Calendar, label: "Attendence", path: `/attendance/${workspaceId}` },
-  ]
+  ];
 
   const handleNavigation = (path: string) => {
     // Only navigate if we have a valid workspace ID
     if (workspaceId) {
-      router.push(path)
+      router.push(path);
     }
-  }
+  };
 
   // Don't render navigation items if we don't have a workspace ID
   if (!workspaceId) {
@@ -42,7 +49,7 @@ export const Sidebar = () => {
           <UserButton />
         </div>
       </aside>
-    )
+    );
   }
 
   return (
@@ -61,5 +68,5 @@ export const Sidebar = () => {
         <UserButton />
       </div>
     </aside>
-  )
-}
+  );
+};

@@ -1,30 +1,35 @@
-"use client"
+"use client";
 
-import { Loader, Plus } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { Loader, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
-import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace"
-import { useGetWorkspaces } from "@/features/workspaces/api/use-get-workspaces"
-import { useCreateWorkspaceModal } from "@/features/workspaces/store/use-create-workspace-modal"
-import { useWorkspaceId } from "@/hooks/use-workspace-id"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace";
+import { useGetWorkspaces } from "@/features/workspaces/api/use-get-workspaces";
+import { useCreateWorkspaceModal } from "@/features/workspaces/store/use-create-workspace-modal";
+import { useWorkspaceId } from "@/hooks/use-workspace-id";
 
 export const WorkspaceSwitcher = () => {
-  const router = useRouter()
-  const workspaceId = useWorkspaceId()
-  const [_open, setOpen] = useCreateWorkspaceModal()
+  const router = useRouter();
+  const workspaceId = useWorkspaceId();
+  const [_open, setOpen] = useCreateWorkspaceModal();
 
   const { data: workspace, isLoading: workspaceLoading } = useGetWorkspace({
     id: workspaceId,
-  })
-  const { data: workspaces, isLoading: workspacesLoading } = useGetWorkspaces()
+  });
+  const { data: workspaces, isLoading: workspacesLoading } = useGetWorkspaces();
 
-  const filteredWorkspaces = workspaces?.filter((ws) => ws._id !== workspaceId)
+  const filteredWorkspaces = workspaces?.filter((ws) => ws._id !== workspaceId);
 
   const handleWorkspaceSwitch = (newWorkspaceId: string) => {
-    router.push(`/workspace/${newWorkspaceId}`)
-  }
+    router.push(`/workspace/${newWorkspaceId}`);
+  };
 
   return (
     <DropdownMenu>
@@ -43,7 +48,9 @@ export const WorkspaceSwitcher = () => {
           className="cursor-pointer flex-col justify-start items-start capitalize"
         >
           {workspace?.name}
-          <span className="text-xs text-muted-foreground">Active workspace</span>
+          <span className="text-xs text-muted-foreground">
+            Active workspace
+          </span>
         </DropdownMenuItem>
         {filteredWorkspaces?.map((workspace) => (
           <DropdownMenuItem
@@ -57,7 +64,10 @@ export const WorkspaceSwitcher = () => {
             <p className="truncate">{workspace.name}</p>
           </DropdownMenuItem>
         ))}
-        <DropdownMenuItem className="cursor-pointer" onClick={() => setOpen(true)}>
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={() => setOpen(true)}
+        >
           <div className="size-9 relative overflow-hidden bg-[#F2F2F2] text-slate-800 font-semibold text-lg rounded-md flex items-center justify-center mr-2">
             <Plus />
           </div>
@@ -65,5 +75,5 @@ export const WorkspaceSwitcher = () => {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
-}
+  );
+};
