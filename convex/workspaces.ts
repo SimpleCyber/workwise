@@ -102,6 +102,7 @@ export const getInfoById = query({
       name: workspace.name,
       joinCode: workspace.joinCode,
       role: member?.role ?? "member",
+      isMember: !!member,
     };
   },
 });
