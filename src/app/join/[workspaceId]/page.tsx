@@ -29,7 +29,7 @@ const JoinWorkspaceIdPage = () => {
 
   const handleComplete = (value: string) => {
     mutate(
-      { workspaceId, joinCode: value },
+      { workspaceId, joinCode: value.toLowerCase() },
       {
         onSuccess: (id) => {
           router.replace(`/workspace/${id}`);
