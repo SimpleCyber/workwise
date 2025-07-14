@@ -76,11 +76,22 @@ export const createProjectBoard = mutation({
     });
 
     await ctx.db.insert("projectLists", {
-      name: "Done",
+      name: "In Review",
       boardId,
       memberId: member._id,
       workspaceId: args.workspaceId,
       position: 2,
+      isArchived: false,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    await ctx.db.insert("projectLists", {
+      name: "Done",
+      boardId,
+      memberId: member._id,
+      workspaceId: args.workspaceId,
+      position: 3,
       isArchived: false,
       createdAt: Date.now(),
       updatedAt: Date.now(),

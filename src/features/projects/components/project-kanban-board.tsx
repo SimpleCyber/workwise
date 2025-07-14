@@ -379,14 +379,15 @@ export const ProjectKanbanBoard = ({
                   </CardContent>
                 </Card>
               ) : (
-                <Button
-                  variant="ghost"
-                  className="w-full h-12 border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50"
-                  onClick={() => setIsAddingList(true)}
-                >
-                  <Plus className="size-4 mr-2" />
-                  Add a list
-                </Button>
+                // <Button
+                //   variant="ghost"
+                //   className="w-full h-12 border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50"
+                //   onClick={() => setIsAddingList(true)}
+                // >
+                //   <Plus className="size-4 mr-2" />
+                //   Add a lis
+                // </Button>
+                <div></div>
               )}
             </div>
           </div>
