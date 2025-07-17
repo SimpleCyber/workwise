@@ -102,7 +102,7 @@ const ProjectsWorkspacePage = () => {
             toast.success("Project board deleted successfully!");
           },
           onError: (error) => {
-            toast.error(error.message || "Failed to delete project board");
+            toast.error("Only admins can delete the project");
           },
         },
       );
