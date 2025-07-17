@@ -23,6 +23,9 @@ import { useGetRecentCards } from "@/features/todos/api/use-get-recent-cards";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 
 export const WorkspaceSidebarContent = () => {
+  const MAX_NAME_WORDS = 10;
+  const MAX_DESCRIPTION_WORDS = 30;
+
   const workspaceId = useWorkspaceId();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -176,17 +179,38 @@ export const WorkspaceSidebarContent = () => {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter board name..."
                 disabled={isPending}
+                maxLength={10}
               />
+
+              <p className="text-xs text-muted-foreground">
+                {name.trim().split(/\s+/).filter(Boolean).length} /{" "}
+                {MAX_NAME_WORDS} words
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Description (Optional)</Label>
               <Textarea
                 id="description"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => {
+                  const input = e.target.value;
+                  const words = input.trim().split(/\s+/).filter(Boolean);
+                  if (words.length <= MAX_DESCRIPTION_WORDS) {
+                    setDescription(input);
+                  } else {
+                    toast.error(
+                      `Description can't exceed ${MAX_DESCRIPTION_WORDS} words.`,
+                    );
+                  }
+                }}
                 placeholder="Enter board description..."
                 disabled={isPending}
               />
+
+              <p className="text-xs text-muted-foreground">
+                {description.trim().split(/\s+/).filter(Boolean).length} /{" "}
+                {MAX_DESCRIPTION_WORDS} words
+              </p>
             </div>
             <div className="flex justify-end gap-2">
               <Button

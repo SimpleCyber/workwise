@@ -49,26 +49,7 @@ export const createBoard = mutation({
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
-    await ctx.db.insert("todoLists", {
-      name: "Doing",
-      boardId,
-      memberId: member._id,
-      workspaceId: args.workspaceId,
-      position: 1,
-      isArchived: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    });
-    await ctx.db.insert("todoLists", {
-      name: "Done",
-      boardId,
-      memberId: member._id,
-      workspaceId: args.workspaceId,
-      position: 2,
-      isArchived: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    });
+
 
     return boardId;
   },

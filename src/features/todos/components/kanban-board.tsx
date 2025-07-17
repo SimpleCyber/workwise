@@ -448,10 +448,6 @@ const KanbanList = ({
                   Rename List
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onArchiveList(list._id)}>
-                  <Archive className="size-4 mr-2" />
-                  Archive List
-                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => onDeleteList(list._id)}
                   className="text-destructive focus:text-destructive"

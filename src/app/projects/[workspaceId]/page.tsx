@@ -48,9 +48,27 @@ const ProjectsWorkspacePage = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
+  const MAX_NAME_WORDS = 10;
+  const MAX_DESCRIPTION_WORDS = 30;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+
+    const nameWords = name.trim().split(/\s+/).length;
+    const descWords = description.trim().split(/\s+/).length;
+
+    if (!name.trim()) return toast.error("Project name is required.");
+
+    if (nameWords > MAX_NAME_WORDS) {
+      return toast.error(`Project name must be under ${MAX_NAME_WORDS} words.`);
+    }
+
+    if (description.trim() && descWords > MAX_DESCRIPTION_WORDS) {
+      return toast.error(
+        `Description must be under ${MAX_DESCRIPTION_WORDS} words.`,
+      );
+    }
+
     createBoard(
       {
         name: name.trim(),
@@ -131,20 +149,50 @@ const ProjectsWorkspacePage = () => {
                 <Input
                   id="name"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => {
+                    const input = e.target.value;
+                    const words = input.trim().split(/\s+/).filter(Boolean);
+                    if (words.length <= MAX_NAME_WORDS) {
+                      setName(input);
+                    } else {
+                      toast.error(
+                        `Title can't exceed ${MAX_NAME_WORDS} words.`,
+                      );
+                    }
+                  }}
                   placeholder="Enter project name..."
                   disabled={isCreatingBoard}
                 />
+
+                <p className="text-xs text-muted-foreground">
+                  {name.trim().split(/\s+/).filter(Boolean).length} /{" "}
+                  {MAX_NAME_WORDS} words
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Description (Optional)</Label>
                 <Textarea
                   id="description"
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={(e) => {
+                    const input = e.target.value;
+                    const words = input.trim().split(/\s+/).filter(Boolean);
+                    if (words.length <= MAX_DESCRIPTION_WORDS) {
+                      setDescription(input);
+                    } else {
+                      toast.error(
+                        `Description can't exceed ${MAX_DESCRIPTION_WORDS} words.`,
+                      );
+                    }
+                  }}
                   placeholder="Enter project description..."
                   disabled={isCreatingBoard}
                 />
+
+                <p className="text-xs text-muted-foreground">
+                  {description.trim().split(/\s+/).filter(Boolean).length} /{" "}
+                  {MAX_DESCRIPTION_WORDS} words
+                </p>
               </div>
               <div className="flex justify-end gap-2">
                 <Button

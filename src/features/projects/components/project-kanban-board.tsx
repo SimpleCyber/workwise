@@ -481,12 +481,6 @@ const ProjectKanbanList = ({
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 flex-1">
-                  <div
-                    {...provided.dragHandleProps}
-                    className="cursor-grab active:cursor-grabbing"
-                  >
-                    <GripVertical className="size-4 text-muted-foreground hover:text-foreground" />
-                  </div>
                   {editingListId === list._id ? (
                     <Input
                       value={editingListName}
@@ -514,36 +508,6 @@ const ProjectKanbanList = ({
                     <h3 className="font-medium text-sm flex-1">{list.name}</h3>
                   )}
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                      <MoreHorizontal className="size-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setEditingListId(list._id);
-                        setEditingListName(list.name);
-                      }}
-                    >
-                      <Edit className="size-4 mr-2" />
-                      Rename List
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => onListArchive(list._id)}>
-                      <Archive className="size-4 mr-2" />
-                      Archive List
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-destructive focus:text-destructive"
-                      onClick={() => onListDelete(list._id)}
-                    >
-                      <Trash2 className="size-4 mr-2" />
-                      Delete List
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </div>
               {sortedTasks.length > 0 && (
                 <div className="text-xs text-muted-foreground">

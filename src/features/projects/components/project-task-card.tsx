@@ -175,15 +175,6 @@ export const ProjectTaskCard = ({
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.stopPropagation();
-                    onArchive?.();
-                  }}
-                >
-                  <Archive className="size-4 mr-2" />
-                  Archive
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
                     onDelete?.();
                   }}
                   className="text-destructive focus:text-destructive"
