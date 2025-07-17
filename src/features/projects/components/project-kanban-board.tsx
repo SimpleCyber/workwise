@@ -283,52 +283,7 @@ export const ProjectKanbanBoard = ({ boardId, lists, selectedMemberIds }: Projec
             {provided.placeholder}
             {/* Add List Column */}
             <div className="flex-shrink-0 w-72">
-              {isAddingList ? (
-                <Card>
-                  <CardContent className="p-3">
-                    <Input
-                      value={newListName}
-                      onChange={(e) => setNewListName(e.target.value)}
-                      placeholder="Enter list title..."
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          handleCreateList()
-                        } else if (e.key === "Escape") {
-                          setIsAddingList(false)
-                          setNewListName("")
-                        }
-                      }}
-                      autoFocus
-                      disabled={isCreatingList}
-                    />
-                    <div className="flex gap-2 mt-2">
-                      <Button size="sm" onClick={handleCreateList} disabled={!newListName.trim() || isCreatingList}>
-                        Add List
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setIsAddingList(false)
-                          setNewListName("")
-                        }}
-                        disabled={isCreatingList}
-                      >
-                        <X className="size-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : (
-                <Button
-                  variant="ghost"
-                  className="w-full h-12 border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50"
-                  onClick={() => setIsAddingList(true)}
-                >
-                  <Plus className="size-4 mr-2" />
-                  Add a list
-                </Button>
-              )}
+
             </div>
           </div>
         )}
@@ -451,33 +406,7 @@ const ProjectKanbanList = ({
                     <h3 className="font-medium text-sm flex-1">{list.name}</h3>
                   )}
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                      <span className="sr-only">Open menu</span>
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setEditingListId(list._id)
-                        setEditingListName(list.name)
-                      }}
-                    >
-                      <Edit className="mr-2 h-4 w-4" /> Rename List
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onListArchive(list._id)}>
-                      <Archive className="mr-2 h-4 w-4" /> Archive List
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => onListDelete(list._id)}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" /> Delete List
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+               
               </div>
               {sortedTasks.length > 0 && (
                 <div className="text-xs text-muted-foreground">
