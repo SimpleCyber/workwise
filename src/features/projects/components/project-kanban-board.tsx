@@ -1,108 +1,68 @@
-"use client";
+"use client"
 
-import {
-  DragDropContext,
-  Draggable,
-  type DropResult,
-  Droppable,
-} from "@hello-pangea/dnd";
-import {
-  Archive,
-  Edit,
-  GripVertical,
-  Loader,
-  MoreHorizontal,
-  Plus,
-  Trash2,
-  X,
-} from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
+import { DragDropContext, Draggable, type DropResult, Droppable } from "@hello-pangea/dnd"
+import { Archive, Edit, Loader, MoreHorizontal, Plus, Trash2, X } from "lucide-react"
+import { useState } from "react"
+import { toast } from "sonner"
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useCreateProjectList } from "@/features/projects/api/use-create-project-list";
-import { useCreateProjectTask } from "@/features/projects/api/use-create-project-task";
-import { useDeleteProjectList } from "@/features/projects/api/use-delete-project-list";
-import { useDeleteProjectTask } from "@/features/projects/api/use-delete-project-task";
-import { useGetProjectTasks } from "@/features/projects/api/use-get-project-tasks";
-import {
-  useGetWorkspaceMembers,
-  WorkspaceMember,
-} from "@/features/projects/api/use-get-workspace-members";
-import { useUpdateProjectList } from "@/features/projects/api/use-update-project-list";
-import { useUpdateProjectTask } from "@/features/projects/api/use-update-project-task";
-
-import type { Id } from "../../../../convex/_generated/dataModel";
-import { ProjectTaskCard } from "./project-task-card";
-import { ProjectTaskDetailModal } from "./project-task-detail-modal";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useCreateProjectList } from "@/features/projects/api/use-create-project-list"
+import { useCreateProjectTask } from "@/features/projects/api/use-create-project-task"
+import { useDeleteProjectList } from "@/features/projects/api/use-delete-project-list"
+import { useDeleteProjectTask } from "@/features/projects/api/use-delete-project-task"
+import { useGetProjectTasks } from "@/features/projects/api/use-get-project-tasks"
+import { useGetWorkspaceMembers, type WorkspaceMember } from "@/features/projects/api/use-get-workspace-members"
+import { useUpdateProjectList } from "@/features/projects/api/use-update-project-list"
+import { useUpdateProjectTask } from "@/features/projects/api/use-update-project-task"
+import type { Id } from "../../../../convex/_generated/dataModel"
+import { ProjectTaskCard } from "./project-task-card"
+import { ProjectTaskDetailModal } from "./project-task-detail-modal"
 
 interface ProjectKanbanBoardProps {
-  boardId: Id<"projectBoards">;
+  boardId: Id<"projectBoards">
   lists: Array<{
-    _id: Id<"projectLists">;
-    name: string;
-    position: number;
-    boardId: Id<"projectBoards">;
-    memberId: Id<"members">;
-    workspaceId: Id<"workspaces">;
-    isArchived?: boolean;
-    createdAt: number;
-    updatedAt: number;
-  }>;
+    _id: Id<"projectLists">
+    name: string
+    position: number
+    boardId: Id<"projectBoards">
+    memberId: Id<"members">
+    workspaceId: Id<"workspaces">
+    isArchived?: boolean
+    createdAt: number
+    updatedAt: number
+  }>
+  selectedMemberIds: Id<"members">[] // Change to array
 }
 
-export const ProjectKanbanBoard = ({
-  boardId,
-  lists,
-}: ProjectKanbanBoardProps) => {
-  const [isAddingList, setIsAddingList] = useState(false);
-  const [newListName, setNewListName] = useState("");
-  const [addingTaskToList, setAddingTaskToList] =
-    useState<Id<"projectLists"> | null>(null);
-  const [newTaskTitle, setNewTaskTitle] = useState("");
-  const [selectedAssignee, setSelectedAssignee] = useState<
-    Id<"members"> | undefined
-  >(undefined);
-  const [selectedTask, setSelectedTask] = useState<any>(null);
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [editingListId, setEditingListId] = useState<Id<"projectLists"> | null>(
-    null,
-  );
-  const [editingListName, setEditingListName] = useState("");
+export const ProjectKanbanBoard = ({ boardId, lists, selectedMemberIds }: ProjectKanbanBoardProps) => {
+  const [isAddingList, setIsAddingList] = useState(false)
+  const [newListName, setNewListName] = useState("")
+  const [addingTaskToList, setAddingTaskToList] = useState<Id<"projectLists"> | null>(null)
+  const [newTaskTitle, setNewTaskTitle] = useState("")
+  const [selectedAssignee, setSelectedAssignee] = useState<Id<"members"> | undefined>(undefined)
+  const [selectedTask, setSelectedTask] = useState<any>(null)
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
+  const [editingListId, setEditingListId] = useState<Id<"projectLists"> | null>(null)
+  const [editingListName, setEditingListName] = useState("")
 
-  const { mutate: createList, isPending: isCreatingList } =
-    useCreateProjectList();
-  const { mutate: createTask, isPending: isCreatingTask } =
-    useCreateProjectTask();
-  const { mutate: updateTask } = useUpdateProjectTask();
-  const { mutate: deleteTask } = useDeleteProjectTask();
-  const { mutate: updateList } = useUpdateProjectList();
-  const { mutate: deleteList } = useDeleteProjectList();
+  const { mutate: createList, isPending: isCreatingList } = useCreateProjectList()
+  const { mutate: createTask, isPending: isCreatingTask } = useCreateProjectTask()
+  const { mutate: updateTask } = useUpdateProjectTask()
+  const { mutate: deleteTask } = useDeleteProjectTask()
+  const { mutate: updateList } = useUpdateProjectList()
+  const { mutate: deleteList } = useDeleteProjectList()
 
   // Get workspace members for assignment
-  const workspaceId = lists[0]?.workspaceId;
-  const { data: members } = useGetWorkspaceMembers({ workspaceId });
+  const workspaceId = lists[0]?.workspaceId
+  const { data: members } = useGetWorkspaceMembers({ workspaceId })
 
   const handleCreateList = () => {
-    if (!newListName.trim()) return;
-
+    if (!newListName.trim()) return
     createList(
       {
         name: newListName.trim(),
@@ -110,20 +70,19 @@ export const ProjectKanbanBoard = ({
       },
       {
         onSuccess: () => {
-          setNewListName("");
-          setIsAddingList(false);
-          toast.success("List created successfully!");
+          setNewListName("")
+          setIsAddingList(false)
+          toast.success("List created successfully!")
         },
         onError: (error) => {
-          toast.error(error.message || "Failed to create list");
+          toast.error(error.message || "Failed to create list")
         },
       },
-    );
-  };
+    )
+  }
 
   const handleCreateTask = (listId: Id<"projectLists">) => {
-    if (!newTaskTitle.trim()) return;
-
+    if (!newTaskTitle.trim()) return
     createTask(
       {
         title: newTaskTitle.trim(),
@@ -132,17 +91,17 @@ export const ProjectKanbanBoard = ({
       },
       {
         onSuccess: () => {
-          setNewTaskTitle("");
-          setSelectedAssignee(undefined);
-          setAddingTaskToList(null);
-          toast.success("Task created successfully!");
+          setNewTaskTitle("")
+          setSelectedAssignee(undefined)
+          setAddingTaskToList(null)
+          toast.success("Task created successfully!")
         },
         onError: (error) => {
-          toast.error(error.message || "Failed to create task");
+          toast.error(error.message || "Failed to create task")
         },
       },
-    );
-  };
+    )
+  }
 
   const handleTaskArchive = (taskId: Id<"projectTasks">) => {
     updateTask(
@@ -152,52 +111,45 @@ export const ProjectKanbanBoard = ({
       },
       {
         onSuccess: () => {
-          toast.success("Task archived successfully!");
+          toast.success("Task archived successfully!")
         },
         onError: (error) => {
-          toast.error(error.message || "Failed to archive task");
+          toast.error(error.message || "Failed to archive task")
         },
       },
-    );
-  };
+    )
+  }
 
   const handleTaskDelete = (taskId: Id<"projectTasks">) => {
-    if (
-      confirm(
-        "Are you sure you want to delete this task? This action cannot be undone.",
-      )
-    ) {
+    if (confirm("Are you sure you want to delete this task? This action cannot be undone.")) {
       deleteTask(
         { taskId },
         {
           onSuccess: () => {
-            toast.success("Task deleted successfully!");
+            toast.success("Task deleted successfully!")
           },
           onError: (error) => {
-            toast.error(error.message || "Failed to delete task");
+            toast.error(error.message || "Failed to delete task")
           },
         },
-      );
+      )
     }
-  };
+  }
 
   const handleDragEnd = (result: DropResult) => {
-    const { destination, source, draggableId, type } = result;
+    const { destination, source, draggableId, type } = result
 
-    if (!destination) return;
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) {
-      return;
+    if (!destination) return
+
+    if (destination.droppableId === source.droppableId && destination.index === source.index) {
+      return
     }
 
     if (type === "task") {
-      const taskId = draggableId as Id<"projectTasks">;
-
+      const taskId = draggableId as Id<"projectTasks">
       // Moving to different list
       if (source.droppableId !== destination.droppableId) {
-        const newListId = destination.droppableId as Id<"projectLists">;
+        const newListId = destination.droppableId as Id<"projectLists">
         updateTask(
           {
             taskId,
@@ -206,10 +158,10 @@ export const ProjectKanbanBoard = ({
           },
           {
             onError: (error) => {
-              toast.error(error.message || "Failed to move task");
+              toast.error(error.message || "Failed to move task")
             },
           },
-        );
+        )
       } else {
         // Reordering within same list
         updateTask(
@@ -219,17 +171,16 @@ export const ProjectKanbanBoard = ({
           },
           {
             onError: (error) => {
-              toast.error(error.message || "Failed to reorder task");
+              toast.error(error.message || "Failed to reorder task")
             },
           },
-        );
+        )
       }
     }
-  };
+  }
 
   const handleListRename = (listId: Id<"projectLists">, newName: string) => {
-    if (!newName.trim()) return;
-
+    if (!newName.trim()) return
     updateList(
       {
         listId,
@@ -237,16 +188,16 @@ export const ProjectKanbanBoard = ({
       },
       {
         onSuccess: () => {
-          toast.success("List renamed successfully!");
-          setEditingListId(null);
-          setEditingListName("");
+          toast.success("List renamed successfully!")
+          setEditingListId(null)
+          setEditingListName("")
         },
         onError: (error) => {
-          toast.error(error.message || "Failed to rename list");
+          toast.error(error.message || "Failed to rename list")
         },
       },
-    );
-  };
+    )
+  }
 
   const handleListArchive = (listId: Id<"projectLists">) => {
     updateList(
@@ -256,14 +207,14 @@ export const ProjectKanbanBoard = ({
       },
       {
         onSuccess: () => {
-          toast.success("List archived successfully!");
+          toast.success("List archived successfully!")
         },
         onError: (error) => {
-          toast.error(error.message || "Failed to archive list");
+          toast.error(error.message || "Failed to archive list")
         },
       },
-    );
-  };
+    )
+  }
 
   const handleListDelete = (listId: Id<"projectLists">) => {
     if (
@@ -275,34 +226,28 @@ export const ProjectKanbanBoard = ({
         { listId },
         {
           onSuccess: () => {
-            toast.success("List deleted successfully!");
+            toast.success("List deleted successfully!")
           },
           onError: (error) => {
-            toast.error(error.message || "Failed to delete list");
+            toast.error(error.message || "Failed to delete list")
           },
         },
-      );
+      )
     }
-  };
+  }
 
   const handleTaskEdit = (task: any) => {
-    setSelectedTask(task);
-    setIsTaskModalOpen(true);
-  };
+    setSelectedTask(task)
+    setIsTaskModalOpen(true)
+  }
 
-  const sortedLists = [...lists]
-    .filter((list) => !list.isArchived)
-    .sort((a, b) => a.position - b.position);
+  const sortedLists = [...lists].filter((list) => !list.isArchived).sort((a, b) => a.position - b.position)
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <Droppable droppableId="board" type="list" direction="horizontal">
         {(provided) => (
-          <div
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-            className="flex h-full gap-4 p-4 overflow-x-auto"
-          >
+          <div ref={provided.innerRef} {...provided.droppableProps} className="flex h-full gap-4 p-4 overflow-x-auto">
             {sortedLists.map((list, index) => (
               <ProjectKanbanList
                 key={list._id}
@@ -316,9 +261,9 @@ export const ProjectKanbanBoard = ({
                 members={members}
                 onAddTask={() => setAddingTaskToList(list._id)}
                 onCancelAddTask={() => {
-                  setAddingTaskToList(null);
-                  setNewTaskTitle("");
-                  setSelectedAssignee(undefined);
+                  setAddingTaskToList(null)
+                  setNewTaskTitle("")
+                  setSelectedAssignee(undefined)
                 }}
                 onCreateTask={() => handleCreateTask(list._id)}
                 isCreatingTask={isCreatingTask}
@@ -332,10 +277,10 @@ export const ProjectKanbanBoard = ({
                 editingListName={editingListName}
                 setEditingListId={setEditingListId}
                 setEditingListName={setEditingListName}
+                selectedMemberIds={selectedMemberIds} // Change to array
               />
             ))}
             {provided.placeholder}
-
             {/* Add List Column */}
             <div className="flex-shrink-0 w-72">
               {isAddingList ? (
@@ -347,29 +292,25 @@ export const ProjectKanbanBoard = ({
                       placeholder="Enter list title..."
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
-                          handleCreateList();
+                          handleCreateList()
                         } else if (e.key === "Escape") {
-                          setIsAddingList(false);
-                          setNewListName("");
+                          setIsAddingList(false)
+                          setNewListName("")
                         }
                       }}
                       autoFocus
                       disabled={isCreatingList}
                     />
                     <div className="flex gap-2 mt-2">
-                      <Button
-                        size="sm"
-                        onClick={handleCreateList}
-                        disabled={!newListName.trim() || isCreatingList}
-                      >
+                      <Button size="sm" onClick={handleCreateList} disabled={!newListName.trim() || isCreatingList}>
                         Add List
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => {
-                          setIsAddingList(false);
-                          setNewListName("");
+                          setIsAddingList(false)
+                          setNewListName("")
                         }}
                         disabled={isCreatingList}
                       >
@@ -379,15 +320,14 @@ export const ProjectKanbanBoard = ({
                   </CardContent>
                 </Card>
               ) : (
-                // <Button
-                //   variant="ghost"
-                //   className="w-full h-12 border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50"
-                //   onClick={() => setIsAddingList(true)}
-                // >
-                //   <Plus className="size-4 mr-2" />
-                //   Add a lis
-                // </Button>
-                <div></div>
+                <Button
+                  variant="ghost"
+                  className="w-full h-12 border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50"
+                  onClick={() => setIsAddingList(true)}
+                >
+                  <Plus className="size-4 mr-2" />
+                  Add a list
+                </Button>
               )}
             </div>
           </div>
@@ -397,44 +337,46 @@ export const ProjectKanbanBoard = ({
         task={selectedTask}
         open={isTaskModalOpen}
         onOpenChange={setIsTaskModalOpen}
+        lists={lists || []}
       />
     </DragDropContext>
-  );
-};
+  )
+}
 
 interface ProjectKanbanListProps {
   list: {
-    _id: Id<"projectLists">;
-    name: string;
-    position: number;
-    boardId: Id<"projectBoards">;
-    memberId: Id<"members">;
-    workspaceId: Id<"workspaces">;
-    isArchived?: boolean;
-    createdAt: number;
-    updatedAt: number;
-  };
-  index: number;
-  isAddingTask: boolean;
-  newTaskTitle: string;
-  setNewTaskTitle: (title: string) => void;
-  selectedAssignee: Id<"members"> | undefined;
-  setSelectedAssignee: (memberId: Id<"members"> | undefined) => void;
-  members: WorkspaceMember[];
-  onAddTask: () => void;
-  onCancelAddTask: () => void;
-  onCreateTask: () => void;
-  isCreatingTask: boolean;
-  onTaskArchive: (taskId: Id<"projectTasks">) => void;
-  onTaskDelete: (taskId: Id<"projectTasks">) => void;
-  onListRename: (listId: Id<"projectLists">, newName: string) => void;
-  onListArchive: (listId: Id<"projectLists">) => void;
-  onListDelete: (listId: Id<"projectLists">) => void;
-  onTaskEdit: (task: any) => void;
-  editingListId: Id<"projectLists"> | null;
-  editingListName: string;
-  setEditingListId: (id: Id<"projectLists"> | null) => void;
-  setEditingListName: (name: string) => void;
+    _id: Id<"projectLists">
+    name: string
+    position: number
+    boardId: Id<"projectBoards">
+    memberId: Id<"members">
+    workspaceId: Id<"workspaces">
+    isArchived?: boolean
+    createdAt: number
+    updatedAt: number
+  }
+  index: number
+  isAddingTask: boolean
+  newTaskTitle: string
+  setNewTaskTitle: (title: string) => void
+  selectedAssignee: Id<"members"> | undefined
+  setSelectedAssignee: (memberId: Id<"members"> | undefined) => void
+  members: WorkspaceMember[]
+  onAddTask: () => void
+  onCancelAddTask: () => void
+  onCreateTask: () => void
+  isCreatingTask: boolean
+  onTaskArchive: (taskId: Id<"projectTasks">) => void
+  onTaskDelete: (taskId: Id<"projectTasks">) => void
+  onListRename: (listId: Id<"projectLists">, newName: string) => void
+  onListArchive: (listId: Id<"projectLists">) => void
+  onListDelete: (listId: Id<"projectLists">) => void
+  onTaskEdit: (task: any) => void
+  editingListId: Id<"projectLists"> | null
+  editingListName: string
+  setEditingListId: (id: Id<"projectLists"> | null) => void
+  setEditingListName: (name: string) => void
+  selectedMemberIds: Id<"members">[] // Change to array
 }
 
 const ProjectKanbanList = ({
@@ -460,14 +402,15 @@ const ProjectKanbanList = ({
   editingListName,
   setEditingListId,
   setEditingListName,
+  selectedMemberIds, // Change to array
 }: ProjectKanbanListProps) => {
-  const { data: tasks, isLoading } = useGetProjectTasks({ listId: list._id });
+  // Pass selectedMemberIds array to the query
+  const { data: tasks, isLoading } = useGetProjectTasks({
+    listId: list._id,
+    assignedToIds: selectedMemberIds.length > 0 ? selectedMemberIds : undefined,
+  })
 
-  const sortedTasks = tasks
-    ? [...tasks]
-        .filter((task) => !task.isArchived)
-        .sort((a, b) => a.position - b.position)
-    : [];
+  const sortedTasks = tasks ? [...tasks].filter((task) => !task.isArchived).sort((a, b) => a.position - b.position) : []
 
   return (
     <Draggable draggableId={list._id} index={index}>
@@ -487,18 +430,18 @@ const ProjectKanbanList = ({
                       onChange={(e) => setEditingListName(e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
-                          onListRename(list._id, editingListName);
+                          onListRename(list._id, editingListName)
                         } else if (e.key === "Escape") {
-                          setEditingListId(null);
-                          setEditingListName("");
+                          setEditingListId(null)
+                          setEditingListName("")
                         }
                       }}
                       onBlur={() => {
                         if (editingListName.trim()) {
-                          onListRename(list._id, editingListName);
+                          onListRename(list._id, editingListName)
                         } else {
-                          setEditingListId(null);
-                          setEditingListName("");
+                          setEditingListId(null)
+                          setEditingListName("")
                         }
                       }}
                       className="h-6 text-sm font-medium"
@@ -508,14 +451,46 @@ const ProjectKanbanList = ({
                     <h3 className="font-medium text-sm flex-1">{list.name}</h3>
                   )}
                 </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                      <span className="sr-only">Open menu</span>
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setEditingListId(list._id)
+                        setEditingListName(list.name)
+                      }}
+                    >
+                      <Edit className="mr-2 h-4 w-4" /> Rename List
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onListArchive(list._id)}>
+                      <Archive className="mr-2 h-4 w-4" /> Archive List
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onListDelete(list._id)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" /> Delete List
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
               {sortedTasks.length > 0 && (
                 <div className="text-xs text-muted-foreground">
                   {sortedTasks.length} task{sortedTasks.length !== 1 ? "s" : ""}
+                  {selectedMemberIds.length > 0 && (
+                    <span className="ml-1 text-blue-600">
+                      (filtered by {selectedMemberIds.length} member{selectedMemberIds.length !== 1 ? "s" : ""})
+                    </span>
+                  )}
                 </div>
               )}
             </CardHeader>
-
+            {/* Keep the rest of the existing Droppable content */}
             <Droppable droppableId={list._id} type="task">
               {(provided, snapshot) => (
                 <CardContent
@@ -529,11 +504,7 @@ const ProjectKanbanList = ({
                     </div>
                   ) : (
                     sortedTasks.map((task, taskIndex) => (
-                      <Draggable
-                        key={task._id}
-                        draggableId={task._id}
-                        index={taskIndex}
-                      >
+                      <Draggable key={task._id} draggableId={task._id} index={taskIndex}>
                         {(provided, snapshot) => (
                           <div
                             ref={provided.innerRef}
@@ -553,7 +524,7 @@ const ProjectKanbanList = ({
                     ))
                   )}
                   {provided.placeholder}
-
+                  {/* Keep existing task creation form */}
                   {isAddingTask ? (
                     <div className="space-y-2">
                       <Input
@@ -562,9 +533,9 @@ const ProjectKanbanList = ({
                         placeholder="Enter task title..."
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
-                            onCreateTask();
+                            onCreateTask()
                           } else if (e.key === "Escape") {
-                            onCancelAddTask();
+                            onCancelAddTask()
                           }
                         }}
                         autoFocus
@@ -572,10 +543,8 @@ const ProjectKanbanList = ({
                       />
                       <div className="flex items-center gap-2">
                         <Select
-                          value={selectedAssignee ?? ""} // must be string
-                          onValueChange={(value) =>
-                            setSelectedAssignee(value as Id<"members">)
-                          } // cast it back
+                          value={selectedAssignee ?? ""}
+                          onValueChange={(value) => setSelectedAssignee(value as Id<"members">)}
                         >
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Assign to..." />
@@ -585,15 +554,9 @@ const ProjectKanbanList = ({
                               <SelectItem key={member._id} value={member._id}>
                                 <div className="flex items-center gap-2">
                                   <Avatar className="w-5 h-5">
-                                    <AvatarImage
-                                      src={
-                                        member.user?.image || "/placeholder.svg"
-                                      }
-                                    />
+                                    <AvatarImage src={member.user?.image || "/placeholder.svg"} />
                                     <AvatarFallback className="text-xs">
-                                      {member.user?.name
-                                        ?.charAt(0)
-                                        .toUpperCase()}
+                                      {member.user?.name?.charAt(0).toUpperCase()}
                                     </AvatarFallback>
                                   </Avatar>
                                   <span>{member.user?.name}</span>
@@ -604,19 +567,10 @@ const ProjectKanbanList = ({
                         </Select>
                       </div>
                       <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={onCreateTask}
-                          disabled={!newTaskTitle.trim() || isCreatingTask}
-                        >
+                        <Button size="sm" onClick={onCreateTask} disabled={!newTaskTitle.trim() || isCreatingTask}>
                           Add task
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={onCancelAddTask}
-                          disabled={isCreatingTask}
-                        >
+                        <Button size="sm" variant="ghost" onClick={onCancelAddTask} disabled={isCreatingTask}>
                           <X className="size-4" />
                         </Button>
                       </div>
@@ -639,5 +593,5 @@ const ProjectKanbanList = ({
         </div>
       )}
     </Draggable>
-  );
-};
+  )
+}

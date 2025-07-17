@@ -284,71 +284,72 @@ export const createProjectTask = mutation({
   },
 });
 
+
 export const getProjectTasks = query({
   args: {
     listId: v.id("projectLists"),
     includeArchived: v.optional(v.boolean()),
+    assignedToIds: v.optional(v.array(v.id("members"))), // Change to array
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getAuthUserId(ctx)
     if (!userId) {
-      return [];
+      return []
     }
-    const list = await ctx.db.get(args.listId);
+
+    const list = await ctx.db.get(args.listId)
     if (!list) {
-      return [];
+      return []
     }
+
     const member = await ctx.db
       .query("members")
-      .withIndex("by_workspace_id_user_id", (q) =>
-        q.eq("workspaceId", list.workspaceId).eq("userId", userId),
-      )
-      .unique();
+      .withIndex("by_workspace_id_user_id", (q) => q.eq("workspaceId", list.workspaceId).eq("userId", userId))
+      .unique()
+
     if (!member) {
-      return [];
+      return []
     }
-    const tasks = await ctx.db
+
+    let tasks = await ctx.db
       .query("projectTasks")
       .withIndex("by_list_id", (q) => q.eq("listId", args.listId))
-      .collect();
+      .collect()
+
+    // Filter by assignedToIds if provided (multiple members)
+    if (args.assignedToIds && args.assignedToIds.length > 0) {
+      tasks = tasks.filter((task) => task.assignedToId && args.assignedToIds!.includes(task.assignedToId))
+    }
+
     // Get member details for each task
     const tasksWithMembers = await Promise.all(
       tasks.map(async (task) => {
-        const assignedTo = task.assignedToId
-          ? await ctx.db.get(task.assignedToId)
-          : null;
-        const assignedBy = task.assignedById
-          ? await ctx.db.get(task.assignedById)
-          : null;
-        const createdBy = await ctx.db.get(task.createdById);
+        const assignedTo = task.assignedToId ? await ctx.db.get(task.assignedToId) : null
+        const assignedBy = task.assignedById ? await ctx.db.get(task.assignedById) : null
+        const createdBy = await ctx.db.get(task.createdById)
+
         // Get user details
-        const assignedToUser = assignedTo
-          ? await ctx.db.get(assignedTo.userId)
-          : null;
-        const assignedByUser = assignedBy
-          ? await ctx.db.get(assignedBy.userId)
-          : null;
-        const createdByUser = createdBy
-          ? await ctx.db.get(createdBy.userId)
-          : null;
+        const assignedToUser = assignedTo ? await ctx.db.get(assignedTo.userId) : null
+        const assignedByUser = assignedBy ? await ctx.db.get(assignedBy.userId) : null
+        const createdByUser = createdBy ? await ctx.db.get(createdBy.userId) : null
+
         return {
           ...task,
-          assignedTo: assignedTo
-            ? { ...assignedTo, user: assignedToUser }
-            : null,
-          assignedBy: assignedBy
-            ? { ...assignedBy, user: assignedByUser }
-            : null,
+          assignedTo: assignedTo ? { ...assignedTo, user: assignedToUser } : null,
+          assignedBy: assignedBy ? { ...assignedBy, user: assignedByUser } : null,
           createdBy: createdBy ? { ...createdBy, user: createdByUser } : null,
-        };
+        }
       }),
-    );
+    )
+
     return tasksWithMembers
       .filter(Boolean)
       .filter((task) => (args.includeArchived ? true : !task.isArchived))
-      .sort((a, b) => a.position - b.position);
+      .sort((a, b) => a.position - b.position)
   },
-});
+})
+
+
 
 export const updateProjectTask = mutation({
   args: {
