@@ -236,10 +236,28 @@ const schema = defineSchema({
     .index("by_workspace_id", ["workspaceId"])
     .index("by_board_archived", ["boardId", "isArchived"]),
 
+
+
+    taskComments: defineTable({
+    taskId: v.id("projectTasks"),
+    memberId: v.id("members"),
+    content: v.string(),
+    images: v.array(v.string()), // Array of image URLs
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    isEdited: v.boolean(),
+  })
+    .index("by_task_id", ["taskId"])
+    .index("by_member_id", ["memberId"]),
+
+
+
+
   projectTasks: defineTable({
     title: v.string(),
     description: v.optional(v.string()),
     taskCode: v.string(), // B01-1, B01-2, etc.
+    images: v.optional(v.array(v.string())),
     listId: v.id("projectLists"),
     boardId: v.id("projectBoards"),
     createdById: v.id("members"),
