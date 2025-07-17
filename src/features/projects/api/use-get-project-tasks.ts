@@ -1,11 +1,11 @@
-import { useQuery } from "convex/react"
-import { api } from "../../../../convex/_generated/api"
-import type { Id } from "../../../../convex/_generated/dataModel"
+import { useQuery } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
+import type { Id } from "../../../../convex/_generated/dataModel";
 
 interface UseGetProjectTasksProps {
-  listId: Id<"projectLists">
-  includeArchived?: boolean
-  assignedToIds?: Id<"members">[] // Change to array
+  listId: Id<"projectLists">;
+  includeArchived?: boolean;
+  assignedToIds?: Id<"members">[]; // Change to array
 }
 
 export const useGetProjectTasks = ({
@@ -17,8 +17,8 @@ export const useGetProjectTasks = ({
     listId,
     includeArchived,
     assignedToIds, // Pass array to the query
-  })
-  const isLoading = data === undefined
+  });
+  const isLoading = data === undefined;
 
-  return { data, isLoading }
-}
+  return { data, isLoading };
+};

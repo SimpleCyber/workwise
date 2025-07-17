@@ -50,7 +50,6 @@ export const createBoard = mutation({
       updatedAt: Date.now(),
     });
 
-
     return boardId;
   },
 });
