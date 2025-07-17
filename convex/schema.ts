@@ -236,9 +236,7 @@ const schema = defineSchema({
     .index("by_workspace_id", ["workspaceId"])
     .index("by_board_archived", ["boardId", "isArchived"]),
 
-
-
-    taskComments: defineTable({
+  taskComments: defineTable({
     taskId: v.id("projectTasks"),
     memberId: v.id("members"),
     content: v.string(),
@@ -249,9 +247,6 @@ const schema = defineSchema({
   })
     .index("by_task_id", ["taskId"])
     .index("by_member_id", ["memberId"]),
-
-
-
 
   projectTasks: defineTable({
     title: v.string(),

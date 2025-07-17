@@ -281,8 +281,6 @@ export const createProjectTask = mutation({
   },
 });
 
-
-
 export const updateProjectTask = mutation({
   args: {
     taskId: v.id("projectTasks"),
@@ -564,9 +562,6 @@ export const deleteProjectTask = mutation({
   },
 });
 
-
-
-
 // Create a comment on a task
 export const createTaskComment = mutation({
   args: {
@@ -575,24 +570,26 @@ export const createTaskComment = mutation({
     images: v.optional(v.array(v.string())), // Array of image URLs
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx)
+    const userId = await getAuthUserId(ctx);
     if (!userId) {
-      throw new Error("Unauthorized")
+      throw new Error("Unauthorized");
     }
 
-    const task = await ctx.db.get(args.taskId)
+    const task = await ctx.db.get(args.taskId);
     if (!task) {
-      throw new Error("Task not found")
+      throw new Error("Task not found");
     }
 
     // Check if user is a member of the workspace
     const member = await ctx.db
       .query("members")
-      .withIndex("by_workspace_id_user_id", (q) => q.eq("workspaceId", task.workspaceId).eq("userId", userId))
-      .unique()
+      .withIndex("by_workspace_id_user_id", (q) =>
+        q.eq("workspaceId", task.workspaceId).eq("userId", userId),
+      )
+      .unique();
 
     if (!member) {
-      throw new Error("Not a member of this workspace")
+      throw new Error("Not a member of this workspace");
     }
 
     const commentId = await ctx.db.insert("taskComments", {
@@ -603,11 +600,11 @@ export const createTaskComment = mutation({
       createdAt: Date.now(),
       updatedAt: Date.now(),
       isEdited: false,
-    })
+    });
 
-    return commentId
+    return commentId;
   },
-})
+});
 
 // Update a comment (only by the author)
 export const updateTaskComment = mutation({
@@ -617,19 +614,19 @@ export const updateTaskComment = mutation({
     images: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx)
+    const userId = await getAuthUserId(ctx);
     if (!userId) {
-      throw new Error("Unauthorized")
+      throw new Error("Unauthorized");
     }
 
-    const comment = await ctx.db.get(args.commentId)
+    const comment = await ctx.db.get(args.commentId);
     if (!comment) {
-      throw new Error("Comment not found")
+      throw new Error("Comment not found");
     }
 
-    const member = await ctx.db.get(comment.memberId)
+    const member = await ctx.db.get(comment.memberId);
     if (!member || member.userId !== userId) {
-      throw new Error("You can only edit your own comments")
+      throw new Error("You can only edit your own comments");
     }
 
     await ctx.db.patch(args.commentId, {
@@ -637,11 +634,11 @@ export const updateTaskComment = mutation({
       images: args.images || [],
       updatedAt: Date.now(),
       isEdited: true,
-    })
+    });
 
-    return args.commentId
+    return args.commentId;
   },
-})
+});
 
 // Delete a comment (only by the author)
 export const deleteTaskComment = mutation({
@@ -649,25 +646,25 @@ export const deleteTaskComment = mutation({
     commentId: v.id("taskComments"),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx)
+    const userId = await getAuthUserId(ctx);
     if (!userId) {
-      throw new Error("Unauthorized")
+      throw new Error("Unauthorized");
     }
 
-    const comment = await ctx.db.get(args.commentId)
+    const comment = await ctx.db.get(args.commentId);
     if (!comment) {
-      throw new Error("Comment not found")
+      throw new Error("Comment not found");
     }
 
-    const member = await ctx.db.get(comment.memberId)
+    const member = await ctx.db.get(comment.memberId);
     if (!member || member.userId !== userId) {
-      throw new Error("You can only delete your own comments")
+      throw new Error("You can only delete your own comments");
     }
 
-    await ctx.db.delete(args.commentId)
-    return args.commentId
+    await ctx.db.delete(args.commentId);
+    return args.commentId;
   },
-})
+});
 
 // Get comments for a task
 export const getTaskComments = query({
@@ -676,53 +673,57 @@ export const getTaskComments = query({
     sortOrder: v.optional(v.union(v.literal("asc"), v.literal("desc"))),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx)
+    const userId = await getAuthUserId(ctx);
     if (!userId) {
-      return []
+      return [];
     }
 
-    const task = await ctx.db.get(args.taskId)
+    const task = await ctx.db.get(args.taskId);
     if (!task) {
-      return []
+      return [];
     }
 
     // Check if user is a member of the workspace
     const member = await ctx.db
       .query("members")
-      .withIndex("by_workspace_id_user_id", (q) => q.eq("workspaceId", task.workspaceId).eq("userId", userId))
-      .unique()
+      .withIndex("by_workspace_id_user_id", (q) =>
+        q.eq("workspaceId", task.workspaceId).eq("userId", userId),
+      )
+      .unique();
 
     if (!member) {
-      return []
+      return [];
     }
 
     const comments = await ctx.db
       .query("taskComments")
       .withIndex("by_task_id", (q) => q.eq("taskId", args.taskId))
-      .collect()
+      .collect();
 
     const commentsWithMembers = await Promise.all(
       comments.map(async (comment) => {
-        const commentMember = await ctx.db.get(comment.memberId)
-        const user = commentMember ? await ctx.db.get(commentMember.userId) : null
+        const commentMember = await ctx.db.get(comment.memberId);
+        const user = commentMember
+          ? await ctx.db.get(commentMember.userId)
+          : null;
 
         return {
           ...comment,
           member: commentMember ? { ...commentMember, user } : null,
-        }
+        };
       }),
-    )
+    );
 
     // Sort by creation date
-    const sortOrder = args.sortOrder || "asc"
+    const sortOrder = args.sortOrder || "asc";
     return commentsWithMembers.filter(Boolean).sort((a, b) => {
       if (sortOrder === "desc") {
-        return b.createdAt - a.createdAt
+        return b.createdAt - a.createdAt;
       }
-      return a.createdAt - b.createdAt
-    })
+      return a.createdAt - b.createdAt;
+    });
   },
-})
+});
 
 // Update task with rich content (only by creator)
 export const updateTaskContent = mutation({
@@ -734,34 +735,35 @@ export const updateTaskContent = mutation({
     images: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx)
+    const userId = await getAuthUserId(ctx);
     if (!userId) {
-      throw new Error("Unauthorized")
+      throw new Error("Unauthorized");
     }
 
-    const task = await ctx.db.get(args.taskId)
+    const task = await ctx.db.get(args.taskId);
     if (!task) {
-      throw new Error("Task not found")
+      throw new Error("Task not found");
     }
 
-    const createdByMember = await ctx.db.get(task.createdById)
+    const createdByMember = await ctx.db.get(task.createdById);
     if (!createdByMember || createdByMember.userId !== userId) {
-      throw new Error("Only the task creator can edit task details")
+      throw new Error("Only the task creator can edit task details");
     }
 
     const updateData: any = {
       updatedAt: Date.now(),
-    }
+    };
 
-    if (args.title !== undefined) updateData.title = args.title
-    if (args.description !== undefined) updateData.description = args.description
-    if (args.dueDate !== undefined) updateData.dueDate = args.dueDate
-    if (args.images !== undefined) updateData.images = args.images
+    if (args.title !== undefined) updateData.title = args.title;
+    if (args.description !== undefined)
+      updateData.description = args.description;
+    if (args.dueDate !== undefined) updateData.dueDate = args.dueDate;
+    if (args.images !== undefined) updateData.images = args.images;
 
-    await ctx.db.patch(args.taskId, updateData)
-    return args.taskId
+    await ctx.db.patch(args.taskId, updateData);
+    return args.taskId;
   },
-})
+});
 
 export const getProjectTasks = query({
   args: {
@@ -770,59 +772,78 @@ export const getProjectTasks = query({
     assignedToIds: v.optional(v.array(v.id("members"))), // Change to array
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx)
+    const userId = await getAuthUserId(ctx);
     if (!userId) {
-      return []
+      return [];
     }
 
-    const list = await ctx.db.get(args.listId)
+    const list = await ctx.db.get(args.listId);
     if (!list) {
-      return []
+      return [];
     }
 
     const member = await ctx.db
       .query("members")
-      .withIndex("by_workspace_id_user_id", (q) => q.eq("workspaceId", list.workspaceId).eq("userId", userId))
-      .unique()
+      .withIndex("by_workspace_id_user_id", (q) =>
+        q.eq("workspaceId", list.workspaceId).eq("userId", userId),
+      )
+      .unique();
 
     if (!member) {
-      return []
+      return [];
     }
 
     let tasks = await ctx.db
       .query("projectTasks")
       .withIndex("by_list_id", (q) => q.eq("listId", args.listId))
-      .collect()
+      .collect();
 
     // Filter by assignedToIds if provided (multiple members)
     if (args.assignedToIds && args.assignedToIds.length > 0) {
-      tasks = tasks.filter((task) => task.assignedToId && args.assignedToIds!.includes(task.assignedToId))
+      tasks = tasks.filter(
+        (task) =>
+          task.assignedToId && args.assignedToIds!.includes(task.assignedToId),
+      );
     }
 
     // Get member details for each task
     const tasksWithMembers = await Promise.all(
       tasks.map(async (task) => {
-        const assignedTo = task.assignedToId ? await ctx.db.get(task.assignedToId) : null
-        const assignedBy = task.assignedById ? await ctx.db.get(task.assignedById) : null
-        const createdBy = await ctx.db.get(task.createdById)
+        const assignedTo = task.assignedToId
+          ? await ctx.db.get(task.assignedToId)
+          : null;
+        const assignedBy = task.assignedById
+          ? await ctx.db.get(task.assignedById)
+          : null;
+        const createdBy = await ctx.db.get(task.createdById);
 
         // Get user details
-        const assignedToUser = assignedTo ? await ctx.db.get(assignedTo.userId) : null
-        const assignedByUser = assignedBy ? await ctx.db.get(assignedBy.userId) : null
-        const createdByUser = createdBy ? await ctx.db.get(createdBy.userId) : null
+        const assignedToUser = assignedTo
+          ? await ctx.db.get(assignedTo.userId)
+          : null;
+        const assignedByUser = assignedBy
+          ? await ctx.db.get(assignedBy.userId)
+          : null;
+        const createdByUser = createdBy
+          ? await ctx.db.get(createdBy.userId)
+          : null;
 
         return {
           ...task,
-          assignedTo: assignedTo ? { ...assignedTo, user: assignedToUser } : null,
-          assignedBy: assignedBy ? { ...assignedBy, user: assignedByUser } : null,
+          assignedTo: assignedTo
+            ? { ...assignedTo, user: assignedToUser }
+            : null,
+          assignedBy: assignedBy
+            ? { ...assignedBy, user: assignedByUser }
+            : null,
           createdBy: createdBy ? { ...createdBy, user: createdByUser } : null,
-        }
+        };
       }),
-    )
+    );
 
     return tasksWithMembers
       .filter(Boolean)
       .filter((task) => (args.includeArchived ? true : !task.isArchived))
-      .sort((a, b) => a.position - b.position)
+      .sort((a, b) => a.position - b.position);
   },
-})
+});

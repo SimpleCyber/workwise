@@ -1,92 +1,99 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { formatDistanceToNow } from "date-fns"
-import { MessageSquare, ArrowUpDown, Edit2, Trash2, Send } from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { Badge } from "@/components/ui/badge"
-import { RichTextEditor } from "@/components/rich-text-editor"
-import { RichTextDisplay } from "@/components/rich-text-display"
+import { useState } from "react";
+import { formatDistanceToNow } from "date-fns";
+import { MessageSquare, ArrowUpDown, Edit2, Trash2, Send } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { RichTextEditor } from "@/components/rich-text-editor";
+import { RichTextDisplay } from "@/components/rich-text-display";
 import {
   useGetTaskComments,
   useCreateTaskComment,
   useUpdateTaskComment,
   useDeleteTaskComment,
-} from "../api/use-task-comments"
-import type { Id } from "../../../../convex/_generated/dataModel"
-import { toast } from "sonner"
+} from "../api/use-task-comments";
+import type { Id } from "../../../../convex/_generated/dataModel";
+import { toast } from "sonner";
 
 interface TaskCommentsSectionProps {
-  taskId: Id<"projectTasks">
-  currentUserId: Id<"users">
+  taskId: Id<"projectTasks">;
+  currentUserId: Id<"users">;
 }
 
-export const TaskCommentsSection = ({ taskId, currentUserId }: TaskCommentsSectionProps) => {
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
-  const [newComment, setNewComment] = useState("")
-  const [editingComment, setEditingComment] = useState<Id<"taskComments"> | null>(null)
-  const [editContent, setEditContent] = useState("")
+export const TaskCommentsSection = ({
+  taskId,
+  currentUserId,
+}: TaskCommentsSectionProps) => {
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [newComment, setNewComment] = useState("");
+  const [editingComment, setEditingComment] =
+    useState<Id<"taskComments"> | null>(null);
+  const [editContent, setEditContent] = useState("");
 
-  const { data: comments, isLoading } = useGetTaskComments(taskId, sortOrder)
-  const createComment = useCreateTaskComment()
-  const updateComment = useUpdateTaskComment()
-  const deleteComment = useDeleteTaskComment()
+  const { data: comments, isLoading } = useGetTaskComments(taskId, sortOrder);
+  const createComment = useCreateTaskComment();
+  const updateComment = useUpdateTaskComment();
+  const deleteComment = useDeleteTaskComment();
 
   const handleSubmitComment = async () => {
-    if (!newComment.trim()) return
+    if (!newComment.trim()) return;
 
     try {
       await createComment({
         taskId,
         content: newComment,
-      })
-      setNewComment("")
-      toast.success("Comment added successfully!")
+      });
+      setNewComment("");
+      toast.success("Comment added successfully!");
     } catch (error) {
-      toast.error("Failed to add comment")
+      toast.error("Failed to add comment");
     }
-  }
+  };
 
-  const handleEditComment = (commentId: Id<"taskComments">, currentContent: string) => {
-    setEditingComment(commentId)
-    setEditContent(currentContent)
-  }
+  const handleEditComment = (
+    commentId: Id<"taskComments">,
+    currentContent: string,
+  ) => {
+    setEditingComment(commentId);
+    setEditContent(currentContent);
+  };
 
   const handleUpdateComment = async (commentId: Id<"taskComments">) => {
-    if (!editContent.trim()) return
+    if (!editContent.trim()) return;
 
     try {
       await updateComment({
         commentId,
         content: editContent,
-      })
-      setEditingComment(null)
-      setEditContent("")
-      toast.success("Comment updated successfully!")
+      });
+      setEditingComment(null);
+      setEditContent("");
+      toast.success("Comment updated successfully!");
     } catch (error) {
-      toast.error("Failed to update comment")
+      toast.error("Failed to update comment");
     }
-  }
+  };
 
   const handleDeleteComment = async (commentId: Id<"taskComments">) => {
-    if (!confirm("Are you sure you want to delete this comment?")) return
+    if (!confirm("Are you sure you want to delete this comment?")) return;
 
     try {
-      await deleteComment({ commentId })
-      toast.success("Comment deleted successfully!")
+      await deleteComment({ commentId });
+      toast.success("Comment deleted successfully!");
     } catch (error) {
-      toast.error("Failed to delete comment")
+      toast.error("Failed to delete comment");
     }
-  }
+  };
 
   const handleImageUpload = async (file: File): Promise<string> => {
     // This would integrate with your file upload service
     // For now, return a placeholder
-    return "/placeholder.svg"
-  }
+    return "/placeholder.svg";
+  };
 
   if (isLoading) {
     return (
@@ -98,10 +105,12 @@ export const TaskCommentsSection = ({ taskId, currentUserId }: TaskCommentsSecti
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-4 text-muted-foreground">Loading comments...</div>
+          <div className="text-center py-4 text-muted-foreground">
+            Loading comments...
+          </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -134,7 +143,11 @@ export const TaskCommentsSection = ({ taskId, currentUserId }: TaskCommentsSecti
             className="min-h-[120px]"
           />
           <div className="flex justify-end">
-            <Button onClick={handleSubmitComment} disabled={!newComment.trim()} className="flex items-center gap-2">
+            <Button
+              onClick={handleSubmitComment}
+              disabled={!newComment.trim()}
+              className="flex items-center gap-2"
+            >
               <Send className="w-4 h-4" />
               Add Comment
             </Button>
@@ -154,7 +167,9 @@ export const TaskCommentsSection = ({ taskId, currentUserId }: TaskCommentsSecti
             comments?.map((comment) => (
               <div key={comment._id} className="flex gap-3 group">
                 <Avatar className="w-8 h-8 mt-1">
-                  <AvatarImage src={comment.member?.user?.image || "/placeholder.svg"} />
+                  <AvatarImage
+                    src={comment.member?.user?.image || "/placeholder.svg"}
+                  />
                   <AvatarFallback className="text-xs">
                     {comment.member?.user?.name?.charAt(0).toUpperCase() || "U"}
                   </AvatarFallback>
@@ -162,12 +177,16 @@ export const TaskCommentsSection = ({ taskId, currentUserId }: TaskCommentsSecti
 
                 <div className="flex-1 space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm">{comment.member?.user?.name || "Unknown User"}</span>
+                    <span className="font-medium text-sm">
+                      {comment.member?.user?.name || "Unknown User"}
+                    </span>
                     <Badge variant="outline" className="text-xs">
                       {comment.member?.role}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                      {formatDistanceToNow(new Date(comment.createdAt), {
+                        addSuffix: true,
+                      })}
                     </span>
                     {comment.isEdited && (
                       <Badge variant="secondary" className="text-xs">
@@ -196,8 +215,8 @@ export const TaskCommentsSection = ({ taskId, currentUserId }: TaskCommentsSecti
                           size="sm"
                           variant="outline"
                           onClick={() => {
-                            setEditingComment(null)
-                            setEditContent("")
+                            setEditingComment(null);
+                            setEditContent("");
                           }}
                         >
                           Cancel
@@ -216,7 +235,9 @@ export const TaskCommentsSection = ({ taskId, currentUserId }: TaskCommentsSecti
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleEditComment(comment._id, comment.content)}
+                            onClick={() =>
+                              handleEditComment(comment._id, comment.content)
+                            }
                             className="h-7 px-2 text-xs"
                           >
                             <Edit2 className="w-3 h-3 mr-1" />
@@ -242,5 +263,5 @@ export const TaskCommentsSection = ({ taskId, currentUserId }: TaskCommentsSecti
         </div>
       </CardContent>
     </Card>
-  )
-}
+  );
+};

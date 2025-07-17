@@ -1,19 +1,30 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Bold, Italic, Underline, ImageIcon, Palette, Upload } from "lucide-react"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useState, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Bold,
+  Italic,
+  Underline,
+  ImageIcon,
+  Palette,
+  Upload,
+} from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface RichTextEditorProps {
-  value: string
-  onChange: (value: string) => void
-  onImageUpload?: (file: File) => Promise<string>
-  placeholder?: string
-  className?: string
+  value: string;
+  onChange: (value: string) => void;
+  onImageUpload?: (file: File) => Promise<string>;
+  placeholder?: string;
+  className?: string;
 }
 
 export const RichTextEditor = ({
@@ -23,45 +34,55 @@ export const RichTextEditor = ({
   placeholder = "Type your message...",
   className = "",
 }: RichTextEditorProps) => {
-  const [isUploading, setIsUploading] = useState(false)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isUploading, setIsUploading] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const insertText = (before: string, after = "") => {
-    const textarea = textareaRef.current
-    if (!textarea) return
+    const textarea = textareaRef.current;
+    if (!textarea) return;
 
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const selectedText = value.substring(start, end)
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = value.substring(start, end);
 
-    const newText = value.substring(0, start) + before + selectedText + after + value.substring(end)
-    onChange(newText)
+    const newText =
+      value.substring(0, start) +
+      before +
+      selectedText +
+      after +
+      value.substring(end);
+    onChange(newText);
 
     // Reset cursor position
     setTimeout(() => {
-      textarea.focus()
-      textarea.setSelectionRange(start + before.length, start + before.length + selectedText.length)
-    }, 0)
-  }
+      textarea.focus();
+      textarea.setSelectionRange(
+        start + before.length,
+        start + before.length + selectedText.length,
+      );
+    }, 0);
+  };
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file || !onImageUpload) return
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file || !onImageUpload) return;
 
-    setIsUploading(true)
+    setIsUploading(true);
     try {
-      const imageUrl = await onImageUpload(file)
-      insertText(`![Image](${imageUrl})`)
+      const imageUrl = await onImageUpload(file);
+      insertText(`![Image](${imageUrl})`);
     } catch (error) {
-      console.error("Failed to upload image:", error)
+      console.error("Failed to upload image:", error);
     } finally {
-      setIsUploading(false)
+      setIsUploading(false);
       if (fileInputRef.current) {
-        fileInputRef.current.value = ""
+        fileInputRef.current.value = "";
       }
     }
-  }
+  };
 
   const colors = [
     "#000000",
@@ -76,17 +97,29 @@ export const RichTextEditor = ({
     "#008000",
     "#FFC0CB",
     "#A52A2A",
-  ]
+  ];
 
   return (
     <div className={`border rounded-lg ${className}`}>
       {/* Toolbar */}
       <div className="flex items-center gap-1 p-2 border-b bg-muted/30">
-        <Button type="button" variant="ghost" size="sm" onClick={() => insertText("**", "**")} className="h-8 w-8 p-0">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => insertText("**", "**")}
+          className="h-8 w-8 p-0"
+        >
           <Bold className="h-4 w-4" />
         </Button>
 
-        <Button type="button" variant="ghost" size="sm" onClick={() => insertText("*", "*")} className="h-8 w-8 p-0">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => insertText("*", "*")}
+          className="h-8 w-8 p-0"
+        >
           <Italic className="h-4 w-4" />
         </Button>
 
@@ -104,7 +137,12 @@ export const RichTextEditor = ({
 
         <Popover>
           <PopoverTrigger asChild>
-            <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+            >
               <Palette className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
@@ -116,7 +154,9 @@ export const RichTextEditor = ({
                   type="button"
                   className="w-8 h-8 rounded border-2 border-gray-200 hover:border-gray-400"
                   style={{ backgroundColor: color }}
-                  onClick={() => insertText(`<span style="color: ${color}">`, "</span>")}
+                  onClick={() =>
+                    insertText(`<span style="color: ${color}">`, "</span>")
+                  }
                 />
               ))}
             </div>
@@ -133,9 +173,19 @@ export const RichTextEditor = ({
               disabled={isUploading}
               className="h-8 w-8 p-0"
             >
-              {isUploading ? <Upload className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+              {isUploading ? (
+                <Upload className="h-4 w-4 animate-spin" />
+              ) : (
+                <ImageIcon className="h-4 w-4" />
+              )}
             </Button>
-            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
           </>
         )}
       </div>
@@ -149,5 +199,5 @@ export const RichTextEditor = ({
         className="border-0 resize-none focus-visible:ring-0 min-h-[100px]"
       />
     </div>
-  )
-}
+  );
+};
