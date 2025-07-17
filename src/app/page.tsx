@@ -18,14 +18,14 @@ const HomePage = () => {
     if (isLoading) return;
 
     if (workspaceId) {
-      router.replace(`/workspace/${workspaceId}`);
+      router.replace(`/tree/${workspaceId}`);
     } else if (!open) {
       setOpen(true);
     }
   }, [workspaceId, isLoading, open, setOpen, router]);
 
   return (
-    <div className="flex h-full flex-1 flex-col items-center justify-center gap-2 bg-[#5E2C5F]/95 text-white">
+    <div className="flex h-full flex-1 flex-col items-center justify-center gap-2 bg-gray-900 text-white">
       <Loader className="size-5 animate-spin" />
     </div>
   );
