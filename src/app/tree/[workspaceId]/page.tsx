@@ -1,32 +1,32 @@
-"use client"
+"use client";
 
-import { Loader2, TriangleAlert } from "lucide-react"
-import type { Id } from "../../../../convex/_generated/dataModel"
-import { useGetTreeData } from "@/features/tree/api/use-get-tree-data"
-import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info"
-import { TreeVisualization } from "@/features/tree/components/tree-visualization"
+import { Loader2, TriangleAlert } from "lucide-react";
+import type { Id } from "../../../../convex/_generated/dataModel";
+import { useGetTreeData } from "@/features/tree/api/use-get-tree-data";
+import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info";
+import { TreeVisualization } from "@/features/tree/components/tree-visualization";
 
 export default function TreeWorkspacePage({
   params,
 }: {
-  params: { workspaceId: Id<"workspaces"> }
+  params: { workspaceId: Id<"workspaces"> };
 }) {
-  const { workspaceId } = params
+  const { workspaceId } = params;
 
   const { data: workspace, isLoading: workspaceLoading } = useGetWorkspaceInfo({
     id: workspaceId,
-  })
+  });
 
   const { data: treeData, isLoading: treeLoading } = useGetTreeData({
     workspaceId,
-  })
+  });
 
   if (workspaceLoading || treeLoading) {
     return (
       <div className="flex h-full flex-1 flex-col items-center justify-center gap-2">
         <Loader2 className="size-5 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   if (!workspace || !treeData) {
@@ -35,7 +35,7 @@ export default function TreeWorkspacePage({
         <TriangleAlert className="size-5 text-muted-foreground" />
         <span className="text-sm text-muted-foreground">Data not found.</span>
       </div>
-    )
+    );
   }
 
   return (
@@ -47,5 +47,5 @@ export default function TreeWorkspacePage({
         <TreeVisualization data={treeData} workspaceId={workspaceId} />
       </div>
     </div>
-  )
+  );
 }

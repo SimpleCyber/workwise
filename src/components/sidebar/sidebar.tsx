@@ -7,7 +7,7 @@ import {
   Presentation,
   UserRoundSearch,
   Calendar,
-  Network 
+  Network,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { UserButton } from "@/features/auth/components/user-button";
@@ -22,7 +22,7 @@ export const Sidebar = () => {
   const workspaceId = useWorkspaceId();
 
   const navigationItems = [
-    { icon: Network , label: "All Data", path: `/tree/${workspaceId}` },
+    { icon: Network, label: "All Data", path: `/tree/${workspaceId}` },
     { icon: Kanban, label: "ToDo", path: `/todo/${workspaceId}` },
     { icon: MessagesSquare, label: "Chat", path: `/workspace/${workspaceId}` },
     { icon: ListTodo, label: "Project", path: `/projects/${workspaceId}` },

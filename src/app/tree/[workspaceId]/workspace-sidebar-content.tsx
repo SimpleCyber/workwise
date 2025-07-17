@@ -1,28 +1,28 @@
-"use client"
+"use client";
 
-import { Network, BarChart3 } from "lucide-react"
-import { usePathname, useRouter } from "next/navigation"
-import { WorkspaceSection } from "@/app/workspace/[workspaceId]/workspace-section"
-import { Button } from "@/components/ui/button"
-import { useWorkspaceId } from "@/hooks/use-workspace-id"
+import { Network, BarChart3 } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { WorkspaceSection } from "@/app/workspace/[workspaceId]/workspace-section";
+import { Button } from "@/components/ui/button";
+import { useWorkspaceId } from "@/hooks/use-workspace-id";
 
 export const WorkspaceSidebarContent = () => {
-  const router = useRouter()
-  const pathname = usePathname()
-  const workspaceId = useWorkspaceId()
+  const router = useRouter();
+  const pathname = usePathname();
+  const workspaceId = useWorkspaceId();
 
   const navigateTo = (path: string) => {
-    const fullPath = `/tree/${workspaceId}${path}`
-    router.push(fullPath)
-  }
+    const fullPath = `/tree/${workspaceId}${path}`;
+    router.push(fullPath);
+  };
 
   const isActive = (path: string) => {
-    const currentPath = pathname
-    const targetPath = `/tree/${workspaceId}${path}`
-    if (path === "" && currentPath === `/tree/${workspaceId}`) return true
-    if (path !== "" && currentPath.includes(path)) return true
-    return false
-  }
+    const currentPath = pathname;
+    const targetPath = `/tree/${workspaceId}${path}`;
+    if (path === "" && currentPath === `/tree/${workspaceId}`) return true;
+    if (path !== "" && currentPath.includes(path)) return true;
+    return false;
+  };
 
   return (
     <>
@@ -30,7 +30,9 @@ export const WorkspaceSidebarContent = () => {
         <Button
           variant="transparent"
           className={`h-7 justify-start px-[18px] text-sm ${
-            isActive("") ? "bg-white/10 text-white" : "text-[#f9EDFFCC] hover:bg-white/5"
+            isActive("")
+              ? "bg-white/10 text-white"
+              : "text-[#f9EDFFCC] hover:bg-white/5"
           }`}
           onClick={() => navigateTo("")}
         >
@@ -58,5 +60,5 @@ export const WorkspaceSidebarContent = () => {
         </Button>
       </WorkspaceSection>
     </>
-  )
-}
+  );
+};

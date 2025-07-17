@@ -1,97 +1,116 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { ChevronDown, ChevronRight, User, Building2, FolderKanban, Users } from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import type { Id } from "../../../../convex/_generated/dataModel"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  ChevronDown,
+  ChevronRight,
+  User,
+  Building2,
+  FolderKanban,
+  Users,
+} from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import type { Id } from "../../../../convex/_generated/dataModel";
 
 interface TreeVisualizationProps {
   data: {
     user: {
-      _id: Id<"users">
-      name?: string
-      email?: string
-      image?: string
-    }
+      _id: Id<"users">;
+      name?: string;
+      email?: string;
+      image?: string;
+    };
     workspaces: Array<{
-      _id: Id<"workspaces">
-      name: string
+      _id: Id<"workspaces">;
+      name: string;
       projects: Array<{
-        _id: Id<"projectBoards">
-        name: string
-        boardCode: string
+        _id: Id<"projectBoards">;
+        name: string;
+        boardCode: string;
         members: Array<{
-          _id: Id<"members">
-          role: "admin" | "member" | "lead"
+          _id: Id<"members">;
+          role: "admin" | "member" | "lead";
           user: {
-            _id: Id<"users">
-            name?: string
-            email?: string
-            image?: string
-          }
+            _id: Id<"users">;
+            name?: string;
+            email?: string;
+            image?: string;
+          };
           taskCounts: {
-            todo: number
-            progress: number
-            hold: number
-            review: number
-            done: number
-            total: number
-          }
-        }>
-      }>
-    }>
-  }
-  workspaceId: Id<"workspaces">
+            todo: number;
+            progress: number;
+            hold: number;
+            review: number;
+            done: number;
+            total: number;
+          };
+        }>;
+      }>;
+    }>;
+  };
+  workspaceId: Id<"workspaces">;
 }
 
-export const TreeVisualization = ({ data, workspaceId }: TreeVisualizationProps) => {
-  const router = useRouter()
-  const [expandedWorkspaces, setExpandedWorkspaces] = useState<Set<string>>(new Set())
-  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set())
+export const TreeVisualization = ({
+  data,
+  workspaceId,
+}: TreeVisualizationProps) => {
+  const router = useRouter();
+  const [expandedWorkspaces, setExpandedWorkspaces] = useState<Set<string>>(
+    new Set(),
+  );
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(
+    new Set(),
+  );
 
   const toggleWorkspace = (workspaceId: string) => {
-    const newExpanded = new Set(expandedWorkspaces)
+    const newExpanded = new Set(expandedWorkspaces);
     if (newExpanded.has(workspaceId)) {
-      newExpanded.delete(workspaceId)
+      newExpanded.delete(workspaceId);
     } else {
-      newExpanded.add(workspaceId)
+      newExpanded.add(workspaceId);
     }
-    setExpandedWorkspaces(newExpanded)
-  }
+    setExpandedWorkspaces(newExpanded);
+  };
 
   const toggleProject = (projectId: string) => {
-    const newExpanded = new Set(expandedProjects)
+    const newExpanded = new Set(expandedProjects);
     if (newExpanded.has(projectId)) {
-      newExpanded.delete(projectId)
+      newExpanded.delete(projectId);
     } else {
-      newExpanded.add(projectId)
+      newExpanded.add(projectId);
     }
-    setExpandedProjects(newExpanded)
-  }
+    setExpandedProjects(newExpanded);
+  };
 
   const handleProjectClick = (projectId: Id<"projectBoards">) => {
-    router.push(`/projects/${workspaceId}/board/${projectId}`)
-  }
+    router.push(`/projects/${workspaceId}/board/${projectId}`);
+  };
 
   const handleMemberClick = (memberId: Id<"members">) => {
-    router.push(`/members/${workspaceId}?profileMemberId=${memberId}`)
-  }
+    router.push(`/members/${workspaceId}?profileMemberId=${memberId}`);
+  };
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case "admin":
-        return "bg-red-100 text-red-800"
+        return "bg-red-100 text-red-800";
       case "lead":
-        return "bg-blue-100 text-blue-800"
+        return "bg-blue-100 text-blue-800";
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   const TaskCountTooltip = ({ taskCounts }: { taskCounts: any }) => (
     <div className="space-y-1 text-xs">
@@ -121,7 +140,7 @@ export const TreeVisualization = ({ data, workspaceId }: TreeVisualizationProps)
         <span>{taskCounts.total}</span>
       </div>
     </div>
-  )
+  );
 
   return (
     <TooltipProvider>
@@ -135,11 +154,17 @@ export const TreeVisualization = ({ data, workspaceId }: TreeVisualizationProps)
               </div>
               <Avatar className="w-10 h-10">
                 <AvatarImage src={data.user.image || "/placeholder.svg"} />
-                <AvatarFallback>{data.user.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                <AvatarFallback>
+                  {data.user.name?.charAt(0).toUpperCase() || "U"}
+                </AvatarFallback>
               </Avatar>
               <div>
-                <h2 className="font-semibold text-lg">{data.user.name || "Unknown User"}</h2>
-                <p className="text-sm text-muted-foreground">{data.user.email}</p>
+                <h2 className="font-semibold text-lg">
+                  {data.user.name || "Unknown User"}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {data.user.email}
+                </p>
               </div>
             </div>
 
@@ -148,7 +173,9 @@ export const TreeVisualization = ({ data, workspaceId }: TreeVisualizationProps)
               {data.workspaces.map((workspace, workspaceIndex) => (
                 <div key={workspace._id} className="relative">
                   {/* Vertical line from user to workspaces */}
-                  {workspaceIndex === 0 && <div className="absolute left-4 -top-6 w-px h-6 bg-border" />}
+                  {workspaceIndex === 0 && (
+                    <div className="absolute left-4 -top-6 w-px h-6 bg-border" />
+                  )}
 
                   {/* Horizontal line to workspace */}
                   <div className="absolute left-4 top-5 w-6 h-px bg-border" />
@@ -184,7 +211,9 @@ export const TreeVisualization = ({ data, workspaceId }: TreeVisualizationProps)
                         {workspace.projects.map((project, projectIndex) => (
                           <div key={project._id} className="relative">
                             {/* Vertical line from workspace to projects */}
-                            {projectIndex === 0 && <div className="absolute left-4 -top-2 w-px h-2 bg-border" />}
+                            {projectIndex === 0 && (
+                              <div className="absolute left-4 -top-2 w-px h-2 bg-border" />
+                            )}
 
                             {/* Horizontal line to project */}
                             <div className="absolute left-4 top-4 w-6 h-px bg-border" />
@@ -209,15 +238,22 @@ export const TreeVisualization = ({ data, workspaceId }: TreeVisualizationProps)
                                   <div className="flex items-center justify-center w-6 h-6 rounded bg-green-100 mr-3">
                                     <FolderKanban className="w-3 h-3 text-green-600" />
                                   </div>
-                                  <span className="font-medium">{project.name}</span>
-                                  <Badge variant="outline" className="ml-2 text-xs font-mono">
+                                  <span className="font-medium">
+                                    {project.name}
+                                  </span>
+                                  <Badge
+                                    variant="outline"
+                                    className="ml-2 text-xs font-mono"
+                                  >
                                     {project.boardCode}
                                   </Badge>
                                 </Button>
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => handleProjectClick(project._id)}
+                                  onClick={() =>
+                                    handleProjectClick(project._id)
+                                  }
                                   className="text-xs"
                                 >
                                   Open Project
@@ -242,35 +278,58 @@ export const TreeVisualization = ({ data, workspaceId }: TreeVisualizationProps)
                                         <TooltipTrigger asChild>
                                           <Card
                                             className="p-3 hover:shadow-md transition-shadow cursor-pointer"
-                                            onClick={() => handleMemberClick(member._id)}
+                                            onClick={() =>
+                                              handleMemberClick(member._id)
+                                            }
                                           >
                                             <div className="flex items-center gap-3">
                                               <Avatar className="w-8 h-8">
-                                                <AvatarImage src={member.user.image || "/placeholder.svg"} />
+                                                <AvatarImage
+                                                  src={
+                                                    member.user.image ||
+                                                    "/placeholder.svg"
+                                                  }
+                                                />
                                                 <AvatarFallback className="text-xs">
-                                                  {member.user.name?.charAt(0).toUpperCase() || "U"}
+                                                  {member.user.name
+                                                    ?.charAt(0)
+                                                    .toUpperCase() || "U"}
                                                 </AvatarFallback>
                                               </Avatar>
                                               <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-medium truncate">
-                                                  {member.user.name || "Unknown"}
+                                                  {member.user.name ||
+                                                    "Unknown"}
                                                 </p>
                                                 <div className="flex items-center gap-2 mt-1">
-                                                  <Badge className={`text-xs ${getRoleBadgeColor(member.role)}`}>
+                                                  <Badge
+                                                    className={`text-xs ${getRoleBadgeColor(member.role)}`}
+                                                  >
                                                     {member.role}
                                                   </Badge>
-                                                  <Badge variant="secondary" className="text-xs">
-                                                    {member.taskCounts.total} tasks
+                                                  <Badge
+                                                    variant="secondary"
+                                                    className="text-xs"
+                                                  >
+                                                    {member.taskCounts.total}{" "}
+                                                    tasks
                                                   </Badge>
                                                 </div>
                                               </div>
                                             </div>
                                           </Card>
                                         </TooltipTrigger>
-                                        <TooltipContent side="right" className="w-48">
+                                        <TooltipContent
+                                          side="right"
+                                          className="w-48"
+                                        >
                                           <div className="space-y-2">
-                                            <p className="font-medium text-sm">{member.user.name || "Unknown"}</p>
-                                            <TaskCountTooltip taskCounts={member.taskCounts} />
+                                            <p className="font-medium text-sm">
+                                              {member.user.name || "Unknown"}
+                                            </p>
+                                            <TaskCountTooltip
+                                              taskCounts={member.taskCounts}
+                                            />
                                           </div>
                                         </TooltipContent>
                                       </Tooltip>
@@ -291,5 +350,5 @@ export const TreeVisualization = ({ data, workspaceId }: TreeVisualizationProps)
         </Card>
       </div>
     </TooltipProvider>
-  )
-}
+  );
+};
