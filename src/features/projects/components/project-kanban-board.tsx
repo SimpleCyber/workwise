@@ -457,17 +457,16 @@ const ProjectKanbanList = ({
                     />
                   ) : (
                     <h3 className="font-medium text-sm flex justify-center">
-                      {list.name} 
-                       {sortedTasks.length > 0 && (
-                          <div className="text-xs text-muted-foreground ml-2 border-2 rounded-sm px-1 bg-gray-200">
-                            {sortedTasks.length}/{sortedTasks.length}
-                          </div>
-                        )}
+                      {list.name}
+                      {sortedTasks.length > 0 && (
+                        <div className="text-xs text-muted-foreground ml-2 border-2 rounded-sm px-1 bg-gray-200">
+                          {sortedTasks.length}/{sortedTasks.length}
+                        </div>
+                      )}
                     </h3>
                   )}
                 </div>
               </div>
-             
             </CardHeader>
             {/* Keep the rest of the existing Droppable content */}
             <Droppable droppableId={list._id} type="task">

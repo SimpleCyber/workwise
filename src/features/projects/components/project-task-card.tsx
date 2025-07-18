@@ -132,19 +132,33 @@ export const ProjectTaskCard = ({
   // Generate unique color for user based on their ID
   const getUserColor = (userId: string) => {
     const colors = [
-      'bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500',
-      'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500',
-      'bg-orange-500', 'bg-cyan-500', 'bg-lime-500', 'bg-emerald-500'
+      "bg-red-500",
+      "bg-blue-500",
+      "bg-green-500",
+      "bg-yellow-500",
+      "bg-purple-500",
+      "bg-pink-500",
+      "bg-indigo-500",
+      "bg-teal-500",
+      "bg-orange-500",
+      "bg-cyan-500",
+      "bg-lime-500",
+      "bg-emerald-500",
     ];
-    const hash = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const hash = userId
+      .split("")
+      .reduce((acc, char) => acc + char.charCodeAt(0), 0);
     return colors[hash % colors.length];
   };
 
-  const userColor = task.assignedTo?.user ? getUserColor(task.assignedTo.user._id) : 'bg-gray-500';
+  const userColor = task.assignedTo?.user
+    ? getUserColor(task.assignedTo.user._id)
+    : "bg-gray-500";
 
   const getAssignmentTooltip = () => {
-    if (!task.assignedBy?.user || !task.assignedTo?.user) return `Assigned to ${task.assignedTo?.user?.name || 'Unknown'}`;
-    
+    if (!task.assignedBy?.user || !task.assignedTo?.user)
+      return `Assigned to ${task.assignedTo?.user?.name || "Unknown"}`;
+
     if (task.assignedBy._id === task.assignedTo._id) {
       return `Self-assigned by ${task.assignedBy.user.name}`;
     }
@@ -160,12 +174,14 @@ export const ProjectTaskCard = ({
       >
         {/* Unique colored left border for each user */}
         <div className={`absolute left-0 top-0 bottom-0 w-1 ${userColor}`} />
-        
+
         <CardContent className="p-3 space-y-1">
           {/* Header with Title and Actions */}
           <div className="flex items-start justify-between">
-            <h4 className="text-sm font-medium leading-tight text-gray-900 flex-1 pr-2">{task.title}</h4>
-            
+            <h4 className="text-sm font-medium leading-tight text-gray-900 flex-1 pr-2">
+              {task.title}
+            </h4>
+
             {/* Actions dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -217,7 +233,9 @@ export const ProjectTaskCard = ({
               <span className="text-xs text-gray-500 font-mono">
                 {task.taskCode}
               </span>
-              <span className={`text-xs font-medium ${priorityColors[task.priority]}`}>
+              <span
+                className={`text-xs font-medium ${priorityColors[task.priority]}`}
+              >
                 {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
               </span>
             </div>
@@ -238,12 +256,14 @@ export const ProjectTaskCard = ({
                   {isOverdue && <AlertCircle className="size-3 inline ml-1" />}
                 </span>
               )}
-              
+
               {task.assignedTo?.user && (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div className="flex items-center gap-1">
-                      <Avatar className={`w-5 h-5 border-2 border-[${userColor}] -mr-2 z-10`}>
+                      <Avatar
+                        className={`w-5 h-5 border-2 border-[${userColor}] -mr-2 z-10`}
+                      >
                         <AvatarImage
                           src={task.assignedTo.user.image || "/placeholder.svg"}
                         />
@@ -251,16 +271,21 @@ export const ProjectTaskCard = ({
                           {task.assignedTo.user.name?.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      {task.assignedBy?.user && task.assignedBy._id !== task.assignedTo._id && (
-                        <Avatar className="w-4 h-4  ">
-                          <AvatarImage
-                            src={task.assignedBy.user.image || "/placeholder.svg"}
-                          />
-                          <AvatarFallback className="text-xs">
-                            {task.assignedBy.user.name?.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
+                      {task.assignedBy?.user &&
+                        task.assignedBy._id !== task.assignedTo._id && (
+                          <Avatar className="w-4 h-4  ">
+                            <AvatarImage
+                              src={
+                                task.assignedBy.user.image || "/placeholder.svg"
+                              }
+                            />
+                            <AvatarFallback className="text-xs">
+                              {task.assignedBy.user.name
+                                ?.charAt(0)
+                                .toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>

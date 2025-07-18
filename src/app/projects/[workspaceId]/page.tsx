@@ -1,7 +1,15 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import { Loader, Plus, TriangleAlert, Trash2, Star, Calendar, FileText } from "lucide-react";
+import {
+  Loader,
+  Plus,
+  TriangleAlert,
+  Trash2,
+  Star,
+  Calendar,
+  FileText,
+} from "lucide-react";
 import Link from "next/link";
 import type React from "react";
 import { useState } from "react";
@@ -135,18 +143,26 @@ const ProjectsWorkspacePage = () => {
         </h1>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" className="bg-gray-600 hover:bg-gray-700 text-white shadow-sm">
+            <Button
+              size="sm"
+              className="bg-gray-600 hover:bg-gray-700 text-white shadow-sm"
+            >
               <Plus className="size-4 mr-2" />
               New Project Board
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-xl font-semibold">Create New Project Board</DialogTitle>
+              <DialogTitle className="text-xl font-semibold">
+                Create New Project Board
+              </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-3">
-                <Label htmlFor="name" className="text-sm font-medium text-slate-700">
+                <Label
+                  htmlFor="name"
+                  className="text-sm font-medium text-slate-700"
+                >
                   Project Name
                 </Label>
                 <Input
@@ -169,11 +185,15 @@ const ProjectsWorkspacePage = () => {
                 />
                 <p className="text-xs text-slate-500 flex items-center gap-1">
                   <FileText className="size-3" />
-                  {name.trim().split(/\s+/).filter(Boolean).length} / {MAX_NAME_WORDS} words
+                  {name.trim().split(/\s+/).filter(Boolean).length} /{" "}
+                  {MAX_NAME_WORDS} words
                 </p>
               </div>
               <div className="space-y-3">
-                <Label htmlFor="description" className="text-sm font-medium text-slate-700">
+                <Label
+                  htmlFor="description"
+                  className="text-sm font-medium text-slate-700"
+                >
                   Description (Optional)
                 </Label>
                 <Textarea
@@ -196,7 +216,9 @@ const ProjectsWorkspacePage = () => {
                 />
                 <p className="text-xs text-slate-500 flex items-center gap-1">
                   <FileText className="size-3" />
-                  {description.trim().split(/\s+/).filter(Boolean).length} / {MAX_DESCRIPTION_WORDS} words
+                  {
+                    description.trim().split(/\s+/).filter(Boolean).length
+                  } / {MAX_DESCRIPTION_WORDS} words
                 </p>
               </div>
               <div className="flex justify-end gap-3 pt-4">
@@ -228,7 +250,7 @@ const ProjectsWorkspacePage = () => {
           </DialogContent>
         </Dialog>
       </div>
-      
+
       <div className="flex-1 p-8">
         <div className="mx-auto max-w-7xl">
           {!boards || boards.length === 0 ? (
@@ -241,7 +263,8 @@ const ProjectsWorkspacePage = () => {
                   No project boards yet
                 </h3>
                 <p className="text-slate-600 mb-8 leading-relaxed">
-                  Create your first project board to start organizing and managing your team's tasks and workflows
+                  Create your first project board to start organizing and
+                  managing your team's tasks and workflows
                 </p>
                 <Dialog open={open} onOpenChange={setOpen}>
                   <DialogTrigger asChild>
@@ -264,34 +287,23 @@ const ProjectsWorkspacePage = () => {
                     <Card className="h-full transition-all duration-200 hover:shadow-lg hover:shadow-gray-100/50 hover:-translate-y-1 border-slate-200 bg-white">
                       <CardHeader className="relative pb-3 -mt-3">
                         <div className="flex items-start justify-between gap-3">
-
-
                           <div className="flex justify-center ">
-                           
-                           
                             <div className="flex items-center gap-2 mt-2">
-
-
-
-                              <Badge 
-                                variant="secondary" 
+                              <Badge
+                                variant="secondary"
                                 className="text-xs font-mono bg-slate-100 text-slate-600 hover:bg-slate-200"
                               >
                                 {board.boardCode}
                               </Badge>
-
-
 
                               {board.isStarred && (
                                 <Star className="size-4 fill-yellow-400 text-yellow-400" />
                               )}
                             </div>
 
-
                             <CardTitle className="ml-2 mt-1 text-lg font-semibold text-slate-800 truncate">
                               {board.name}
                             </CardTitle>
-                            
                           </div>
                           <Button
                             variant="ghost"
