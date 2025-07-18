@@ -8,6 +8,8 @@ import {
   Edit,
   MoreHorizontal,
   Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -93,20 +95,17 @@ interface ProjectTaskCardProps {
   onEdit?: () => void;
   onArchive?: () => void;
   onDelete?: () => void;
+  onMoveToPrevious?: () => void;
+  onMoveToNext?: () => void;
+  isFirstList?: boolean;
+  isLastList?: boolean;
 }
 
 const priorityColors = {
-  low: "bg-green-100 text-green-800",
-  medium: "bg-blue-100 text-blue-800",
-  high: "bg-orange-100 text-orange-800",
-  urgent: "bg-red-100 text-red-800",
-};
-
-const priorityIcons = {
-  low: "🟢",
-  medium: "🔵",
-  high: "🟠",
-  urgent: "🔴",
+  low: "text-green-600",
+  medium: "text-blue-600",
+  high: "text-orange-600",
+  urgent: "text-red-600",
 };
 
 export const ProjectTaskCard = ({
@@ -114,6 +113,10 @@ export const ProjectTaskCard = ({
   onEdit,
   onArchive,
   onDelete,
+  onMoveToPrevious,
+  onMoveToNext,
+  isFirstList = false,
+  isLastList = false,
 }: ProjectTaskCardProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -121,41 +124,55 @@ export const ProjectTaskCard = ({
     task.dueDate && task.dueDate < Date.now() + 24 * 60 * 60 * 1000;
   const isOverdue = task.dueDate && task.dueDate < Date.now();
 
-  const getAssignmentTooltip = () => {
-    if (!task.assignedBy?.user || !task.assignedTo?.user) return "";
+  const trimDescription = (text: string, maxLength: number = 50) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + "...";
+  };
 
+  // Generate unique color for user based on their ID
+  const getUserColor = (userId: string) => {
+    const colors = [
+      'bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500',
+      'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500',
+      'bg-orange-500', 'bg-cyan-500', 'bg-lime-500', 'bg-emerald-500'
+    ];
+    const hash = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return colors[hash % colors.length];
+  };
+
+  const userColor = task.assignedTo?.user ? getUserColor(task.assignedTo.user._id) : 'bg-gray-500';
+
+  const getAssignmentTooltip = () => {
+    if (!task.assignedBy?.user || !task.assignedTo?.user) return `Assigned to ${task.assignedTo?.user?.name || 'Unknown'}`;
+    
     if (task.assignedBy._id === task.assignedTo._id) {
       return `Self-assigned by ${task.assignedBy.user.name}`;
     }
 
-    return `${task.assignedBy.user.name} → ${task.assignedTo.user.name}`;
+    return `Assigned by ${task.assignedBy.user.name} to ${task.assignedTo.user.name}`;
   };
 
   return (
     <TooltipProvider>
       <Card
-        className="cursor-pointer hover:shadow-md transition-shadow bg-white group"
-        onClick={() => setIsModalOpen(true)}
+        className="cursor-pointer hover:bg-gray-50 transition-colors bg-white shadow-none border border-gray-200 rounded-lg relative w-[100%] mx-auto overflow-hidden"
+        onClick={() => onEdit?.()}
       >
-        <CardContent className="p-3 space-y-3">
-          {/* Header with Task Code and Priority */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-xs font-mono">
-                {task.taskCode}
-              </Badge>
-              <Badge className={`text-xs ${priorityColors[task.priority]}`}>
-                {priorityIcons[task.priority]} {task.priority.toUpperCase()}
-              </Badge>
-            </div>
-
+        {/* Unique colored left border for each user */}
+        <div className={`absolute left-0 top-0 bottom-0 w-1 ${userColor}`} />
+        
+        <CardContent className="p-3 space-y-1">
+          {/* Header with Title and Actions */}
+          <div className="flex items-start justify-between">
+            <h4 className="text-sm font-medium leading-tight text-gray-900 flex-1 pr-2">{task.title}</h4>
+            
             {/* Actions dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="h-5 w-5 p-0 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <MoreHorizontal className="size-4" />
@@ -186,43 +203,47 @@ export const ProjectTaskCard = ({
             </DropdownMenu>
           </div>
 
-          {/* Title */}
-          <h4 className="text-sm font-medium leading-tight">{task.title}</h4>
-
           {/* Description preview */}
           {task.description && (
-            <p className="text-xs text-muted-foreground line-clamp-2">
-              {task.description}
+            <p className="text-xs text-gray-600 leading-relaxed">
+              {trimDescription(task.description)}
             </p>
           )}
 
-          {/* Due date */}
-          {task.dueDate && (
-            <div className="flex items-center gap-1">
-              <Calendar className="size-3" />
-              <span
-                className={`text-xs ${
-                  isOverdue
-                    ? "text-red-600 font-medium"
-                    : isDueSoon
-                      ? "text-yellow-600 font-medium"
-                      : "text-muted-foreground"
-                }`}
-              >
-                {format(task.dueDate, "MMM d")}
-                {isOverdue && <AlertCircle className="size-3 inline ml-1" />}
+          {/* Footer with Task Code, Priority, Due Date and Assignment */}
+          <div className="flex items-center justify-between pt-2">
+            {/* Task Code and Priority */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500 font-mono">
+                {task.taskCode}
+              </span>
+              <span className={`text-xs font-medium ${priorityColors[task.priority]}`}>
+                {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
               </span>
             </div>
-          )}
 
-          {/* Assignment Info */}
-          <div className="flex items-center justify-between">
+            {/* Due Date and Assigned To */}
             <div className="flex items-center gap-2">
+              {task.dueDate && (
+                <span
+                  className={`text-xs ${
+                    isOverdue
+                      ? "text-red-600 font-medium"
+                      : isDueSoon
+                        ? "text-yellow-600 font-medium"
+                        : "text-gray-500"
+                  }`}
+                >
+                  {format(task.dueDate, "MMM d")}
+                  {isOverdue && <AlertCircle className="size-3 inline ml-1" />}
+                </span>
+              )}
+              
               {task.assignedTo?.user && (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div className="flex items-center gap-1">
-                      <Avatar className="w-6 h-6">
+                      <Avatar className={`w-5 h-5 border-2 border-[${userColor}] -mr-2 z-10`}>
                         <AvatarImage
                           src={task.assignedTo.user.image || "/placeholder.svg"}
                         />
@@ -230,27 +251,16 @@ export const ProjectTaskCard = ({
                           {task.assignedTo.user.name?.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      {task.assignedBy?.user &&
-                        task.assignedBy._id !== task.assignedTo._id && (
-                          <>
-                            <span className="text-xs text-muted-foreground">
-                              ←
-                            </span>
-                            <Avatar className="w-6 h-6">
-                              <AvatarImage
-                                src={
-                                  task.assignedBy.user.image ||
-                                  "/placeholder.svg"
-                                }
-                              />
-                              <AvatarFallback className="text-xs">
-                                {task.assignedBy.user.name
-                                  ?.charAt(0)
-                                  .toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                          </>
-                        )}
+                      {task.assignedBy?.user && task.assignedBy._id !== task.assignedTo._id && (
+                        <Avatar className="w-4 h-4  ">
+                          <AvatarImage
+                            src={task.assignedBy.user.image || "/placeholder.svg"}
+                          />
+                          <AvatarFallback className="text-xs">
+                            {task.assignedBy.user.name?.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -259,34 +269,7 @@ export const ProjectTaskCard = ({
                 </Tooltip>
               )}
             </div>
-
-            {/* Labels */}
-            {task.labels && task.labels.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {task.labels.slice(0, 2).map((label, index) => (
-                  <Badge
-                    key={label}
-                    variant="secondary"
-                    className="text-xs px-1 py-0"
-                  >
-                    {label}
-                  </Badge>
-                ))}
-                {task.labels.length > 2 && (
-                  <Badge variant="secondary" className="text-xs px-1 py-0">
-                    +{task.labels.length - 2}
-                  </Badge>
-                )}
-              </div>
-            )}
           </div>
-
-          {/* Completion status */}
-          {task.isCompleted && (
-            <div className="flex items-center gap-1 text-green-600">
-              <span className="text-xs">✓ Completed</span>
-            </div>
-          )}
         </CardContent>
       </Card>
     </TooltipProvider>

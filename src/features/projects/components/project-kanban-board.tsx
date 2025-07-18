@@ -428,7 +428,7 @@ const ProjectKanbanList = ({
           {...provided.draggableProps}
           className={`flex-shrink-0 w-72 ${snapshot.isDragging ? "rotate-2" : ""}`}
         >
-          <Card>
+          <Card className="bg-gray-50">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 flex-1">
@@ -456,21 +456,18 @@ const ProjectKanbanList = ({
                       autoFocus
                     />
                   ) : (
-                    <h3 className="font-medium text-sm flex-1">{list.name}</h3>
+                    <h3 className="font-medium text-sm flex justify-center">
+                      {list.name} 
+                       {sortedTasks.length > 0 && (
+                          <div className="text-xs text-muted-foreground ml-2 border-2 rounded-sm px-1 bg-gray-200">
+                            {sortedTasks.length}/{sortedTasks.length}
+                          </div>
+                        )}
+                    </h3>
                   )}
                 </div>
               </div>
-              {sortedTasks.length > 0 && (
-                <div className="text-xs text-muted-foreground">
-                  {sortedTasks.length} task{sortedTasks.length !== 1 ? "s" : ""}
-                  {selectedMemberIds.length > 0 && (
-                    <span className="ml-1 text-blue-600">
-                      (filtered by {selectedMemberIds.length} member
-                      {selectedMemberIds.length !== 1 ? "s" : ""})
-                    </span>
-                  )}
-                </div>
-              )}
+             
             </CardHeader>
             {/* Keep the rest of the existing Droppable content */}
             <Droppable droppableId={list._id} type="task">
