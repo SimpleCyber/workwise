@@ -4,13 +4,15 @@ import type { Id } from "../../../../convex/_generated/dataModel";
 
 // Get task comments
 export const useGetTaskComments = (
-  taskId: Id<"projectTasks">,
+  taskId: Id<"projectTasks"> | undefined,
   sortOrder: "asc" | "desc" = "asc",
 ) => {
-  const data = useQuery(api.projects.getTaskComments, { taskId, sortOrder });
-  const isLoading = data === undefined;
-
-  return { data, isLoading };
+  const data = useQuery(
+    api.projects.getTaskComments,
+    taskId ? { taskId, sortOrder } : "skip",
+  );
+  const isLoading = data === undefined && !!taskId;
+  return { data: data || [], isLoading };
 };
 
 // Create comment
