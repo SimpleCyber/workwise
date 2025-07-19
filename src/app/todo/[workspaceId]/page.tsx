@@ -153,7 +153,7 @@ const TodoWorkspacePage = () => {
                       setName(input);
                     } else {
                       toast.error(
-                        `Board name can't exceed ${MAX_NAME_WORDS} words.`,
+                        `Board name can not exceed ${MAX_NAME_WORDS} words.`,
                       );
                     }
                   }}
@@ -176,7 +176,7 @@ const TodoWorkspacePage = () => {
                     setDescription(input);
                   } else {
                     toast.error(
-                      `Description can't exceed ${MAX_DESCRIPTION_WORDS} words.`,
+                      `Description can not exceed ${MAX_DESCRIPTION_WORDS} words.`,
                     );
                   }
                 }}
