@@ -1,4 +1,5 @@
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import Image from "next/image";
 
 interface ThumbnailProps {
   url: string | null | undefined;
@@ -11,7 +12,7 @@ export const Thumbnail = ({ url }: ThumbnailProps) => {
     <Dialog>
       <DialogTrigger>
         <div className="relative my-2 max-w-[360px] cursor-zoom-in overflow-hidden rounded-lg border">
-          <img
+          <Image
             src={url}
             alt="Message image"
             className="size-full rounded-md object-cover"
@@ -23,7 +24,7 @@ export const Thumbnail = ({ url }: ThumbnailProps) => {
         isThumbnail
         className="max-w-[800px] border-none bg-transparent p-0 shadow-none"
       >
-        <img
+        <Image
           src={url}
           alt="Message image"
           className="size-full rounded-md object-cover"

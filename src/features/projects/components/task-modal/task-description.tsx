@@ -15,6 +15,8 @@ import { useGenerateUploadUrl } from "@/features/upload/api/use-generate-upload-
 import dynamic from "next/dynamic";
 import type { Id } from "../../../../../convex/_generated/dataModel";
 
+import Image from "next/image";
+
 const Editor = dynamic(() => import("@/components/editor"), { ssr: false });
 const Renderer = dynamic(() => import("@/components/renderer"), { ssr: false });
 
@@ -151,7 +153,7 @@ export const TaskDescription = ({
                           key={index}
                           className="relative group rounded-lg overflow-hidden border bg-gray-50"
                         >
-                          <img
+                          <Image
                             src={imageUrl || "/placeholder.svg"}
                             alt={`Description image ${index + 1}`}
                             className="w-full h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity"

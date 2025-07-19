@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 interface ImagePreviewModalProps {
   imageUrl: string | null;
@@ -27,7 +28,7 @@ export const ImagePreviewModal = ({
           >
             <X className="w-4 h-4" />
           </Button>
-          <img
+          <Image
             src={imageUrl || "/placeholder.svg"}
             alt="Full size preview"
             className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
