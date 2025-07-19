@@ -118,18 +118,18 @@ export const TaskDetails = ({ task, lists }: TaskDetailsProps) => {
   };
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {/* Priority */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
-          <Flag className="w-4 h-4" />
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600">
+          <Flag className="w-3.5 h-3.5" />
           Priority
           {showSaved === "priority" && (
-            <Check className="w-3 h-3 text-green-600 animate-pulse" />
+            <Check className="w-3 h-3 text-emerald-500" />
           )}
         </div>
         <Select value={task.priority} onValueChange={handlePriorityChange}>
-          <SelectTrigger className="h-9">
+          <SelectTrigger className="h-8 text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -142,19 +142,19 @@ export const TaskDetails = ({ task, lists }: TaskDetailsProps) => {
       </div>
 
       {/* Assigned To */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
-          <User className="w-4 h-4" />
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600">
+          <User className="w-3.5 h-3.5" />
           Assigned To
           {showSaved === "assignee" && (
-            <Check className="w-3 h-3 text-green-600 animate-pulse" />
+            <Check className="w-3 h-3 text-emerald-500" />
           )}
         </div>
         <Select
           value={task.assignedToId || ""}
           onValueChange={handleAssigneeChange}
         >
-          <SelectTrigger className="h-9">
+          <SelectTrigger className="h-8 text-sm">
             <SelectValue placeholder="Select assignee..." />
           </SelectTrigger>
           <SelectContent>
@@ -166,16 +166,18 @@ export const TaskDetails = ({ task, lists }: TaskDetailsProps) => {
               .map((member) => (
                 <SelectItem key={member._id} value={member._id}>
                   <div className="flex items-center gap-2">
-                    <Avatar className="w-5 h-5">
+                    <Avatar className="w-4 h-4">
                       <AvatarImage
                         src={member.user?.image || "/placeholder.svg"}
                         alt={member.user?.name || "Avatar"}
                       />
-                      <AvatarFallback className="text-xs">
+                      <AvatarFallback className="text-xs font-medium">
                         {member.user?.name?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <span>{member.user?.name || "Unnamed Member"}</span>
+                    <span className="text-sm">
+                      {member.user?.name || "Unnamed Member"}
+                    </span>
                   </div>
                 </SelectItem>
               ))}
@@ -184,33 +186,33 @@ export const TaskDetails = ({ task, lists }: TaskDetailsProps) => {
       </div>
 
       {/* Due Date */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
-          <Calendar className="w-4 h-4" />
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600">
+          <Calendar className="w-3.5 h-3.5" />
           Due Date
           {showSaved === "dueDate" && (
-            <Check className="w-3 h-3 text-green-600 animate-pulse" />
+            <Check className="w-3 h-3 text-emerald-500" />
           )}
         </div>
         <Input
           type="date"
           value={dueDate}
           onChange={handleDueDateChange}
-          className="h-9"
+          className="h-8 text-sm"
         />
       </div>
 
       {/* List Status */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
-          <List className="w-4 h-4" />
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600">
+          <List className="w-3.5 h-3.5" />
           List Status
           {showSaved === "list" && (
-            <Check className="w-3 h-3 text-green-600 animate-pulse" />
+            <Check className="w-3 h-3 text-emerald-500" />
           )}
         </div>
         <Select value={task.listId || ""} onValueChange={handleListChange}>
-          <SelectTrigger className="h-9">
+          <SelectTrigger className="h-8 text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -225,11 +227,11 @@ export const TaskDetails = ({ task, lists }: TaskDetailsProps) => {
 
       {/* Task Info */}
       <div className="col-span-2 lg:col-span-4 pt-4 border-t">
-        <div className="flex items-center gap-6 text-sm text-gray-600">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
+          <div className="flex items-center gap-1.5">
             <span>Created by:</span>
             {task.createdBy?.user && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <Avatar className="w-5 h-5">
                   <AvatarImage
                     src={task.createdBy.user.image || "/placeholder.svg"}
@@ -238,8 +240,10 @@ export const TaskDetails = ({ task, lists }: TaskDetailsProps) => {
                     {task.createdBy.user.name?.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <span className="font-medium">{task.createdBy.user.name}</span>
-                <Badge variant="outline" className="text-xs">
+                <span className="font-medium text-slate-700">
+                  {task.createdBy.user.name}
+                </span>
+                <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
                   {task.createdBy.role}
                 </Badge>
               </div>
@@ -247,7 +251,7 @@ export const TaskDetails = ({ task, lists }: TaskDetailsProps) => {
           </div>
           <div>
             <span>Created: </span>
-            <span className="font-medium">
+            <span className="font-medium text-slate-700">
               {format(task.createdAt, "MMM d, yyyy 'at' h:mm a")}
             </span>
           </div>

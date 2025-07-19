@@ -65,7 +65,7 @@ export const CreateChannelModal = () => {
         <DialogHeader>
           <DialogTitle>Add a channel</DialogTitle>
           <DialogDescription>
-            Channels are where your team communicates. They&apos;re best when
+            Channels are where your team communicates. They are best when
             organized around a topic.
           </DialogDescription>
         </DialogHeader>

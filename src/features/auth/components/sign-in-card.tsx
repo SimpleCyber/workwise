@@ -113,7 +113,7 @@ export const SignInCard = ({ setState }: SignInCardProps) => {
         </div>
 
         <p className="text-center text-xs text-muted-foreground">
-          Don&apos;t have an account?{" "}
+          Dont have an account?{" "}
           <button
             disabled={pending}
             onClick={() => setState("signUp")}
