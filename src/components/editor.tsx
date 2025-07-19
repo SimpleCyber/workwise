@@ -194,7 +194,8 @@ const Editor = ({
               <Image
                 src={URL.createObjectURL(image)}
                 alt="Uploaded image"
-                fill
+                width={800}
+                height={600}
                 className="overflow-hidden rounded-xl border object-cover"
               />
             </div>

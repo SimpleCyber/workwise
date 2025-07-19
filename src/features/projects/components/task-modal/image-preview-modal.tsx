@@ -29,6 +29,8 @@ export const ImagePreviewModal = ({
             <X className="w-4 h-4" />
           </Button>
           <Image
+            width={800}
+            height={600}
             src={imageUrl || "/placeholder.svg"}
             alt="Full size preview"
             className="w-full h-auto max-h-[85vh] object-contain rounded-lg"

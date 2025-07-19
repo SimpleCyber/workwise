@@ -293,6 +293,7 @@ export const AttendanceDetailModal = ({
                         {attendance.taskImage && (
                           <div className="mt-3">
                             <Image 
+                            width={800} height={600}
                               src={`${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${attendance.taskImage}`}
                               alt="Task attachment"
                               className="max-w-full h-auto rounded border cursor-pointer hover:opacity-80 transition-opacity"
@@ -415,6 +416,7 @@ export const AttendanceDetailModal = ({
                       </p>
                       {comment.image && (
                         <Image 
+                        width={800} height={600}
                           src={`${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${comment.image}`}
                           alt="Comment attachment"
                           className="mt-2 max-w-full h-auto rounded border cursor-pointer hover:opacity-80 transition-opacity"
@@ -451,6 +453,7 @@ export const AttendanceDetailModal = ({
               {commentImage && (
                 <div className="relative">
                   <Image 
+                  width={800} height={600}
                     src={
                       URL.createObjectURL(commentImage) || "/placeholder.svg"
                     }

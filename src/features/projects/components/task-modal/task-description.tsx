@@ -154,6 +154,8 @@ export const TaskDescription = ({
                           className="relative group rounded-lg overflow-hidden border bg-gray-50"
                         >
                           <Image
+                            width={800}
+                            height={600}
                             src={imageUrl || "/placeholder.svg"}
                             alt={`Description image ${index + 1}`}
                             className="w-full h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity"

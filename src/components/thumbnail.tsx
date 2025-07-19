@@ -14,6 +14,8 @@ export const Thumbnail = ({ url }: ThumbnailProps) => {
         <div className="relative my-2 max-w-[360px] cursor-zoom-in overflow-hidden rounded-lg border">
           <Image
             src={url}
+            width={800}
+            height={600}
             alt="Message image"
             className="size-full rounded-md object-cover"
           />
@@ -26,6 +28,8 @@ export const Thumbnail = ({ url }: ThumbnailProps) => {
       >
         <Image
           src={url}
+          width={800}
+          height={600}
           alt="Message image"
           className="size-full rounded-md object-cover"
         />

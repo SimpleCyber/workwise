@@ -22,7 +22,7 @@ export const RichTextDisplay = ({
       .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") // Bold
       .replace(/\*(.*?)\*/g, "<em>$1</em>") // Italic
       .replace(/!\[([^\]]*)\]$$([^)]+)$$/g, (match, alt, src) => {
-        return `<Image  src="${src}" alt="${alt}" class="inline-image cursor-pointer max-w-full h-auto rounded border" onclick="window.openImage('${src}')" />`;
+        return `<Image width={800} height={600} src="${src}" alt="${alt}" class="inline-image cursor-pointer max-w-full h-auto rounded border" onclick="window.openImage('${src}')" />`;
       });
 
     return processed;
@@ -52,6 +52,8 @@ export const RichTextDisplay = ({
             <div className="relative">
               <Image
                 src={selectedImage || "/placeholder.svg"}
+                width={800}
+                height={600}
                 alt="Full size"
                 className="w-full h-auto max-h-[80vh] object-contain rounded"
               />

@@ -254,6 +254,8 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
                           <div className="relative group max-w-sm rounded-lg overflow-hidden border">
                             <Image
                               src={comment.imageUrl || "/placeholder.svg"}
+                              width={800}
+                              height={600}
                               alt="Comment attachment"
                               className="w-full h-auto object-cover cursor-pointer hover:opacity-90 transition-opacity"
                               onClick={() => onImagePreview(comment.imageUrl)}

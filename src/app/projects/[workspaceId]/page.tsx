@@ -297,7 +297,7 @@ const ProjectsWorkspacePage = () => {
                               </Badge>
 
                               {board.isStarred && (
-                                <Star className="size-4 fill-yellow-400 text-yellow-400" />
+                                <Star className="size-4 width={800} height={600}-yellow-400 text-yellow-400" />
                               )}
                             </div>
 
