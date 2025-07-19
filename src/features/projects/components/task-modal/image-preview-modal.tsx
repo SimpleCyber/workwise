@@ -27,7 +27,6 @@ export const ImagePreviewModal = ({
           >
             <X className="w-4 h-4" />
           </Button>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrl || "/placeholder.svg"}
             alt="Full size preview"

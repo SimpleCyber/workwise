@@ -151,7 +151,6 @@ export const TaskDescription = ({
                           key={index}
                           className="relative group rounded-lg overflow-hidden border bg-gray-50"
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={imageUrl || "/placeholder.svg"}
                             alt={`Description image ${index + 1}`}

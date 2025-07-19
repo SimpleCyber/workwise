@@ -252,7 +252,6 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
                       {comment.image && (
                         <div className="mt-3">
                           <div className="relative group max-w-sm rounded-lg overflow-hidden border">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={comment.imageUrl || "/placeholder.svg"}
                               alt="Comment attachment"
