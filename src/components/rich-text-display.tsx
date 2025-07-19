@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 interface RichTextDisplayProps {
   content: string;
@@ -21,7 +22,7 @@ export const RichTextDisplay = ({
       .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") // Bold
       .replace(/\*(.*?)\*/g, "<em>$1</em>") // Italic
       .replace(/!\[([^\]]*)\]$$([^)]+)$$/g, (match, alt, src) => {
-        return `<img src="${src}" alt="${alt}" class="inline-image cursor-pointer max-w-full h-auto rounded border" onclick="window.openImage('${src}')" />`;
+        return `<Image  src="${src}" alt="${alt}" class="inline-image cursor-pointer max-w-full h-auto rounded border" onclick="window.openImage('${src}')" />`;
       });
 
     return processed;
@@ -49,7 +50,7 @@ export const RichTextDisplay = ({
         <DialogContent className="max-w-4xl max-h-[90vh] p-2">
           {selectedImage && (
             <div className="relative">
-              <img
+              <Image
                 src={selectedImage || "/placeholder.svg"}
                 alt="Full size"
                 className="w-full h-auto max-h-[80vh] object-contain rounded"

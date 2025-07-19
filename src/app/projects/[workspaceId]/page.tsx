@@ -175,7 +175,7 @@ const ProjectsWorkspacePage = () => {
                       setName(input);
                     } else {
                       toast.error(
-                        `Title can't exceed ${MAX_NAME_WORDS} words.`,
+                        `Title can not exceed ${MAX_NAME_WORDS} words.`,
                       );
                     }
                   }}
@@ -206,7 +206,7 @@ const ProjectsWorkspacePage = () => {
                       setDescription(input);
                     } else {
                       toast.error(
-                        `Description can't exceed ${MAX_DESCRIPTION_WORDS} words.`,
+                        `Description can nott exceed ${MAX_DESCRIPTION_WORDS} words.`,
                       );
                     }
                   }}

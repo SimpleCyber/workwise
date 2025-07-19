@@ -174,7 +174,7 @@ export const WorkspaceSidebarContent = () => {
                     setName(input);
                   } else {
                     toast.error(
-                      `Project name can't exceed ${MAX_NAME_WORDS} words.`,
+                      `Project name can not exceed ${MAX_NAME_WORDS} words.`,
                     );
                   }
                 }}
@@ -199,7 +199,7 @@ export const WorkspaceSidebarContent = () => {
                     setDescription(input);
                   } else {
                     toast.error(
-                      `Description can't exceed ${MAX_DESCRIPTION_WORDS} words.`,
+                      `Description cannot exceed ${MAX_DESCRIPTION_WORDS} words.`,
                     );
                   }
                 }}

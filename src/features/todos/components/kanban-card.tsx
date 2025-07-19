@@ -1,11 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import {
-  Calendar,
-  Check,
-  Trash2,
-} from "lucide-react";
+import { Calendar, Check, Trash2 } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -45,7 +41,7 @@ interface KanbanCardProps {
 
 const labelColors = [
   "bg-green-500",
-  "bg-yellow-500", 
+  "bg-yellow-500",
   "bg-orange-500",
   "bg-red-500",
   "bg-purple-500",
@@ -141,27 +137,29 @@ export const KanbanCard = ({ card }: KanbanCardProps) => {
                       duration-300 
                       ease-in-out
                       transform
-                      ${showCheckCircle 
-                        ? 'opacity-100 scale-100 translate-x-0' 
-                        : 'opacity-0 scale-75 -translate-x-2'
+                      ${
+                        showCheckCircle
+                          ? "opacity-100 scale-100 translate-x-0"
+                          : "opacity-0 scale-75 -translate-x-2"
                       }
-                      ${card.isCompleted 
-                        ? 'bg-green-500 border-green-500' 
-                        : 'border-gray-300 hover:border-green-400'
+                      ${
+                        card.isCompleted
+                          ? "bg-green-500 border-green-500"
+                          : "border-gray-300 hover:border-green-400"
                       }
                     `}
                     onClick={handleToggleComplete}
                   >
                     {card.isCompleted && (
-                      <Check 
+                      <Check
                         className={`
                           h-3 
                           w-3 
                           text-white 
                           transition-all 
                           duration-200 
-                          ${card.isCompleted ? 'scale-100' : 'scale-0'}
-                        `} 
+                          ${card.isCompleted ? "scale-100" : "scale-0"}
+                        `}
                       />
                     )}
                   </div>
@@ -173,7 +171,7 @@ export const KanbanCard = ({ card }: KanbanCardProps) => {
             </TooltipProvider>
 
             {/* Title */}
-            <h4 
+            <h4
               className={`
                 text-sm 
                 font-medium 
@@ -183,7 +181,7 @@ export const KanbanCard = ({ card }: KanbanCardProps) => {
                 transition-all 
                 duration-300 
                 ease-in-out
-                ${showCheckCircle ? 'ml-0' : '-ml-7'}
+                ${showCheckCircle ? "ml-0" : "-ml-7"}
               `}
             >
               {card.title}
@@ -192,12 +190,12 @@ export const KanbanCard = ({ card }: KanbanCardProps) => {
 
           {/* Description */}
           {card.description && (
-            <div 
+            <div
               className={`
                 transition-all 
                 duration-300 
                 ease-in-out
-                ${showCheckCircle ? 'ml-7' : 'ml-0'}
+                ${showCheckCircle ? "ml-7" : "ml-0"}
               `}
             >
               <p className="text-xs text-gray-600 leading-4 line-clamp-3 mb-3">
@@ -207,7 +205,7 @@ export const KanbanCard = ({ card }: KanbanCardProps) => {
           )}
 
           {/* Bottom Row: Label, Date + Delete */}
-          <div 
+          <div
             className={`
               flex 
               items-center 
@@ -216,7 +214,7 @@ export const KanbanCard = ({ card }: KanbanCardProps) => {
               transition-all 
               duration-300 
               ease-in-out
-              ${showCheckCircle ? 'ml-7' : 'ml-0'}
+              ${showCheckCircle ? "ml-7" : "ml-0"}
             `}
           >
             {/* Labels */}
@@ -227,8 +225,6 @@ export const KanbanCard = ({ card }: KanbanCardProps) => {
                   onMouseEnter={() => setIsLabelsHovered(true)}
                   onMouseLeave={() => setIsLabelsHovered(false)}
                 >
-
-                  
                   <div
                     className={`
                       border-2                      rounded-sm 
@@ -244,7 +240,6 @@ export const KanbanCard = ({ card }: KanbanCardProps) => {
                     {card.labels[0]}
                   </div>
 
-
                   {card.labels.length > 1 && (
                     <span className="text-xs text-gray-500 font-medium cursor-pointer">
                       +{card.labels.length - 1}
@@ -255,7 +250,7 @@ export const KanbanCard = ({ card }: KanbanCardProps) => {
                 {/* Additional Labels Tooltip */}
                 {isLabelsHovered && card.labels.length > 1 && (
                   <div className="absolute top-full left-0 mt-1 bg-black text-white text-xs rounded px-2 py-1 z-10 whitespace-nowrap">
-                    {card.labels.slice(1).join(', ')}
+                    {card.labels.slice(1).join(", ")}
                   </div>
                 )}
               </div>
@@ -265,7 +260,8 @@ export const KanbanCard = ({ card }: KanbanCardProps) => {
             <div className="flex items-center gap-2">
               {/* Due Date */}
               {card.dueDate && (
-                <div className={`
+                <div
+                  className={`
                   flex 
                   items-center 
                   gap-1 
@@ -274,13 +270,15 @@ export const KanbanCard = ({ card }: KanbanCardProps) => {
                   rounded 
                   text-xs 
                   font-medium
-                  ${isOverdue 
-                    ? 'bg-red-100 text-red-700' 
-                    : isDueSoon 
-                      ? 'bg-yellow-100 text-yellow-700' 
-                      : 'bg-gray-100 text-gray-700'
+                  ${
+                    isOverdue
+                      ? "bg-red-100 text-red-700"
+                      : isDueSoon
+                        ? "bg-yellow-100 text-yellow-700"
+                        : "bg-gray-100 text-gray-700"
                   }
-                `}>
+                `}
+                >
                   <Calendar className="h-3 w-3" />
                   <span>{format(card.dueDate, "MMM d")}</span>
                 </div>

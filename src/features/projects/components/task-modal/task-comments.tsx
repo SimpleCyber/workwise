@@ -1,5 +1,5 @@
 "use client";
-
+import Image from "next/image";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -252,8 +252,7 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
                       {comment.image && (
                         <div className="mt-3">
                           <div className="relative group max-w-sm rounded-lg overflow-hidden border">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
+                            <Image
                               src={comment.imageUrl || "/placeholder.svg"}
                               alt="Comment attachment"
                               className="w-full h-auto object-cover cursor-pointer hover:opacity-90 transition-opacity"

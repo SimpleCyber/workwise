@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { TaskDetails } from "./task-details";
 import { TaskDescription } from "./task-description";
 import { TaskComments } from "./task-comments";
@@ -59,17 +59,20 @@ export const TaskContent = ({
     setIsResizing(true);
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isResizing) return;
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!isResizing) return;
 
-    const container = document.getElementById("task-content-container");
-    if (!container) return;
+      const container = document.getElementById("task-content-container");
+      if (!container) return;
 
-    const rect = container.getBoundingClientRect();
-    const percentage = ((e.clientX - rect.left) / rect.width) * 100;
-    const clampedPercentage = Math.max(25, Math.min(75, percentage));
-    setDescriptionWidth(clampedPercentage);
-  };
+      const rect = container.getBoundingClientRect();
+      const percentage = ((e.clientX - rect.left) / rect.width) * 100;
+      const clampedPercentage = Math.max(25, Math.min(75, percentage));
+      setDescriptionWidth(clampedPercentage);
+    },
+    [isResizing],
+  );
 
   const handleMouseUp = () => {
     setIsResizing(false);
@@ -85,7 +88,7 @@ export const TaskContent = ({
         document.removeEventListener("mouseup", handleMouseUp);
       };
     }
-  }, [isResizing]);
+  }, [isResizing, handleMouseMove, handleMouseUp]);
 
   return (
     <div className="flex-1 overflow-hidden">

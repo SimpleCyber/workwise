@@ -199,7 +199,7 @@ export const WorkspaceSidebarContent = () => {
                     setDescription(input);
                   } else {
                     toast.error(
-                      `Description can't exceed ${MAX_DESCRIPTION_WORDS} words.`,
+                      `Description can not exceed ${MAX_DESCRIPTION_WORDS} words.`,
                     );
                   }
                 }}
