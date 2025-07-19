@@ -74,9 +74,9 @@ export const TaskContent = ({
     [isResizing],
   );
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     setIsResizing(false);
-  };
+  }, []);
 
   // Add event listeners
   React.useEffect(() => {

@@ -264,7 +264,7 @@ const ProjectsWorkspacePage = () => {
                 </h3>
                 <p className="text-slate-600 mb-8 leading-relaxed">
                   Create your first project board to start organizing and
-                  managing your team's tasks and workflows
+                  managing your team tasks and workflows
                 </p>
                 <Dialog open={open} onOpenChange={setOpen}>
                   <DialogTrigger asChild>
