@@ -33,6 +33,33 @@ import {
 
 import type { Id } from "../../../../convex/_generated/dataModel";
 
+const extractTextFromRichContent = (jsonContent: string): string => {
+  try {
+    const parsed = JSON.parse(jsonContent);
+    if (Array.isArray(parsed.ops)) {
+      const text = parsed.ops
+        .map((op: { insert: string }) =>
+          typeof op.insert === "string" ? op.insert : "",
+        )
+        .join("")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      return text + "\n";
+    }
+    return "";
+  } catch {
+    return "";
+  }
+};
+
+const trimDescription = (text: string, maxLength = 200): string => {
+  const trimmed = text.trim();
+  return trimmed.length > maxLength
+    ? trimmed.slice(0, maxLength).trim() + "..."
+    : trimmed;
+};
+
 interface ProjectTaskCardProps {
   task: {
     _id: Id<"projectTasks">;
@@ -222,7 +249,7 @@ export const ProjectTaskCard = ({
           {/* Description preview */}
           {task.description && (
             <p className="text-xs text-gray-600 leading-relaxed">
-              {trimDescription(task.description)}
+              {trimDescription(extractTextFromRichContent(task.description))}
             </p>
           )}
 
@@ -269,21 +296,6 @@ export const ProjectTaskCard = ({
                           {task.assignedTo.user.name?.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      {/* {task.assignedBy?.user &&
-                        task.assignedBy._id !== task.assignedTo._id && (
-                          <Avatar className="w-4 h-4  ">
-                            <AvatarImage className="opacity-50"
-                              src={
-                                task.assignedBy.user.image || "/placeholder.svg"
-                              }
-                            />
-                            <AvatarFallback className="text-xs">
-                              {task.assignedBy.user.name
-                                ?.charAt(0)
-                                .toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                        )} */}
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
