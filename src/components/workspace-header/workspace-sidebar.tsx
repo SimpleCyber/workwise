@@ -38,7 +38,7 @@ export const WorkspaceSidebar = ({ children }: WorkspaceSidebarProps) => {
   }
 
   return (
-    <div className="flex h-full flex-col gap-y-2 bg-[#5E2C5F] rounded-md">
+    <div className="flex h-full flex-col gap-y-2 bg-[#5E2C5F] rounded-tl-xl">
       <WorkspaceHeader
         workspace={workspace}
         isAdmin={member.role === "admin"}

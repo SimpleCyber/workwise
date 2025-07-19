@@ -26,7 +26,7 @@ const MembersWorkspaceLayout = ({ children }: Readonly<PropsWithChildren>) => {
           <ResizablePanel
             defaultSize={20}
             minSize={11}
-            className="bg-[#5E2C5F]"
+            className="bg-gray-900"
           >
             <WorkspaceSidebar>
               <WorkspaceSidebarContent />
