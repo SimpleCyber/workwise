@@ -7,6 +7,7 @@ import {
   Presentation,
   UserRoundSearch,
   Calendar,
+  Files,
   Network,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
@@ -26,7 +27,7 @@ export const Sidebar = () => {
     { icon: Kanban, label: "ToDo", path: `/todo/${workspaceId}` },
     { icon: MessagesSquare, label: "Chat", path: `/workspace/${workspaceId}` },
     { icon: ListTodo, label: "Project", path: `/projects/${workspaceId}` },
-    { icon: Presentation, label: "Board", path: `/board/${workspaceId}` },
+    { icon: Files, label: "Data Room", path: `/data-room/${workspaceId}` },
     {
       icon: UserRoundSearch,
       label: "Members",

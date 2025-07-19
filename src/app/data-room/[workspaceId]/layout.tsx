@@ -1,7 +1,6 @@
 "use client";
 
 import type { PropsWithChildren } from "react";
-
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { Toolbar } from "@/components/toolbar/toolbar";
 import {
@@ -10,10 +9,9 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { WorkspaceSidebar } from "@/components/workspace-header/workspace-sidebar";
-
 import { WorkspaceSidebarContent } from "./workspace-sidebar-content";
 
-const BoardWorkspaceLayout = ({ children }: Readonly<PropsWithChildren>) => {
+const DataRoomWorkspaceLayout = ({ children }: Readonly<PropsWithChildren>) => {
   return (
     <div className="h-full">
       <Toolbar />
@@ -21,7 +19,7 @@ const BoardWorkspaceLayout = ({ children }: Readonly<PropsWithChildren>) => {
         <Sidebar />
         <ResizablePanelGroup
           direction="horizontal"
-          autoSaveId="board-workspace-layout"
+          autoSaveId="data-room-workspace-layout"
         >
           <ResizablePanel
             defaultSize={20}
@@ -42,4 +40,4 @@ const BoardWorkspaceLayout = ({ children }: Readonly<PropsWithChildren>) => {
   );
 };
 
-export default BoardWorkspaceLayout;
+export default DataRoomWorkspaceLayout;

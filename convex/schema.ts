@@ -94,6 +94,7 @@ const schema = defineSchema({
     .index("by_workspace_id", ["workspaceId"])
     .index("by_member_id", ["memberId"]),
   // Leave requests table
+
   leaveRequests: defineTable({
     memberId: v.id("members"),
     workspaceId: v.id("workspaces"),
@@ -282,6 +283,23 @@ const schema = defineSchema({
     .index("by_assigned_by", ["assignedById"])
     .index("by_workspace_id", ["workspaceId"])
     .index("by_list_archived", ["listId", "isArchived"]),
+
+  dataRoomFiles: defineTable({
+    workspaceId: v.id("workspaces"),
+    uploaderId: v.id("members"),
+    storageId: v.id("_storage"),
+    fileName: v.string(),
+    fileType: v.string(),
+    fileSize: v.number(),
+    comment: v.string(),
+    visibility: v.union(v.literal("public"), v.literal("private")),
+    allowedMembers: v.array(v.id("members")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_workspace_id", ["workspaceId"])
+    .index("by_uploader_id", ["uploaderId"])
+    .index("by_created_at", ["createdAt"]),
 });
 
 export default schema;
