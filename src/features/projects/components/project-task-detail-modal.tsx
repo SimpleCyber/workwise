@@ -261,7 +261,7 @@ export const ProjectTaskDetailModal = ({
       toast.success("Description updated successfully!");
     } catch (error) {
       console.error("Error updating description:", error);
-      toast.error("Failed to update description");
+      toast.error("Task Creator can only update description");
     }
   };
 
@@ -375,7 +375,7 @@ export const ProjectTaskDetailModal = ({
               size="sm"
               onClick={() => onOpenChange(false)}
             >
-              <X className="size-4" />
+              {/* <X className="size-4" /> */}
             </Button>
           </div>
         </DialogHeader>
