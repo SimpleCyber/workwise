@@ -163,7 +163,7 @@ export const ProjectTaskCard = ({
       return `Self-assigned by ${task.assignedBy.user.name}`;
     }
 
-    return `Assigned by ${task.assignedBy.user.name} to ${task.assignedTo.user.name}`;
+    return `${task.assignedTo.user.name} <- ${task.assignedBy.user.name}`;
   };
 
   return (
@@ -261,9 +261,7 @@ export const ProjectTaskCard = ({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div className="flex items-center gap-1">
-                      <Avatar
-                        className={`w-5 h-5 border-2 border-[${userColor}] -mr-2 z-10`}
-                      >
+                      <Avatar className="w-4 h-4">
                         <AvatarImage
                           src={task.assignedTo.user.image || "/placeholder.svg"}
                         />
@@ -271,10 +269,10 @@ export const ProjectTaskCard = ({
                           {task.assignedTo.user.name?.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      {task.assignedBy?.user &&
+                      {/* {task.assignedBy?.user &&
                         task.assignedBy._id !== task.assignedTo._id && (
                           <Avatar className="w-4 h-4  ">
-                            <AvatarImage
+                            <AvatarImage className="opacity-50"
                               src={
                                 task.assignedBy.user.image || "/placeholder.svg"
                               }
@@ -285,7 +283,7 @@ export const ProjectTaskCard = ({
                                 .toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
-                        )}
+                        )} */}
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
