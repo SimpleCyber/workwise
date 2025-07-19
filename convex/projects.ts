@@ -563,33 +563,34 @@ export const deleteProjectTask = mutation({
 });
 
 // Create a comment on a task
+
+
+// Add this to your existing createTaskComment mutation
 export const createTaskComment = mutation({
   args: {
     taskId: v.id("projectTasks"),
     content: v.string(),
-    images: v.optional(v.array(v.string())), // Array of image URLs
+    images: v.optional(v.array(v.string())), // Array of image URLs or storage IDs
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getAuthUserId(ctx)
     if (!userId) {
-      throw new Error("Unauthorized");
+      throw new Error("Unauthorized")
     }
 
-    const task = await ctx.db.get(args.taskId);
+    const task = await ctx.db.get(args.taskId)
     if (!task) {
-      throw new Error("Task not found");
+      throw new Error("Task not found")
     }
 
     // Check if user is a member of the workspace
     const member = await ctx.db
       .query("members")
-      .withIndex("by_workspace_id_user_id", (q) =>
-        q.eq("workspaceId", task.workspaceId).eq("userId", userId),
-      )
-      .unique();
+      .withIndex("by_workspace_id_user_id", (q) => q.eq("workspaceId", task.workspaceId).eq("userId", userId))
+      .unique()
 
     if (!member) {
-      throw new Error("Not a member of this workspace");
+      throw new Error("Not a member of this workspace")
     }
 
     const commentId = await ctx.db.insert("taskComments", {
@@ -600,13 +601,13 @@ export const createTaskComment = mutation({
       createdAt: Date.now(),
       updatedAt: Date.now(),
       isEdited: false,
-    });
+    })
 
-    return commentId;
+    return commentId
   },
-});
+})
 
-// Update a comment (only by the author)
+// Update the existing updateTaskComment mutation
 export const updateTaskComment = mutation({
   args: {
     commentId: v.id("taskComments"),
@@ -614,19 +615,19 @@ export const updateTaskComment = mutation({
     images: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getAuthUserId(ctx)
     if (!userId) {
-      throw new Error("Unauthorized");
+      throw new Error("Unauthorized")
     }
 
-    const comment = await ctx.db.get(args.commentId);
+    const comment = await ctx.db.get(args.commentId)
     if (!comment) {
-      throw new Error("Comment not found");
+      throw new Error("Comment not found")
     }
 
-    const member = await ctx.db.get(comment.memberId);
+    const member = await ctx.db.get(comment.memberId)
     if (!member || member.userId !== userId) {
-      throw new Error("You can only edit your own comments");
+      throw new Error("You can only edit your own comments")
     }
 
     await ctx.db.patch(args.commentId, {
@@ -634,11 +635,66 @@ export const updateTaskComment = mutation({
       images: args.images || [],
       updatedAt: Date.now(),
       isEdited: true,
-    });
+    })
 
-    return args.commentId;
+    return args.commentId
   },
-});
+})
+
+// Get comments for a task
+export const getTaskComments = query({
+  args: {
+    taskId: v.id("projectTasks"),
+    sortOrder: v.optional(v.union(v.literal("asc"), v.literal("desc"))),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx)
+    if (!userId) {
+      return []
+    }
+
+    const task = await ctx.db.get(args.taskId)
+    if (!task) {
+      return []
+    }
+
+    // Check if user is a member of the workspace
+    const member = await ctx.db
+      .query("members")
+      .withIndex("by_workspace_id_user_id", (q) => q.eq("workspaceId", task.workspaceId).eq("userId", userId))
+      .unique()
+
+    if (!member) {
+      return []
+    }
+
+    const comments = await ctx.db
+      .query("taskComments")
+      .withIndex("by_task_id", (q) => q.eq("taskId", args.taskId))
+      .collect()
+
+    const commentsWithMembers = await Promise.all(
+      comments.map(async (comment) => {
+        const commentMember = await ctx.db.get(comment.memberId)
+        const user = commentMember ? await ctx.db.get(commentMember.userId) : null
+        return {
+          ...comment,
+          member: commentMember ? { ...commentMember, user } : null,
+        }
+      }),
+    )
+
+    // Sort by creation date
+    const sortOrder = args.sortOrder || "asc"
+    return commentsWithMembers.filter(Boolean).sort((a, b) => {
+      if (sortOrder === "desc") {
+        return b.createdAt - a.createdAt
+      }
+      return a.createdAt - b.createdAt
+    })
+  },
+})
+
 
 // Delete a comment (only by the author)
 export const deleteTaskComment = mutation({
@@ -666,64 +722,7 @@ export const deleteTaskComment = mutation({
   },
 });
 
-// Get comments for a task
-export const getTaskComments = query({
-  args: {
-    taskId: v.id("projectTasks"),
-    sortOrder: v.optional(v.union(v.literal("asc"), v.literal("desc"))),
-  },
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      return [];
-    }
 
-    const task = await ctx.db.get(args.taskId);
-    if (!task) {
-      return [];
-    }
-
-    // Check if user is a member of the workspace
-    const member = await ctx.db
-      .query("members")
-      .withIndex("by_workspace_id_user_id", (q) =>
-        q.eq("workspaceId", task.workspaceId).eq("userId", userId),
-      )
-      .unique();
-
-    if (!member) {
-      return [];
-    }
-
-    const comments = await ctx.db
-      .query("taskComments")
-      .withIndex("by_task_id", (q) => q.eq("taskId", args.taskId))
-      .collect();
-
-    const commentsWithMembers = await Promise.all(
-      comments.map(async (comment) => {
-        const commentMember = await ctx.db.get(comment.memberId);
-        const user = commentMember
-          ? await ctx.db.get(commentMember.userId)
-          : null;
-
-        return {
-          ...comment,
-          member: commentMember ? { ...commentMember, user } : null,
-        };
-      }),
-    );
-
-    // Sort by creation date
-    const sortOrder = args.sortOrder || "asc";
-    return commentsWithMembers.filter(Boolean).sort((a, b) => {
-      if (sortOrder === "desc") {
-        return b.createdAt - a.createdAt;
-      }
-      return a.createdAt - b.createdAt;
-    });
-  },
-});
 
 // Update task with rich content (only by creator)
 export const updateTaskContent = mutation({
