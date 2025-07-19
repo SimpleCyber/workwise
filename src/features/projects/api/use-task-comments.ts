@@ -8,11 +8,11 @@ import type { Id } from "@/../convex/_generated/dataModel"
 // Get task comments
 export const useGetTaskComments = (taskId: Id<"projectTasks"> | undefined, sortOrder: "asc" | "desc" = "asc") => {
   const result = useQuery(api.projects.getTaskComments, taskId ? { taskId, sortOrder } : "skip")
-  
+
   return {
     data: result,
     isLoading: result === undefined,
-    error: null // You can add error handling if needed
+    error: null,
   }
 }
 
@@ -20,7 +20,7 @@ export const useGetTaskComments = (taskId: Id<"projectTasks"> | undefined, sortO
 type CreateCommentRequest = {
   taskId: Id<"projectTasks">
   content: string
-  images?: string[]
+  image?: Id<"_storage">
 }
 
 export const useCreateTaskComment = () => {
@@ -59,7 +59,7 @@ export const useCreateTaskComment = () => {
 type UpdateCommentRequest = {
   commentId: Id<"taskComments">
   content: string
-  images?: string[]
+  image?: Id<"_storage">
 }
 
 export const useUpdateTaskComment = () => {

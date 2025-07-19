@@ -195,7 +195,7 @@ export const ProjectTaskDetailModal = ({ task, open, onOpenChange, lists }: Proj
     if (!task) return
 
     try {
-      let imageUrl: string | undefined
+      let storageId: Id<"_storage"> | undefined
 
       if (image) {
         const url = await generateUploadUrl({}, { throwError: true })
@@ -209,20 +209,20 @@ export const ProjectTaskDetailModal = ({ task, open, onOpenChange, lists }: Proj
 
         if (!result.ok) throw new Error("Failed to upload image")
 
-        const { storageId } = await result.json()
-        // You might need to get the actual URL from storage
-        imageUrl = storageId // This might need to be converted to actual URL
+        const { storageId: uploadedStorageId } = await result.json()
+        storageId = uploadedStorageId
       }
 
       await createComment.mutate({
         taskId: task._id,
         content: body,
-        images: imageUrl ? [imageUrl] : undefined,
+        image: storageId, // Pass the storage ID directly
       })
 
       setEditorKey((prev) => prev + 1) // Reset editor
       toast.success("Comment added successfully!")
     } catch (error) {
+      console.error("Error submitting comment:", error)
       toast.error("Failed to add comment")
     }
   }
@@ -232,7 +232,7 @@ export const ProjectTaskDetailModal = ({ task, open, onOpenChange, lists }: Proj
     { body, image }: { body: string; image: File | null },
   ) => {
     try {
-      let imageUrl: string | undefined
+      let storageId: Id<"_storage"> | undefined
 
       if (image) {
         const url = await generateUploadUrl({}, { throwError: true })
@@ -246,19 +246,20 @@ export const ProjectTaskDetailModal = ({ task, open, onOpenChange, lists }: Proj
 
         if (!result.ok) throw new Error("Failed to upload image")
 
-        const { storageId } = await result.json()
-        imageUrl = storageId
+        const { storageId: uploadedStorageId } = await result.json()
+        storageId = uploadedStorageId
       }
 
       await updateComment.mutate({
         commentId,
         content: body,
-        images: imageUrl ? [imageUrl] : undefined,
+        image: storageId,
       })
 
       setEditingComment(null)
       toast.success("Comment updated successfully!")
     } catch (error) {
+      console.error("Error updating comment:", error)
       toast.error("Failed to update comment")
     }
   }
@@ -499,7 +500,7 @@ export const ProjectTaskDetailModal = ({ task, open, onOpenChange, lists }: Proj
                       <p>No comments yet. Be the first to comment!</p>
                     </div>
                   ) : (
-                    comments?.map((comment) => (
+                    comments?.map((comment: any) => (
                       <div key={comment._id} className="flex gap-3 group">
                         <Avatar className="w-8 h-8 mt-1">
                           <AvatarImage src={comment.member?.user?.image || "/placeholder.svg"} />
@@ -539,22 +540,21 @@ export const ProjectTaskDetailModal = ({ task, open, onOpenChange, lists }: Proj
                             <>
                               <div className="bg-muted/30 rounded-lg p-3">
                                 <Renderer value={comment.content} />
-                                {/* Display comment images */}
-                                {comment.images && comment.images.length > 0 && (
-                                  <div className="mt-2 flex flex-wrap gap-2">
-                                    {comment.images.map((imageUrl, index) => (
-                                      <div
-                                        key={index}
-                                        className="relative max-w-[200px] rounded-lg overflow-hidden border"
-                                      >
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img
-                                          src={imageUrl || "/placeholder.svg"}
-                                          alt={`Comment attachment ${index + 1}`}
-                                          className="w-full h-auto object-cover"
-                                        />
-                                      </div>
-                                    ))}
+                                {/* Display comment image */}
+                                {comment.image && (
+                                  <div className="mt-2">
+                                    <div className="relative max-w-[300px] rounded-lg overflow-hidden border">
+                                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                                      <img
+                                        src={comment.imageUrl || "/placeholder.svg"}
+                                        alt="Comment attachment"
+                                        className="w-full h-auto object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                                        onClick={() => {
+                                          // Optional: Open image in modal
+                                          window.open(comment.imageUrl, "_blank")
+                                        }}
+                                      />
+                                    </div>
                                   </div>
                                 )}
                               </div>

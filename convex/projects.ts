@@ -565,12 +565,15 @@ export const deleteProjectTask = mutation({
 // Create a comment on a task
 
 
+
+
+
 // Add this to your existing createTaskComment mutation
 export const createTaskComment = mutation({
   args: {
     taskId: v.id("projectTasks"),
     content: v.string(),
-    images: v.optional(v.array(v.string())), // Array of image URLs or storage IDs
+    image: v.optional(v.id("_storage")), // Single image storage ID
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
@@ -597,7 +600,7 @@ export const createTaskComment = mutation({
       taskId: args.taskId,
       memberId: member._id,
       content: args.content,
-      images: args.images || [],
+      images: args.image ? [args.image] : [], // Store as array for consistency with schema
       createdAt: Date.now(),
       updatedAt: Date.now(),
       isEdited: false,
@@ -612,7 +615,7 @@ export const updateTaskComment = mutation({
   args: {
     commentId: v.id("taskComments"),
     content: v.string(),
-    images: v.optional(v.array(v.string())),
+    image: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx)
@@ -632,7 +635,7 @@ export const updateTaskComment = mutation({
 
     await ctx.db.patch(args.commentId, {
       content: args.content,
-      images: args.images || [],
+      images: args.image ? [args.image] : [],
       updatedAt: Date.now(),
       isEdited: true,
     })
@@ -677,9 +680,18 @@ export const getTaskComments = query({
       comments.map(async (comment) => {
         const commentMember = await ctx.db.get(comment.memberId)
         const user = commentMember ? await ctx.db.get(commentMember.userId) : null
+
+        // Get image URL if image exists
+        let imageUrl = null
+        if (comment.images && comment.images.length > 0) {
+          imageUrl = await ctx.storage.getUrl(comment.images[0])
+        }
+
         return {
           ...comment,
           member: commentMember ? { ...commentMember, user } : null,
+          image: comment.images && comment.images.length > 0 ? comment.images[0] : null,
+          imageUrl,
         }
       }),
     )
@@ -695,32 +707,30 @@ export const getTaskComments = query({
   },
 })
 
-
-// Delete a comment (only by the author)
+// Update schema to use storage IDs instead of strings
 export const deleteTaskComment = mutation({
-  args: {
-    commentId: v.id("taskComments"),
-  },
+  args: { commentId: v.id("taskComments") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getAuthUserId(ctx)
     if (!userId) {
-      throw new Error("Unauthorized");
+      throw new Error("Unauthorized")
     }
 
-    const comment = await ctx.db.get(args.commentId);
+    const comment = await ctx.db.get(args.commentId)
     if (!comment) {
-      throw new Error("Comment not found");
+      throw new Error("Comment not found")
     }
 
-    const member = await ctx.db.get(comment.memberId);
+    const member = await ctx.db.get(comment.memberId)
     if (!member || member.userId !== userId) {
-      throw new Error("You can only delete your own comments");
+      throw new Error("You can only delete your own comments")
     }
 
-    await ctx.db.delete(args.commentId);
-    return args.commentId;
+    await ctx.db.delete(args.commentId)
+    return args.commentId
   },
-});
+})
+
 
 
 
