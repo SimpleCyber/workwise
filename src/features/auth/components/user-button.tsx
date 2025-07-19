@@ -48,7 +48,7 @@ export const UserButton = () => {
           onClick={async () => {
             await signOut();
 
-            router.replace("/auth");
+            router.replace("/");
           }}
           className="h-10"
         >

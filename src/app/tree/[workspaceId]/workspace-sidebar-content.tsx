@@ -41,7 +41,7 @@ export const WorkspaceSidebarContent = () => {
         </Button>
       </div>
 
-      <WorkspaceSection label="Views" hint="Explore" onNew={() => {}}>
+      {/* <WorkspaceSection label="Views" hint="Explore" onNew={() => {}}>
         <Button
           variant="transparent"
           className="h-7 justify-start px-[18px] text-sm text-[#f9EDFFCC] hover:bg-white/5"
@@ -58,7 +58,7 @@ export const WorkspaceSidebarContent = () => {
           <BarChart3 className="mr-1 size-3.5 shrink-0" />
           <span className="truncate text-sm">Analytics</span>
         </Button>
-      </WorkspaceSection>
+      </WorkspaceSection> */}
     </>
   );
 };

@@ -53,7 +53,7 @@ export const WorkspaceSidebarContent = () => {
           <Users className="mr-1 size-3.5 shrink-0" />
           <span className="truncate text-sm">All Members</span>
         </Button>
-
+        {/* 
         {(member?.role === "admin" || member?.role === "lead") && (
           <Button
             variant="transparent"
@@ -123,10 +123,10 @@ export const WorkspaceSidebarContent = () => {
             <UserPlus className="mr-1 size-3.5 shrink-0" />
             <span className="truncate text-sm">Invite Members</span>
           </Button>
-        )}
+        )} */}
       </div>
 
-      <WorkspaceSection label="Quick Actions" hint="Manage" onNew={() => {}}>
+      {/* <WorkspaceSection label="Quick Actions" hint="Manage" onNew={() => {}}>
         {member?.role === "admin" && (
           <Button
             variant="transparent"
@@ -146,7 +146,7 @@ export const WorkspaceSidebarContent = () => {
           <Users className="mr-1 size-3.5 shrink-0" />
           <span className="truncate text-sm">Teams</span>
         </Button>
-      </WorkspaceSection>
+      </WorkspaceSection> */}
     </>
   );
 };

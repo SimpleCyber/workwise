@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 export const WorkspaceSidebarContent = () => {
   return (
     <>
-      <div className="mt-3 flex flex-col px-2">
+      {/* <div className="mt-3 flex flex-col px-2">
         <Button
           variant="transparent"
           className="h-7 justify-start px-[18px] text-sm text-[#f9EDFFCC]"
@@ -45,7 +45,7 @@ export const WorkspaceSidebarContent = () => {
         >
           <span className="truncate text-sm">Marketing</span>
         </Button>
-      </WorkspaceSection>
+      </WorkspaceSection> */}
     </>
   );
 };

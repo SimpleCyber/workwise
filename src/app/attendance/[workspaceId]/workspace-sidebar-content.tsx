@@ -112,7 +112,7 @@ export const WorkspaceSidebarContent = () => {
           </>
         )}
       </div>
-
+      {/* 
       <WorkspaceSection
         label="Quick Actions"
         hint="New Request"
@@ -137,7 +137,7 @@ export const WorkspaceSidebarContent = () => {
           <CheckSquare className="mr-1 size-3.5 shrink-0" />
           <span className="truncate text-sm">My Records</span>
         </Button>
-      </WorkspaceSection>
+      </WorkspaceSection> */}
     </>
   );
 };

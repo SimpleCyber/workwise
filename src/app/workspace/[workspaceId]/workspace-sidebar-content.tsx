@@ -43,10 +43,10 @@ export const WorkspaceSidebarContent = () => {
 
   return (
     <>
-      <div className="mt-3 flex flex-col px-2">
+      {/* <div className="mt-3 flex flex-col px-2">
         <SidebarItem label="Threads" icon={MessageSquareText} id="threads" />
         <SidebarItem label="Drafts & Sent" icon={SendHorizonal} id="draft" />
-      </div>
+      </div> */}
 
       {channels && channels.length !== 0 && (
         <WorkspaceSection
