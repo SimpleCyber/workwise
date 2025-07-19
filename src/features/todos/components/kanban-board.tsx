@@ -458,7 +458,6 @@ const KanbanList = ({
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          
         </CardHeader>
         <Droppable droppableId={list._id} type="card">
           {(provided, snapshot) => (
