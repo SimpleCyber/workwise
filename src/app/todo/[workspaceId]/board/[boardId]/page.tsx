@@ -4,7 +4,7 @@ import { Loader, TriangleAlert } from "lucide-react";
 
 import { useGetBoard } from "@/features/todos/api/use-get-board";
 import { useGetLists } from "@/features/todos/api/use-get-lists";
-import { KanbanBoard } from "@/features/todos/components/kanban-board";
+import { KanbanBoard } from "@/features/todos/components/todoboard";
 
 import type { Id } from "../../../../../../convex/_generated/dataModel";
 
