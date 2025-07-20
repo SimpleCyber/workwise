@@ -142,6 +142,7 @@ const schema = defineSchema({
     workspaceId: v.id("workspaces"),
     position: v.number(),
     isArchived: v.optional(v.boolean()),
+    isCollapsed: v.optional(v.boolean()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })

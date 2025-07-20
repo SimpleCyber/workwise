@@ -286,6 +286,7 @@ export const updateList = mutation({
     name: v.optional(v.string()),
     position: v.optional(v.number()),
     isArchived: v.optional(v.boolean()),
+    isCollapsed: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);

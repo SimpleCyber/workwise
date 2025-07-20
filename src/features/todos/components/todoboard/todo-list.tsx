@@ -1,55 +1,102 @@
-"use client"
+"use client";
 
-import { Draggable, Droppable } from "@hello-pangea/dnd"
-import { Loader } from "lucide-react"
-import { useState } from "react"
+import { Draggable, Droppable } from "@hello-pangea/dnd";
+import { Loader } from "lucide-react";
+import { useState, useMemo } from "react";
 
-import { Card, CardContent } from "@/components/ui/card"
-import { useGetCards } from "@/features/todos/api/use-get-cards"
+import { Card, CardContent } from "@/components/ui/card";
+import { useGetCards } from "@/features/todos/api/use-get-cards";
 
-import type { Id } from "../../../../../convex/_generated/dataModel"
-import { TodoTask } from "./todo-task"
-import { TodoAddCard } from "./todo-add-card"
-import { TodoListHeader } from "./todo-list-header"
+import type { Id } from "../../../../../convex/_generated/dataModel";
+import { TodoTask } from "./todo-task";
+import { TodoAddCard } from "./todo-add-card";
+import { TodoListHeader, type SortOption } from "./todo-list-header";
 
 interface TodoListProps {
   list: {
-    _id: Id<"todoLists">
-    name: string
-    position: number
-    boardId: Id<"todoBoards">
-    memberId: Id<"members">
-    workspaceId: Id<"workspaces">
-    isArchived?: boolean
-    createdAt: number
-    updatedAt: number
-  }
-  dragHandleProps: any
+    _id: Id<"todoLists">;
+    name: string;
+    position: number;
+    boardId: Id<"todoBoards">;
+    memberId: Id<"members">;
+    workspaceId: Id<"workspaces">;
+    isArchived?: boolean;
+    createdAt: number;
+    updatedAt: number;
+  };
+  dragHandleProps: any;
 }
 
 export const TodoList = ({ list, dragHandleProps }: TodoListProps) => {
-  const [isAddingCard, setIsAddingCard] = useState(false)
-  const [isCollapsed, setIsCollapsed] = useState(false)
-  const { data: cards, isLoading } = useGetCards({ listId: list._id })
+  const [isAddingCard, setIsAddingCard] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const { data: cards, isLoading } = useGetCards({ listId: list._id });
 
-  const sortedCards = cards ? [...cards].filter((card) => !card.isArchived).sort((a, b) => a.position - b.position) : []
+  const filteredCards = cards ? cards.filter((card) => !card.isArchived) : [];
+
+  const sortedCards = useMemo(() => {
+    if (!filteredCards.length) return [];
+
+    const sorted = [...filteredCards];
+
+    switch (sortBy) {
+      case "newest":
+        return sorted.sort((a, b) => b.createdAt - a.createdAt);
+      case "oldest":
+        return sorted.sort((a, b) => a.createdAt - b.createdAt);
+      case "alphabetical":
+        return sorted.sort((a, b) => a.title.localeCompare(b.title));
+      default:
+        return sorted.sort((a, b) => a.position - b.position);
+    }
+  }, [filteredCards, sortBy]);
+
+  const taskCounts = useMemo(() => {
+    if (!filteredCards.length) return { completed: 0, total: 0 };
+
+    const completed = filteredCards.filter((card) => card.isCompleted).length;
+    const total = filteredCards.length;
+
+    return { completed, total };
+  }, [filteredCards]);
+
+  const getCollapsedWidth = () => {
+    const baseWidth = 55;
+    return baseWidth;
+  };
 
   const handleToggleCollapse = () => {
-    setIsCollapsed(!isCollapsed)
-    // If collapsing, also cancel any card addition in progress
+    setIsCollapsed(!isCollapsed);
     if (!isCollapsed && isAddingCard) {
-      setIsAddingCard(false)
+      setIsAddingCard(false);
     }
-  }
+  };
+
+  const handleSortChange = (newSortBy: SortOption) => {
+    setSortBy(newSortBy);
+  };
+
+  const collapsedWidth = getCollapsedWidth();
 
   return (
-    <div className="w-72">
-      <Card className="bg-gray-50">
+    <div
+      className="transition-all duration-300 ease-in-out"
+      style={{
+        width: isCollapsed ? `${collapsedWidth}px` : "288px",
+      }}
+    >
+      <Card
+        className={`bg-gray-50 transition-all duration-300 ease-in-out ${isCollapsed ? "h-96" : ""}`}
+      >
         <TodoListHeader
           list={list}
           dragHandleProps={dragHandleProps}
           isCollapsed={isCollapsed}
           onToggleCollapse={handleToggleCollapse}
+          taskCounts={taskCounts}
+          sortBy={sortBy}
+          onSortChange={handleSortChange}
         />
 
         {!isCollapsed && (
@@ -66,7 +113,11 @@ export const TodoList = ({ list, dragHandleProps }: TodoListProps) => {
                   </div>
                 ) : (
                   sortedCards.map((card, index) => (
-                    <Draggable key={card._id} draggableId={card._id} index={index}>
+                    <Draggable
+                      key={card._id}
+                      draggableId={card._id}
+                      index={index}
+                    >
                       {(provided, snapshot) => (
                         <div
                           ref={provided.innerRef}
@@ -82,12 +133,16 @@ export const TodoList = ({ list, dragHandleProps }: TodoListProps) => {
                 )}
                 {provided.placeholder}
 
-                <TodoAddCard listId={list._id} isAddingCard={isAddingCard} setIsAddingCard={setIsAddingCard} />
+                <TodoAddCard
+                  listId={list._id}
+                  isAddingCard={isAddingCard}
+                  setIsAddingCard={setIsAddingCard}
+                />
               </CardContent>
             )}
           </Droppable>
         )}
       </Card>
     </div>
-  )
-}
+  );
+};
