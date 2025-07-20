@@ -25,11 +25,7 @@ const AttendanceWorkspaceLayout = ({
           direction="horizontal"
           autoSaveId="attendance-workspace-layout"
         >
-          <ResizablePanel
-            defaultSize={20}
-            minSize={11}
-            className="bg-gray-900"
-          >
+          <ResizablePanel defaultSize={20} minSize={11} className="bg-gray-900">
             <WorkspaceSidebar>
               <WorkspaceSidebarContent />
             </WorkspaceSidebar>
