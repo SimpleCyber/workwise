@@ -11,6 +11,7 @@ import type { Id } from "../../../../../convex/_generated/dataModel";
 import { TodoTask } from "./todo-task";
 import { TodoAddCard } from "./todo-add-card";
 import { TodoListHeader, type SortOption } from "./todo-list-header";
+import { useUpdateList } from "../../api/use-update-list";
 
 interface TodoListProps {
   list: {
@@ -21,6 +22,7 @@ interface TodoListProps {
     memberId: Id<"members">;
     workspaceId: Id<"workspaces">;
     isArchived?: boolean;
+    isCollapsed?: boolean;
     createdAt: number;
     updatedAt: number;
   };
@@ -29,9 +31,11 @@ interface TodoListProps {
 
 export const TodoList = ({ list, dragHandleProps }: TodoListProps) => {
   const [isAddingCard, setIsAddingCard] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const { data: cards, isLoading } = useGetCards({ listId: list._id });
+  const { mutate: updateList } = useUpdateList();
+
+  const isCollapsed = list.isCollapsed ?? false;
 
   const filteredCards = cards ? cards.filter((card) => !card.isArchived) : [];
 
@@ -67,8 +71,12 @@ export const TodoList = ({ list, dragHandleProps }: TodoListProps) => {
   };
 
   const handleToggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
-    if (!isCollapsed && isAddingCard) {
+    const newCollapsedState = !isCollapsed;
+    updateList({
+      listId: list._id,
+      isCollapsed: newCollapsedState,
+    });
+    if (!newCollapsedState && isAddingCard) {
       setIsAddingCard(false);
     }
   };
@@ -87,7 +95,7 @@ export const TodoList = ({ list, dragHandleProps }: TodoListProps) => {
       }}
     >
       <Card
-        className={`bg-gray-50 transition-all duration-300 ease-in-out ${isCollapsed ? "h-96" : ""}`}
+        className={`bg-gray-50 transition-all duration-300 ease-in-out ${isCollapsed ? "" : ""}`}
       >
         <TodoListHeader
           list={list}

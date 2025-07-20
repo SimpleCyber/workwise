@@ -24,7 +24,6 @@ interface TodoTaskProps {
     dueDate?: number;
     isCompleted?: boolean;
     isArchived?: boolean;
-    isCollapsed?: boolean;
     labels?: string[];
     attachments?: Id<"_storage">[];
     createdAt: number;

@@ -11,6 +11,7 @@ type RequestType = {
   name?: string;
   position?: number;
   isArchived?: boolean;
+  isCollapsed?: boolean;
 };
 
 type ResponseType = void | null;

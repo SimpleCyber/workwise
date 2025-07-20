@@ -46,6 +46,7 @@ interface TodoListHeaderProps {
     memberId: Id<"members">;
     workspaceId: Id<"workspaces">;
     isArchived?: boolean;
+    isCollapsed?: boolean;
     createdAt: number;
     updatedAt: number;
   };
