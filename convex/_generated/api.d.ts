@@ -24,6 +24,7 @@ import type * as members from "../members.js";
 import type * as messages from "../messages.js";
 import type * as projects from "../projects.js";
 import type * as reactions from "../reactions.js";
+import type * as search from "../search.js";
 import type * as todos from "../todos.js";
 import type * as tree from "../tree.js";
 import type * as upload from "../upload.js";
@@ -50,6 +51,7 @@ declare const fullApi: ApiFromModules<{
   messages: typeof messages;
   projects: typeof projects;
   reactions: typeof reactions;
+  search: typeof search;
   todos: typeof todos;
   tree: typeof tree;
   upload: typeof upload;
