@@ -47,7 +47,7 @@ export const TodoTask = ({ card }: TodoTaskProps) => {
       >
         <CardContent className="p-3">
           {/* Check Circle and Header */}
-          <div className="flex items-start gap-2 mb-2">
+          <div className="flex items-start gap-2 mb-1">
             <TodoTaskCheckbox card={card} showCheckCircle={showCheckCircle} />
 
             {/* Title */}
@@ -99,10 +99,9 @@ export const TodoTask = ({ card }: TodoTaskProps) => {
           >
             <TodoTaskLabels labels={card.labels} />
 
-            {/* Date and Delete together */}
             <div className="flex items-center gap-2">
               <TodoTaskDueDate dueDate={card.dueDate} />
-              <TodoTaskDeleteButton cardId={card._id} />
+              {isHovered && <TodoTaskDeleteButton cardId={card._id} />}
             </div>
           </div>
         </CardContent>
