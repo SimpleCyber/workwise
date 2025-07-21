@@ -25,9 +25,9 @@ export const Sidebar = () => {
   const navigationItems = [
     { icon: Network, label: "All Data", path: `/tree/${workspaceId}` },
     { icon: Kanban, label: "ToDo", path: `/todo/${workspaceId}` },
-    { icon: MessagesSquare, label: "Chat", path: `/workspace/${workspaceId}` },
     { icon: ListTodo, label: "Project", path: `/projects/${workspaceId}` },
     { icon: Files, label: "Data Room", path: `/data-room/${workspaceId}` },
+    { icon: MessagesSquare, label: "Chat", path: `/workspace/${workspaceId}` },
     {
       icon: UserRoundSearch,
       label: "Members",
