@@ -8,6 +8,7 @@ import { JotaiProvider } from "@/components/jotai-provider";
 import { ModalProvider } from "@/components/modal-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { siteConfig } from "@/config";
+import { Analytics } from "@vercel/analytics/next";
 
 import "./globals.css";
 
@@ -20,6 +21,7 @@ export const metadata: Metadata = siteConfig;
 const RootLayout = ({ children }: Readonly<PropsWithChildren>) => {
   return (
     <ConvexAuthNextjsServerProvider>
+      <Analytics />
       <html lang="en">
         <body className={`${inter.className} antialiased`}>
           <ConvexClientProvider>
