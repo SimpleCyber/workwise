@@ -123,7 +123,7 @@ export const SearchResults = ({
     <div className="flex flex-col h-full">
       <div className="p-4 border-b bg-muted/30">
         <p className="text-sm text-muted-foreground">
-          Found {total} result{total !== 1 ? "s" : ""} for "{query}"
+          Found {total} result{total !== 1 ? "s" : ""} for &quot;{query}&quot;
         </p>
       </div>
 
