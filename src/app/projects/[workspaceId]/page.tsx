@@ -9,6 +9,8 @@ import {
   Star,
   Calendar,
   FileText,
+  Pencil,
+  MoreHorizontal,
 } from "lucide-react";
 import Link from "next/link";
 import type React from "react";
@@ -30,6 +32,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,6 +46,7 @@ import { useCreateProjectBoard } from "@/features/projects/api/use-create-projec
 import { useGetProjectBoards } from "@/features/projects/api/use-get-project-boards";
 import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info";
 import { useRemoveProjectBoard } from "@/features/projects/api/use-remove-project-board";
+import { useUpdateProjectBoard } from "@/features/projects/api/use-update-project-board";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import type { Id } from "../../../../convex/_generated/dataModel";
 
@@ -52,9 +62,13 @@ const ProjectsWorkspacePage = () => {
     useCreateProjectBoard();
   const { mutate: removeBoard, isPending: isRemovingBoard } =
     useRemoveProjectBoard();
+  const { mutate: updateBoard, isPending: isUpdatingBoard } =
+    useUpdateProjectBoard();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [editingBoardId, setEditingBoardId] =
+    useState<Id<"projectBoards"> | null>(null);
 
   const MAX_NAME_WORDS = 10;
   const MAX_DESCRIPTION_WORDS = 30;
@@ -77,24 +91,46 @@ const ProjectsWorkspacePage = () => {
       );
     }
 
-    createBoard(
-      {
-        name: name.trim(),
-        description: description.trim() || undefined,
-        workspaceId,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Project board created successfully!");
-          setOpen(false);
-          setName("");
-          setDescription("");
+    if (editingBoardId) {
+      updateBoard(
+        {
+          boardId: editingBoardId,
+          name: name.trim(),
+          description: description.trim() || undefined,
         },
-        onError: (error) => {
-          toast.error(error.message || "Failed to create project board");
+        {
+          onSuccess: () => {
+            toast.success("Project board updated successfully!");
+            setOpen(false);
+            setEditingBoardId(null);
+            setName("");
+            setDescription("");
+          },
+          onError: (error) => {
+            toast.error(error.message || "Failed to update project board");
+          },
         },
-      },
-    );
+      );
+    } else {
+      createBoard(
+        {
+          name: name.trim(),
+          description: description.trim() || undefined,
+          workspaceId,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Project board created successfully!");
+            setOpen(false);
+            setName("");
+            setDescription("");
+          },
+          onError: (error) => {
+            toast.error(error.message || "Failed to create project board");
+          },
+        },
+      );
+    }
   };
 
   const handleDeleteBoard = (boardId: Id<"projectBoards">) => {
@@ -136,7 +172,6 @@ const ProjectsWorkspacePage = () => {
   }
   return (
     <div className="flex h-full flex-col bg-slate-50/30">
-      {/* Keep header unchanged */}
       <div className="flex h-[49px] items-center justify-between border-b bg-white px-4">
         <h1 className="text-lg font-semibold">
           Project Boards - {workspace.name}
@@ -154,7 +189,9 @@ const ProjectsWorkspacePage = () => {
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="text-xl font-semibold">
-                Create New Project Board
+                {editingBoardId
+                  ? "Edit Project Board"
+                  : "Create New Project Board"}
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -180,7 +217,7 @@ const ProjectsWorkspacePage = () => {
                     }
                   }}
                   placeholder="Enter project name..."
-                  disabled={isCreatingBoard}
+                  disabled={isCreatingBoard || isUpdatingBoard}
                   className="h-11 border-slate-200 focus:border-gray-500 focus:ring-gray-500/20"
                 />
                 <p className="text-xs text-slate-500 flex items-center gap-1">
@@ -206,12 +243,12 @@ const ProjectsWorkspacePage = () => {
                       setDescription(input);
                     } else {
                       toast.error(
-                        `Description can nott exceed ${MAX_DESCRIPTION_WORDS} words.`,
+                        `Description can not exceed ${MAX_DESCRIPTION_WORDS} words.`,
                       );
                     }
                   }}
                   placeholder="Enter project description..."
-                  disabled={isCreatingBoard}
+                  disabled={isCreatingBoard || isUpdatingBoard}
                   className="min-h-[100px] border-slate-200 focus:border-gray-500 focus:ring-gray-500/20 resize-none"
                 />
                 <p className="text-xs text-slate-500 flex items-center gap-1">
@@ -225,22 +262,29 @@ const ProjectsWorkspacePage = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setOpen(false)}
-                  disabled={isCreatingBoard}
+                  onClick={() => {
+                    setOpen(false);
+                    setEditingBoardId(null);
+                    setName("");
+                    setDescription("");
+                  }}
+                  disabled={isCreatingBoard || isUpdatingBoard}
                   className="px-6 border-slate-200 text-slate-600 hover:bg-slate-50"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isCreatingBoard || !name.trim()}
+                  disabled={isCreatingBoard || isUpdatingBoard || !name.trim()}
                   className="px-6 bg-gray-600 hover:bg-gray-700 text-white shadow-sm"
                 >
-                  {isCreatingBoard ? (
+                  {isCreatingBoard || isUpdatingBoard ? (
                     <>
                       <Loader className="size-4 mr-2 animate-spin" />
-                      Creating...
+                      {editingBoardId ? "Updating..." : "Creating..."}
                     </>
+                  ) : editingBoardId ? (
+                    "Update Project Board"
                   ) : (
                     "Create Project Board"
                   )}
@@ -287,7 +331,7 @@ const ProjectsWorkspacePage = () => {
                     <Card className="h-full transition-all duration-200 hover:shadow-lg hover:shadow-gray-100/50 hover:-translate-y-1 border-slate-200 bg-white">
                       <CardHeader className="relative pb-3 -mt-3">
                         <div className="flex items-start justify-between gap-3">
-                          <div className="flex justify-center ">
+                          <div className="flex justify-center">
                             <div className="flex items-center gap-2 mt-2">
                               <Badge
                                 variant="secondary"
@@ -305,19 +349,51 @@ const ProjectsWorkspacePage = () => {
                               {board.name}
                             </CardTitle>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 text-slate-400 hover:text-red-500 bg-slate-100 hover:bg-slate-200 transition-colors"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleDeleteBoard(board._id);
-                            }}
-                            disabled={isRemovingBoard}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Delete Board</span>
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={(e) => e.preventDefault()}
+                              >
+                                <MoreHorizontal className="size-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem asChild>
+                                <Link
+                                  href={`/projects/${workspaceId}/board/${board._id}`}
+                                >
+                                  Open Board
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setEditingBoardId(board._id);
+                                  setName(board.name);
+                                  setDescription(board.description || "");
+                                  setOpen(true);
+                                }}
+                              >
+                                <Pencil className="size-4 mr-2" />
+                                Edit Board
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleDeleteBoard(board._id);
+                                }}
+                                className="text-destructive focus:text-destructive"
+                                disabled={isRemovingBoard}
+                              >
+                                <Trash2 className="size-4 mr-2" />
+                                Delete Board
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                         {board.description && (
                           <CardDescription className="line-clamp-2 text-slate-600 mt-3 leading-relaxed">

@@ -76,16 +76,6 @@ export const WorkspaceSidebarContent = () => {
             <span className="truncate text-sm">All Project Boards</span>
           </Button>
         </Link>
-        {/* <Button
-          variant="transparent"
-          className="h-7 justify-start px-[18px] text-sm text-[#f9EDFFCC]"
-          onClick={() => setShowArchived(!showArchived)}
-        >
-          <Archive className="mr-1 size-3.5 shrink-0" />
-          <span className="truncate text-sm">
-            {showArchived ? "Hide Archived" : "Show Archived"}
-          </span>
-        </Button> */}
       </div>
 
       {/* Active Project Boards */}

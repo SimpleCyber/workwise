@@ -78,36 +78,7 @@ export const WorkspaceSidebarContent = () => {
             <span className="truncate text-sm">All Boards</span>
           </Button>
         </Link>
-        {/* <Button
-          variant="transparent"
-          className="h-7 justify-start px-[18px] text-sm text-[#f9EDFFCC]"
-          onClick={() => setShowArchived(!showArchived)}
-        >
-          <Archive className="mr-1 size-3.5 shrink-0" />
-          <span className="truncate text-sm">
-            {showArchived ? "Hide Archived" : "Show Archived"}
-          </span>
-        </Button> */}
       </div>
-
-      {/* Recent Cards */}
-      {recentCards && recentCards.length > 0 && (
-        <WorkspaceSection label="Recent Cards" hint="View All" onNew={() => {}}>
-          {recentCards.slice(0, 3).map((card) => (
-            <Link
-              key={card._id}
-              href={`/todo/${workspaceId}/board/${card.boardId}`}
-            >
-              <Button
-                variant="transparent"
-                className="h-7 justify-start px-[18px] text-sm text-[#f9EDFFCC] w-full"
-              >
-                <span className="truncate text-sm">{card.title}</span>
-              </Button>
-            </Link>
-          ))}
-        </WorkspaceSection>
-      )}
 
       {/* Active Boards */}
       <WorkspaceSection

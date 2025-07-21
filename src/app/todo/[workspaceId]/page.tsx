@@ -8,7 +8,9 @@ import {
   MoreHorizontal,
   Trash2,
   Edit,
-} from "lucide-react"; // Added MoreHorizontal, Trash2, Edit
+  Pencil,
+  Calendar,
+} from "lucide-react";
 import Link from "next/link";
 import type React from "react";
 import { useState } from "react";
@@ -32,18 +34,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  DropdownMenu, // Added
-  DropdownMenuContent, // Added
-  DropdownMenuItem, // Added
-  DropdownMenuSeparator, // Added
-  DropdownMenuTrigger, // Added
-} from "@/components/ui/dropdown-menu"; // Added
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useCreateBoard } from "@/features/todos/api/use-create-board";
 import { useGetBoards } from "@/features/todos/api/use-get-boards";
 import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info";
-import { useDeleteBoard } from "@/features/todos/api/use-delete-board"; // Added
+import { useDeleteBoard } from "@/features/todos/api/use-delete-board";
+import { useUpdateBoard } from "@/features/todos/api/use-update-board";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
-import type { Id } from "../../../../convex/_generated/dataModel"; // Updated import for Id
+import type { Id } from "../../../../convex/_generated/dataModel";
 
 const TodoWorkspacePage = () => {
   const MAX_NAME_WORDS = 10;
@@ -56,37 +59,80 @@ const TodoWorkspacePage = () => {
   const { data: boards, isLoading: boardsLoading } = useGetBoards({
     workspaceId,
   });
-  const { mutate: createBoard, isPending: isCreatingBoard } = useCreateBoard(); // Renamed isPending
-  const { mutate: deleteBoard, isPending: isDeletingBoard } = useDeleteBoard(); // Added
+  const { mutate: createBoard, isPending: isCreatingBoard } = useCreateBoard();
+  const { mutate: deleteBoard, isPending: isDeletingBoard } = useDeleteBoard();
+  const { mutate: updateBoard, isPending: isUpdatingBoard } = useUpdateBoard();
+
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [editingBoardId, setEditingBoardId] = useState<Id<"todoBoards"> | null>(
+    null,
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
-    createBoard(
-      {
-        name: name.trim(),
-        description: description.trim() || undefined,
-        workspaceId,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Board created successfully!");
-          setOpen(false);
-          setName("");
-          setDescription("");
+
+    const nameWords = name.trim().split(/\s+/).length;
+    const descWords = description.trim().split(/\s+/).length;
+
+    if (!name.trim()) return toast.error("Board name is required.");
+
+    if (nameWords > MAX_NAME_WORDS) {
+      return toast.error(`Board name must be under ${MAX_NAME_WORDS} words.`);
+    }
+
+    if (description.trim() && descWords > MAX_DESCRIPTION_WORDS) {
+      return toast.error(
+        `Description must be under ${MAX_DESCRIPTION_WORDS} words.`,
+      );
+    }
+
+    if (editingBoardId) {
+      // Handle update
+      updateBoard(
+        {
+          boardId: editingBoardId,
+          name: name.trim(),
+          description: description.trim() || undefined,
         },
-        onError: (error) => {
-          toast.error(error.message || "Failed to create board");
+        {
+          onSuccess: () => {
+            toast.success("Board updated successfully!");
+            setOpen(false);
+            setEditingBoardId(null);
+            setName("");
+            setDescription("");
+          },
+          onError: (error) => {
+            toast.error(error.message || "Failed to update board");
+          },
         },
-      },
-    );
+      );
+    } else {
+      // Handle create
+      createBoard(
+        {
+          name: name.trim(),
+          description: description.trim() || undefined,
+          workspaceId,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Board created successfully!");
+            setOpen(false);
+            setName("");
+            setDescription("");
+          },
+          onError: (error) => {
+            toast.error(error.message || "Failed to create board");
+          },
+        },
+      );
+    }
   };
 
   const handleDeleteBoard = (boardId: string) => {
-    // Added
     if (
       confirm(
         "Are you sure you want to delete this board and all its contents? This action cannot be undone.",
@@ -123,6 +169,7 @@ const TodoWorkspacePage = () => {
       </div>
     );
   }
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-[49px] items-center justify-between border-b bg-white px-4">
@@ -138,7 +185,9 @@ const TodoWorkspacePage = () => {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create New Board</DialogTitle>
+              <DialogTitle>
+                {editingBoardId ? "Edit Board" : "Create New Board"}
+              </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
@@ -158,55 +207,62 @@ const TodoWorkspacePage = () => {
                     }
                   }}
                   placeholder="Enter board name..."
-                  disabled={isCreatingBoard}
+                  disabled={isCreatingBoard || isUpdatingBoard}
                 />
-
                 <p className="text-xs text-muted-foreground">
                   {name.trim().split(/\s+/).filter(Boolean).length} /{" "}
                   {MAX_NAME_WORDS} words
                 </p>
               </div>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => {
-                  const input = e.target.value;
-                  const words = input.trim().split(/\s+/).filter(Boolean);
-                  if (words.length <= MAX_DESCRIPTION_WORDS) {
-                    setDescription(input);
-                  } else {
-                    toast.error(
-                      `Description can not exceed ${MAX_DESCRIPTION_WORDS} words.`,
-                    );
-                  }
-                }}
-                placeholder="Enter board description..."
-                disabled={isCreatingBoard}
-              />
-
-              <p className="text-xs text-muted-foreground">
-                {description.trim().split(/\s+/).filter(Boolean).length} /{" "}
-                {MAX_DESCRIPTION_WORDS} words
-              </p>
-
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => {
+                    const input = e.target.value;
+                    const words = input.trim().split(/\s+/).filter(Boolean);
+                    if (words.length <= MAX_DESCRIPTION_WORDS) {
+                      setDescription(input);
+                    } else {
+                      toast.error(
+                        `Description can not exceed ${MAX_DESCRIPTION_WORDS} words.`,
+                      );
+                    }
+                  }}
+                  placeholder="Enter board description..."
+                  disabled={isCreatingBoard || isUpdatingBoard}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {description.trim().split(/\s+/).filter(Boolean).length} /{" "}
+                  {MAX_DESCRIPTION_WORDS} words
+                </p>
+              </div>
               <div className="flex justify-end gap-2">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setOpen(false)}
-                  disabled={isCreatingBoard}
+                  onClick={() => {
+                    setOpen(false);
+                    setEditingBoardId(null);
+                    setName("");
+                    setDescription("");
+                  }}
+                  disabled={isCreatingBoard || isUpdatingBoard}
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isCreatingBoard || !name.trim()}
+                  disabled={isCreatingBoard || isUpdatingBoard || !name.trim()}
                 >
-                  {isCreatingBoard ? (
+                  {isCreatingBoard || isUpdatingBoard ? (
                     <>
                       <Loader className="size-4 mr-2 animate-spin" />
-                      Creating...
+                      {editingBoardId ? "Updating..." : "Creating..."}
                     </>
+                  ) : editingBoardId ? (
+                    "Update Board"
                   ) : (
                     "Create Board"
                   )}
@@ -240,11 +296,9 @@ const TodoWorkspacePage = () => {
               {boards.map((board) => (
                 <Card
                   key={board._id}
-                  className="hover:shadow-md transition-shadow cursor-pointer"
+                  className="hover:shadow-md transition-shadow"
                 >
                   <CardHeader className="relative">
-                    {" "}
-                    {/* Added relative for dropdown positioning */}
                     <div className="flex items-center justify-between">
                       <Link
                         href={`/todo/${workspaceId}/board/${board._id}`}
@@ -272,6 +326,16 @@ const TodoWorkspacePage = () => {
                               <Edit className="size-4 mr-2" /> Open Board
                             </Link>
                           </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setEditingBoardId(board._id);
+                              setName(board.name);
+                              setDescription(board.description || "");
+                              setOpen(true);
+                            }}
+                          >
+                            <Pencil className="size-4 mr-2" /> Edit Board
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => handleDeleteBoard(board._id)}
@@ -290,16 +354,14 @@ const TodoWorkspacePage = () => {
                     )}
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <Calendar className="size-3" />
                       <span>
                         Created{" "}
                         {formatDistanceToNow(board.createdAt, {
                           addSuffix: true,
                         })}
                       </span>
-                      {board.isStarred && (
-                        <span className="text-yellow-500">⭐</span>
-                      )}
                     </div>
                   </CardContent>
                 </Card>

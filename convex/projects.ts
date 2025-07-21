@@ -883,3 +883,36 @@ export const getProjectTasks = query({
       .sort((a, b) => a.position - b.position);
   },
 });
+
+// In your convex/projects.ts file
+export const updateProjectBoard = mutation({
+  args: {
+    boardId: v.id("projectBoards"),
+    name: v.optional(v.string()),
+    description: v.optional(v.string()),
+    background: v.optional(v.string()),
+    isStarred: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Unauthorized");
+    }
+
+    const board = await ctx.db.get(args.boardId);
+    if (!board) {
+      throw new Error("Board not found");
+    }
+
+    const member = await ctx.db.get(board.memberId);
+    if (!member || member.userId !== userId) {
+      throw new Error("Unauthorized");
+    }
+
+    const { boardId, ...updates } = args;
+    await ctx.db.patch(args.boardId, {
+      ...updates,
+      updatedAt: Date.now(),
+    });
+  },
+});
