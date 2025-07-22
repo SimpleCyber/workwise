@@ -1,4 +1,5 @@
 "use client";
+
 import Image from "next/image";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
@@ -173,42 +174,39 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
   };
 
   return (
-    <div className="p-6 h-full flex flex-col">
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between p-4 border-b bg-gray-50/50">
         <div className="flex items-center gap-2">
-          <MessageSquare className="w-5 h-5" />
-          <h3 className="text-lg font-semibold">
-            Comments ({comments?.length || 0})
-          </h3>
+          <MessageSquare className="w-4 h-4" />
+          <h3 className="font-medium">Activity ({comments?.length || 0})</h3>
         </div>
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-          className="flex items-center gap-2"
+          className="flex items-center gap-1 text-xs"
         >
-          <ArrowUpDown className="w-4 h-4" />
-          {sortOrder === "asc" ? "Oldest First" : "Newest First"}
+          <ArrowUpDown className="w-3 h-3" />
+          {sortOrder === "asc" ? "Oldest" : "Newest"}
         </Button>
       </div>
 
       {/* Comments List */}
-      <div className="flex-1 overflow-y-auto space-y-6 mb-6">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {isLoading ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-gray-500 text-sm">
             Loading comments...
           </div>
         ) : comments?.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p className="text-lg mb-2">Start the conversation</p>
-            <p className="text-sm">Add the first comment to this task</p>
+          <div className="text-center py-8 text-gray-500">
+            <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-30" />
+            <p className="text-sm">No activity yet</p>
           </div>
         ) : (
           comments?.map((comment: any) => (
-            <div key={comment._id} className="flex gap-3 group">
-              <Avatar className="w-8 h-8 mt-1 flex-shrink-0">
+            <div key={comment._id} className="flex gap-2 group">
+              <Avatar className="w-6 h-6 mt-1 flex-shrink-0">
                 <AvatarImage
                   src={comment.member?.user?.image || "/placeholder.svg"}
                 />
@@ -217,12 +215,12 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
                 </AvatarFallback>
               </Avatar>
 
-              <div className="flex-1 space-y-2">
+              <div className="flex-1 space-y-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-medium text-sm">
+                  <span className="font-medium text-xs">
                     {comment.member?.user?.name || "Unknown User"}
                   </span>
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-xs px-1 py-0">
                     {comment.member?.role}
                   </Badge>
                   <span className="text-xs text-gray-500">
@@ -231,7 +229,7 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
                     })}
                   </span>
                   {comment.isEdited && (
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge variant="secondary" className="text-xs px-1 py-0">
                       edited
                     </Badge>
                   )}
@@ -246,22 +244,21 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
                   />
                 ) : (
                   <>
-                    <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="bg-gray-50 rounded p-2 text-sm">
                       <Renderer value={comment.content} />
-
                       {comment.image && (
-                        <div className="mt-3">
-                          <div className="relative group max-w-sm rounded-lg overflow-hidden border">
+                        <div className="mt-2">
+                          <div className="relative group max-w-xs rounded overflow-hidden border">
                             <Image
                               src={comment.imageUrl || "/placeholder.svg"}
-                              width={800}
-                              height={600}
+                              width={300}
+                              height={200}
                               alt="Comment attachment"
                               className="w-full h-auto object-cover cursor-pointer hover:opacity-90 transition-opacity"
                               onClick={() => onImagePreview(comment.imageUrl)}
                             />
                             <TooltipProvider>
-                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Button
@@ -271,7 +268,7 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
                                         onImagePreview(comment.imageUrl)
                                       }
                                     >
-                                      <Maximize2 className="w-4 h-4" />
+                                      <Maximize2 className="w-3 h-3" />
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -290,12 +287,10 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
                                         )
                                       }
                                     >
-                                      <Download className="w-4 h-4" />
+                                      <Download className="w-3 h-3" />
                                     </Button>
                                   </TooltipTrigger>
-                                  <TooltipContent>
-                                    Download image
-                                  </TooltipContent>
+                                  <TooltipContent>Download</TooltipContent>
                                 </Tooltip>
                               </div>
                             </TooltipProvider>
@@ -310,7 +305,7 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
                           variant="ghost"
                           size="sm"
                           onClick={() => setEditingComment(comment._id)}
-                          className="h-7 px-2 text-xs"
+                          className="h-6 px-2 text-xs"
                         >
                           <Edit2 className="w-3 h-3 mr-1" />
                           Edit
@@ -319,7 +314,7 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDeleteComment(comment._id)}
-                          className="h-7 px-2 text-xs text-red-600 hover:text-red-700"
+                          className="h-6 px-2 text-xs text-red-600 hover:text-red-700"
                         >
                           <Trash2 className="w-3 h-3 mr-1" />
                           Delete
@@ -334,12 +329,12 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
         )}
       </div>
 
-      {/* New Comment Form - Always at bottom */}
-      <div className="border-t pt-4">
+      {/* New Comment Form */}
+      <div className="border-t p-4 bg-gray-50/30">
         <Editor
           key={editorKey}
           onSubmit={handleSubmitComment}
-          placeholder="Write a comment..."
+          placeholder="Add a comment..."
           variant="create"
         />
       </div>

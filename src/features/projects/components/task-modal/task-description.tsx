@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { ImageIcon, Download, Maximize2 } from "lucide-react";
+import {
+  ImageIcon,
+  Download,
+  Maximize2,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -14,7 +20,6 @@ import { useUpdateTaskContent } from "@/features/projects/api/use-update-task-co
 import { useGenerateUploadUrl } from "@/features/upload/api/use-generate-upload-url";
 import dynamic from "next/dynamic";
 import type { Id } from "../../../../../convex/_generated/dataModel";
-
 import Image from "next/image";
 
 const Editor = dynamic(() => import("@/components/editor"), { ssr: false });
@@ -34,6 +39,7 @@ export const TaskDescription = ({
   onImagePreview,
 }: TaskDescriptionProps) => {
   const [isEditing, setIsEditing] = useState(!task.description);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [editorKey, setEditorKey] = useState(0);
 
   const { mutate: updateTaskContent, isPending } = useUpdateTaskContent();
@@ -107,113 +113,141 @@ export const TaskDescription = ({
   };
 
   return (
-    <div className="p-6 h-full">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">Description</h3>
+    <div className="p-4">
+      {/* Collapsible Header */}
+      <div className="flex items-center justify-between mb-3">
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+        >
+          {isCollapsed ? (
+            <ChevronRight className="w-4 h-4" />
+          ) : (
+            <ChevronDown className="w-4 h-4" />
+          )}
+          Description
+        </button>
+        {!isEditing && task.description && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsEditing(true)}
+            className="text-xs"
+          >
+            Edit
+          </Button>
+        )}
       </div>
 
-      {isEditing ? (
-        <div className="h-full">
-          <Editor
-            key={editorKey}
-            onSubmit={handleUpdate}
-            onCancel={() => {
-              if (task.description) {
-                setIsEditing(false);
-              }
-            }}
-            defaultValue={task.description ? JSON.parse(task.description) : []}
-            placeholder="Describe this task... You can paste images directly here."
-            variant="create"
-            disabled={isPending}
-          />
-        </div>
-      ) : (
-        <div
-          className="min-h-[200px] cursor-pointer hover:bg-gray-50 rounded-lg p-4 transition-colors"
-          onClick={() => setIsEditing(true)}
-        >
-          {task.description ? (
-            <div className="space-y-4">
-              <Renderer value={task.description} />
-
-              {/* Description Images */}
-              {task.descriptionImages && task.descriptionImages.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <ImageIcon className="w-4 h-4" />
-                    <span>
-                      {task.descriptionImages.length} image(s) attached
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-1 gap-3">
-                    {task.descriptionImages.map(
-                      (imageUrl: string, index: number) => (
-                        <div
-                          key={index}
-                          className="relative group rounded-lg overflow-hidden border bg-gray-50"
-                        >
-                          <Image
-                            width={800}
-                            height={600}
-                            src={imageUrl || "/placeholder.svg"}
-                            alt={`Description image ${index + 1}`}
-                            className="w-full h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onImagePreview(imageUrl);
-                            }}
-                          />
-                          <TooltipProvider>
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="secondary"
-                                    size="sm"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      onImagePreview(imageUrl);
-                                    }}
-                                  >
-                                    <Maximize2 className="w-4 h-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>View full size</TooltipContent>
-                              </Tooltip>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="secondary"
-                                    size="sm"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDownloadImage(
-                                        imageUrl,
-                                        `description-image-${index + 1}.jpg`,
-                                      );
-                                    }}
-                                  >
-                                    <Download className="w-4 h-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Download image</TooltipContent>
-                              </Tooltip>
-                            </div>
-                          </TooltipProvider>
-                        </div>
-                      ),
-                    )}
-                  </div>
-                </div>
-              )}
+      {/* Content */}
+      {!isCollapsed && (
+        <div className="space-y-3">
+          {isEditing ? (
+            <div>
+              <Editor
+                key={editorKey}
+                onSubmit={handleUpdate}
+                onCancel={() => {
+                  if (task.description) {
+                    setIsEditing(false);
+                  }
+                }}
+                defaultValue={
+                  task.description ? JSON.parse(task.description) : []
+                }
+                placeholder="Add a description..."
+                variant="create"
+                disabled={isPending}
+              />
             </div>
           ) : (
-            <div className="text-center py-12 text-gray-500">
-              <p className="text-lg mb-2">No description yet</p>
-              <p className="text-sm">
-                Click here to add a description for this task
-              </p>
+            <div
+              className="min-h-[60px] cursor-pointer hover:bg-gray-50 rounded p-3 transition-colors"
+              onClick={() => setIsEditing(true)}
+            >
+              {task.description ? (
+                <div className="space-y-3">
+                  <Renderer value={task.description} />
+
+                  {/* Description Images */}
+                  {task.descriptionImages &&
+                    task.descriptionImages.length > 0 && (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-xs text-gray-600">
+                          <ImageIcon className="w-3 h-3" />
+                          <span>
+                            {task.descriptionImages.length} attachment(s)
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {task.descriptionImages.map(
+                            (imageUrl: string, index: number) => (
+                              <div
+                                key={index}
+                                className="relative group rounded overflow-hidden border bg-gray-50"
+                              >
+                                <Image
+                                  width={200}
+                                  height={120}
+                                  src={imageUrl || "/placeholder.svg"}
+                                  alt={`Attachment ${index + 1}`}
+                                  className="w-full h-24 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onImagePreview(imageUrl);
+                                  }}
+                                />
+                                <TooltipProvider>
+                                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="secondary"
+                                          size="sm"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            onImagePreview(imageUrl);
+                                          }}
+                                        >
+                                          <Maximize2 className="w-3 h-3" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        View full size
+                                      </TooltipContent>
+                                    </Tooltip>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="secondary"
+                                          size="sm"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDownloadImage(
+                                              imageUrl,
+                                              `attachment-${index + 1}.jpg`,
+                                            );
+                                          }}
+                                        >
+                                          <Download className="w-3 h-3" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>Download</TooltipContent>
+                                    </Tooltip>
+                                  </div>
+                                </TooltipProvider>
+                              </div>
+                            ),
+                          )}
+                        </div>
+                      </div>
+                    )}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-gray-500">
+                  <p className="text-sm">Add a description...</p>
+                </div>
+              )}
             </div>
           )}
         </div>
