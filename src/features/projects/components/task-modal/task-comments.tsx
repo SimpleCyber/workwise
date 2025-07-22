@@ -176,7 +176,7 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b bg-gray-50/50">
+      <div className="flex items-center justify-between p-4 bg-gray-50/50">
         <div className="flex items-center gap-2">
           <MessageSquare className="w-4 h-4" />
           <h3 className="font-medium">Activity ({comments?.length || 0})</h3>
