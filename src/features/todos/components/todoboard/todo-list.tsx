@@ -37,7 +37,9 @@ export const TodoList = ({ list, dragHandleProps }: TodoListProps) => {
 
   const isCollapsed = list.isCollapsed ?? false;
 
-  const filteredCards = cards ? cards.filter((card) => !card.isArchived) : [];
+  const filteredCards = useMemo(() => {
+    return cards ? cards.filter((card) => !card.isArchived) : [];
+  }, [cards]);
 
   const sortedCards = useMemo(() => {
     if (!filteredCards.length) return [];
