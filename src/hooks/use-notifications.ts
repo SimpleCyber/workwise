@@ -1,16 +1,17 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
-export const useGetNotifications = (limit?: number) => {
-  const data = useQuery(api.notifications.getUserNotifications, { limit });
-  const isLoading = data === undefined;
-  return { data: data || [], isLoading };
+export const useGetNotifications = (
+  limit?: number,
+  category?: "all" | "attendance" | "projects" | "dataroom",
+) => {
+  return useQuery(api.notifications.getUserNotifications, { limit, category });
 };
 
-export const useGetUnreadCount = () => {
-  const data = useQuery(api.notifications.getUnreadCount);
-  const isLoading = data === undefined;
-  return { data: data || 0, isLoading };
+export const useGetUnreadCount = (
+  category?: "all" | "attendance" | "projects" | "dataroom",
+) => {
+  return useQuery(api.notifications.getUnreadCount, { category });
 };
 
 export const useMarkAsRead = () => {

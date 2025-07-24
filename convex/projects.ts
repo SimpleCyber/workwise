@@ -67,7 +67,6 @@ export const createProjectBoard = mutation({
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
-
     await ctx.db.insert("projectLists", {
       name: "Hold Task",
       boardId,
@@ -78,7 +77,6 @@ export const createProjectBoard = mutation({
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
-
     await ctx.db.insert("projectLists", {
       name: "In Review",
       boardId,
@@ -89,13 +87,12 @@ export const createProjectBoard = mutation({
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
-
     await ctx.db.insert("projectLists", {
       name: "Done",
       boardId,
       memberId: member._id,
       workspaceId: args.workspaceId,
-      position: 3,
+      position: 4,
       isArchived: false,
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -261,7 +258,8 @@ export const createProjectTask = mutation({
       .withIndex("by_list_id", (q) => q.eq("listId", args.listId))
       .collect();
     const maxPosition = Math.max(...tasks.map((t) => t.position), -1);
-    return await ctx.db.insert("projectTasks", {
+
+    const taskId = await ctx.db.insert("projectTasks", {
       title: args.title,
       taskCode,
       listId: args.listId,
@@ -278,6 +276,100 @@ export const createProjectTask = mutation({
       updatedAt: Date.now(),
       assignedAt: Date.now(),
     });
+
+    // Create notification for task assignment if assigned to someone else
+    if (args.assignedToId && args.assignedToId !== member._id) {
+      const assignedMember = await ctx.db.get(args.assignedToId);
+      if (assignedMember) {
+        const workspace = await ctx.db.get(list.workspaceId);
+        await ctx.db.insert("notifications", {
+          userId: assignedMember.userId,
+          workspaceId: list.workspaceId,
+          type: "task_assigned",
+          title: "New Task Assigned",
+          message: `You have been assigned task "${args.title}" (${taskCode}) in project "${board.name}"`,
+          relatedId: taskId,
+          actionBy: userId,
+          isRead: false,
+          createdAt: Date.now(),
+        });
+      }
+    }
+
+    return taskId;
+  },
+});
+
+export const getProjectTasks = query({
+  args: {
+    listId: v.id("projectLists"),
+    includeArchived: v.optional(v.boolean()),
+    assignedToId: v.optional(v.id("members")), // Added optional assignedToId for filtering
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return [];
+    }
+    const list = await ctx.db.get(args.listId);
+    if (!list) {
+      return [];
+    }
+    const member = await ctx.db
+      .query("members")
+      .withIndex("by_workspace_id_user_id", (q) =>
+        q.eq("workspaceId", list.workspaceId).eq("userId", userId),
+      )
+      .unique();
+    if (!member) {
+      return [];
+    }
+    let tasks = await ctx.db
+      .query("projectTasks")
+      .withIndex("by_list_id", (q) => q.eq("listId", args.listId))
+      .collect();
+
+    // Filter by assignedToId if provided
+    if (args.assignedToId) {
+      tasks = tasks.filter((task) => task.assignedToId === args.assignedToId);
+    }
+
+    // Get member details for each task
+    const tasksWithMembers = await Promise.all(
+      tasks.map(async (task) => {
+        const assignedTo = task.assignedToId
+          ? await ctx.db.get(task.assignedToId)
+          : null;
+        const assignedBy = task.assignedById
+          ? await ctx.db.get(task.assignedById)
+          : null;
+        const createdBy = await ctx.db.get(task.createdById);
+        // Get user details
+        const assignedToUser = assignedTo
+          ? await ctx.db.get(assignedTo.userId)
+          : null;
+        const assignedByUser = assignedBy
+          ? await ctx.db.get(assignedBy.userId)
+          : null;
+        const createdByUser = createdBy
+          ? await ctx.db.get(createdBy.userId)
+          : null;
+        return {
+          ...task,
+          assignedTo: assignedTo
+            ? { ...assignedTo, user: assignedToUser }
+            : null,
+          assignedBy: assignedBy
+            ? { ...assignedBy, user: assignedByUser }
+            : null,
+          createdBy: createdBy ? { ...createdBy, user: createdByUser } : null,
+        };
+      }),
+    );
+    return tasksWithMembers
+      .filter(Boolean)
+      .filter((task) => (args.includeArchived ? true : !task.isArchived))
+      .sort((a, b) => a.position - b.position);
   },
 });
 
@@ -297,7 +389,7 @@ export const updateProjectTask = mutation({
     ),
     dueDate: v.optional(v.number()),
     isCompleted: v.optional(v.boolean()),
-    listId: v.optional(v.id("projectLists")),
+    listId: v.optional(v.id("projectLists")), // Ensure listId is an optional argument
     position: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -318,6 +410,12 @@ export const updateProjectTask = mutation({
     if (!member) {
       throw new Error("Unauthorized");
     }
+
+    // Get board and list info for notifications
+    const board = await ctx.db.get(task.boardId);
+    const oldList = await ctx.db.get(task.listId);
+    const newList = args.listId ? await ctx.db.get(args.listId) : oldList;
+
     // Check permissions for assignment
     if (args.assignedToId && args.assignedToId !== task.assignedToId) {
       // Only admins, leads, or the current assignee can reassign tasks
@@ -331,8 +429,10 @@ export const updateProjectTask = mutation({
         );
       }
     }
+
     const { taskId, ...updates } = args;
-    // If reassigning, update assignment metadata
+
+    // If reassigning, update assignment metadata and create notification
     if (args.assignedToId && args.assignedToId !== task.assignedToId) {
       await ctx.db.patch(args.taskId, {
         ...updates,
@@ -340,11 +440,94 @@ export const updateProjectTask = mutation({
         assignedAt: Date.now(),
         updatedAt: Date.now(),
       });
+
+      // Notify new assignee
+      const newAssignee = await ctx.db.get(args.assignedToId);
+      if (newAssignee && board) {
+        await ctx.db.insert("notifications", {
+          userId: newAssignee.userId,
+          workspaceId: task.workspaceId,
+          type: "task_assigned",
+          title: "Task Reassigned",
+          message: `You have been assigned task "${task.title}" (${task.taskCode}) in project "${board.name}"`,
+          relatedId: args.taskId,
+          actionBy: userId,
+          isRead: false,
+          createdAt: Date.now(),
+        });
+      }
     } else {
       await ctx.db.patch(args.taskId, {
         ...updates,
         updatedAt: Date.now(),
       });
+    }
+
+    // Handle status change notifications
+    if (
+      args.listId &&
+      args.listId !== task.listId &&
+      board &&
+      oldList &&
+      newList
+    ) {
+      const taskCreator = await ctx.db.get(task.createdById);
+
+      // Notify task creator when task moves to "In Review"
+      if (
+        newList.name === "In Review" &&
+        taskCreator &&
+        taskCreator.userId !== userId
+      ) {
+        await ctx.db.insert("notifications", {
+          userId: taskCreator.userId,
+          workspaceId: task.workspaceId,
+          type: "task_status_changed",
+          title: "Task Ready for Review",
+          message: `Task "${task.title}" (${task.taskCode}) in project "${board.name}" is ready for review`,
+          relatedId: args.taskId,
+          actionBy: userId,
+          isRead: false,
+          createdAt: Date.now(),
+        });
+      }
+
+      // Notify task creator when task is completed
+      if (
+        newList.name === "Done" &&
+        taskCreator &&
+        taskCreator.userId !== userId
+      ) {
+        await ctx.db.insert("notifications", {
+          userId: taskCreator.userId,
+          workspaceId: task.workspaceId,
+          type: "task_completed",
+          title: "Task Completed",
+          message: `Task "${task.title}" (${task.taskCode}) in project "${board.name}" has been completed`,
+          relatedId: args.taskId,
+          actionBy: userId,
+          isRead: false,
+          createdAt: Date.now(),
+        });
+      }
+
+      // Notify assignee when task is moved to "Hold Task"
+      if (newList.name === "Hold Task" && task.assignedToId) {
+        const assignee = await ctx.db.get(task.assignedToId);
+        if (assignee && assignee.userId !== userId) {
+          await ctx.db.insert("notifications", {
+            userId: assignee.userId,
+            workspaceId: task.workspaceId,
+            type: "task_on_hold",
+            title: "Task Put on Hold",
+            message: `Task "${task.title}" (${task.taskCode}) in project "${board.name}" has been put on hold`,
+            relatedId: args.taskId,
+            actionBy: userId,
+            isRead: false,
+            createdAt: Date.now(),
+          });
+        }
+      }
     }
   },
 });
@@ -563,8 +746,6 @@ export const deleteProjectTask = mutation({
 });
 
 // Create a comment on a task
-
-// Add this to your existing createTaskComment mutation
 export const createTaskComment = mutation({
   args: {
     taskId: v.id("projectTasks"),
@@ -576,12 +757,10 @@ export const createTaskComment = mutation({
     if (!userId) {
       throw new Error("Unauthorized");
     }
-
     const task = await ctx.db.get(args.taskId);
     if (!task) {
       throw new Error("Task not found");
     }
-
     // Check if user is a member of the workspace
     const member = await ctx.db
       .query("members")
@@ -589,7 +768,6 @@ export const createTaskComment = mutation({
         q.eq("workspaceId", task.workspaceId).eq("userId", userId),
       )
       .unique();
-
     if (!member) {
       throw new Error("Not a member of this workspace");
     }
@@ -603,6 +781,48 @@ export const createTaskComment = mutation({
       updatedAt: Date.now(),
       isEdited: false,
     });
+
+    // Create notifications for task participants
+    const board = await ctx.db.get(task.boardId);
+    const taskCreator = await ctx.db.get(task.createdById);
+    const taskAssignee = task.assignedToId
+      ? await ctx.db.get(task.assignedToId)
+      : null;
+
+    // Notify task creator if they're not the commenter
+    if (taskCreator && taskCreator.userId !== userId && board) {
+      await ctx.db.insert("notifications", {
+        userId: taskCreator.userId,
+        workspaceId: task.workspaceId,
+        type: "task_comment_added",
+        title: "New Comment on Your Task",
+        message: `New comment added to task "${task.title}" (${task.taskCode}) in project "${board.name}"`,
+        relatedId: args.taskId,
+        actionBy: userId,
+        isRead: false,
+        createdAt: Date.now(),
+      });
+    }
+
+    // Notify task assignee if they're not the commenter and different from creator
+    if (
+      taskAssignee &&
+      taskAssignee.userId !== userId &&
+      taskAssignee.userId !== taskCreator?.userId &&
+      board
+    ) {
+      await ctx.db.insert("notifications", {
+        userId: taskAssignee.userId,
+        workspaceId: task.workspaceId,
+        type: "task_comment_added",
+        title: "New Comment on Assigned Task",
+        message: `New comment added to task "${task.title}" (${task.taskCode}) in project "${board.name}"`,
+        relatedId: args.taskId,
+        actionBy: userId,
+        isRead: false,
+        createdAt: Date.now(),
+      });
+    }
 
     return commentId;
   },
@@ -620,24 +840,20 @@ export const updateTaskComment = mutation({
     if (!userId) {
       throw new Error("Unauthorized");
     }
-
     const comment = await ctx.db.get(args.commentId);
     if (!comment) {
       throw new Error("Comment not found");
     }
-
     const member = await ctx.db.get(comment.memberId);
     if (!member || member.userId !== userId) {
       throw new Error("You can only edit your own comments");
     }
-
     await ctx.db.patch(args.commentId, {
       content: args.content,
       images: args.image ? [args.image] : [],
       updatedAt: Date.now(),
       isEdited: true,
     });
-
     return args.commentId;
   },
 });
@@ -653,12 +869,10 @@ export const getTaskComments = query({
     if (!userId) {
       return [];
     }
-
     const task = await ctx.db.get(args.taskId);
     if (!task) {
       return [];
     }
-
     // Check if user is a member of the workspace
     const member = await ctx.db
       .query("members")
@@ -666,7 +880,6 @@ export const getTaskComments = query({
         q.eq("workspaceId", task.workspaceId).eq("userId", userId),
       )
       .unique();
-
     if (!member) {
       return [];
     }
@@ -682,13 +895,11 @@ export const getTaskComments = query({
         const user = commentMember
           ? await ctx.db.get(commentMember.userId)
           : null;
-
         // Get image URL if image exists
         let imageUrl = null;
         if (comment.images && comment.images.length > 0) {
           imageUrl = await ctx.storage.getUrl(comment.images[0]);
         }
-
         return {
           ...comment,
           member: commentMember ? { ...commentMember, user } : null,
@@ -712,7 +923,6 @@ export const getTaskComments = query({
   },
 });
 
-// Update schema to use storage IDs instead of strings
 export const deleteTaskComment = mutation({
   args: { commentId: v.id("taskComments") },
   handler: async (ctx, args) => {
@@ -720,17 +930,14 @@ export const deleteTaskComment = mutation({
     if (!userId) {
       throw new Error("Unauthorized");
     }
-
     const comment = await ctx.db.get(args.commentId);
     if (!comment) {
       throw new Error("Comment not found");
     }
-
     const member = await ctx.db.get(comment.memberId);
     if (!member || member.userId !== userId) {
       throw new Error("You can only delete your own comments");
     }
-
     await ctx.db.delete(args.commentId);
     return args.commentId;
   },
@@ -748,32 +955,26 @@ export const updateTaskContent = mutation({
     if (!userId) {
       throw new Error("Unauthorized");
     }
-
     const task = await ctx.db.get(args.taskId);
     if (!task) {
       throw new Error("Task not found");
     }
-
     const member = await ctx.db
       .query("members")
       .withIndex("by_workspace_id_user_id", (q) =>
         q.eq("workspaceId", task.workspaceId).eq("userId", userId),
       )
       .unique();
-
     if (!member) {
       throw new Error("Unauthorized");
     }
-
     // Only task creator can edit content
     if (member._id !== task.createdById) {
       throw new Error("Only the task creator can edit task content");
     }
-
     const updateData: any = {
       updatedAt: Date.now(),
     };
-
     if (args.title !== undefined) updateData.title = args.title;
     if (args.description !== undefined)
       updateData.description = args.description;
@@ -782,109 +983,11 @@ export const updateTaskContent = mutation({
       const existingImages = task.images || [];
       updateData.images = [...existingImages, args.image];
     }
-
     await ctx.db.patch(args.taskId, updateData);
     return args.taskId;
   },
 });
 
-// Update the getProjectTasks query to include description images
-export const getProjectTasks = query({
-  args: {
-    listId: v.id("projectLists"),
-    includeArchived: v.optional(v.boolean()),
-    assignedToIds: v.optional(v.array(v.id("members"))),
-  },
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      return [];
-    }
-
-    const list = await ctx.db.get(args.listId);
-    if (!list) {
-      return [];
-    }
-
-    const member = await ctx.db
-      .query("members")
-      .withIndex("by_workspace_id_user_id", (q) =>
-        q.eq("workspaceId", list.workspaceId).eq("userId", userId),
-      )
-      .unique();
-
-    if (!member) {
-      return [];
-    }
-
-    let tasks = await ctx.db
-      .query("projectTasks")
-      .withIndex("by_list_id", (q) => q.eq("listId", args.listId))
-      .collect();
-
-    // Filter by assignedToIds if provided
-    if (args.assignedToIds && args.assignedToIds.length > 0) {
-      tasks = tasks.filter(
-        (task) =>
-          task.assignedToId && args.assignedToIds!.includes(task.assignedToId),
-      );
-    }
-
-    // Get member details and description images for each task
-    const tasksWithMembers = await Promise.all(
-      tasks.map(async (task) => {
-        const assignedTo = task.assignedToId
-          ? await ctx.db.get(task.assignedToId)
-          : null;
-        const assignedBy = task.assignedById
-          ? await ctx.db.get(task.assignedById)
-          : null;
-        const createdBy = await ctx.db.get(task.createdById);
-
-        // Get user details
-        const assignedToUser = assignedTo
-          ? await ctx.db.get(assignedTo.userId)
-          : null;
-        const assignedByUser = assignedBy
-          ? await ctx.db.get(assignedBy.userId)
-          : null;
-        const createdByUser = createdBy
-          ? await ctx.db.get(createdBy.userId)
-          : null;
-
-        // Get description image URLs
-        let descriptionImages: string[] = [];
-        if (task.images && task.images.length > 0) {
-          descriptionImages = await Promise.all(
-            task.images.map(async (imageId) => {
-              const url = await ctx.storage.getUrl(imageId);
-              return url || "";
-            }),
-          );
-        }
-
-        return {
-          ...task,
-          assignedTo: assignedTo
-            ? { ...assignedTo, user: assignedToUser }
-            : null,
-          assignedBy: assignedBy
-            ? { ...assignedBy, user: assignedByUser }
-            : null,
-          createdBy: createdBy ? { ...createdBy, user: createdByUser } : null,
-          descriptionImages: descriptionImages.filter(Boolean),
-        };
-      }),
-    );
-
-    return tasksWithMembers
-      .filter(Boolean)
-      .filter((task) => (args.includeArchived ? true : !task.isArchived))
-      .sort((a, b) => a.position - b.position);
-  },
-});
-
-// In your convex/projects.ts file
 export const updateProjectBoard = mutation({
   args: {
     boardId: v.id("projectBoards"),
@@ -898,17 +1001,14 @@ export const updateProjectBoard = mutation({
     if (!userId) {
       throw new Error("Unauthorized");
     }
-
     const board = await ctx.db.get(args.boardId);
     if (!board) {
       throw new Error("Board not found");
     }
-
     const member = await ctx.db.get(board.memberId);
     if (!member || member.userId !== userId) {
       throw new Error("Unauthorized");
     }
-
     const { boardId, ...updates } = args;
     await ctx.db.patch(args.boardId, {
       ...updates,

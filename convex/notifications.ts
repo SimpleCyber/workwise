@@ -15,6 +15,11 @@ export const createNotification = mutation({
       v.literal("attendance_checkout"),
       v.literal("document_uploaded"),
       v.literal("document_shared"),
+      v.literal("task_assigned"),
+      v.literal("task_status_changed"),
+      v.literal("task_completed"),
+      v.literal("task_on_hold"),
+      v.literal("task_comment_added"),
     ),
     title: v.string(),
     message: v.string(),
@@ -42,16 +47,40 @@ export const createNotification = mutation({
 export const getUserNotifications = query({
   args: {
     limit: v.optional(v.number()),
+    category: v.optional(
+      v.union(
+        v.literal("all"),
+        v.literal("attendance"),
+        v.literal("projects"),
+        v.literal("dataroom"),
+      ),
+    ),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
 
-    const notifications = await ctx.db
+    let notifications = await ctx.db
       .query("notifications")
       .withIndex("by_user_id", (q) => q.eq("userId", userId))
       .order("desc")
       .take(args.limit || 50);
+
+    // Filter by category if specified
+    if (args.category && args.category !== "all") {
+      notifications = notifications.filter((notification) => {
+        switch (args.category) {
+          case "attendance":
+            return notification.type.includes("attendance");
+          case "projects":
+            return notification.type.includes("task");
+          case "dataroom":
+            return notification.type.includes("document");
+          default:
+            return true;
+        }
+      });
+    }
 
     // Populate workspace and action user data
     const notificationsWithData = await Promise.all(
@@ -97,16 +126,41 @@ export const markAsRead = mutation({
 
 // Mark all notifications as read
 export const markAllAsRead = mutation({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    category: v.optional(
+      v.union(
+        v.literal("all"),
+        v.literal("attendance"),
+        v.literal("projects"),
+        v.literal("dataroom"),
+      ),
+    ),
+  },
+  handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Unauthorized");
 
-    const unreadNotifications = await ctx.db
+    let unreadNotifications = await ctx.db
       .query("notifications")
       .withIndex("by_user_id", (q) => q.eq("userId", userId))
       .filter((q) => q.eq(q.field("isRead"), false))
       .collect();
+
+    // Filter by category if specified
+    if (args.category && args.category !== "all") {
+      unreadNotifications = unreadNotifications.filter((notification) => {
+        switch (args.category) {
+          case "attendance":
+            return notification.type.includes("attendance");
+          case "projects":
+            return notification.type.includes("task");
+          case "dataroom":
+            return notification.type.includes("document");
+          default:
+            return true;
+        }
+      });
+    }
 
     await Promise.all(
       unreadNotifications.map((notification) =>
@@ -120,16 +174,41 @@ export const markAllAsRead = mutation({
 
 // Get unread notification count
 export const getUnreadCount = query({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    category: v.optional(
+      v.union(
+        v.literal("all"),
+        v.literal("attendance"),
+        v.literal("projects"),
+        v.literal("dataroom"),
+      ),
+    ),
+  },
+  handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return 0;
 
-    const unreadNotifications = await ctx.db
+    let unreadNotifications = await ctx.db
       .query("notifications")
       .withIndex("by_user_id", (q) => q.eq("userId", userId))
       .filter((q) => q.eq(q.field("isRead"), false))
       .collect();
+
+    // Filter by category if specified
+    if (args.category && args.category !== "all") {
+      unreadNotifications = unreadNotifications.filter((notification) => {
+        switch (args.category) {
+          case "attendance":
+            return notification.type.includes("attendance");
+          case "projects":
+            return notification.type.includes("task");
+          case "dataroom":
+            return notification.type.includes("document");
+          default:
+            return true;
+        }
+      });
+    }
 
     return unreadNotifications.length;
   },

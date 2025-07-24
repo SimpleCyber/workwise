@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Bell,
   X,
@@ -28,15 +29,28 @@ import {
   FileText,
   Share,
   LogOut,
+  Briefcase,
+  MessageSquare,
+  AlertTriangle,
+  CheckCircle,
+  Pause,
+  Users,
+  FolderOpen,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useState } from "react";
 
 export const NotificationPanel = () => {
   const [open, setOpen] = useAtom(notificationOpenAtom);
-  const { data: notifications, isLoading } = useGetNotifications(50);
-  const { data: unreadCount } = useGetUnreadCount();
+  const [activeCategory, setActiveCategory] = useState<
+    "all" | "attendance" | "projects" | "dataroom"
+  >("all");
+  const notifications = useGetNotifications(50, activeCategory);
+  const unreadCount = useGetUnreadCount(activeCategory);
+  const isLoading = notifications === undefined;
+
   const markAsRead = useMarkAsRead();
   const markAllAsRead = useMarkAllAsRead();
   const deleteNotification = useDeleteNotification();
@@ -54,7 +68,7 @@ export const NotificationPanel = () => {
 
   const handleMarkAllAsRead = async () => {
     try {
-      await markAllAsRead({});
+      await markAllAsRead({ category: activeCategory });
       toast.success("All notifications marked as read");
     } catch (error) {
       toast.error("Failed to mark all notifications as read");
@@ -101,6 +115,16 @@ export const NotificationPanel = () => {
         return <FileText className="w-4 h-4 text-blue-500" />;
       case "document_shared":
         return <Share className="w-4 h-4 text-green-500" />;
+      case "task_assigned":
+        return <Briefcase className="w-4 h-4 text-blue-500" />;
+      case "task_status_changed":
+        return <AlertTriangle className="w-4 h-4 text-orange-500" />;
+      case "task_completed":
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case "task_on_hold":
+        return <Pause className="w-4 h-4 text-red-500" />;
+      case "task_comment_added":
+        return <MessageSquare className="w-4 h-4 text-blue-500" />;
       default:
         return <Bell className="w-4 h-4 text-gray-500" />;
     }
@@ -122,6 +146,16 @@ export const NotificationPanel = () => {
         return "border-l-blue-500";
       case "document_shared":
         return "border-l-green-500";
+      case "task_assigned":
+        return "border-l-blue-500";
+      case "task_status_changed":
+        return "border-l-orange-500";
+      case "task_completed":
+        return "border-l-green-500";
+      case "task_on_hold":
+        return "border-l-red-500";
+      case "task_comment_added":
+        return "border-l-blue-500";
       default:
         return "border-l-gray-500";
     }
@@ -134,6 +168,9 @@ export const NotificationPanel = () => {
     if (notification.type.includes("document")) {
       return `/tree/${notification.workspaceId}`;
     }
+    if (notification.type.includes("task")) {
+      return `/dashboard/${notification.workspaceId}/projects`;
+    }
     return `/tree/${notification.workspaceId}`;
   };
 
@@ -143,6 +180,19 @@ export const NotificationPanel = () => {
     );
   };
 
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case "attendance":
+        return <Users className="w-4 h-4" />;
+      case "projects":
+        return <Briefcase className="w-4 h-4" />;
+      case "dataroom":
+        return <FolderOpen className="w-4 h-4" />;
+      default:
+        return <Bell className="w-4 h-4" />;
+    }
+  };
+
   return (
     <div className="fixed top-10 right-0 z-50 w-96 h-full bg-gray-300 p-4">
       {/* Header */}
@@ -150,14 +200,14 @@ export const NotificationPanel = () => {
         <div className="flex items-center gap-2">
           <Bell className="w-5 h-5" />
           <h2 className="text-lg font-semibold">Notifications</h2>
-          {unreadCount > 0 && (
+          {unreadCount! > 0 && (
             <Badge variant="destructive" className="text-xs">
               {unreadCount}
             </Badge>
           )}
         </div>
         <div className="flex items-center gap-2">
-          {unreadCount > 0 && (
+          {unreadCount! > 0 && (
             <Button
               variant="ghost"
               size="sm"
@@ -174,173 +224,212 @@ export const NotificationPanel = () => {
         </div>
       </div>
 
-      {/* Content */}
-      <ScrollArea className="h-[calc(100vh-80px)]">
-        {isLoading ? (
-          <div className="flex items-center justify-center p-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        ) : notifications.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-8 text-center">
-            <Bell className="w-12 h-12 text-gray-300 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No notifications
-            </h3>
-            <p className="text-sm text-gray-500">You are all caught up!</p>
-          </div>
-        ) : (
-          <div className="divide-y">
-            {notifications.map((notification) => (
-              <div
-                key={notification._id}
-                className={`p-4 hover:bg-white bg-gray-50 border-l-4 ${getNotificationColor(notification.type)} ${
-                  !notification.isRead ? "bg-blue-50/30" : ""
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 mt-1">
-                    {getNotificationIcon(notification.type)}
-                  </div>
+      {/* Category Tabs */}
+      <Tabs
+        value={activeCategory}
+        onValueChange={(value) => setActiveCategory(value as any)}
+        className="w-full"
+      >
+        <TabsList className="grid w-full grid-cols-4 bg-gray-200">
+          <TabsTrigger value="all" className="flex items-center gap-1 text-xs">
+            <Bell className="w-3 h-3" />
+            All
+          </TabsTrigger>
+          <TabsTrigger
+            value="attendance"
+            className="flex items-center gap-1 text-xs"
+          >
+            <Users className="w-3 h-3" />
+            Attend
+          </TabsTrigger>
+          <TabsTrigger
+            value="projects"
+            className="flex items-center gap-1 text-xs"
+          >
+            <Briefcase className="w-3 h-3" />
+            Projects
+          </TabsTrigger>
+          <TabsTrigger
+            value="dataroom"
+            className="flex items-center gap-1 text-xs"
+          >
+            <FolderOpen className="w-3 h-3" />
+            Docs
+          </TabsTrigger>
+        </TabsList>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
-                        <h4 className="text-sm font-medium text-gray-900 mb-1">
-                          {notification.title}
-                        </h4>
-                        <p className="text-sm text-gray-600 mb-2">
-                          {notification.message}
-                        </p>
+        <TabsContent value={activeCategory} className="mt-0">
+          {/* Content */}
+          <ScrollArea className="h-[calc(100vh-140px)]">
+            {isLoading ? (
+              <div className="flex items-center justify-center p-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : notifications.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-8 text-center">
+                {getCategoryIcon(activeCategory)}
+                <h3 className="text-lg font-medium text-gray-900 mb-2 mt-4">
+                  No notifications
+                </h3>
+                <p className="text-sm text-gray-500">You are all caught up!</p>
+              </div>
+            ) : (
+              <div className="divide-y">
+                {notifications.map((notification) => (
+                  <div
+                    key={notification._id}
+                    className={`p-4 hover:bg-white bg-gray-50 border-l-4 ${getNotificationColor(notification.type)} ${
+                      !notification.isRead ? "bg-blue-50/30" : ""
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 mt-1">
+                        {getNotificationIcon(notification.type)}
+                      </div>
 
-                        {/* Workspace context */}
-                        <div className="flex items-center gap-2 mb-2">
-                          <Building className="w-3 h-3 text-gray-400" />
-                          <span className="text-xs text-gray-500">
-                            {notification.workspace?.name ||
-                              "Unknown Workspace"}
-                          </span>
-                        </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <h4 className="text-sm font-medium text-gray-900 mb-1">
+                              {notification.title}
+                            </h4>
+                            <p className="text-sm text-gray-600 mb-2">
+                              {notification.message}
+                            </p>
 
-                        {/* Action user */}
-                        {notification.actionUser && (
-                          <div className="flex items-center gap-2 mb-2">
-                            <Avatar className="w-4 h-4">
-                              <AvatarImage
-                                src={
-                                  notification.actionUser.image ||
-                                  "/placeholder.svg"
-                                }
-                              />
-                              <AvatarFallback className="text-xs">
-                                {notification.actionUser.name
-                                  ?.charAt(0)
-                                  .toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-xs text-gray-500">
-                              by {notification.actionUser.name}
-                            </span>
+                            {/* Workspace context */}
+                            <div className="flex items-center gap-2 mb-2">
+                              <Building className="w-3 h-3 text-gray-400" />
+                              <span className="text-xs text-gray-500">
+                                {notification.workspace?.name ||
+                                  "Unknown Workspace"}
+                              </span>
+                            </div>
+
+                            {/* Action user */}
+                            {notification.actionUser && (
+                              <div className="flex items-center gap-2 mb-2">
+                                <Avatar className="w-4 h-4">
+                                  <AvatarImage
+                                    src={
+                                      notification.actionUser.image ||
+                                      "/placeholder.svg"
+                                    }
+                                  />
+                                  <AvatarFallback className="text-xs">
+                                    {notification.actionUser.name
+                                      ?.charAt(0)
+                                      .toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="text-xs text-gray-500">
+                                  by {notification.actionUser.name}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Admin Actions for Attendance */}
+                            {canShowAttendanceActions(notification) && (
+                              <div className="flex items-center gap-2 mb-2">
+                                <Button
+                                  size="sm"
+                                  className="text-xs h-6 bg-green-500 hover:bg-green-600 text-white"
+                                  onClick={() =>
+                                    handleAttendanceAction(
+                                      notification.relatedId!,
+                                      "approved",
+                                    )
+                                  }
+                                >
+                                  <UserCheck className="w-3 h-3 mr-1" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  className="text-xs h-6"
+                                  onClick={() =>
+                                    handleAttendanceAction(
+                                      notification.relatedId!,
+                                      "rejected",
+                                    )
+                                  }
+                                >
+                                  <UserX className="w-3 h-3 mr-1" />
+                                  Reject
+                                </Button>
+                              </div>
+                            )}
+
+                            {/* Actions */}
+                            <div className="flex items-center gap-2 mt-2">
+                              <Link href={getActionUrl(notification)}>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-xs h-7 bg-transparent"
+                                  onClick={() => {
+                                    if (!notification.isRead) {
+                                      handleMarkAsRead(notification._id);
+                                    }
+                                    setOpen(false);
+                                  }}
+                                >
+                                  View Details
+                                </Button>
+                              </Link>
+
+                              {!notification.isRead && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-xs h-7"
+                                  onClick={() =>
+                                    handleMarkAsRead(notification._id)
+                                  }
+                                >
+                                  <Check className="w-3 h-3 mr-1" />
+                                  Mark read
+                                </Button>
+                              )}
+                            </div>
                           </div>
-                        )}
 
-                        {/* Admin Actions for Attendance */}
-                        {canShowAttendanceActions(notification) && (
-                          <div className="flex items-center gap-2 mb-2">
-                            <Button
-                              size="sm"
-                              className="text-xs h-6 bg-green-500 hover:bg-green-600 text-white"
-                              onClick={() =>
-                                handleAttendanceAction(
-                                  notification.relatedId!,
-                                  "approved",
-                                )
-                              }
-                            >
-                              <UserCheck className="w-3 h-3 mr-1" />
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              className="text-xs h-6"
-                              onClick={() =>
-                                handleAttendanceAction(
-                                  notification.relatedId!,
-                                  "rejected",
-                                )
-                              }
-                            >
-                              <UserX className="w-3 h-3 mr-1" />
-                              Reject
-                            </Button>
-                          </div>
-                        )}
-
-                        {/* Actions */}
-                        <div className="flex items-center gap-2 mt-2">
-                          <Link href={getActionUrl(notification)}>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-xs h-7 bg-transparent"
-                              onClick={() => {
-                                if (!notification.isRead) {
-                                  handleMarkAsRead(notification._id);
-                                }
-                                setOpen(false);
-                              }}
-                            >
-                              View Details
-                            </Button>
-                          </Link>
-
-                          {!notification.isRead && (
+                          <div className="flex flex-col items-end gap-2">
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="text-xs h-7"
-                              onClick={() => handleMarkAsRead(notification._id)}
+                              className="h-6 w-6 p-0"
+                              onClick={() =>
+                                handleDeleteNotification(notification._id)
+                              }
                             >
-                              <Check className="w-3 h-3 mr-1" />
-                              Mark read
+                              <Trash2 className="w-3 h-3 text-gray-400 hover:text-red-500" />
                             </Button>
-                          )}
+
+                            {!notification.isRead && (
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            )}
+                          </div>
                         </div>
                       </div>
+                    </div>
 
-                      <div className="flex flex-col items-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0"
-                          onClick={() =>
-                            handleDeleteNotification(notification._id)
-                          }
-                        >
-                          <Trash2 className="w-3 h-3 text-gray-400 hover:text-red-500" />
-                        </Button>
-
-                        {!notification.isRead && (
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        )}
-                      </div>
+                    {/* Timestamp at bottom right */}
+                    <div className="flex justify-end mt-2">
+                      <span className="text-xs text-gray-400">
+                        {formatDistanceToNow(new Date(notification.createdAt), {
+                          addSuffix: true,
+                        })}
+                      </span>
                     </div>
                   </div>
-                </div>
-
-                {/* Timestamp at bottom right */}
-                <div className="flex justify-end mt-2">
-                  <span className="text-xs text-gray-400">
-                    {formatDistanceToNow(new Date(notification.createdAt), {
-                      addSuffix: true,
-                    })}
-                  </span>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
-      </ScrollArea>
+            )}
+          </ScrollArea>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
