@@ -63,6 +63,7 @@ import { format } from "date-fns";
 
 import { useAtom } from "jotai";
 import { calendarOpenAtom, notificationOpenAtom } from "@/lib/panel-atoms";
+import { SidebarButton } from "../sidebar/sidebar-button";
 
 const searchTypes = [
   { id: "chat", label: "Chat", icon: MessageSquare },
@@ -485,7 +486,7 @@ export const Toolbar = () => {
         </CommandDialog>
 
         <div className="ml-auto flex flex-1 items-center justify-end">
-          <Button variant="transparent" size="iconSm" asChild>
+          {/* <Button variant="transparent" size="iconSm" asChild>
             <Link
               href={links.sourceCode}
               target="_blank"
@@ -494,23 +495,20 @@ export const Toolbar = () => {
             >
               <FaGithub className="size-5 text-white" />
             </Link>
-          </Button>
-
-          <Button
-            variant="transparent"
-            size="iconSm"
+          </Button> */}
+          <SidebarButton
+            icon={Bell}
+            label=""
+            isActive={notificationOpen}
             onClick={() => setNotificationOpen((prev) => !prev)}
-          >
-            <Bell className="size-5 text-white" />
-          </Button>
+          />
 
-          <Button
-            variant="transparent"
-            size="iconSm"
+          <SidebarButton
+            icon={CalendarClock}
+            label=""
+            isActive={calendarOpen}
             onClick={() => setCalendarOpen((prev) => !prev)}
-          >
-            <CalendarClock className="size-5 text-white" />
-          </Button>
+          />
         </div>
       </nav>
 
