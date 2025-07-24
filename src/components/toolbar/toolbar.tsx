@@ -13,6 +13,8 @@ import {
   FolderKanban,
   Users,
   FileText,
+  Bell,
+  CalendarClock,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -59,6 +61,9 @@ import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { format } from "date-fns";
 
+import { useAtom } from "jotai";
+import { calendarOpenAtom, notificationOpenAtom } from "@/lib/panel-atoms";
+
 const searchTypes = [
   { id: "chat", label: "Chat", icon: MessageSquare },
   { id: "projects", label: "Projects", icon: FolderKanban },
@@ -73,6 +78,8 @@ export const Toolbar = () => {
   const { data } = useGetWorkspace({ id: workspaceId });
   const { data: channels } = useGetChannels({ workspaceId });
   const { data: members } = useGetMembers({ workspaceId });
+  const [calendarOpen, setCalendarOpen] = useAtom(calendarOpenAtom);
+  const [notificationOpen, setNotificationOpen] = useAtom(notificationOpenAtom);
 
   // Original command dialog state
   const [open, setOpen] = useState(false);
@@ -487,6 +494,22 @@ export const Toolbar = () => {
             >
               <FaGithub className="size-5 text-white" />
             </Link>
+          </Button>
+
+          <Button
+            variant="transparent"
+            size="iconSm"
+            onClick={() => setNotificationOpen((prev) => !prev)}
+          >
+            <Bell className="size-5 text-white" />
+          </Button>
+
+          <Button
+            variant="transparent"
+            size="iconSm"
+            onClick={() => setCalendarOpen((prev) => !prev)}
+          >
+            <CalendarClock className="size-5 text-white" />
           </Button>
         </div>
       </nav>

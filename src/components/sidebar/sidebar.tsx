@@ -26,11 +26,11 @@ export const Sidebar = () => {
     { icon: Network, label: "All Data", path: `/tree/${workspaceId}` },
     { icon: Kanban, label: "ToDo", path: `/todo/${workspaceId}` },
     { icon: ListTodo, label: "Project", path: `/projects/${workspaceId}` },
-    { icon: Files, label: "Data Room", path: `/data-room/${workspaceId}` },
+    { icon: Files, label: "Data", path: `/data-room/${workspaceId}` },
     { icon: MessagesSquare, label: "Chat", path: `/workspace/${workspaceId}` },
     {
       icon: UserRoundSearch,
-      label: "Members",
+      label: "Member",
       path: `/members/${workspaceId}`,
     },
     { icon: Calendar, label: "Attendence", path: `/attendance/${workspaceId}` },
@@ -46,7 +46,7 @@ export const Sidebar = () => {
   // Don't render navigation items if we don't have a workspace ID
   if (!workspaceId) {
     return (
-      <aside className="flex h-full w-[70px] flex-col items-center gap-y-4 bg-gray-900 pb-[4px] pt-[9px]">
+      <aside className="flex h-full w-[60px] flex-col items-center gap-y-4 bg-gray-900 pb-[4px] pt-[9px]">
         <WorkspaceSwitcher />
         <div className="mt-auto flex flex-col items-center justify-center gap-y-1">
           <UserButton />
@@ -56,7 +56,7 @@ export const Sidebar = () => {
   }
 
   return (
-    <aside className="flex h-full w-[70px] flex-col items-center gap-y-4 bg-gray-900 pb-[4px] pt-[9px]">
+    <aside className="flex h-full w-[60px] flex-col items-center gap-y-4 bg-gray-900 pb-[4px] pt-[9px]">
       <WorkspaceSwitcher />
       {navigationItems.map((item) => (
         <SidebarButton

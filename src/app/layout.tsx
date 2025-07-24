@@ -10,6 +10,9 @@ import { Toaster } from "@/components/ui/sonner";
 import { siteConfig } from "@/config";
 import { Analytics } from "@vercel/analytics/next";
 
+import { CalendarPanel } from "@/components/calender/CalendarPanel";
+import { NotificationPanel } from "@/components/notification/NotificationPanel";
+
 import "./globals.css";
 
 const inter = Inter({
@@ -28,6 +31,10 @@ const RootLayout = ({ children }: Readonly<PropsWithChildren>) => {
             <JotaiProvider>
               <Toaster theme="light" richColors closeButton />
               <ModalProvider />
+
+              {/* Persistent panels */}
+              <CalendarPanel />
+              <NotificationPanel />
 
               {children}
             </JotaiProvider>
