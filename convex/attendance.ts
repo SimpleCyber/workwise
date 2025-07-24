@@ -73,6 +73,35 @@ export const checkIn = mutation({
       status: "pending",
     });
 
+    // Get user info for notification
+    const user = await ctx.db.get(userId);
+    const workspace = await ctx.db.get(args.workspaceId);
+
+    // Notify all admins in the workspace
+    const admins = await ctx.db
+      .query("members")
+      .withIndex("by_workspace_id", (q) =>
+        q.eq("workspaceId", args.workspaceId),
+      )
+      .filter((q) => q.eq(q.field("role"), "admin"))
+      .collect();
+
+    await Promise.all(
+      admins.map(async (admin) => {
+        await ctx.db.insert("notifications", {
+          userId: admin.userId,
+          workspaceId: args.workspaceId,
+          type: "attendance_submitted",
+          title: "New Attendance Submission",
+          message: `${user?.name || "A user"} has submitted their attendance for approval in ${workspace?.name || "workspace"}.`,
+          relatedId: attendanceId,
+          actionBy: userId,
+          isRead: false,
+          createdAt: Date.now(),
+        });
+      }),
+    );
+
     return attendanceId;
   },
 });
@@ -285,6 +314,7 @@ export const getAttendanceByDate = query({
     const attendedMemberIds = new Set(
       attendance.map((record) => record.memberId),
     );
+
     const absentMembers = allMembers.filter(
       (member) => !attendedMemberIds.has(member._id),
     );
@@ -372,6 +402,59 @@ export const updateAttendanceStatus = mutation({
       approvedBy: currentMember._id,
       approvedAt: Date.now(),
     });
+
+    // Get user and admin info for notifications
+    const attendanceMember = await ctx.db.get(attendance.memberId);
+    const attendanceUser = attendanceMember
+      ? await ctx.db.get(attendanceMember.userId)
+      : null;
+    const adminUser = await ctx.db.get(userId);
+    const workspace = await ctx.db.get(attendance.workspaceId);
+
+    // Notify the user whose attendance was updated
+    if (attendanceUser) {
+      await ctx.db.insert("notifications", {
+        userId: attendanceUser._id,
+        workspaceId: attendance.workspaceId,
+        type:
+          args.status === "approved"
+            ? "attendance_approved"
+            : "attendance_rejected",
+        title: `Attendance ${args.status === "approved" ? "Approved" : "Rejected"}`,
+        message: `Your attendance has been ${args.status} by ${adminUser?.name || "an admin"} in ${workspace?.name || "workspace"}.`,
+        relatedId: args.attendanceId,
+        actionBy: userId,
+        isRead: false,
+        createdAt: Date.now(),
+      });
+    }
+
+    // Notify other admins about the action
+    const otherAdmins = await ctx.db
+      .query("members")
+      .withIndex("by_workspace_id", (q) =>
+        q.eq("workspaceId", attendance.workspaceId),
+      )
+      .filter((q) =>
+        q.and(q.eq(q.field("role"), "admin"), q.neq(q.field("userId"), userId)),
+      )
+      .collect();
+
+    await Promise.all(
+      otherAdmins.map(async (admin) => {
+        await ctx.db.insert("notifications", {
+          userId: admin.userId,
+          workspaceId: attendance.workspaceId,
+          type: "attendance_action_by_admin",
+          title: "Attendance Action by Admin",
+          message: `${adminUser?.name || "An admin"} has ${args.status} ${attendanceUser?.name || "a user"}'s attendance in ${workspace?.name || "workspace"}.`,
+          relatedId: args.attendanceId,
+          actionBy: userId,
+          isRead: false,
+          createdAt: Date.now(),
+        });
+      }),
+    );
 
     return args.attendanceId;
   },

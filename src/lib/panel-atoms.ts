@@ -1,11 +1,4 @@
-// lib/panel-atoms.ts
-import { atomWithStorage } from "jotai/utils";
+import { atom } from "jotai";
 
-export const calendarOpenAtom = atomWithStorage<boolean>(
-  "calendar-panel-open",
-  false,
-);
-export const notificationOpenAtom = atomWithStorage<boolean>(
-  "notification-panel-open",
-  false,
-);
+export const notificationOpenAtom = atom(false);
+export const calendarOpenAtom = atom(false);

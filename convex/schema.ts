@@ -81,6 +81,29 @@ const schema = defineSchema({
     .index("by_member_id", ["memberId"])
     .index("by_member_id_date", ["memberId", "date"])
     .index("by_status", ["status"]),
+  // Notifications table
+  notifications: defineTable({
+    userId: v.id("users"),
+    workspaceId: v.id("workspaces"),
+    type: v.union(
+      v.literal("attendance_submitted"),
+      v.literal("attendance_approved"),
+      v.literal("attendance_rejected"),
+      v.literal("attendance_action_by_admin"),
+      v.literal("task_assigned"),
+      v.literal("project_updated"),
+    ),
+    title: v.string(),
+    message: v.string(),
+    relatedId: v.optional(v.id("attendance")),
+    actionBy: v.optional(v.id("users")),
+    isRead: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_user_id", ["userId"])
+    .index("by_workspace_id", ["workspaceId"])
+    .index("by_created_at", ["createdAt"])
+    .index("by_is_read", ["isRead"]),
   // Attendance comments table
   attendanceComments: defineTable({
     attendanceId: v.id("attendance"),
@@ -94,7 +117,6 @@ const schema = defineSchema({
     .index("by_workspace_id", ["workspaceId"])
     .index("by_member_id", ["memberId"]),
   // Leave requests table
-
   leaveRequests: defineTable({
     memberId: v.id("members"),
     workspaceId: v.id("workspaces"),
@@ -204,7 +226,6 @@ const schema = defineSchema({
   })
     .index("by_card_id", ["cardId"])
     .index("by_member_id", ["memberId"]),
-
   // Project Management tables
   projectBoards: defineTable({
     name: v.string(),
@@ -222,7 +243,6 @@ const schema = defineSchema({
     .index("by_workspace_id", ["workspaceId"])
     .index("by_member_workspace", ["memberId", "workspaceId"])
     .index("by_workspace_archived", ["workspaceId", "isArchived"]),
-
   projectLists: defineTable({
     name: v.string(),
     boardId: v.id("projectBoards"),
@@ -237,7 +257,6 @@ const schema = defineSchema({
     .index("by_member_id", ["memberId"])
     .index("by_workspace_id", ["workspaceId"])
     .index("by_board_archived", ["boardId", "isArchived"]),
-
   taskComments: defineTable({
     taskId: v.id("projectTasks"),
     memberId: v.id("members"),
@@ -249,7 +268,6 @@ const schema = defineSchema({
   })
     .index("by_task_id", ["taskId"])
     .index("by_member_id", ["memberId"]),
-
   projectTasks: defineTable({
     title: v.string(),
     description: v.optional(v.string()),
@@ -284,7 +302,6 @@ const schema = defineSchema({
     .index("by_assigned_by", ["assignedById"])
     .index("by_workspace_id", ["workspaceId"])
     .index("by_list_archived", ["listId", "isArchived"]),
-
   dataRoomFiles: defineTable({
     workspaceId: v.id("workspaces"),
     uploaderId: v.id("members"),
