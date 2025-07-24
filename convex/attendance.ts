@@ -135,6 +135,35 @@ export const checkOut = mutation({
       taskImage: args.image,
     });
 
+    // Get user and workspace info for notification
+    const user = await ctx.db.get(userId);
+    const workspace = await ctx.db.get(attendance.workspaceId);
+
+    // Notify all admins about the checkout
+    const admins = await ctx.db
+      .query("members")
+      .withIndex("by_workspace_id", (q) =>
+        q.eq("workspaceId", attendance.workspaceId),
+      )
+      .filter((q) => q.eq(q.field("role"), "admin"))
+      .collect();
+
+    await Promise.all(
+      admins.map(async (admin) => {
+        await ctx.db.insert("notifications", {
+          userId: admin.userId,
+          workspaceId: attendance.workspaceId,
+          type: "attendance_checkout",
+          title: "User Checked Out",
+          message: `${user?.name || "A user"} has checked out and completed their tasks in ${workspace?.name || "workspace"}.`,
+          relatedId: args.attendanceId,
+          actionBy: userId,
+          isRead: false,
+          createdAt: Date.now(),
+        });
+      }),
+    );
+
     return args.attendanceId;
   },
 });

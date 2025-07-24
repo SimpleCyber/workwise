@@ -9,6 +9,7 @@ import {
   useDeleteNotification,
   useGetUnreadCount,
 } from "@/hooks/use-notifications";
+import { useUpdateAttendanceStatus } from "@/hooks/use-update-attendance-status";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -24,6 +25,9 @@ import {
   UserX,
   Settings,
   Building,
+  FileText,
+  Share,
+  LogOut,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
@@ -36,6 +40,7 @@ export const NotificationPanel = () => {
   const markAsRead = useMarkAsRead();
   const markAllAsRead = useMarkAllAsRead();
   const deleteNotification = useDeleteNotification();
+  const updateAttendanceStatus = useUpdateAttendanceStatus();
 
   if (!open) return null;
 
@@ -65,6 +70,21 @@ export const NotificationPanel = () => {
     }
   };
 
+  const handleAttendanceAction = async (
+    attendanceId: string,
+    action: "approved" | "rejected",
+  ) => {
+    try {
+      await updateAttendanceStatus({
+        attendanceId: attendanceId as any,
+        status: action,
+      });
+      toast.success(`Attendance ${action} successfully!`);
+    } catch (error) {
+      toast.error(`Failed to ${action.slice(0, -1)} attendance`);
+    }
+  };
+
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case "attendance_submitted":
@@ -75,6 +95,12 @@ export const NotificationPanel = () => {
         return <UserX className="w-4 h-4 text-red-500" />;
       case "attendance_action_by_admin":
         return <Settings className="w-4 h-4 text-blue-500" />;
+      case "attendance_checkout":
+        return <LogOut className="w-4 h-4 text-purple-500" />;
+      case "document_uploaded":
+        return <FileText className="w-4 h-4 text-blue-500" />;
+      case "document_shared":
+        return <Share className="w-4 h-4 text-green-500" />;
       default:
         return <Bell className="w-4 h-4 text-gray-500" />;
     }
@@ -90,6 +116,12 @@ export const NotificationPanel = () => {
         return "border-l-red-500";
       case "attendance_action_by_admin":
         return "border-l-blue-500";
+      case "attendance_checkout":
+        return "border-l-purple-500";
+      case "document_uploaded":
+        return "border-l-blue-500";
+      case "document_shared":
+        return "border-l-green-500";
       default:
         return "border-l-gray-500";
     }
@@ -99,11 +131,20 @@ export const NotificationPanel = () => {
     if (notification.type.includes("attendance")) {
       return `/attendance/${notification.workspaceId}`;
     }
+    if (notification.type.includes("document")) {
+      return `/tree/${notification.workspaceId}`;
+    }
     return `/tree/${notification.workspaceId}`;
   };
 
+  const canShowAttendanceActions = (notification: any) => {
+    return (
+      notification.type === "attendance_submitted" && notification.relatedId
+    );
+  };
+
   return (
-    <div className="fixed top-10 right-0 z-50 w-96 h-full bg-gray-300  p-4">
+    <div className="fixed top-10 right-0 z-50 w-96 h-full bg-gray-300 p-4">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-400">
         <div className="flex items-center gap-2">
@@ -115,7 +156,6 @@ export const NotificationPanel = () => {
             </Badge>
           )}
         </div>
-
         <div className="flex items-center gap-2">
           {unreadCount > 0 && (
             <Button
@@ -200,6 +240,39 @@ export const NotificationPanel = () => {
                             <span className="text-xs text-gray-500">
                               by {notification.actionUser.name}
                             </span>
+                          </div>
+                        )}
+
+                        {/* Admin Actions for Attendance */}
+                        {canShowAttendanceActions(notification) && (
+                          <div className="flex items-center gap-2 mb-2">
+                            <Button
+                              size="sm"
+                              className="text-xs h-6 bg-green-500 hover:bg-green-600 text-white"
+                              onClick={() =>
+                                handleAttendanceAction(
+                                  notification.relatedId!,
+                                  "approved",
+                                )
+                              }
+                            >
+                              <UserCheck className="w-3 h-3 mr-1" />
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              className="text-xs h-6"
+                              onClick={() =>
+                                handleAttendanceAction(
+                                  notification.relatedId!,
+                                  "rejected",
+                                )
+                              }
+                            >
+                              <UserX className="w-3 h-3 mr-1" />
+                              Reject
+                            </Button>
                           </div>
                         )}
 

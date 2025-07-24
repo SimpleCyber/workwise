@@ -19,7 +19,6 @@ export const uploadDataRoomFile = mutation({
     if (!userId) {
       throw new Error("Unauthorized");
     }
-
     // Check if user is a member of the workspace
     const member = await ctx.db
       .query("members")
@@ -45,6 +44,58 @@ export const uploadDataRoomFile = mutation({
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
+
+    // Get user and workspace info for notifications
+    const user = await ctx.db.get(userId);
+    const workspace = await ctx.db.get(args.workspaceId);
+
+    // If it's a public document, notify all workspace members
+    if (args.visibility === "public") {
+      const allMembers = await ctx.db
+        .query("members")
+        .withIndex("by_workspace_id", (q) =>
+          q.eq("workspaceId", args.workspaceId),
+        )
+        .filter((q) => q.neq(q.field("_id"), member._id)) // Exclude the uploader
+        .collect();
+
+      await Promise.all(
+        allMembers.map(async (workspaceMember) => {
+          await ctx.db.insert("notifications", {
+            userId: workspaceMember.userId,
+            workspaceId: args.workspaceId,
+            type: "document_uploaded",
+            title: "New Public Document",
+            message: `${user?.name || "A user"} uploaded a new public document "${args.fileName}" in ${workspace?.name || "workspace"}.`,
+            relatedId: fileId,
+            actionBy: userId,
+            isRead: false,
+            createdAt: Date.now(),
+          });
+        }),
+      );
+    } else {
+      // If it's a private document, notify only allowed members
+      await Promise.all(
+        args.allowedMembers.map(async (allowedMemberId) => {
+          const allowedMember = await ctx.db.get(allowedMemberId);
+          if (allowedMember && allowedMember._id !== member._id) {
+            // Don't notify the uploader
+            await ctx.db.insert("notifications", {
+              userId: allowedMember.userId,
+              workspaceId: args.workspaceId,
+              type: "document_shared",
+              title: "Document Shared With You",
+              message: `${user?.name || "A user"} shared a private document "${args.fileName}" with you in ${workspace?.name || "workspace"}.`,
+              relatedId: fileId,
+              actionBy: userId,
+              isRead: false,
+              createdAt: Date.now(),
+            });
+          }
+        }),
+      );
+    }
 
     return fileId;
   },
@@ -165,7 +216,6 @@ export const getDataRoomFiles = query({
           ? await ctx.db.get(uploader.userId)
           : null;
         const fileUrl = await ctx.storage.getUrl(file.storageId);
-
         return {
           ...file,
           uploader: uploader ? { ...uploader, user: uploaderUser } : null,
