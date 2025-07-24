@@ -97,9 +97,9 @@ export const NotificationPanel = () => {
 
   const getActionUrl = (notification: any) => {
     if (notification.type.includes("attendance")) {
-      return `/dashboard/${notification.workspaceId}/attendance`;
+      return `/attendance/${notification.workspaceId}`;
     }
-    return `/dashboard/${notification.workspaceId}`;
+    return `/tree/${notification.workspaceId}`;
   };
 
   return (
@@ -153,7 +153,7 @@ export const NotificationPanel = () => {
             {notifications.map((notification) => (
               <div
                 key={notification._id}
-                className={`p-4 hover:bg-gray-50 transition-colors border-l-4 ${getNotificationColor(notification.type)} ${
+                className={`p-4 hover:bg-white bg-gray-50 border-l-4 ${getNotificationColor(notification.type)} ${
                   !notification.isRead ? "bg-blue-50/30" : ""
                 }`}
               >
