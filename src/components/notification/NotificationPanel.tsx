@@ -146,7 +146,7 @@ export const NotificationPanel = () => {
             <h3 className="text-lg font-medium text-gray-900 mb-2">
               No notifications
             </h3>
-            <p className="text-sm text-gray-500">You're all caught up!</p>
+            <p className="text-sm text-gray-500">You are all caught up!</p>
           </div>
         ) : (
           <div className="divide-y">
