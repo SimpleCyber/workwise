@@ -304,37 +304,44 @@ export const getProjectTasks = query({
   args: {
     listId: v.id("projectLists"),
     includeArchived: v.optional(v.boolean()),
-    assignedToId: v.optional(v.id("members")), // Added optional assignedToId for filtering
+    assignedToIds: v.optional(v.array(v.id("members"))),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
       return [];
     }
+
     const list = await ctx.db.get(args.listId);
     if (!list) {
       return [];
     }
+
     const member = await ctx.db
       .query("members")
       .withIndex("by_workspace_id_user_id", (q) =>
         q.eq("workspaceId", list.workspaceId).eq("userId", userId),
       )
       .unique();
+
     if (!member) {
       return [];
     }
+
     let tasks = await ctx.db
       .query("projectTasks")
       .withIndex("by_list_id", (q) => q.eq("listId", args.listId))
       .collect();
 
-    // Filter by assignedToId if provided
-    if (args.assignedToId) {
-      tasks = tasks.filter((task) => task.assignedToId === args.assignedToId);
+    // Filter by assignedToIds if provided
+    if (args.assignedToIds && args.assignedToIds.length > 0) {
+      tasks = tasks.filter(
+        (task) =>
+          task.assignedToId && args.assignedToIds!.includes(task.assignedToId),
+      );
     }
 
-    // Get member details for each task
+    // Get member details and description images for each task
     const tasksWithMembers = await Promise.all(
       tasks.map(async (task) => {
         const assignedTo = task.assignedToId
@@ -344,6 +351,7 @@ export const getProjectTasks = query({
           ? await ctx.db.get(task.assignedById)
           : null;
         const createdBy = await ctx.db.get(task.createdById);
+
         // Get user details
         const assignedToUser = assignedTo
           ? await ctx.db.get(assignedTo.userId)
@@ -354,6 +362,18 @@ export const getProjectTasks = query({
         const createdByUser = createdBy
           ? await ctx.db.get(createdBy.userId)
           : null;
+
+        // Get description image URLs
+        let descriptionImages: string[] = [];
+        if (task.images && task.images.length > 0) {
+          descriptionImages = await Promise.all(
+            task.images.map(async (imageId) => {
+              const url = await ctx.storage.getUrl(imageId);
+              return url || "";
+            }),
+          );
+        }
+
         return {
           ...task,
           assignedTo: assignedTo
@@ -363,9 +383,11 @@ export const getProjectTasks = query({
             ? { ...assignedBy, user: assignedByUser }
             : null,
           createdBy: createdBy ? { ...createdBy, user: createdByUser } : null,
+          descriptionImages: descriptionImages.filter(Boolean),
         };
       }),
     );
+
     return tasksWithMembers
       .filter(Boolean)
       .filter((task) => (args.includeArchived ? true : !task.isArchived))
