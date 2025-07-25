@@ -19,8 +19,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PanelRight, PlusCircle, CheckCircle, Clock, AlertCircle, Trash2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  PanelRight,
+  PlusCircle,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  Trash2,
+} from "lucide-react";
 
 // --- Node Types ---
 const TaskNode = ({ data }: NodeProps) => {
@@ -51,20 +64,28 @@ const TaskNode = ({ data }: NodeProps) => {
   };
 
   return (
-    <div className={`border rounded-lg shadow-md p-4 min-w-[280px] ${getStatusColor()}`}>
+    <div
+      className={`border rounded-lg shadow-md p-4 min-w-[280px] ${getStatusColor()}`}
+    >
       <div className="flex items-center justify-between mb-2">
-        <h4 className="font-semibold text-sm">{data.title || "Untitled Task"}</h4>
+        <h4 className="font-semibold text-sm">
+          {data.title || "Untitled Task"}
+        </h4>
         {getStatusIcon()}
       </div>
       <p className="text-xs text-gray-600 mb-2 line-clamp-2">
         {data.description || "Click to add description..."}
       </p>
       {data.priority && (
-        <span className={`text-xs px-2 py-1 rounded-full ${
-          data.priority === "high" ? "bg-red-100 text-red-700" :
-          data.priority === "medium" ? "bg-yellow-100 text-yellow-700" :
-          "bg-gray-100 text-gray-700"
-        }`}>
+        <span
+          className={`text-xs px-2 py-1 rounded-full ${
+            data.priority === "high"
+              ? "bg-red-100 text-red-700"
+              : data.priority === "medium"
+                ? "bg-yellow-100 text-yellow-700"
+                : "bg-gray-100 text-gray-700"
+          }`}
+        >
           {data.priority} priority
         </span>
       )}
@@ -104,7 +125,7 @@ export default function TaskOrganizer() {
     status: "pending",
     priority: "medium",
     dueDate: "",
-    label: ""
+    label: "",
   });
 
   const initialNodes: Node[] = [
@@ -129,7 +150,7 @@ export default function TaskOrganizer() {
         description: "Write and submit the Q4 project proposal",
         status: "in-progress",
         priority: "high",
-        dueDate: "2025-08-01"
+        dueDate: "2025-08-01",
       },
     },
     {
@@ -141,7 +162,7 @@ export default function TaskOrganizer() {
         description: "Prepare agenda and materials for weekly team meeting",
         status: "pending",
         priority: "medium",
-        dueDate: "2025-07-26"
+        dueDate: "2025-07-26",
       },
     },
     {
@@ -153,7 +174,7 @@ export default function TaskOrganizer() {
         description: "Buy ingredients for weekend cooking",
         status: "pending",
         priority: "low",
-        dueDate: "2025-07-27"
+        dueDate: "2025-07-27",
       },
     },
   ];
@@ -169,7 +190,7 @@ export default function TaskOrganizer() {
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
+    [setEdges],
   );
 
   const onNodeClick = useCallback((event: any, node: Node) => {
@@ -180,14 +201,14 @@ export default function TaskOrganizer() {
       status: node.data.status || "pending",
       priority: node.data.priority || "medium",
       dueDate: node.data.dueDate || "",
-      label: node.data.label || ""
+      label: node.data.label || "",
     });
     setDrawerOpen(true);
   }, []);
 
   const updateSelectedNode = () => {
     if (!selectedNode) return;
-    
+
     setNodes((nds) =>
       nds.map((node) =>
         node.id === selectedNode.id
@@ -195,7 +216,7 @@ export default function TaskOrganizer() {
               ...node,
               data: {
                 ...node.data,
-                ...editForm
+                ...editForm,
               },
             }
           : node,
@@ -206,11 +227,14 @@ export default function TaskOrganizer() {
 
   const deleteSelectedNode = () => {
     if (!selectedNode) return;
-    
+
     setNodes((nds) => nds.filter((node) => node.id !== selectedNode.id));
-    setEdges((eds) => eds.filter((edge) => 
-      edge.source !== selectedNode.id && edge.target !== selectedNode.id
-    ));
+    setEdges((eds) =>
+      eds.filter(
+        (edge) =>
+          edge.source !== selectedNode.id && edge.target !== selectedNode.id,
+      ),
+    );
     setDrawerOpen(false);
   };
 
@@ -220,12 +244,12 @@ export default function TaskOrganizer() {
       id: newId,
       type: "taskNode",
       position: { x: Math.random() * 400 + 100, y: Math.random() * 300 + 250 },
-      data: { 
-        title: "New Task", 
-        description: "", 
-        status: "pending", 
+      data: {
+        title: "New Task",
+        description: "",
+        status: "pending",
         priority: "medium",
-        dueDate: ""
+        dueDate: "",
       },
     };
     setNodes((prev) => [...prev, newTask]);
@@ -243,11 +267,17 @@ export default function TaskOrganizer() {
   };
 
   const getTaskStats = () => {
-    const tasks = nodes.filter(node => node.type === "taskNode");
-    const completed = tasks.filter(task => task.data.status === "completed").length;
-    const inProgress = tasks.filter(task => task.data.status === "in-progress").length;
-    const pending = tasks.filter(task => task.data.status === "pending").length;
-    
+    const tasks = nodes.filter((node) => node.type === "taskNode");
+    const completed = tasks.filter(
+      (task) => task.data.status === "completed",
+    ).length;
+    const inProgress = tasks.filter(
+      (task) => task.data.status === "in-progress",
+    ).length;
+    const pending = tasks.filter(
+      (task) => task.data.status === "pending",
+    ).length;
+
     return { total: tasks.length, completed, inProgress, pending };
   };
 
@@ -260,7 +290,10 @@ export default function TaskOrganizer() {
         <div className="flex justify-between items-center mb-2">
           <h2 className="text-2xl font-bold text-gray-800"> Task Organizer</h2>
           <div className="flex gap-2">
-            <Button onClick={addNewTask} className="bg-blue-600 hover:bg-blue-700">
+            <Button
+              onClick={addNewTask}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
               <PlusCircle className="mr-2 w-4 h-4" />
               Add Task
             </Button>
@@ -270,7 +303,7 @@ export default function TaskOrganizer() {
             </Button>
           </div>
         </div>
-        
+
         {/* Stats */}
         <div className="flex gap-4 text-sm">
           <span className="bg-white px-3 py-1 rounded-full border">
@@ -313,32 +346,38 @@ export default function TaskOrganizer() {
             <h3 className="text-lg font-semibold">
               Edit {selectedNode?.type === "taskNode" ? "Task" : "Category"}
             </h3>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               size="sm"
               onClick={deleteSelectedNode}
             >
               <Trash2 className="w-4 h-4" />
             </Button>
           </div>
-          
+
           <div className="space-y-4">
             {selectedNode?.type === "taskNode" ? (
               <>
                 <Input
                   placeholder="Task Title"
                   value={editForm.title}
-                  onChange={(e) => setEditForm({...editForm, title: e.target.value})}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, title: e.target.value })
+                  }
                 />
                 <Textarea
                   placeholder="Task description..."
                   value={editForm.description}
-                  onChange={(e) => setEditForm({...editForm, description: e.target.value})}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, description: e.target.value })
+                  }
                   rows={4}
                 />
-                <Select 
-                  value={editForm.status} 
-                  onValueChange={(value) => setEditForm({...editForm, status: value})}
+                <Select
+                  value={editForm.status}
+                  onValueChange={(value) =>
+                    setEditForm({ ...editForm, status: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
@@ -349,9 +388,11 @@ export default function TaskOrganizer() {
                     <SelectItem value="completed">Completed</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select 
-                  value={editForm.priority} 
-                  onValueChange={(value) => setEditForm({...editForm, priority: value})}
+                <Select
+                  value={editForm.priority}
+                  onValueChange={(value) =>
+                    setEditForm({ ...editForm, priority: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select priority" />
@@ -365,17 +406,21 @@ export default function TaskOrganizer() {
                 <Input
                   type="date"
                   value={editForm.dueDate}
-                  onChange={(e) => setEditForm({...editForm, dueDate: e.target.value})}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, dueDate: e.target.value })
+                  }
                 />
               </>
             ) : (
               <Input
                 placeholder="Category Name"
                 value={editForm.label}
-                onChange={(e) => setEditForm({...editForm, label: e.target.value})}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, label: e.target.value })
+                }
               />
             )}
-            
+
             <div className="flex gap-2">
               <Button onClick={updateSelectedNode} className="flex-1">
                 Save Changes

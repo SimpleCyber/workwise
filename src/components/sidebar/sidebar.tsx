@@ -34,7 +34,7 @@ export const Sidebar = () => {
       path: `/members/${workspaceId}`,
     },
     { icon: Calendar, label: "Attendence", path: `/attendance/${workspaceId}` },
-    { icon: AlignStartHorizontal , label: "Test", path: `/test/${workspaceId}` },
+    { icon: AlignStartHorizontal, label: "Test", path: `/test/${workspaceId}` },
   ];
 
   const handleNavigation = (path: string) => {

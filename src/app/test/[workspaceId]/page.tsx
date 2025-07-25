@@ -4,7 +4,7 @@ import { Loader2, TriangleAlert } from "lucide-react";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { useGetTreeData } from "@/features/test/api/use-get-tree-data";
 import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info";
-import  NotesOrganizer  from "@/features/test/components/tree-visualization";
+import NotesOrganizer from "@/features/test/components/tree-visualization";
 
 export default function TreeWorkspacePage({
   params,
