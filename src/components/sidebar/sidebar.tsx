@@ -4,7 +4,7 @@ import {
   Kanban,
   ListTodo,
   MessagesSquare,
-  Presentation,
+  AlignStartHorizontal,
   UserRoundSearch,
   Calendar,
   Files,
@@ -34,16 +34,15 @@ export const Sidebar = () => {
       path: `/members/${workspaceId}`,
     },
     { icon: Calendar, label: "Attendence", path: `/attendance/${workspaceId}` },
+    { icon: AlignStartHorizontal , label: "Test", path: `/test/${workspaceId}` },
   ];
 
   const handleNavigation = (path: string) => {
-    // Only navigate if we have a valid workspace ID
     if (workspaceId) {
       router.push(path);
     }
   };
 
-  // Don't render navigation items if we don't have a workspace ID
   if (!workspaceId) {
     return (
       <aside className="flex h-full w-[60px] flex-col items-center gap-y-4 bg-gray-900 pb-[4px] pt-[9px]">
