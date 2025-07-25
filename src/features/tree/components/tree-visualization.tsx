@@ -344,7 +344,7 @@ export const TreeVisualization = ({
 }: TreeVisualizationProps) => {
   const router = useRouter();
   const [layout, setLayout] = useState<"vertical" | "horizontal">("vertical");
-  const [viewMode, setViewMode] = useState<"all" | "overview">("overview");
+  const [viewMode, setViewMode] = useState<"all" | "overview">("all");
   const [expandedWorkspaces, setExpandedWorkspaces] = useState<Set<string>>(
     new Set(),
   );
@@ -579,7 +579,7 @@ export const TreeVisualization = ({
               <SelectItem value="all">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4" />
-                  Full Details
+                  Overall
                 </div>
               </SelectItem>
             </SelectContent>
