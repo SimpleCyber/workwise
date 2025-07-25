@@ -109,6 +109,7 @@
     "react-resizable-panels": "^2.1.2",
     "react-use": "^17.5.1",
     "react-verification-input": "^4.1.2",
+    "reactflow": "^11.11.4",
     "sonner": "^2.0.6",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7"
