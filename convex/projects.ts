@@ -534,11 +534,31 @@ export const updateProjectTask = mutation({
       }
 
       // Notify assignee when task is moved to "Hold Task"
-      if (newList.name === "Hold Task" && task.assignedToId) {
-        const assignee = await ctx.db.get(task.assignedToId);
-        if (assignee && assignee.userId !== userId) {
+      if (newList.name === "Hold Task") {
+        const now = Date.now();
+
+        // Notify assignee
+        if (task.assignedToId) {
+          const assignee = await ctx.db.get(task.assignedToId);
+          if (assignee && assignee.userId !== userId) {
+            await ctx.db.insert("notifications", {
+              userId: assignee.userId,
+              workspaceId: task.workspaceId,
+              type: "task_on_hold",
+              title: "Task Put on Hold",
+              message: `Task "${task.title}" (${task.taskCode}) in project "${board.name}" has been put on hold`,
+              relatedId: args.taskId,
+              actionBy: userId,
+              isRead: false,
+              createdAt: now,
+            });
+          }
+        }
+
+        // Notify task creator
+        if (taskCreator && taskCreator.userId !== userId) {
           await ctx.db.insert("notifications", {
-            userId: assignee.userId,
+            userId: taskCreator.userId,
             workspaceId: task.workspaceId,
             type: "task_on_hold",
             title: "Task Put on Hold",
@@ -546,7 +566,7 @@ export const updateProjectTask = mutation({
             relatedId: args.taskId,
             actionBy: userId,
             isRead: false,
-            createdAt: Date.now(),
+            createdAt: now,
           });
         }
       }
