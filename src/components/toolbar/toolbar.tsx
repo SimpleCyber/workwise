@@ -500,14 +500,26 @@ export const Toolbar = () => {
             icon={Bell}
             label=""
             isActive={notificationOpen}
-            onClick={() => setNotificationOpen((prev) => !prev)}
+            onClick={() => {
+              setNotificationOpen((prev) => {
+                const next = !prev;
+                if (next) setCalendarOpen(false); // Close calendar if notifications is being opened
+                return next;
+              });
+            }}
           />
 
           <SidebarButton
             icon={CalendarClock}
             label=""
             isActive={calendarOpen}
-            onClick={() => setCalendarOpen((prev) => !prev)}
+            onClick={() => {
+              setCalendarOpen((prev) => {
+                const next = !prev;
+                if (next) setNotificationOpen(false); // Close notifications if calendar is being opened
+                return next;
+              });
+            }}
           />
         </div>
       </nav>

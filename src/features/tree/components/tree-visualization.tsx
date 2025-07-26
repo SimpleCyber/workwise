@@ -343,7 +343,7 @@ export const TreeVisualization = ({
   workspaceId,
 }: TreeVisualizationProps) => {
   const router = useRouter();
-  const [layout, setLayout] = useState<"vertical" | "horizontal">("vertical");
+  const [layout, setLayout] = useState<"vertical" | "horizontal">("horizontal");
   const [viewMode, setViewMode] = useState<"all" | "overview">("all");
   const [expandedWorkspaces, setExpandedWorkspaces] = useState<Set<string>>(
     new Set(),
@@ -402,11 +402,19 @@ export const TreeVisualization = ({
       vertical: isHorizontal ? 200 : 250,
     };
 
-    // User node (root)
+    // Dynamic user-root position based on layout and workspace count
+    const workspaceCount = data.workspaces.length;
+    const centerX = isHorizontal
+      ? -100
+      : (workspaceCount - 1) * spacing.horizontal * 0.5;
+    const centerY = isHorizontal
+      ? (workspaceCount - 1) * spacing.vertical * 0.5
+      : 0;
+
     nodes.push({
       id: "user-root",
       type: "userNode",
-      position: { x: 0, y: 0 },
+      position: { x: centerX, y: centerY },
       data: { user: data.user, isHorizontal },
     });
 
@@ -550,8 +558,9 @@ export const TreeVisualization = ({
   }, [layout]);
 
   return (
-    <div className="w-full h-[800px] border rounded-lg overflow-hidden">
+    <div className="w-full h-[80vh] border rounded-lg overflow-hidden">
       {/* Controls */}
+
       <div className="flex items-center justify-between p-4 bg-gray-50 border-b">
         <div className="flex items-center gap-4">
           <h2 className="text-lg font-semibold">Organization Tree</h2>
