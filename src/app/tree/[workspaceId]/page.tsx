@@ -1,51 +1,46 @@
-"use client";
+"use client"
 
-import { Loader2, TriangleAlert } from "lucide-react";
-import type { Id } from "../../../../convex/_generated/dataModel";
-import { useGetTreeData } from "@/features/tree/api/use-get-tree-data";
-import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info";
-import { TreeVisualization } from "@/features/tree/components/tree-visualization";
+import { Loader2, TriangleAlert } from "lucide-react"
+import type { Id } from "../../../../convex/_generated/dataModel"
+import { useGetTreeData } from "@/features/tree/api/use-get-tree-data"
+import { TreeVisualization } from "@/features/tree/components/tree-visualization"
 
 export default function TreeWorkspacePage({
   params,
 }: {
-  params: { workspaceId: Id<"workspaces"> };
+  params: { workspaceId: Id<"workspaces"> }
 }) {
-  const { workspaceId } = params;
-
-  const { data: workspace, isLoading: workspaceLoading } = useGetWorkspaceInfo({
-    id: workspaceId,
-  });
+  const { workspaceId } = params
 
   const { data: treeData, isLoading: treeLoading } = useGetTreeData({
     workspaceId,
-  });
+  })
 
-  if (workspaceLoading || treeLoading) {
+  if (treeLoading) {
     return (
-      <div className="flex h-full flex-1 flex-col items-center justify-center gap-2">
-        <Loader2 className="size-5 animate-spin text-muted-foreground" />
+      <div className="flex h-full items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="size-8 animate-spin text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">Loading tree data...</span>
+        </div>
       </div>
-    );
+    )
   }
 
-  if (!workspace || !treeData) {
+  if (!treeData) {
     return (
-      <div className="flex h-full flex-1 flex-col items-center justify-center gap-2">
-        <TriangleAlert className="size-5 text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">Data not found.</span>
+      <div className="flex h-full items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <TriangleAlert className="size-8 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">Tree data not found.</span>
+        </div>
       </div>
-    );
+    )
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex h-[49px] items-center border-b bg-white px-4">
-        <h1 className="text-lg font-semibold">All Data - {workspace.name}</h1>
-      </div>
-      <div className="flex-1 overflow-auto p-6">
-        <TreeVisualization data={treeData} workspaceId={workspaceId} />
-      </div>
+    <div className="h-full w-full">
+      <TreeVisualization data={treeData} workspaceId={workspaceId} />
     </div>
-  );
+  )
 }
