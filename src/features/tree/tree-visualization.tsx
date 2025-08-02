@@ -35,7 +35,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { Id } from "../../../../convex/_generated/dataModel"
+import type { Id } from "../../../convex/_generated/dataModel"
 
 interface TreeVisualizationProps {
   data: {

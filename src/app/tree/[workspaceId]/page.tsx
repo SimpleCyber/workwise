@@ -3,7 +3,7 @@
 import { Loader2, TriangleAlert } from "lucide-react"
 import type { Id } from "../../../../convex/_generated/dataModel"
 import { useGetTreeData } from "@/features/tree/api/use-get-tree-data"
-import { TreeVisualization } from "@/features/tree/components/tree-visualization"
+import { TreeVisualization } from "@/features/tree/tree-visualization"
 
 export default function TreeWorkspacePage({
   params,
