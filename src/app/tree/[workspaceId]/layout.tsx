@@ -25,30 +25,13 @@ const TreeWorkspaceLayout = ({ children }: Readonly<PropsWithChildren>) => {
       <div className="flex h-[calc(100vh_-_40px)]">
         <Sidebar />
         <ResizablePanelGroup direction="horizontal" autoSaveId="tree-workspace-layout">
-          <ResizablePanel defaultSize={20} minSize={11} className="bg-gray-900">
+          <ResizablePanel defaultSize={0} minSize={0} maxSize={30} className="bg-gray-900">
             <WorkspaceSidebar>
               <WorkspaceSidebarContent />
             </WorkspaceSidebar>
           </ResizablePanel>
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize={80} minSize={20} className="flex flex-col">
-            {/* Header moved here */}
-            <div className="flex h-[49px] items-center border-b bg-white px-4 flex-shrink-0">
-              {workspaceLoading ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                  <span className="text-lg font-semibold">Loading...</span>
-                </div>
-              ) : workspace ? (
-                <h1 className="text-lg font-semibold">All Data - {workspace.name}</h1>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <TriangleAlert className="size-4 text-muted-foreground" />
-                  <span className="text-lg font-semibold">Workspace not found</span>
-                </div>
-              )}
-            </div>
-            {/* Content area with full remaining height */}
             <div className="flex-1 overflow-hidden">{children}</div>
           </ResizablePanel>
         </ResizablePanelGroup>
