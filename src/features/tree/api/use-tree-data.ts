@@ -136,7 +136,7 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
       data: { user: data.user, isHorizontal },
     })
 
-    // Workspace nodes - only show all if no active workspace or in "all" view mode
+    // Workspace nodes - centered arrangement
     data.workspaces.forEach((workspace, workspaceIndex) => {
       const workspaceNodeId = `workspace-${workspace._id}`
       const isWorkspaceExpanded = expandedWorkspaces.has(workspace._id) || showAll
@@ -146,12 +146,17 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
         return
       }
 
+      // Calculate centered position for workspaces
+      const totalWorkspaces = showAll ? data.workspaces.length : activeWorkspace ? 1 : data.workspaces.length
+      const centerIndex = (totalWorkspaces - 1) / 2
+      const offsetFromCenter = workspaceIndex - centerIndex
+
       nodes.push({
         id: workspaceNodeId,
         type: "workspaceNode",
         position: {
-          x: isHorizontal ? spacing.horizontal : workspaceIndex * spacing.horizontal,
-          y: isHorizontal ? workspaceIndex * spacing.vertical : spacing.vertical,
+          x: isHorizontal ? spacing.horizontal : centerX + offsetFromCenter * (spacing.horizontal * 0.8),
+          y: isHorizontal ? centerY + offsetFromCenter * (spacing.vertical * 0.8) : spacing.vertical,
         },
         data: {
           name: workspace.name,
@@ -169,13 +174,20 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
         id: `user-${workspaceNodeId}`,
         source: "user-root",
         target: workspaceNodeId,
-        type: "smoothstep",
+        type: "default",
         style: { stroke: "#8b5cf6", strokeWidth: 2 },
+        animated: true,
       })
 
-      // Project nodes
+      // Project nodes - centered arrangement
       if (isWorkspaceExpanded) {
-        workspace.projects.forEach((project, projectIndex) => {
+        const visibleProjects = showAll
+          ? workspace.projects
+          : activeProject
+            ? workspace.projects.filter((p) => p._id === activeProject)
+            : workspace.projects
+
+        visibleProjects.forEach((project, projectIndex) => {
           const projectNodeId = `project-${project._id}`
           const isProjectExpanded = expandedProjects.has(project._id) || showAll
 
@@ -184,12 +196,21 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
             return
           }
 
+          // Calculate centered position for projects
+          const totalProjects = visibleProjects.length
+          const centerIndex = (totalProjects - 1) / 2
+          const offsetFromCenter = projectIndex - centerIndex
+
           nodes.push({
             id: projectNodeId,
             type: "projectNode",
             position: {
-              x: isHorizontal ? spacing.horizontal * 2 : workspaceIndex * spacing.horizontal + projectIndex * 300,
-              y: isHorizontal ? workspaceIndex * spacing.vertical + projectIndex * 250 : spacing.vertical * 2,
+              x: isHorizontal
+                ? spacing.horizontal * 2
+                : nodes.find((n) => n.id === workspaceNodeId)?.position.x! + offsetFromCenter * 280,
+              y: isHorizontal
+                ? nodes.find((n) => n.id === workspaceNodeId)?.position.y! + offsetFromCenter * 200
+                : spacing.vertical * 2,
             },
             data: {
               name: project.name,
@@ -202,8 +223,6 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
               isListsExpanded: isProjectExpanded,
               isHorizontal,
               viewMode,
-              // description: project.description,
-              // background: project.background,
               isActive: project._id === activeProject,
             },
           })
@@ -212,13 +231,20 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
             id: `${workspaceNodeId}-${projectNodeId}`,
             source: workspaceNodeId,
             target: projectNodeId,
-            type: "smoothstep",
+            type: "default",
             style: { stroke: "#10b981", strokeWidth: 2 },
+            animated: true,
           })
 
-          // List nodes
+          // List nodes - centered arrangement
           if (isProjectExpanded) {
-            project.lists.forEach((list, listIndex) => {
+            const visibleLists = showAll
+              ? project.lists
+              : activeList
+                ? project.lists.filter((l) => l._id === activeList)
+                : project.lists
+
+            visibleLists.forEach((list, listIndex) => {
               const listNodeId = `list-${list._id}`
               const isListExpanded = expandedLists.has(list._id) || showAll
 
@@ -227,15 +253,20 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
                 return
               }
 
+              // Calculate centered position for lists
+              const totalLists = visibleLists.length
+              const centerIndex = (totalLists - 1) / 2
+              const offsetFromCenter = listIndex - centerIndex
+
               nodes.push({
                 id: listNodeId,
                 type: "listNode",
                 position: {
                   x: isHorizontal
                     ? spacing.horizontal * 3
-                    : workspaceIndex * spacing.horizontal + projectIndex * 300 + listIndex * 200,
+                    : nodes.find((n) => n.id === projectNodeId)?.position.x! + offsetFromCenter * 180,
                   y: isHorizontal
-                    ? workspaceIndex * spacing.vertical + projectIndex * 250 + listIndex * 200
+                    ? nodes.find((n) => n.id === projectNodeId)?.position.y! + offsetFromCenter * 180
                     : spacing.vertical * 3,
                 },
                 data: {
@@ -255,23 +286,30 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
                 id: `${projectNodeId}-${listNodeId}`,
                 source: projectNodeId,
                 target: listNodeId,
-                type: "smoothstep",
+                type: "default",
                 style: { stroke: "#f59e0b", strokeWidth: 2 },
+                animated: true,
               })
 
-              // Task nodes
+              // Task nodes - centered arrangement
               if (isListExpanded && list.tasks.length > 0) {
                 list.tasks.forEach((task, taskIndex) => {
                   const taskNodeId = `task-${task._id}`
+
+                  // Calculate centered position for tasks
+                  const totalTasks = list.tasks.length
+                  const centerIndex = (totalTasks - 1) / 2
+                  const offsetFromCenter = taskIndex - centerIndex
+
                   nodes.push({
                     id: taskNodeId,
                     type: "taskNode",
                     position: {
                       x: isHorizontal
                         ? spacing.horizontal * 4
-                        : workspaceIndex * spacing.horizontal + projectIndex * 300 + listIndex * 200 + taskIndex * 220,
+                        : nodes.find((n) => n.id === listNodeId)?.position.x! + offsetFromCenter * 200,
                       y: isHorizontal
-                        ? workspaceIndex * spacing.vertical + projectIndex * 250 + listIndex * 200 + taskIndex * 120
+                        ? nodes.find((n) => n.id === listNodeId)?.position.y! + offsetFromCenter * 110
                         : spacing.vertical * 4,
                     },
                     data: {
@@ -284,8 +322,9 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
                     id: `${listNodeId}-${taskNodeId}`,
                     source: listNodeId,
                     target: taskNodeId,
-                    type: "smoothstep",
+                    type: "default",
                     style: { stroke: "#ef4444", strokeWidth: 1 },
+                    animated: true,
                   })
                 })
               }
