@@ -10,19 +10,7 @@ import {
 } from "@/components/ui/resizable";
 import { WorkspaceSidebar } from "@/components/workspace-header/workspace-sidebar";
 import { WorkspaceSidebarContent } from "./workspace-sidebar-content";
-import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info";
-import { Loader2, TriangleAlert } from "lucide-react";
-import type { Id } from "../../../../convex/_generated/dataModel";
-import { useParams } from "next/navigation";
-
 const TreeWorkspaceLayout = ({ children }: Readonly<PropsWithChildren>) => {
-  const params = useParams();
-  const workspaceId = params.workspaceId as Id<"workspaces">;
-
-  const { data: workspace, isLoading: workspaceLoading } = useGetWorkspaceInfo({
-    id: workspaceId,
-  });
-
   return (
     <div className="h-full">
       <Toolbar />

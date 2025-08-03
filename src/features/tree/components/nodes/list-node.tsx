@@ -12,16 +12,11 @@ import { Handle, Position, type NodeProps } from "reactflow";
 import { Card, CardContent } from "@/components/ui/card";
 import { ActionOverlay, useHoverActions } from "../tree-actions/action-overlay";
 import { CreateTaskModal } from "../tree-actions/create-task-modal";
-import { DeleteConfirmationModal } from "../tree-actions/delete-confirmation-modal";
-import { useDeleteProjectList } from "../../../projects/api/use-delete-project-list";
 import { getListIcon, getListColor } from "../../api/tree-utils";
 
 export const ListNode = ({ data }: NodeProps) => {
   const { isHovered, hoverProps } = useHoverActions();
   const [showCreateTask, setShowCreateTask] = useState(false);
-  const [showDeleteList, setShowDeleteList] = useState(false);
-
-  const { mutate: deleteList, isPending: isDeleting } = useDeleteProjectList();
 
   const getIconComponent = (iconName: string) => {
     switch (iconName) {
@@ -42,15 +37,6 @@ export const ListNode = ({ data }: NodeProps) => {
 
   const handleNodeClick = () => {
     data.onToggleTasks?.(data.listId);
-  };
-
-  const handleDeleteList = async () => {
-    try {
-      await deleteList({ listId: data.listId });
-      setShowDeleteList(false);
-    } catch (error) {
-      console.error("Failed to delete list:", error);
-    }
   };
 
   const listColor = getListColor(data.name);
@@ -137,7 +123,6 @@ export const ListNode = ({ data }: NodeProps) => {
         >
           <ActionOverlay
             onAdd={() => setShowCreateTask(true)}
-            onDelete={() => setShowDeleteList(true)}
             position="top"
             isVisible={isHovered}
           />
@@ -150,16 +135,6 @@ export const ListNode = ({ data }: NodeProps) => {
         onClose={() => setShowCreateTask(false)}
         listId={data.listId}
         workspaceId={data.workspaceId}
-      />
-
-      <DeleteConfirmationModal
-        isOpen={showDeleteList}
-        onClose={() => setShowDeleteList(false)}
-        onConfirm={handleDeleteList}
-        title="Delete List"
-        description="Are you sure you want to delete this list? This action cannot be undone and will delete all tasks within this list:"
-        itemName={data.name}
-        isLoading={isDeleting}
       />
     </div>
   );

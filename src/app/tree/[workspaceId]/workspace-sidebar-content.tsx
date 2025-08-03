@@ -1,8 +1,7 @@
 "use client";
 
-import { Network, BarChart3 } from "lucide-react";
+import { Network } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { WorkspaceSection } from "@/app/workspace/[workspaceId]/workspace-section";
 import { Button } from "@/components/ui/button";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 
@@ -18,7 +17,6 @@ export const WorkspaceSidebarContent = () => {
 
   const isActive = (path: string) => {
     const currentPath = pathname;
-    const targetPath = `/tree/${workspaceId}${path}`;
     if (path === "" && currentPath === `/tree/${workspaceId}`) return true;
     if (path !== "" && currentPath.includes(path)) return true;
     return false;
@@ -40,25 +38,6 @@ export const WorkspaceSidebarContent = () => {
           <span className="truncate text-sm">Tree View</span>
         </Button>
       </div>
-
-      {/* <WorkspaceSection label="Views" hint="Explore" onNew={() => {}}>
-        <Button
-          variant="transparent"
-          className="h-7 justify-start px-[18px] text-sm text-[#f9EDFFCC] hover:bg-white/5"
-          onClick={() => navigateTo("/overview")}
-        >
-          <BarChart3 className="mr-1 size-3.5 shrink-0" />
-          <span className="truncate text-sm">Overview</span>
-        </Button>
-        <Button
-          variant="transparent"
-          className="h-7 justify-start px-[18px] text-sm text-[#f9EDFFCC] hover:bg-white/5"
-          onClick={() => navigateTo("/analytics")}
-        >
-          <BarChart3 className="mr-1 size-3.5 shrink-0" />
-          <span className="truncate text-sm">Analytics</span>
-        </Button>
-      </WorkspaceSection> */}
     </>
   );
 };

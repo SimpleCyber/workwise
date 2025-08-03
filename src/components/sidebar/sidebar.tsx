@@ -28,9 +28,9 @@ export const Sidebar = () => {
     { icon: Kanban, label: "ToDo", path: `/todo/${workspaceId}` },
     { icon: ListTodo, label: "Project", path: `/projects/${workspaceId}` },
     { icon: MessagesSquare, label: "Chat", path: `/workspace/${workspaceId}` },
-    { icon: Files, label: "Data", path: `/data-room/${workspaceId}` },
+    { icon: Files, label: "Files", path: `/data-room/${workspaceId}` },
 
-    { icon: Calendar, label: "Attendence", path: `/attendance/${workspaceId}` },
+    { icon: Calendar, label: "Attend", path: `/attendance/${workspaceId}` },
     // { icon: AlignStartHorizontal, label: "Test", path: `/test/${workspaceId}` },
   ];
 
