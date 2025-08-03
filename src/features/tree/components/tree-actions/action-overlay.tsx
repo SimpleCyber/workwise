@@ -1,29 +1,18 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Edit, Trash2, MoreHorizontal } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Plus, Edit, Trash2 } from "lucide-react"
 
 interface ActionOverlayProps {
   onAdd?: () => void
   onEdit?: () => void
   onDelete?: () => void
-  onMore?: () => void
   position?: "top" | "bottom" | "left" | "right"
-  className?: string
   isVisible: boolean
 }
 
-export const ActionOverlay = ({
-  onAdd,
-  onEdit,
-  onDelete,
-  onMore,
-  position = "top",
-  className = "",
-}: ActionOverlayProps) => {
-  const [isVisible, setIsVisible] = useState(false)
+export const ActionOverlay = ({ onAdd, onEdit, onDelete, position = "top", isVisible }: ActionOverlayProps) => {
+  if (!isVisible) return null
 
   const positionClasses = {
     top: "-top-12 left-1/2 transform -translate-x-1/2",
@@ -34,100 +23,74 @@ export const ActionOverlay = ({
 
   return (
     <div
-      className={`absolute ${positionClasses[position]} flex gap-1 bg-white border rounded-lg shadow-lg p-1 z-50 transition-all duration-200 ${
-        isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
-      } ${className}`}
-      onMouseEnter={() => setIsVisible(true)}
-      onMouseLeave={() => setIsVisible(false)}
+      className={`absolute ${positionClasses[position]} flex gap-1 bg-white rounded-lg shadow-lg p-1 z-[9999]`}
+      style={{ zIndex: 9999 }}
+      onMouseEnter={(e) => e.stopPropagation()}
+      onMouseLeave={(e) => e.stopPropagation()}
     >
-      <TooltipProvider>
-        {onAdd && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 w-8 p-0 hover:bg-green-100 hover:text-green-600"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onAdd()
-                }}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Add</TooltipContent>
-          </Tooltip>
-        )}
+      {onAdd && (
+        <button
+          className="w-8 h-8 flex items-center justify-center hover:bg-green-100 rounded text-gray-400 hover:text-green-600 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation()
+            onAdd()
+          }}
+          title="Add"
+        >
+          <Plus className="w-4 h-4" />
+        </button>
+      )}
 
-        {onEdit && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 w-8 p-0 hover:bg-blue-100 hover:text-blue-600"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onEdit()
-                }}
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Edit</TooltipContent>
-          </Tooltip>
-        )}
+      {onEdit && (
+        <button
+          className="w-8 h-8 flex items-center justify-center hover:bg-blue-100 rounded text-gray-400 hover:text-blue-600 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation()
+            onEdit()
+          }}
+          title="Edit"
+        >
+          <Edit className="w-4 h-4" />
+        </button>
+      )}
 
-        {onDelete && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onDelete()
-                }}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Delete</TooltipContent>
-          </Tooltip>
-        )}
-
-        {onMore && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 w-8 p-0 hover:bg-gray-100"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onMore()
-                }}
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>More</TooltipContent>
-          </Tooltip>
-        )}
-      </TooltipProvider>
+      {onDelete && (
+        <button
+          className="w-8 h-8 flex items-center justify-center hover:bg-red-100 rounded text-gray-400 hover:text-red-600 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete()
+          }}
+          title="Delete"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      )}
     </div>
   )
 }
 
-// Hook to manage hover state
+// Simplified hook to manage hover state
 export const useHoverActions = () => {
   const [isHovered, setIsHovered] = useState(false)
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null)
 
   const hoverProps = {
-    onMouseEnter: () => setIsHovered(true),
-    onMouseLeave: () => setIsHovered(false),
+    onMouseEnter: () => {
+      console.log("Mouse entered") // Debug log
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+        setTimeoutId(null)
+      }
+      setIsHovered(true)
+    },
+    onMouseLeave: () => {
+      console.log("Mouse left") // Debug log
+      const id = setTimeout(() => {
+        setIsHovered(false)
+      }, 100) // Small delay to allow moving to overlay
+      setTimeoutId(id)
+    },
   }
 
   return { isHovered, hoverProps }

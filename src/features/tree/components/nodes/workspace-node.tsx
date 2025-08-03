@@ -37,24 +37,28 @@ export const WorkspaceNode = ({ data }: NodeProps) => {
                 </Badge>
               </div>
             </div>
-            {data.viewMode === "overview" && (
-              <Button variant="ghost" size="sm" onClick={() => data.onToggle?.(data.workspaceId)} className="text-xs">
-                {data.isExpanded ? "−" : "+"}
-              </Button>
-            )}
           </div>
           <Handle type="target" position={data.isHorizontal ? Position.Left : Position.Top} className="w-3 h-3" />
           <Handle type="source" position={data.isHorizontal ? Position.Right : Position.Bottom} className="w-3 h-3" />
         </CardContent>
       </Card>
 
-      {/* Action Overlay */}
+      {/* Action Overlay - Now positioned at the top */}
       {isHovered && (
-        <ActionOverlay
-          onAdd={() => setShowCreateProject(true)}
-          position={data.isHorizontal ? "right" : "bottom"}
-          isVisible={isHovered}
-        />
+        <div
+          onMouseEnter={() => {
+            // Keep the overlay visible when hovering over it
+          }}
+          onMouseLeave={() => {
+            // This will be handled by the useHoverActions hook
+          }}
+        >
+          <ActionOverlay
+            onAdd={() => setShowCreateProject(true)}
+            position="top"
+            isVisible={isHovered}
+          />
+        </div>
       )}
 
       {/* Create Project Modal */}

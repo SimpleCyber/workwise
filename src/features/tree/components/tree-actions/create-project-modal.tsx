@@ -83,15 +83,7 @@ export const CreateProjectModal = ({ isOpen, onClose, workspaceId }: CreateProje
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="background">Background Color</Label>
-            <Input
-              id="background"
-              value={background}
-              onChange={(e) => setBackground(e.target.value)}
-              placeholder="e.g., #3b82f6 or blue-500"
-            />
-          </div>
+        
 
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={handleClose}>

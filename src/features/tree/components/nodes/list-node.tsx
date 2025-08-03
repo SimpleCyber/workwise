@@ -109,14 +109,23 @@ export const ListNode = ({ data }: NodeProps) => {
         </div>
       </div>
 
-      {/* Action Overlay */}
+      {/* Action Overlay - Now positioned at the top */}
       {isHovered && (
-        <ActionOverlay
-          onAdd={() => setShowCreateTask(true)}
-          onDelete={() => setShowDeleteList(true)}
-          position={data.isHorizontal ? "right" : "bottom"}
-          isVisible={isHovered}
-        />
+        <div
+          onMouseEnter={() => {
+            // Keep the overlay visible when hovering over it
+          }}
+          onMouseLeave={() => {
+            // This will be handled by the useHoverActions hook
+          }}
+        >
+          <ActionOverlay
+            onAdd={() => setShowCreateTask(true)}
+            onDelete={() => setShowDeleteList(true)}
+            position="top"
+            isVisible={isHovered}
+          />
+        </div>
       )}
 
       {/* Modals */}

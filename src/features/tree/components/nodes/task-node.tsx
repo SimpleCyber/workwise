@@ -169,14 +169,23 @@ export const TaskNode = ({ data }: NodeProps) => {
         </Tooltip>
       </TooltipProvider>
 
-      {/* Action Overlay */}
+      {/* Action Overlay - Now positioned at the top */}
       {isHovered && (
-        <ActionOverlay
-        isVisible={isHovered}
-          onEdit={handleEditTask}
-          onDelete={() => setShowDeleteTask(true)}
-          position={data.isHorizontal ? "right" : "bottom"}
-        />
+        <div
+          onMouseEnter={() => {
+            // Keep the overlay visible when hovering over it
+          }}
+          onMouseLeave={() => {
+            // This will be handled by the useHoverActions hook
+          }}
+        >
+          <ActionOverlay
+            isVisible={isHovered}
+            onEdit={handleEditTask}
+            onDelete={() => setShowDeleteTask(true)}
+            position="top"
+          />
+        </div>
       )}
 
       {/* Delete Confirmation Modal */}

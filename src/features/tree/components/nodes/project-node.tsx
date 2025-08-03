@@ -14,7 +14,6 @@ import { useRemoveProjectBoard } from "../../../projects/api/use-remove-project-
 
 export const ProjectNode = ({ data }: NodeProps) => {
   const { isHovered, hoverProps } = useHoverActions()
-  const [showCreateList, setShowCreateList] = useState(false)
   const [showEditProject, setShowEditProject] = useState(false)
   const [showDeleteProject, setShowDeleteProject] = useState(false)
 
@@ -111,19 +110,26 @@ export const ProjectNode = ({ data }: NodeProps) => {
         </div>
       </div>
 
-      {/* Action Overlay */}
+      {/* Action Overlay - Now positioned at the top */}
       {isHovered && (
-        <ActionOverlay
-          onAdd={() => setShowCreateList(true)}
-          onEdit={() => setShowEditProject(true)}
-          onDelete={() => setShowDeleteProject(true)}
-          position={data.isHorizontal ? "right" : "bottom"}
-          isVisible={isHovered}
-        />
+        <div
+          onMouseEnter={() => {
+            // Keep the overlay visible when hovering over it
+          }}
+          onMouseLeave={() => {
+            // This will be handled by the useHoverActions hook
+          }}
+        >
+          <ActionOverlay
+            onEdit={() => setShowEditProject(true)}
+            onDelete={() => setShowDeleteProject(true)}
+            position="top"
+            isVisible={isHovered}
+          />
+        </div>
       )}
 
       {/* Modals */}
-      <CreateListModal isOpen={showCreateList} onClose={() => setShowCreateList(false)} boardId={data.projectId} />
 
       <EditProjectModal
         isOpen={showEditProject}
@@ -146,26 +152,6 @@ export const ProjectNode = ({ data }: NodeProps) => {
         isLoading={isDeleting}
       />
 
-      <style jsx>{`
-        @keyframes flicker-bg {
-          0%, 100% {
-            background-color: rgb(220 252 231);
-          }
-          25% {
-            background-color: rgb(187 247 208);
-          }
-          50% {
-            background-color: rgb(134 239 172);
-          }
-          75% {
-            background-color: rgb(187 247 208);
-          }
-        }
-        
-        .animate-flicker-bg {
-          animation: flicker-bg 2s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   )
 }
