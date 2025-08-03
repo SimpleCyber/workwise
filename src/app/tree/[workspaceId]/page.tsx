@@ -38,6 +38,8 @@ export default function TreeWorkspacePage({
     )
   }
 
+  console.log("tree :",treeData);
+
   return (
     <div className="h-full w-full">
       <TreeVisualization data={treeData} workspaceId={workspaceId} />
