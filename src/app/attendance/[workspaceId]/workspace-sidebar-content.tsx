@@ -1,15 +1,7 @@
 "use client";
 
-import {
-  AlertCircle,
-  BarChart3,
-  Calendar,
-  CheckSquare,
-  Clock,
-} from "lucide-react";
+import { BarChart3, Calendar, Clock, Users } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-
-import { WorkspaceSection } from "@/app/workspace/[workspaceId]/workspace-section";
 import { Button } from "@/components/ui/button";
 import { useCurrentMember } from "@/features/members/api/use-current-member";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
@@ -34,7 +26,6 @@ export const WorkspaceSidebarContent = () => {
       path === ""
         ? `/attendance/${workspaceId}`
         : `/attendance/${workspaceId}${path}`;
-
     if (path === "" && currentPath === `/attendance/${workspaceId}`)
       return true;
     if (path !== "" && currentPath.includes(path)) return true;
@@ -69,6 +60,18 @@ export const WorkspaceSidebarContent = () => {
             >
               <Clock className="mr-1 size-3.5 shrink-0" />
               <span className="truncate text-sm">Check In/Out</span>
+            </Button>
+            <Button
+              variant="transparent"
+              className={`h-7 justify-start px-[18px] text-sm ${
+                isActive("/members")
+                  ? "bg-white/10 text-white"
+                  : "text-[#f9EDFFCC] hover:bg-white/5"
+              }`}
+              onClick={() => navigateTo("/members")}
+            >
+              <Users className="mr-1 size-3.5 shrink-0" />
+              <span className="truncate text-sm">Members</span>
             </Button>
             <Button
               variant="transparent"
@@ -112,32 +115,6 @@ export const WorkspaceSidebarContent = () => {
           </>
         )}
       </div>
-      {/* 
-      <WorkspaceSection
-        label="Quick Actions"
-        hint="New Request"
-        onNew={() => {}}
-      >
-        <Button
-          variant="transparent"
-          className="h-7 justify-start px-[18px] text-sm text-[#f9EDFFCC] hover:bg-white/5"
-          onClick={() => {
-            // TODO: Implement leave request functionality
-            console.log("Leave request clicked");
-          }}
-        >
-          <AlertCircle className="mr-1 size-3.5 shrink-0" />
-          <span className="truncate text-sm">Leave Request</span>
-        </Button>
-        <Button
-          variant="transparent"
-          className="h-7 justify-start px-[18px] text-sm text-[#f9EDFFCC] hover:bg-white/5"
-          onClick={() => navigateTo("/calendar")}
-        >
-          <CheckSquare className="mr-1 size-3.5 shrink-0" />
-          <span className="truncate text-sm">My Records</span>
-        </Button>
-      </WorkspaceSection> */}
     </>
   );
 };

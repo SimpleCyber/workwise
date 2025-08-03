@@ -27,13 +27,9 @@ export const Sidebar = () => {
     { icon: Network, label: "All Data", path: `/tree/${workspaceId}` },
     { icon: Kanban, label: "ToDo", path: `/todo/${workspaceId}` },
     { icon: ListTodo, label: "Project", path: `/projects/${workspaceId}` },
-    { icon: Files, label: "Data", path: `/data-room/${workspaceId}` },
     { icon: MessagesSquare, label: "Chat", path: `/workspace/${workspaceId}` },
-    // {
-    //   icon: UserRoundSearch,
-    //   label: "Member",
-    //   path: `/members/${workspaceId}`,
-    // },
+    { icon: Files, label: "Data", path: `/data-room/${workspaceId}` },
+
     { icon: Calendar, label: "Attendence", path: `/attendance/${workspaceId}` },
     // { icon: AlignStartHorizontal, label: "Test", path: `/test/${workspaceId}` },
   ];

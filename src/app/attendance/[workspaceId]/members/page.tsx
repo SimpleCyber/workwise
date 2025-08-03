@@ -43,7 +43,7 @@ import { InviteModal } from "@/features/members/components/invite-modal";
 import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 
-const MembersWorkspacePage = () => {
+const AttendanceMembersPage = () => {
   const workspaceId = useWorkspaceId();
   const [searchTerm, setSearchTerm] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -57,6 +57,7 @@ const MembersWorkspacePage = () => {
   });
   const { data: currentMember } = useCurrentMember({ workspaceId });
   const { data: stats } = useGetMemberStats({ workspaceId });
+
   const { mutate: updateRole, isPending: isUpdatingRole } =
     useUpdateMemberRole();
   const { mutate: removeMember, isPending: isRemoving } = useRemoveMember();
@@ -375,4 +376,4 @@ const MembersWorkspacePage = () => {
   );
 };
 
-export default MembersWorkspacePage;
+export default AttendanceMembersPage;
