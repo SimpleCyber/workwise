@@ -19,38 +19,84 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set())
   const [expandedLists, setExpandedLists] = useState<Set<string>>(new Set())
 
-  const toggleWorkspace = useCallback((workspaceId: string) => {
-    setExpandedWorkspaces((prev) => {
-      const newExpanded = new Set(prev)
-      if (newExpanded.has(workspaceId)) {
-        newExpanded.delete(workspaceId)
-      } else {
-        newExpanded.add(workspaceId)
-      }
-      return newExpanded
-    })
-  }, [])
+  // Track the last expanded item at each level to hide siblings
+  const [activeWorkspace, setActiveWorkspace] = useState<string | null>(null)
+  const [activeProject, setActiveProject] = useState<string | null>(null)
+  const [activeList, setActiveList] = useState<string | null>(null)
 
-  const toggleProject = useCallback((projectId: string) => {
-    setExpandedProjects((prev) => {
-      const newExpanded = new Set(prev)
-      if (newExpanded.has(projectId)) {
-        newExpanded.delete(projectId)
-      } else {
-        newExpanded.add(projectId)
+  const toggleWorkspace = useCallback(
+    (workspaceId: string) => {
+      setExpandedWorkspaces((prev) => {
+        const newExpanded = new Set(prev)
+        const isCurrentlyExpanded = newExpanded.has(workspaceId)
+
+        if (isCurrentlyExpanded) {
+          // If closing, remove from expanded and clear active
+          newExpanded.delete(workspaceId)
+          setActiveWorkspace(null)
+        } else {
+          // If expanding, add to expanded and set as active
+          newExpanded.add(workspaceId)
+          setActiveWorkspace(workspaceId)
+        }
+
+        return newExpanded
+      })
+
+      // When changing workspace, reset project and list selections
+      if (activeWorkspace !== workspaceId) {
+        setExpandedProjects(new Set())
+        setExpandedLists(new Set())
+        setActiveProject(null)
+        setActiveList(null)
       }
-      return newExpanded
-    })
-  }, [])
+    },
+    [activeWorkspace],
+  )
+
+  const toggleProject = useCallback(
+    (projectId: string) => {
+      setExpandedProjects((prev) => {
+        const newExpanded = new Set(prev)
+        const isCurrentlyExpanded = newExpanded.has(projectId)
+
+        if (isCurrentlyExpanded) {
+          // If closing, remove from expanded and clear active
+          newExpanded.delete(projectId)
+          setActiveProject(null)
+        } else {
+          // If expanding, add to expanded and set as active
+          newExpanded.add(projectId)
+          setActiveProject(projectId)
+        }
+
+        return newExpanded
+      })
+
+      // When changing project, reset list selections
+      if (activeProject !== projectId) {
+        setExpandedLists(new Set())
+        setActiveList(null)
+      }
+    },
+    [activeProject],
+  )
 
   const toggleList = useCallback((listId: string) => {
     setExpandedLists((prev) => {
       const newExpanded = new Set(prev)
-      if (newExpanded.has(listId)) {
+      const isCurrentlyExpanded = newExpanded.has(listId)
+
+      if (isCurrentlyExpanded) {
+        // If closing, remove from expanded and clear active
         newExpanded.delete(listId)
+        setActiveList(null)
       } else {
+        // If expanding, add to expanded and set as active
         newExpanded.add(listId)
+        setActiveList(listId)
       }
+
       return newExpanded
     })
   }, [])
@@ -90,10 +136,15 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
       data: { user: data.user, isHorizontal },
     })
 
-    // Workspace nodes
+    // Workspace nodes - only show all if no active workspace or in "all" view mode
     data.workspaces.forEach((workspace, workspaceIndex) => {
       const workspaceNodeId = `workspace-${workspace._id}`
       const isWorkspaceExpanded = expandedWorkspaces.has(workspace._id) || showAll
+
+      // Skip siblings of active workspace unless in "all" mode
+      if (activeWorkspace && activeWorkspace !== workspace._id && !showAll) {
+        return
+      }
 
       nodes.push({
         id: workspaceNodeId,
@@ -110,6 +161,7 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
           onToggle: toggleWorkspace,
           isExpanded: isWorkspaceExpanded,
           viewMode,
+          isActive: workspace._id === activeWorkspace,
         },
       })
 
@@ -126,6 +178,11 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
         workspace.projects.forEach((project, projectIndex) => {
           const projectNodeId = `project-${project._id}`
           const isProjectExpanded = expandedProjects.has(project._id) || showAll
+
+          // Skip siblings of active project unless in "all" mode
+          if (activeProject && activeProject !== project._id && !showAll) {
+            return
+          }
 
           nodes.push({
             id: projectNodeId,
@@ -145,6 +202,9 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
               isListsExpanded: isProjectExpanded,
               isHorizontal,
               viewMode,
+              // description: project.description,
+              // background: project.background,
+              isActive: project._id === activeProject,
             },
           })
 
@@ -161,6 +221,11 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
             project.lists.forEach((list, listIndex) => {
               const listNodeId = `list-${list._id}`
               const isListExpanded = expandedLists.has(list._id) || showAll
+
+              // Skip siblings of active list unless in "all" mode
+              if (activeList && activeList !== list._id && !showAll) {
+                return
+              }
 
               nodes.push({
                 id: listNodeId,
@@ -181,6 +246,8 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
                   isTasksExpanded: isListExpanded,
                   isHorizontal,
                   viewMode,
+                  workspaceId: workspace._id,
+                  isActive: list._id === activeList,
                 },
               })
 
@@ -240,6 +307,9 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
     toggleWorkspace,
     toggleProject,
     toggleList,
+    activeWorkspace,
+    activeProject,
+    activeList,
   ])
 
   return {

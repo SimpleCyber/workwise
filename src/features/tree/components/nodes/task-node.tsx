@@ -1,9 +1,15 @@
+"use client"
+
+import { useState } from "react"
 import { MessageSquare, Calendar } from "lucide-react"
 import { Handle, Position, type NodeProps } from "reactflow"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { ActionOverlay, useHoverActions } from "../tree-actions/action-overlay"
+import { DeleteConfirmationModal } from "../tree-actions/delete-confirmation-modal"
+import { useDeleteProjectTask } from "../../../projects/api/use-delete-project-task"
 import { getPriorityColor, formatDate } from "../../api/tree-utils"
 import type { Task } from "../../api/tree-types"
 
@@ -93,53 +99,96 @@ const TaskTooltip = ({ task }: TaskTooltipProps) => (
 )
 
 export const TaskNode = ({ data }: NodeProps) => {
+  const { isHovered, hoverProps } = useHoverActions()
+  const [showDeleteTask, setShowDeleteTask] = useState(false)
+
+  const { mutate: deleteTask, isPending: isDeleting } = useDeleteProjectTask()
+
+  const handleDeleteTask = async () => {
+    try {
+      await deleteTask({ taskId: data.task._id })
+      setShowDeleteTask(false)
+    } catch (error) {
+      console.error("Failed to delete task:", error)
+    }
+  }
+
+  const handleEditTask = () => {
+    // Navigate to task detail page or open edit modal
+    // You can implement this based on your routing structure
+    console.log("Edit task:", data.task._id)
+  }
+
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Card className="min-w-[200px] max-w-[250px] shadow-sm border cursor-pointer hover:shadow-md transition-shadow">
-            <CardContent className="p-2">
-              <div className="space-y-2">
-                <div className="flex items-start justify-between">
-                  <h6 className="font-medium text-sm truncate flex-1 mr-2">{data.task.title}</h6>
-                  <Badge className={`text-xs ${getPriorityColor(data.task.priority)}`}>{data.task.priority}</Badge>
+    <div className="relative" {...hoverProps}>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Card className="min-w-[200px] max-w-[250px] shadow-sm border cursor-pointer hover:shadow-md transition-shadow">
+              <CardContent className="p-2">
+                <div className="space-y-2">
+                  <div className="flex items-start justify-between">
+                    <h6 className="font-medium text-sm truncate flex-1 mr-2">{data.task.title}</h6>
+                    <Badge className={`text-xs ${getPriorityColor(data.task.priority)}`}>{data.task.priority}</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Badge variant="outline" className="text-xs font-mono">
+                      {data.task.taskCode}
+                    </Badge>
+                    {data.task.assignedTo && (
+                      <Avatar className="w-5 h-5">
+                        <AvatarImage src={data.task.assignedTo.user.image || "/placeholder.svg"} />
+                        <AvatarFallback className="text-xs">
+                          {data.task.assignedTo.user.name?.charAt(0).toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    {data.task.commentsCount > 0 && (
+                      <div className="flex items-center gap-1">
+                        <MessageSquare className="w-3 h-3" />
+                        <span>{data.task.commentsCount}</span>
+                      </div>
+                    )}
+                    {data.task.dueDate && (
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        <span>{formatDate(data.task.dueDate)}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <Badge variant="outline" className="text-xs font-mono">
-                    {data.task.taskCode}
-                  </Badge>
-                  {data.task.assignedTo && (
-                    <Avatar className="w-5 h-5">
-                      <AvatarImage src={data.task.assignedTo.user.image || "/placeholder.svg"} />
-                      <AvatarFallback className="text-xs">
-                        {data.task.assignedTo.user.name?.charAt(0).toUpperCase() || "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  {data.task.commentsCount > 0 && (
-                    <div className="flex items-center gap-1">
-                      <MessageSquare className="w-3 h-3" />
-                      <span>{data.task.commentsCount}</span>
-                    </div>
-                  )}
-                  {data.task.dueDate && (
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      <span>{formatDate(data.task.dueDate)}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <Handle type="target" position={data.isHorizontal ? Position.Left : Position.Top} className="w-3 h-3" />
-            </CardContent>
-          </Card>
-        </TooltipTrigger>
-        <TooltipContent side="right" className="w-96">
-          <TaskTooltip task={data.task} />
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+                <Handle type="target" position={data.isHorizontal ? Position.Left : Position.Top} className="w-3 h-3" />
+              </CardContent>
+            </Card>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="w-96">
+            <TaskTooltip task={data.task} />
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      {/* Action Overlay */}
+      {isHovered && (
+        <ActionOverlay
+        isVisible={isHovered}
+          onEdit={handleEditTask}
+          onDelete={() => setShowDeleteTask(true)}
+          position={data.isHorizontal ? "right" : "bottom"}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={showDeleteTask}
+        onClose={() => setShowDeleteTask(false)}
+        onConfirm={handleDeleteTask}
+        title="Delete Task"
+        description="Are you sure you want to delete this task? This action cannot be undone:"
+        itemName={data.task.title}
+        isLoading={isDeleting}
+      />
+    </div>
   )
 }
