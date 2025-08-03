@@ -10,7 +10,7 @@ export interface User {
 export interface Member {
   _id: Id<"members">;
   role: "admin" | "member" | "lead";
-  user: User;
+  user?: User | null;
   taskCounts?: {
     todo: number;
     progress: number;
