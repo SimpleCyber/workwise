@@ -29,13 +29,13 @@ export const Sidebar = () => {
     { icon: ListTodo, label: "Project", path: `/projects/${workspaceId}` },
     { icon: Files, label: "Data", path: `/data-room/${workspaceId}` },
     { icon: MessagesSquare, label: "Chat", path: `/workspace/${workspaceId}` },
-    {
-      icon: UserRoundSearch,
-      label: "Member",
-      path: `/members/${workspaceId}`,
-    },
+    // {
+    //   icon: UserRoundSearch,
+    //   label: "Member",
+    //   path: `/members/${workspaceId}`,
+    // },
     { icon: Calendar, label: "Attendence", path: `/attendance/${workspaceId}` },
-    { icon: AlignStartHorizontal, label: "Test", path: `/test/${workspaceId}` },
+    // { icon: AlignStartHorizontal, label: "Test", path: `/test/${workspaceId}` },
   ];
 
   const handleNavigation = (path: string) => {

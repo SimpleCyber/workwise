@@ -2,15 +2,12 @@
 
 import {
   CheckCircle,
-  ImageIcon,
-  MessageSquare,
-  Send,
   User,
   X,
   XCircle,
 } from "lucide-react";
 import type React from "react";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import type { Id } from "@/../convex/_generated/dataModel";
@@ -31,7 +28,6 @@ import { useCurrentMember } from "@/features/members/api/use-current-member";
 import { useGenerateUploadUrl } from "@/features/upload/api/use-generate-upload-url";
 
 import { useAddComment } from "../api/use-add-comment";
-import { useGetComments } from "../api/use-get-comments";
 import { useUpdateAttendanceStatus } from "../api/use-update-attendance-status";
 import Image from "next/image";
 
@@ -50,14 +46,9 @@ export const AttendanceDetailModal = ({
   onClose,
   isAdmin = false,
 }: AttendanceDetailModalProps) => {
-  const [comment, setComment] = useState("");
-  const [commentImage, setCommentImage] = useState<File | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: comments, isLoading: commentsLoading } = useGetComments({
-    attendanceId: attendance?._id || "",
-  });
+
   const { data: currentMember } = useCurrentMember({ workspaceId });
   const { mutate: addComment, isPending: isAddingComment } = useAddComment();
   const { mutate: updateStatus, isPending: isUpdating } =
@@ -85,56 +76,6 @@ export const AttendanceDetailModal = ({
 
   const isAbsent =
     attendance.status === "absent" || attendance.checkInTime === 0;
-
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setCommentImage(file);
-    }
-  };
-
-  const handleAddComment = async () => {
-    if (!comment.trim() && !commentImage) return;
-
-    try {
-      let imageId: Id<"_storage"> | undefined;
-
-      if (commentImage) {
-        const url = await generateUploadUrl({}, { throwError: true });
-        if (!url) throw new Error("Failed to get upload URL");
-
-        const result = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": commentImage.type },
-          body: commentImage,
-        });
-
-        if (!result.ok) throw new Error("Failed to upload image");
-        const { storageId } = await result.json();
-        imageId = storageId;
-      }
-
-      await addComment(
-        {
-          attendanceId: attendance._id,
-          content: comment,
-          image: imageId,
-        },
-        {
-          onSuccess: () => {
-            setComment("");
-            setCommentImage(null);
-            toast.success("Comment added successfully!");
-          },
-          onError: (error) => {
-            toast.error(error.message || "Failed to add comment");
-          },
-        },
-      );
-    } catch (error) {
-      toast.error("Failed to add comment");
-    }
-  };
 
   const handleStatusUpdate = async (status: "approved" | "rejected") => {
     await updateStatus(
@@ -172,7 +113,7 @@ export const AttendanceDetailModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl h-[85vh] p-0 flex">
+      <DialogContent className="max-w-3xl h-[85vh] p-0 flex">
         {/* Main Content - 2/3 width */}
         <div className="flex-1 flex flex-col overflow-hidden border-r">
           <DialogHeader className="p-6 pb-4">
@@ -373,134 +314,6 @@ export const AttendanceDetailModal = ({
               )}
             </div>
           </ScrollArea>
-        </div>
-
-        {/* Comments Sidebar - 1/3 width */}
-        <div className="w-96 flex flex-col border-l">
-          <div className="p-4 border-b">
-            <h3 className="font-semibold text-sm flex items-center gap-2">
-              <MessageSquare className="w-4 h-4" />
-              Comments & Activity
-            </h3>
-          </div>
-
-          {/* Comments List with fixed height and scroll */}
-          <ScrollArea className="flex-1">
-            <div className="p-4 space-y-4">
-              {commentsLoading ? (
-                <div className="flex items-center justify-center p-4">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                </div>
-              ) : comments && comments.length > 0 ? (
-                comments.map((comment) => (
-                  <div key={comment._id} className="flex gap-3">
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage
-                        src={comment.user?.image || "/placeholder.svg"}
-                      />
-                      <AvatarFallback>
-                        {comment.user?.name?.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-medium">
-                          {comment.user?.name}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(comment.createdAt).toLocaleTimeString()}
-                        </span>
-                      </div>
-                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                        {comment.content}
-                      </p>
-                      {comment.image && (
-                        <Image 
-                        width={800} height={600}
-                          src={`${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${comment.image}`}
-                          alt="Comment attachment"
-                          className="mt-2 max-w-full h-auto rounded border cursor-pointer hover:opacity-80 transition-opacity"
-                          crossOrigin="anonymous"
-                          onClick={() => {
-                            window.open(
-                              `${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${comment.image}`,
-                              "_blank",
-                            );
-                          }}
-                        />
-                      )}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  No comments yet
-                </p>
-              )}
-            </div>
-          </ScrollArea>
-
-          {/* Fixed comment input at bottom */}
-          <div className="p-4 border-t bg-background">
-            <div className="space-y-2">
-              <Textarea
-                placeholder="Write a comment..."
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                rows={2}
-                className="resize-none text-sm"
-              />
-              {commentImage && (
-                <div className="relative">
-                  <Image 
-                  width={800} height={600}
-                    src={
-                      URL.createObjectURL(commentImage) || "/placeholder.svg"
-                    }
-                    alt="Preview"
-                    className="max-w-full h-20 object-cover rounded border"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute top-1 right-1"
-                    onClick={() => setCommentImage(null)}
-                  >
-                    <X className="w-3 h-3" />
-                  </Button>
-                </div>
-              )}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleImageSelect}
-                    accept="image/*"
-                    className="hidden"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isAddingComment}
-                  >
-                    <ImageIcon className="w-4 h-4" />
-                  </Button>
-                </div>
-                <Button
-                  onClick={handleAddComment}
-                  disabled={
-                    isAddingComment || (!comment.trim() && !commentImage)
-                  }
-                  size="sm"
-                >
-                  <Send className="w-3 h-3 mr-1" />
-                  {isAddingComment ? "Sending..." : "Send"}
-                </Button>
-              </div>
-            </div>
-          </div>
         </div>
       </DialogContent>
     </Dialog>
