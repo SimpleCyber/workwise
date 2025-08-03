@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Building2 } from "lucide-react"
-import { Handle, Position, type NodeProps } from "reactflow"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { ActionOverlay, useHoverActions } from "../tree-actions/action-overlay"
-import { CreateProjectModal } from "../tree-actions/create-project-modal"
+import { useState } from "react";
+import { Building2 } from "lucide-react";
+import { Handle, Position, type NodeProps } from "reactflow";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ActionOverlay, useHoverActions } from "../tree-actions/action-overlay";
+import { CreateProjectModal } from "../tree-actions/create-project-modal";
 
 export const WorkspaceNode = ({ data }: NodeProps) => {
-  const { isHovered, hoverProps } = useHoverActions()
-  const [showCreateProject, setShowCreateProject] = useState(false)
+  const { isHovered, hoverProps } = useHoverActions();
+  const [showCreateProject, setShowCreateProject] = useState(false);
 
   return (
     <div className="relative" {...hoverProps}>
@@ -22,7 +22,10 @@ export const WorkspaceNode = ({ data }: NodeProps) => {
       >
         <CardContent className="p-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3" onClick={() => data.onToggle?.(data.workspaceId)}>
+            <div
+              className="flex items-center gap-3"
+              onClick={() => data.onToggle?.(data.workspaceId)}
+            >
               <div
                 className={`flex items-center justify-center w-8 h-8 rounded ${
                   data.isActive ? "bg-purple-200" : "bg-purple-100"
@@ -38,8 +41,16 @@ export const WorkspaceNode = ({ data }: NodeProps) => {
               </div>
             </div>
           </div>
-          <Handle type="target" position={data.isHorizontal ? Position.Left : Position.Top} className="w-3 h-3" />
-          <Handle type="source" position={data.isHorizontal ? Position.Right : Position.Bottom} className="w-3 h-3" />
+          <Handle
+            type="target"
+            position={data.isHorizontal ? Position.Left : Position.Top}
+            className="w-3 h-3"
+          />
+          <Handle
+            type="source"
+            position={data.isHorizontal ? Position.Right : Position.Bottom}
+            className="w-3 h-3"
+          />
         </CardContent>
       </Card>
 
@@ -68,5 +79,5 @@ export const WorkspaceNode = ({ data }: NodeProps) => {
         workspaceId={data.workspaceId}
       />
     </div>
-  )
-}
+  );
+};

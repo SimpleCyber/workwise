@@ -1,20 +1,25 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { MessageSquare, Calendar } from "lucide-react"
-import { Handle, Position, type NodeProps } from "reactflow"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { ActionOverlay, useHoverActions } from "../tree-actions/action-overlay"
-import { DeleteConfirmationModal } from "../tree-actions/delete-confirmation-modal"
-import { useDeleteProjectTask } from "../../../projects/api/use-delete-project-task"
-import { getPriorityColor, formatDate } from "../../api/tree-utils"
-import type { Task } from "../../api/tree-types"
+import { useState } from "react";
+import { MessageSquare, Calendar } from "lucide-react";
+import { Handle, Position, type NodeProps } from "reactflow";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { ActionOverlay, useHoverActions } from "../tree-actions/action-overlay";
+import { DeleteConfirmationModal } from "../tree-actions/delete-confirmation-modal";
+import { useDeleteProjectTask } from "../../../projects/api/use-delete-project-task";
+import { getPriorityColor, formatDate } from "../../api/tree-utils";
+import type { Task } from "../../api/tree-types";
 
 interface TaskTooltipProps {
-  task: Task
+  task: Task;
 }
 
 const TaskTooltip = ({ task }: TaskTooltipProps) => (
@@ -32,11 +37,16 @@ const TaskTooltip = ({ task }: TaskTooltipProps) => (
     <div className="grid grid-cols-2 gap-2">
       <div>
         <p className="font-medium">Priority:</p>
-        <Badge className={`text-xs ${getPriorityColor(task.priority)}`}>{task.priority}</Badge>
+        <Badge className={`text-xs ${getPriorityColor(task.priority)}`}>
+          {task.priority}
+        </Badge>
       </div>
       <div>
         <p className="font-medium">Status:</p>
-        <Badge variant={task.isCompleted ? "default" : "secondary"} className="text-xs">
+        <Badge
+          variant={task.isCompleted ? "default" : "secondary"}
+          className="text-xs"
+        >
           {task.isCompleted ? "Completed" : "In Progress"}
         </Badge>
       </div>
@@ -46,7 +56,9 @@ const TaskTooltip = ({ task }: TaskTooltipProps) => (
         <p className="font-medium mb-1">Assigned to:</p>
         <div className="flex items-center gap-2">
           <Avatar className="w-6 h-6">
-            <AvatarImage src={task.assignedTo.user.image || "/placeholder.svg"} />
+            <AvatarImage
+              src={task.assignedTo.user.image || "/placeholder.svg"}
+            />
             <AvatarFallback className="text-xs">
               {task.assignedTo.user.name?.charAt(0).toUpperCase() || "U"}
             </AvatarFallback>
@@ -60,7 +72,9 @@ const TaskTooltip = ({ task }: TaskTooltipProps) => (
         <p className="font-medium mb-1">Assigned by:</p>
         <div className="flex items-center gap-2">
           <Avatar className="w-6 h-6">
-            <AvatarImage src={task.assignedBy.user.image || "/placeholder.svg"} />
+            <AvatarImage
+              src={task.assignedBy.user.image || "/placeholder.svg"}
+            />
             <AvatarFallback className="text-xs">
               {task.assignedBy.user.name?.charAt(0).toUpperCase() || "U"}
             </AvatarFallback>
@@ -96,28 +110,28 @@ const TaskTooltip = ({ task }: TaskTooltipProps) => (
       </div>
     </div>
   </div>
-)
+);
 
 export const TaskNode = ({ data }: NodeProps) => {
-  const { isHovered, hoverProps } = useHoverActions()
-  const [showDeleteTask, setShowDeleteTask] = useState(false)
+  const { isHovered, hoverProps } = useHoverActions();
+  const [showDeleteTask, setShowDeleteTask] = useState(false);
 
-  const { mutate: deleteTask, isPending: isDeleting } = useDeleteProjectTask()
+  const { mutate: deleteTask, isPending: isDeleting } = useDeleteProjectTask();
 
   const handleDeleteTask = async () => {
     try {
-      await deleteTask({ taskId: data.task._id })
-      setShowDeleteTask(false)
+      await deleteTask({ taskId: data.task._id });
+      setShowDeleteTask(false);
     } catch (error) {
-      console.error("Failed to delete task:", error)
+      console.error("Failed to delete task:", error);
     }
-  }
+  };
 
   const handleEditTask = () => {
     // Navigate to task detail page or open edit modal
     // You can implement this based on your routing structure
-    console.log("Edit task:", data.task._id)
-  }
+    console.log("Edit task:", data.task._id);
+  };
 
   return (
     <div className="relative" {...hoverProps}>
@@ -128,8 +142,14 @@ export const TaskNode = ({ data }: NodeProps) => {
               <CardContent className="p-2">
                 <div className="space-y-2">
                   <div className="flex items-start justify-between">
-                    <h6 className="font-medium text-sm truncate flex-1 mr-2">{data.task.title}</h6>
-                    <Badge className={`text-xs ${getPriorityColor(data.task.priority)}`}>{data.task.priority}</Badge>
+                    <h6 className="font-medium text-sm truncate flex-1 mr-2">
+                      {data.task.title}
+                    </h6>
+                    <Badge
+                      className={`text-xs ${getPriorityColor(data.task.priority)}`}
+                    >
+                      {data.task.priority}
+                    </Badge>
                   </div>
                   <div className="flex items-center justify-between">
                     <Badge variant="outline" className="text-xs font-mono">
@@ -137,9 +157,16 @@ export const TaskNode = ({ data }: NodeProps) => {
                     </Badge>
                     {data.task.assignedTo && (
                       <Avatar className="w-5 h-5">
-                        <AvatarImage src={data.task.assignedTo.user.image || "/placeholder.svg"} />
+                        <AvatarImage
+                          src={
+                            data.task.assignedTo.user.image ||
+                            "/placeholder.svg"
+                          }
+                        />
                         <AvatarFallback className="text-xs">
-                          {data.task.assignedTo.user.name?.charAt(0).toUpperCase() || "U"}
+                          {data.task.assignedTo.user.name
+                            ?.charAt(0)
+                            .toUpperCase() || "U"}
                         </AvatarFallback>
                       </Avatar>
                     )}
@@ -159,7 +186,11 @@ export const TaskNode = ({ data }: NodeProps) => {
                     )}
                   </div>
                 </div>
-                <Handle type="target" position={data.isHorizontal ? Position.Left : Position.Top} className="w-3 h-3" />
+                <Handle
+                  type="target"
+                  position={data.isHorizontal ? Position.Left : Position.Top}
+                  className="w-3 h-3"
+                />
               </CardContent>
             </Card>
           </TooltipTrigger>
@@ -199,5 +230,5 @@ export const TaskNode = ({ data }: NodeProps) => {
         isLoading={isDeleting}
       />
     </div>
-  )
-}
+  );
+};

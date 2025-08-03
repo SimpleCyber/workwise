@@ -1,43 +1,59 @@
-"use client"
+"use client";
 
-import type { PropsWithChildren } from "react"
-import { Sidebar } from "@/components/sidebar/sidebar"
-import { Toolbar } from "@/components/toolbar/toolbar"
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
-import { WorkspaceSidebar } from "@/components/workspace-header/workspace-sidebar"
-import { WorkspaceSidebarContent } from "./workspace-sidebar-content"
-import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info"
-import { Loader2, TriangleAlert } from "lucide-react"
-import type { Id } from "../../../../convex/_generated/dataModel"
-import { useParams } from "next/navigation"
+import type { PropsWithChildren } from "react";
+import { Sidebar } from "@/components/sidebar/sidebar";
+import { Toolbar } from "@/components/toolbar/toolbar";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import { WorkspaceSidebar } from "@/components/workspace-header/workspace-sidebar";
+import { WorkspaceSidebarContent } from "./workspace-sidebar-content";
+import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info";
+import { Loader2, TriangleAlert } from "lucide-react";
+import type { Id } from "../../../../convex/_generated/dataModel";
+import { useParams } from "next/navigation";
 
 const TreeWorkspaceLayout = ({ children }: Readonly<PropsWithChildren>) => {
-  const params = useParams()
-  const workspaceId = params.workspaceId as Id<"workspaces">
+  const params = useParams();
+  const workspaceId = params.workspaceId as Id<"workspaces">;
 
   const { data: workspace, isLoading: workspaceLoading } = useGetWorkspaceInfo({
     id: workspaceId,
-  })
+  });
 
   return (
     <div className="h-full">
       <Toolbar />
       <div className="flex h-[calc(100vh_-_40px)]">
         <Sidebar />
-        <ResizablePanelGroup direction="horizontal" autoSaveId="tree-workspace-layout">
-          <ResizablePanel defaultSize={0} minSize={0} maxSize={30} className="bg-gray-900">
+        <ResizablePanelGroup
+          direction="horizontal"
+          autoSaveId="tree-workspace-layout"
+        >
+          <ResizablePanel
+            defaultSize={0}
+            minSize={0}
+            maxSize={30}
+            className="bg-gray-900"
+          >
             <WorkspaceSidebar>
               <WorkspaceSidebarContent />
             </WorkspaceSidebar>
           </ResizablePanel>
           <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={80} minSize={20} className="flex flex-col">
+          <ResizablePanel
+            defaultSize={80}
+            minSize={20}
+            className="flex flex-col"
+          >
             <div className="flex-1 overflow-hidden">{children}</div>
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default TreeWorkspaceLayout
+export default TreeWorkspaceLayout;

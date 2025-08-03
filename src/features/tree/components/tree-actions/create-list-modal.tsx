@@ -1,47 +1,56 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useCreateProjectList } from "../../../projects/api/use-create-project-list"
-import type { Id } from "../../../../../convex/_generated/dataModel"
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useCreateProjectList } from "../../../projects/api/use-create-project-list";
+import type { Id } from "../../../../../convex/_generated/dataModel";
 
 interface CreateListModalProps {
-  isOpen: boolean
-  onClose: () => void
-  boardId: Id<"projectBoards">
+  isOpen: boolean;
+  onClose: () => void;
+  boardId: Id<"projectBoards">;
 }
 
-export const CreateListModal = ({ isOpen, onClose, boardId }: CreateListModalProps) => {
-  const [name, setName] = useState("")
+export const CreateListModal = ({
+  isOpen,
+  onClose,
+  boardId,
+}: CreateListModalProps) => {
+  const [name, setName] = useState("");
 
-  const { mutate: createList, isPending } = useCreateProjectList()
+  const { mutate: createList, isPending } = useCreateProjectList();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!name.trim()) return
+    e.preventDefault();
+    if (!name.trim()) return;
 
     try {
       await createList({
         name: name.trim(),
         boardId,
-      })
+      });
 
-      setName("")
-      onClose()
+      setName("");
+      onClose();
     } catch (error) {
-      console.error("Failed to create list:", error)
+      console.error("Failed to create list:", error);
     }
-  }
+  };
 
   const handleClose = () => {
-    setName("")
-    onClose()
-  }
+    setName("");
+    onClose();
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -73,5 +82,5 @@ export const CreateListModal = ({ isOpen, onClose, boardId }: CreateListModalPro
         </form>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};

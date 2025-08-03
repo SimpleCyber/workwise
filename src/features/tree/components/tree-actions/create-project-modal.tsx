@@ -1,32 +1,41 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { useCreateProjectBoard } from "../../../projects/api/use-create-project-board"
-import type { Id } from "../../../../../convex/_generated/dataModel"
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { useCreateProjectBoard } from "../../../projects/api/use-create-project-board";
+import type { Id } from "../../../../../convex/_generated/dataModel";
 
 interface CreateProjectModalProps {
-  isOpen: boolean
-  onClose: () => void
-  workspaceId: Id<"workspaces">
+  isOpen: boolean;
+  onClose: () => void;
+  workspaceId: Id<"workspaces">;
 }
 
-export const CreateProjectModal = ({ isOpen, onClose, workspaceId }: CreateProjectModalProps) => {
-  const [name, setName] = useState("")
-  const [description, setDescription] = useState("")
-  const [background, setBackground] = useState("")
+export const CreateProjectModal = ({
+  isOpen,
+  onClose,
+  workspaceId,
+}: CreateProjectModalProps) => {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [background, setBackground] = useState("");
 
-  const { mutate: createProject, isPending } = useCreateProjectBoard()
+  const { mutate: createProject, isPending } = useCreateProjectBoard();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!name.trim()) return
+    e.preventDefault();
+    if (!name.trim()) return;
 
     try {
       await createProject({
@@ -34,24 +43,24 @@ export const CreateProjectModal = ({ isOpen, onClose, workspaceId }: CreateProje
         description: description.trim() || undefined,
         background: background.trim() || undefined,
         workspaceId,
-      })
+      });
 
       // Reset form and close modal
-      setName("")
-      setDescription("")
-      setBackground("")
-      onClose()
+      setName("");
+      setDescription("");
+      setBackground("");
+      onClose();
     } catch (error) {
-      console.error("Failed to create project:", error)
+      console.error("Failed to create project:", error);
     }
-  }
+  };
 
   const handleClose = () => {
-    setName("")
-    setDescription("")
-    setBackground("")
-    onClose()
-  }
+    setName("");
+    setDescription("");
+    setBackground("");
+    onClose();
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -83,8 +92,6 @@ export const CreateProjectModal = ({ isOpen, onClose, workspaceId }: CreateProje
             />
           </div>
 
-        
-
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={handleClose}>
               Cancel
@@ -96,5 +103,5 @@ export const CreateProjectModal = ({ isOpen, onClose, workspaceId }: CreateProje
         </form>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};

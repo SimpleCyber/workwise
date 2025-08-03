@@ -1,25 +1,31 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Plus, Edit, Trash2 } from "lucide-react"
+import { useState } from "react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 
 interface ActionOverlayProps {
-  onAdd?: () => void
-  onEdit?: () => void
-  onDelete?: () => void
-  position?: "top" | "bottom" | "left" | "right"
-  isVisible: boolean
+  onAdd?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  position?: "top" | "bottom" | "left" | "right";
+  isVisible: boolean;
 }
 
-export const ActionOverlay = ({ onAdd, onEdit, onDelete, position = "top", isVisible }: ActionOverlayProps) => {
-  if (!isVisible) return null
+export const ActionOverlay = ({
+  onAdd,
+  onEdit,
+  onDelete,
+  position = "top",
+  isVisible,
+}: ActionOverlayProps) => {
+  if (!isVisible) return null;
 
   const positionClasses = {
     top: "-top-12 left-1/2 transform -translate-x-1/2",
     bottom: "-bottom-12 left-1/2 transform -translate-x-1/2",
     left: "-left-12 top-1/2 transform -translate-y-1/2 flex-col",
     right: "-right-12 top-1/2 transform -translate-y-1/2 flex-col",
-  }
+  };
 
   return (
     <div
@@ -32,8 +38,8 @@ export const ActionOverlay = ({ onAdd, onEdit, onDelete, position = "top", isVis
         <button
           className="w-8 h-8 flex items-center justify-center hover:bg-green-100 rounded text-gray-400 hover:text-green-600 transition-colors"
           onClick={(e) => {
-            e.stopPropagation()
-            onAdd()
+            e.stopPropagation();
+            onAdd();
           }}
           title="Add"
         >
@@ -45,8 +51,8 @@ export const ActionOverlay = ({ onAdd, onEdit, onDelete, position = "top", isVis
         <button
           className="w-8 h-8 flex items-center justify-center hover:bg-blue-100 rounded text-gray-400 hover:text-blue-600 transition-colors"
           onClick={(e) => {
-            e.stopPropagation()
-            onEdit()
+            e.stopPropagation();
+            onEdit();
           }}
           title="Edit"
         >
@@ -58,8 +64,8 @@ export const ActionOverlay = ({ onAdd, onEdit, onDelete, position = "top", isVis
         <button
           className="w-8 h-8 flex items-center justify-center hover:bg-red-100 rounded text-gray-400 hover:text-red-600 transition-colors"
           onClick={(e) => {
-            e.stopPropagation()
-            onDelete()
+            e.stopPropagation();
+            onDelete();
           }}
           title="Delete"
         >
@@ -67,31 +73,31 @@ export const ActionOverlay = ({ onAdd, onEdit, onDelete, position = "top", isVis
         </button>
       )}
     </div>
-  )
-}
+  );
+};
 
 // Simplified hook to manage hover state
 export const useHoverActions = () => {
-  const [isHovered, setIsHovered] = useState(false)
-  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null)
+  const [isHovered, setIsHovered] = useState(false);
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   const hoverProps = {
     onMouseEnter: () => {
-      console.log("Mouse entered") // Debug log
+      console.log("Mouse entered"); // Debug log
       if (timeoutId) {
-        clearTimeout(timeoutId)
-        setTimeoutId(null)
+        clearTimeout(timeoutId);
+        setTimeoutId(null);
       }
-      setIsHovered(true)
+      setIsHovered(true);
     },
     onMouseLeave: () => {
-      console.log("Mouse left") // Debug log
+      console.log("Mouse left"); // Debug log
       const id = setTimeout(() => {
-        setIsHovered(false)
-      }, 100) // Small delay to allow moving to overlay
-      setTimeoutId(id)
+        setIsHovered(false);
+      }, 100); // Small delay to allow moving to overlay
+      setTimeoutId(id);
     },
-  }
+  };
 
-  return { isHovered, hoverProps }
-}
+  return { isHovered, hoverProps };
+};

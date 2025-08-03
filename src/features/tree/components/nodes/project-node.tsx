@@ -1,32 +1,33 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Goal, ExternalLink } from "lucide-react"
-import { Handle, Position, type NodeProps } from "reactflow"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { ActionOverlay, useHoverActions } from "../tree-actions/action-overlay"
-import { CreateListModal } from "../tree-actions/create-list-modal"
-import { EditProjectModal } from "../tree-actions/edit-project-modal"
-import { DeleteConfirmationModal } from "../tree-actions/delete-confirmation-modal"
-import { useRemoveProjectBoard } from "../../../projects/api/use-remove-project-board"
+import { useState } from "react";
+import { Goal, ExternalLink } from "lucide-react";
+import { Handle, Position, type NodeProps } from "reactflow";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ActionOverlay, useHoverActions } from "../tree-actions/action-overlay";
+import { CreateListModal } from "../tree-actions/create-list-modal";
+import { EditProjectModal } from "../tree-actions/edit-project-modal";
+import { DeleteConfirmationModal } from "../tree-actions/delete-confirmation-modal";
+import { useRemoveProjectBoard } from "../../../projects/api/use-remove-project-board";
 
 export const ProjectNode = ({ data }: NodeProps) => {
-  const { isHovered, hoverProps } = useHoverActions()
-  const [showEditProject, setShowEditProject] = useState(false)
-  const [showDeleteProject, setShowDeleteProject] = useState(false)
+  const { isHovered, hoverProps } = useHoverActions();
+  const [showEditProject, setShowEditProject] = useState(false);
+  const [showDeleteProject, setShowDeleteProject] = useState(false);
 
-  const { mutate: deleteProject, isPending: isDeleting } = useRemoveProjectBoard()
+  const { mutate: deleteProject, isPending: isDeleting } =
+    useRemoveProjectBoard();
 
   const handleDeleteProject = async () => {
     try {
-      await deleteProject({ boardId: data.projectId })
-      setShowDeleteProject(false)
+      await deleteProject({ boardId: data.projectId });
+      setShowDeleteProject(false);
     } catch (error) {
-      console.error("Failed to delete project:", error)
+      console.error("Failed to delete project:", error);
     }
-  }
+  };
 
   return (
     <div className="relative" {...hoverProps}>
@@ -65,7 +66,9 @@ export const ProjectNode = ({ data }: NodeProps) => {
               style={{
                 left: data.isHorizontal ? "-6px" : "50%",
                 top: data.isHorizontal ? "50%" : "-6px",
-                transform: data.isHorizontal ? "translateY(-50%)" : "translateX(-50%)",
+                transform: data.isHorizontal
+                  ? "translateY(-50%)"
+                  : "translateX(-50%)",
               }}
             />
             <Handle
@@ -77,7 +80,9 @@ export const ProjectNode = ({ data }: NodeProps) => {
                 left: data.isHorizontal ? "auto" : "50%",
                 bottom: data.isHorizontal ? "auto" : "-6px",
                 top: data.isHorizontal ? "50%" : "auto",
-                transform: data.isHorizontal ? "translateY(-50%)" : "translateX(-50%)",
+                transform: data.isHorizontal
+                  ? "translateY(-50%)"
+                  : "translateX(-50%)",
               }}
             />
           </CardContent>
@@ -97,8 +102,8 @@ export const ProjectNode = ({ data }: NodeProps) => {
                 size="sm"
                 variant="outline"
                 onClick={(e) => {
-                  e.stopPropagation()
-                  data.onProjectClick(data.projectId)
+                  e.stopPropagation();
+                  data.onProjectClick(data.projectId);
                 }}
                 className="text-xs mt-1"
               >
@@ -151,7 +156,6 @@ export const ProjectNode = ({ data }: NodeProps) => {
         itemName={data.name}
         isLoading={isDeleting}
       />
-
     </div>
-  )
-}
+  );
+};

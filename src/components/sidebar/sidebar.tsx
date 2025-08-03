@@ -59,12 +59,10 @@ export const Sidebar = () => {
     <aside className="flex h-full w-[60px] flex-col items-center gap-y-4 bg-gray-900 pb-[4px] pt-[9px]">
       <WorkspaceSwitcher />
 
-
       {/* <WorkspaceManageButton
         isOpen={false}
         onClick={() => {}}
       /> */}
-
 
       {navigationItems.map((item) => (
         <SidebarButton

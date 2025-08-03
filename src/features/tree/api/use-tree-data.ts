@@ -1,162 +1,179 @@
-"use client"
+"use client";
 
-import { useState, useCallback, useMemo } from "react"
-import { useRouter } from "next/navigation"
-import type { Node, Edge } from "reactflow"
-import type { TreeData, ViewMode, Layout } from "./tree-types"
-import type { Id } from "../../../../convex/_generated/dataModel"
+import { useState, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import type { Node, Edge } from "reactflow";
+import type { TreeData, ViewMode, Layout } from "./tree-types";
+import type { Id } from "../../../../convex/_generated/dataModel";
 
 interface UseTreeDataProps {
-  data: TreeData
-  workspaceId: Id<"workspaces">
+  data: TreeData;
+  workspaceId: Id<"workspaces">;
 }
 
 export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
-  const router = useRouter()
-  const [layout, setLayout] = useState<Layout>("horizontal")
-  const [viewMode, setViewMode] = useState<ViewMode>("overview")
-  const [expandedWorkspaces, setExpandedWorkspaces] = useState<Set<string>>(new Set())
-  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set())
-  const [expandedLists, setExpandedLists] = useState<Set<string>>(new Set())
+  const router = useRouter();
+  const [layout, setLayout] = useState<Layout>("horizontal");
+  const [viewMode, setViewMode] = useState<ViewMode>("overview");
+  const [expandedWorkspaces, setExpandedWorkspaces] = useState<Set<string>>(
+    new Set(),
+  );
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(
+    new Set(),
+  );
+  const [expandedLists, setExpandedLists] = useState<Set<string>>(new Set());
 
   // Track the last expanded item at each level to hide siblings
-  const [activeWorkspace, setActiveWorkspace] = useState<string | null>(null)
-  const [activeProject, setActiveProject] = useState<string | null>(null)
-  const [activeList, setActiveList] = useState<string | null>(null)
+  const [activeWorkspace, setActiveWorkspace] = useState<string | null>(null);
+  const [activeProject, setActiveProject] = useState<string | null>(null);
+  const [activeList, setActiveList] = useState<string | null>(null);
 
   const toggleWorkspace = useCallback(
     (workspaceId: string) => {
       setExpandedWorkspaces((prev) => {
-        const newExpanded = new Set(prev)
-        const isCurrentlyExpanded = newExpanded.has(workspaceId)
+        const newExpanded = new Set(prev);
+        const isCurrentlyExpanded = newExpanded.has(workspaceId);
 
         if (isCurrentlyExpanded) {
           // If closing, remove from expanded and clear active
-          newExpanded.delete(workspaceId)
-          setActiveWorkspace(null)
+          newExpanded.delete(workspaceId);
+          setActiveWorkspace(null);
         } else {
           // If expanding, add to expanded and set as active
-          newExpanded.add(workspaceId)
-          setActiveWorkspace(workspaceId)
+          newExpanded.add(workspaceId);
+          setActiveWorkspace(workspaceId);
         }
 
-        return newExpanded
-      })
+        return newExpanded;
+      });
 
       // When changing workspace, reset project and list selections
       if (activeWorkspace !== workspaceId) {
-        setExpandedProjects(new Set())
-        setExpandedLists(new Set())
-        setActiveProject(null)
-        setActiveList(null)
+        setExpandedProjects(new Set());
+        setExpandedLists(new Set());
+        setActiveProject(null);
+        setActiveList(null);
       }
     },
     [activeWorkspace],
-  )
+  );
 
   const toggleProject = useCallback(
     (projectId: string) => {
       setExpandedProjects((prev) => {
-        const newExpanded = new Set(prev)
-        const isCurrentlyExpanded = newExpanded.has(projectId)
+        const newExpanded = new Set(prev);
+        const isCurrentlyExpanded = newExpanded.has(projectId);
 
         if (isCurrentlyExpanded) {
           // If closing, remove from expanded and clear active
-          newExpanded.delete(projectId)
-          setActiveProject(null)
+          newExpanded.delete(projectId);
+          setActiveProject(null);
         } else {
           // If expanding, add to expanded and set as active
-          newExpanded.add(projectId)
-          setActiveProject(projectId)
+          newExpanded.add(projectId);
+          setActiveProject(projectId);
         }
 
-        return newExpanded
-      })
+        return newExpanded;
+      });
 
       // When changing project, reset list selections
       if (activeProject !== projectId) {
-        setExpandedLists(new Set())
-        setActiveList(null)
+        setExpandedLists(new Set());
+        setActiveList(null);
       }
     },
     [activeProject],
-  )
+  );
 
   const toggleList = useCallback((listId: string) => {
     setExpandedLists((prev) => {
-      const newExpanded = new Set(prev)
-      const isCurrentlyExpanded = newExpanded.has(listId)
+      const newExpanded = new Set(prev);
+      const isCurrentlyExpanded = newExpanded.has(listId);
 
       if (isCurrentlyExpanded) {
         // If closing, remove from expanded and clear active
-        newExpanded.delete(listId)
-        setActiveList(null)
+        newExpanded.delete(listId);
+        setActiveList(null);
       } else {
         // If expanding, add to expanded and set as active
-        newExpanded.add(listId)
-        setActiveList(listId)
+        newExpanded.add(listId);
+        setActiveList(listId);
       }
 
-      return newExpanded
-    })
-  }, [])
+      return newExpanded;
+    });
+  }, []);
 
   const handleProjectClick = useCallback(
     (projectId: Id<"projectBoards">) => {
-      router.push(`/projects/${workspaceId}/board/${projectId}`)
+      router.push(`/projects/${workspaceId}/board/${projectId}`);
     },
     [router, workspaceId],
-  )
+  );
 
   const onLayoutChange = useCallback(() => {
-    setLayout(layout === "vertical" ? "horizontal" : "vertical")
-  }, [layout])
+    setLayout(layout === "vertical" ? "horizontal" : "vertical");
+  }, [layout]);
 
   const { nodes, edges } = useMemo(() => {
-    const nodes: Node[] = []
-    const edges: Edge[] = []
-    const isHorizontal = layout === "horizontal"
-    const showAll = viewMode === "all"
+    const nodes: Node[] = [];
+    const edges: Edge[] = [];
+    const isHorizontal = layout === "horizontal";
+    const showAll = viewMode === "all";
 
     // Spacing configuration
     const spacing = {
       horizontal: isHorizontal ? 400 : 350,
       vertical: isHorizontal ? 250 : 300,
-    }
+    };
 
     // Dynamic user-root position
-    const workspaceCount = data.workspaces.length
-    const centerX = isHorizontal ? -100 : (workspaceCount - 1) * spacing.horizontal * 0.5
-    const centerY = isHorizontal ? (workspaceCount - 1) * spacing.vertical * 0.5 : 0
+    const workspaceCount = data.workspaces.length;
+    const centerX = isHorizontal
+      ? -100
+      : (workspaceCount - 1) * spacing.horizontal * 0.5;
+    const centerY = isHorizontal
+      ? (workspaceCount - 1) * spacing.vertical * 0.5
+      : 0;
 
     nodes.push({
       id: "user-root",
       type: "userNode",
       position: { x: centerX, y: centerY },
       data: { user: data.user, isHorizontal },
-    })
+    });
 
     // Workspace nodes - centered arrangement
     data.workspaces.forEach((workspace, workspaceIndex) => {
-      const workspaceNodeId = `workspace-${workspace._id}`
-      const isWorkspaceExpanded = expandedWorkspaces.has(workspace._id) || showAll
+      const workspaceNodeId = `workspace-${workspace._id}`;
+      const isWorkspaceExpanded =
+        expandedWorkspaces.has(workspace._id) || showAll;
 
       // Skip siblings of active workspace unless in "all" mode
       if (activeWorkspace && activeWorkspace !== workspace._id && !showAll) {
-        return
+        return;
       }
 
       // Calculate centered position for workspaces
-      const totalWorkspaces = showAll ? data.workspaces.length : activeWorkspace ? 1 : data.workspaces.length
-      const centerIndex = (totalWorkspaces - 1) / 2
-      const offsetFromCenter = workspaceIndex - centerIndex
+      const totalWorkspaces = showAll
+        ? data.workspaces.length
+        : activeWorkspace
+          ? 1
+          : data.workspaces.length;
+      const centerIndex = (totalWorkspaces - 1) / 2;
+      const offsetFromCenter = workspaceIndex - centerIndex;
 
       nodes.push({
         id: workspaceNodeId,
         type: "workspaceNode",
         position: {
-          x: isHorizontal ? spacing.horizontal : centerX + offsetFromCenter * (spacing.horizontal * 0.8),
-          y: isHorizontal ? centerY + offsetFromCenter * (spacing.vertical * 0.8) : spacing.vertical,
+          x: isHorizontal
+            ? spacing.horizontal
+            : centerX + offsetFromCenter * (spacing.horizontal * 0.8),
+          y: isHorizontal
+            ? centerY + offsetFromCenter * (spacing.vertical * 0.8)
+            : spacing.vertical,
         },
         data: {
           name: workspace.name,
@@ -168,7 +185,7 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
           viewMode,
           isActive: workspace._id === activeWorkspace,
         },
-      })
+      });
 
       edges.push({
         id: `user-${workspaceNodeId}`,
@@ -177,7 +194,7 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
         type: "default",
         style: { stroke: "#8b5cf6", strokeWidth: 2 },
         animated: true,
-      })
+      });
 
       // Project nodes - centered arrangement
       if (isWorkspaceExpanded) {
@@ -185,21 +202,22 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
           ? workspace.projects
           : activeProject
             ? workspace.projects.filter((p) => p._id === activeProject)
-            : workspace.projects
+            : workspace.projects;
 
         visibleProjects.forEach((project, projectIndex) => {
-          const projectNodeId = `project-${project._id}`
-          const isProjectExpanded = expandedProjects.has(project._id) || showAll
+          const projectNodeId = `project-${project._id}`;
+          const isProjectExpanded =
+            expandedProjects.has(project._id) || showAll;
 
           // Skip siblings of active project unless in "all" mode
           if (activeProject && activeProject !== project._id && !showAll) {
-            return
+            return;
           }
 
           // Calculate centered position for projects
-          const totalProjects = visibleProjects.length
-          const centerIndex = (totalProjects - 1) / 2
-          const offsetFromCenter = projectIndex - centerIndex
+          const totalProjects = visibleProjects.length;
+          const centerIndex = (totalProjects - 1) / 2;
+          const offsetFromCenter = projectIndex - centerIndex;
 
           nodes.push({
             id: projectNodeId,
@@ -207,9 +225,11 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
             position: {
               x: isHorizontal
                 ? spacing.horizontal * 2
-                : nodes.find((n) => n.id === workspaceNodeId)?.position.x! + offsetFromCenter * 280,
+                : nodes.find((n) => n.id === workspaceNodeId)?.position.x! +
+                  offsetFromCenter * 280,
               y: isHorizontal
-                ? nodes.find((n) => n.id === workspaceNodeId)?.position.y! + offsetFromCenter * 200
+                ? nodes.find((n) => n.id === workspaceNodeId)?.position.y! +
+                  offsetFromCenter * 200
                 : spacing.vertical * 2,
             },
             data: {
@@ -225,7 +245,7 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
               viewMode,
               isActive: project._id === activeProject,
             },
-          })
+          });
 
           edges.push({
             id: `${workspaceNodeId}-${projectNodeId}`,
@@ -234,7 +254,7 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
             type: "default",
             style: { stroke: "#10b981", strokeWidth: 2 },
             animated: true,
-          })
+          });
 
           // List nodes - centered arrangement
           if (isProjectExpanded) {
@@ -242,21 +262,21 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
               ? project.lists
               : activeList
                 ? project.lists.filter((l) => l._id === activeList)
-                : project.lists
+                : project.lists;
 
             visibleLists.forEach((list, listIndex) => {
-              const listNodeId = `list-${list._id}`
-              const isListExpanded = expandedLists.has(list._id) || showAll
+              const listNodeId = `list-${list._id}`;
+              const isListExpanded = expandedLists.has(list._id) || showAll;
 
               // Skip siblings of active list unless in "all" mode
               if (activeList && activeList !== list._id && !showAll) {
-                return
+                return;
               }
 
               // Calculate centered position for lists
-              const totalLists = visibleLists.length
-              const centerIndex = (totalLists - 1) / 2
-              const offsetFromCenter = listIndex - centerIndex
+              const totalLists = visibleLists.length;
+              const centerIndex = (totalLists - 1) / 2;
+              const offsetFromCenter = listIndex - centerIndex;
 
               nodes.push({
                 id: listNodeId,
@@ -264,9 +284,11 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
                 position: {
                   x: isHorizontal
                     ? spacing.horizontal * 3
-                    : nodes.find((n) => n.id === projectNodeId)?.position.x! + offsetFromCenter * 180,
+                    : nodes.find((n) => n.id === projectNodeId)?.position.x! +
+                      offsetFromCenter * 180,
                   y: isHorizontal
-                    ? nodes.find((n) => n.id === projectNodeId)?.position.y! + offsetFromCenter * 180
+                    ? nodes.find((n) => n.id === projectNodeId)?.position.y! +
+                      offsetFromCenter * 180
                     : spacing.vertical * 3,
                 },
                 data: {
@@ -280,7 +302,7 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
                   workspaceId: workspace._id,
                   isActive: list._id === activeList,
                 },
-              })
+              });
 
               edges.push({
                 id: `${projectNodeId}-${listNodeId}`,
@@ -289,17 +311,17 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
                 type: "default",
                 style: { stroke: "#f59e0b", strokeWidth: 2 },
                 animated: true,
-              })
+              });
 
               // Task nodes - centered arrangement
               if (isListExpanded && list.tasks.length > 0) {
                 list.tasks.forEach((task, taskIndex) => {
-                  const taskNodeId = `task-${task._id}`
+                  const taskNodeId = `task-${task._id}`;
 
                   // Calculate centered position for tasks
-                  const totalTasks = list.tasks.length
-                  const centerIndex = (totalTasks - 1) / 2
-                  const offsetFromCenter = taskIndex - centerIndex
+                  const totalTasks = list.tasks.length;
+                  const centerIndex = (totalTasks - 1) / 2;
+                  const offsetFromCenter = taskIndex - centerIndex;
 
                   nodes.push({
                     id: taskNodeId,
@@ -307,16 +329,18 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
                     position: {
                       x: isHorizontal
                         ? spacing.horizontal * 4
-                        : nodes.find((n) => n.id === listNodeId)?.position.x! + offsetFromCenter * 200,
+                        : nodes.find((n) => n.id === listNodeId)?.position.x! +
+                          offsetFromCenter * 200,
                       y: isHorizontal
-                        ? nodes.find((n) => n.id === listNodeId)?.position.y! + offsetFromCenter * 110
+                        ? nodes.find((n) => n.id === listNodeId)?.position.y! +
+                          offsetFromCenter * 110
                         : spacing.vertical * 4,
                     },
                     data: {
                       task,
                       isHorizontal,
                     },
-                  })
+                  });
 
                   edges.push({
                     id: `${listNodeId}-${taskNodeId}`,
@@ -325,16 +349,16 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
                     type: "default",
                     style: { stroke: "#ef4444", strokeWidth: 1 },
                     animated: true,
-                  })
-                })
+                  });
+                });
               }
-            })
+            });
           }
-        })
+        });
       }
-    })
+    });
 
-    return { nodes, edges }
+    return { nodes, edges };
   }, [
     data,
     layout,
@@ -349,7 +373,7 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
     activeWorkspace,
     activeProject,
     activeList,
-  ])
+  ]);
 
   return {
     layout,
@@ -358,5 +382,5 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
     edges,
     onLayoutChange,
     setViewMode,
-  }
-}
+  };
+};

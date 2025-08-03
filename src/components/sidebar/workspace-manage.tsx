@@ -1,6 +1,6 @@
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
-// create a button and export it that will help me to expand and collaspe the workspacesidebar 
+// create a button and export it that will help me to expand and collaspe the workspacesidebar
 export const WorkspaceManageButton = ({
   isOpen,
   onClick,
@@ -14,7 +14,11 @@ export const WorkspaceManageButton = ({
       onClick={onClick}
       aria-label={isOpen ? "Collapse Sidebar" : "Expand Sidebar"}
     >
-      {isOpen ? <PanelLeftClose className="size-5" /> : <PanelLeftOpen className="size-5" />}
+      {isOpen ? (
+        <PanelLeftClose className="size-5" />
+      ) : (
+        <PanelLeftOpen className="size-5" />
+      )}
     </button>
   );
 };

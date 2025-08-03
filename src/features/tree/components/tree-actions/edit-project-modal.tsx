@@ -1,45 +1,55 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { useUpdateProjectBoard } from "../../../projects/api/use-update-project-board"
-import type { Id } from "../../../../../convex/_generated/dataModel"
+import { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { useUpdateProjectBoard } from "../../../projects/api/use-update-project-board";
+import type { Id } from "../../../../../convex/_generated/dataModel";
 
 interface EditProjectModalProps {
-  isOpen: boolean
-  onClose: () => void
-  boardId: Id<"projectBoards">
+  isOpen: boolean;
+  onClose: () => void;
+  boardId: Id<"projectBoards">;
   initialData: {
-    name: string
-    description?: string
-    background?: string
-  }
+    name: string;
+    description?: string;
+    background?: string;
+  };
 }
 
-export const EditProjectModal = ({ isOpen, onClose, boardId, initialData }: EditProjectModalProps) => {
-  const [name, setName] = useState("")
-  const [description, setDescription] = useState("")
-  const [background, setBackground] = useState("")
+export const EditProjectModal = ({
+  isOpen,
+  onClose,
+  boardId,
+  initialData,
+}: EditProjectModalProps) => {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [background, setBackground] = useState("");
 
-  const { mutate: updateProject, isPending } = useUpdateProjectBoard()
+  const { mutate: updateProject, isPending } = useUpdateProjectBoard();
 
   useEffect(() => {
     if (isOpen) {
-      setName(initialData.name)
-      setDescription(initialData.description || "")
-      setBackground(initialData.background || "")
+      setName(initialData.name);
+      setDescription(initialData.description || "");
+      setBackground(initialData.background || "");
     }
-  }, [isOpen, initialData])
+  }, [isOpen, initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!name.trim()) return
+    e.preventDefault();
+    if (!name.trim()) return;
 
     try {
       await updateProject({
@@ -47,13 +57,13 @@ export const EditProjectModal = ({ isOpen, onClose, boardId, initialData }: Edit
         name: name.trim(),
         description: description.trim() || undefined,
         background: background.trim() || undefined,
-      })
+      });
 
-      onClose()
+      onClose();
     } catch (error) {
-      console.error("Failed to update project:", error)
+      console.error("Failed to update project:", error);
     }
-  }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -106,5 +116,5 @@ export const EditProjectModal = ({ isOpen, onClose, boardId, initialData }: Edit
         </form>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};

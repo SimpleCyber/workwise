@@ -1,25 +1,40 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Eye, Users, RotateCw } from "lucide-react"
-import type { ViewMode, Layout, TreeData } from "../api/tree-types"
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Eye, Users, RotateCw } from "lucide-react";
+import type { ViewMode, Layout, TreeData } from "../api/tree-types";
 
 interface TreeControlsProps {
-  data: TreeData
-  viewMode: ViewMode
-  layout: Layout
-  onViewModeChange: (mode: ViewMode) => void
-  onLayoutChange: () => void
+  data: TreeData;
+  viewMode: ViewMode;
+  layout: Layout;
+  onViewModeChange: (mode: ViewMode) => void;
+  onLayoutChange: () => void;
 }
 
-export const TreeControls = ({ data, viewMode, layout, onViewModeChange, onLayoutChange }: TreeControlsProps) => {
-  const totalProjects = data.workspaces.reduce((acc, ws) => acc + ws.projects.length, 0)
+export const TreeControls = ({
+  data,
+  viewMode,
+  layout,
+  onViewModeChange,
+  onLayoutChange,
+}: TreeControlsProps) => {
+  const totalProjects = data.workspaces.reduce(
+    (acc, ws) => acc + ws.projects.length,
+    0,
+  );
   const totalTasks = data.workspaces.reduce(
     (acc, ws) => acc + ws.projects.reduce((pacc, p) => pacc + p.totalTasks, 0),
     0,
-  )
+  );
 
   return (
     <div className="flex items-center justify-between p-3 bg-gray-50 border-b flex-shrink-0">
@@ -54,11 +69,16 @@ export const TreeControls = ({ data, viewMode, layout, onViewModeChange, onLayou
             </SelectItem>
           </SelectContent>
         </Select>
-        <Button variant="outline" size="sm" onClick={onLayoutChange} className="h-8 bg-transparent">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onLayoutChange}
+          className="h-8 bg-transparent"
+        >
           <RotateCw className="w-3 h-3 mr-1" />
           {layout === "vertical" ? "Horizontal" : "Vertical"}
         </Button>
       </div>
     </div>
-  )
-}
+  );
+};

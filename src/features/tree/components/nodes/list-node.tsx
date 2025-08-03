@@ -1,53 +1,59 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { ClipboardList, ClipboardCheck, Clock, ClipboardX, Eye } from "lucide-react"
-import { Handle, Position, type NodeProps } from "reactflow"
-import { Card, CardContent } from "@/components/ui/card"
-import { ActionOverlay, useHoverActions } from "../tree-actions/action-overlay"
-import { CreateTaskModal } from "../tree-actions/create-task-modal"
-import { DeleteConfirmationModal } from "../tree-actions/delete-confirmation-modal"
-import { useDeleteProjectList } from "../../../projects/api/use-delete-project-list"
-import { getListIcon, getListColor } from "../../api/tree-utils"
+import { useState } from "react";
+import {
+  ClipboardList,
+  ClipboardCheck,
+  Clock,
+  ClipboardX,
+  Eye,
+} from "lucide-react";
+import { Handle, Position, type NodeProps } from "reactflow";
+import { Card, CardContent } from "@/components/ui/card";
+import { ActionOverlay, useHoverActions } from "../tree-actions/action-overlay";
+import { CreateTaskModal } from "../tree-actions/create-task-modal";
+import { DeleteConfirmationModal } from "../tree-actions/delete-confirmation-modal";
+import { useDeleteProjectList } from "../../../projects/api/use-delete-project-list";
+import { getListIcon, getListColor } from "../../api/tree-utils";
 
 export const ListNode = ({ data }: NodeProps) => {
-  const { isHovered, hoverProps } = useHoverActions()
-  const [showCreateTask, setShowCreateTask] = useState(false)
-  const [showDeleteList, setShowDeleteList] = useState(false)
+  const { isHovered, hoverProps } = useHoverActions();
+  const [showCreateTask, setShowCreateTask] = useState(false);
+  const [showDeleteList, setShowDeleteList] = useState(false);
 
-  const { mutate: deleteList, isPending: isDeleting } = useDeleteProjectList()
+  const { mutate: deleteList, isPending: isDeleting } = useDeleteProjectList();
 
   const getIconComponent = (iconName: string) => {
     switch (iconName) {
       case "list":
-        return <ClipboardList className="w-8 h-8 text-blue-600" />
+        return <ClipboardList className="w-8 h-8 text-blue-600" />;
       case "clock":
-        return <Clock className="w-8 h-8 text-yellow-600" />
+        return <Clock className="w-8 h-8 text-yellow-600" />;
       case "alert-circle":
-        return <ClipboardX className="w-8 h-8 text-red-600" />
+        return <ClipboardX className="w-8 h-8 text-red-600" />;
       case "eye":
-        return <Eye className="w-8 h-8 text-purple-600" />
+        return <Eye className="w-8 h-8 text-purple-600" />;
       case "check-square":
-        return <ClipboardCheck className="w-8 h-8 text-green-600" />
+        return <ClipboardCheck className="w-8 h-8 text-green-600" />;
       default:
-        return <ClipboardList className="w-8 h-8 text-gray-600" />
+        return <ClipboardList className="w-8 h-8 text-gray-600" />;
     }
-  }
+  };
 
   const handleNodeClick = () => {
-    data.onToggleTasks?.(data.listId)
-  }
+    data.onToggleTasks?.(data.listId);
+  };
 
   const handleDeleteList = async () => {
     try {
-      await deleteList({ listId: data.listId })
-      setShowDeleteList(false)
+      await deleteList({ listId: data.listId });
+      setShowDeleteList(false);
     } catch (error) {
-      console.error("Failed to delete list:", error)
+      console.error("Failed to delete list:", error);
     }
-  }
+  };
 
-  const listColor = getListColor(data.name)
+  const listColor = getListColor(data.name);
   const baseColor = listColor.includes("blue")
     ? "blue"
     : listColor.includes("yellow")
@@ -58,7 +64,7 @@ export const ListNode = ({ data }: NodeProps) => {
           ? "purple"
           : listColor.includes("green")
             ? "green"
-            : "gray"
+            : "gray";
 
   return (
     <div className="relative" {...hoverProps}>
@@ -71,10 +77,14 @@ export const ListNode = ({ data }: NodeProps) => {
         >
           <CardContent className="flex items-center justify-center h-full p-2">
             {!data.isTasksExpanded ? (
-              <div className="flex items-center justify-center">{getIconComponent(getListIcon(data.name))}</div>
+              <div className="flex items-center justify-center">
+                {getIconComponent(getListIcon(data.name))}
+              </div>
             ) : (
               <div className="flex items-center justify-center">
-                <div className="animate-pulse">{getIconComponent(getListIcon(data.name))}</div>
+                <div className="animate-pulse">
+                  {getIconComponent(getListIcon(data.name))}
+                </div>
               </div>
             )}
 
@@ -85,7 +95,9 @@ export const ListNode = ({ data }: NodeProps) => {
               style={{
                 left: data.isHorizontal ? "-6px" : "50%",
                 top: data.isHorizontal ? "50%" : "-6px",
-                transform: data.isHorizontal ? "translateY(-50%)" : "translateX(-50%)",
+                transform: data.isHorizontal
+                  ? "translateY(-50%)"
+                  : "translateX(-50%)",
               }}
             />
             <Handle
@@ -97,7 +109,9 @@ export const ListNode = ({ data }: NodeProps) => {
                 left: data.isHorizontal ? "auto" : "50%",
                 bottom: data.isHorizontal ? "auto" : "-6px",
                 top: data.isHorizontal ? "50%" : "auto",
-                transform: data.isHorizontal ? "translateY(-50%)" : "translateX(-50%)",
+                transform: data.isHorizontal
+                  ? "translateY(-50%)"
+                  : "translateX(-50%)",
               }}
             />
           </CardContent>
@@ -105,7 +119,9 @@ export const ListNode = ({ data }: NodeProps) => {
 
         <div className="mt-2 text-center">
           <p className="text-xs font-semibold text-gray-700">{data.name}</p>
-          <div className="text-xs mt-1 text-gray-500">{data.taskCount} tasks</div>
+          <div className="text-xs mt-1 text-gray-500">
+            {data.taskCount} tasks
+          </div>
         </div>
       </div>
 
@@ -146,5 +162,5 @@ export const ListNode = ({ data }: NodeProps) => {
         isLoading={isDeleting}
       />
     </div>
-  )
-}
+  );
+};

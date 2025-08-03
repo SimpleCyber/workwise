@@ -1,17 +1,23 @@
-"use client"
+"use client";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { AlertTriangle } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle } from "lucide-react";
 
 interface DeleteConfirmationModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onConfirm: () => void
-  title: string
-  description: string
-  itemName: string
-  isLoading?: boolean
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title: string;
+  description: string;
+  itemName: string;
+  isLoading?: boolean;
 }
 
 export const DeleteConfirmationModal = ({
@@ -39,14 +45,24 @@ export const DeleteConfirmationModal = ({
         </DialogHeader>
 
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={isLoading}
+          >
             Cancel
           </Button>
-          <Button type="button" variant="destructive" onClick={onConfirm} disabled={isLoading}>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={onConfirm}
+            disabled={isLoading}
+          >
             {isLoading ? "Deleting..." : "Delete"}
           </Button>
         </div>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
