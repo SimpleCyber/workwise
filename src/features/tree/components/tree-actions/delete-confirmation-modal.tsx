@@ -50,6 +50,7 @@ export const DeleteConfirmationModal = ({
             variant="outline"
             onClick={onClose}
             disabled={isLoading}
+            F
           >
             Cancel
           </Button>

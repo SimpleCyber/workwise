@@ -74,7 +74,7 @@ export const EditProjectModal = ({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Project Name *</Label>
+            <Label htmlFor="name">Project Name</Label>
             <Input
               id="name"
               value={name}
@@ -92,16 +92,6 @@ export const EditProjectModal = ({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter project description (optional)"
               rows={3}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="background">Background Color</Label>
-            <Input
-              id="background"
-              value={background}
-              onChange={(e) => setBackground(e.target.value)}
-              placeholder="e.g., #3b82f6 or blue-500"
             />
           </div>
 

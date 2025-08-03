@@ -71,7 +71,7 @@ export const CreateProjectModal = ({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Project Name *</Label>
+            <Label htmlFor="name">Project Name</Label>
             <Input
               id="name"
               value={name}

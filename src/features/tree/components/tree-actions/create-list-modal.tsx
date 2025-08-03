@@ -61,7 +61,7 @@ export const CreateListModal = ({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">List Name *</Label>
+            <Label htmlFor="name">List Name</Label>
             <Input
               id="name"
               value={name}

@@ -77,7 +77,7 @@ export const CreateTaskModal = ({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Task Title *</Label>
+            <Label htmlFor="title">Task Title</Label>
             <Input
               id="title"
               value={title}
