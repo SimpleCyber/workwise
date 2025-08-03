@@ -1,5 +1,5 @@
 {
-  "name": "slack-clone",
+  "name": "woodls",
   "version": "1.0.1",
   "private": true,
   "scripts": {
@@ -12,11 +12,11 @@
     "format:fix": "prettier --write . --config .prettierrc.mjs"
   },
   "author": {
-    "name": "Sanidhya Kumar Verma",
-    "email": "sanidhya.verma12345@gmail.com",
-    "url": "https://github.com/sanidhyy"
+    "name": "Cyber Chakra",
+    "email": "woodls@gmail.com",
+    "url": "https://github.com/simplecyber"
   },
-  "description": "Collaborate with your team using real-time messaging in this Slack clone built with Next.js, Convex, and Shadcn UI.",
+  "description": "Collaborate with your team using real-time messaging in this Woodls built with Next.js, Convex, and Shadcn UI.",
   "keywords": [
     "reactjs",
     "nextjs",
@@ -44,7 +44,7 @@
     "real-time-messaging",
     "collaboration",
     "ui/ux",
-    "slack-clone",
+    "woodls",
     "date-fns",
     "cn",
     "clsx",

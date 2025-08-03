@@ -27,7 +27,7 @@ const WorkspaceIdLayout = ({ children }: Readonly<PropsWithChildren>) => {
         <Sidebar />
         <ResizablePanelGroup
           direction="horizontal"
-          autoSaveId="slack-clone-workspace-layout"
+          autoSaveId="woodls-workspace-layout"
         >
           <ResizablePanel
             defaultSize={20}
