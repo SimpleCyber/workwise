@@ -57,13 +57,13 @@ const TaskTooltip = ({ task }: TaskTooltipProps) => (
         <div className="flex items-center gap-2">
           <Avatar className="w-6 h-6">
             <AvatarImage
-              src={task.assignedTo.user.image || "/placeholder.svg"}
+              src={task.assignedTo?.user?.image || "/placeholder.svg"}
             />
             <AvatarFallback className="text-xs">
-              {task.assignedTo.user.name?.charAt(0).toUpperCase() || "U"}
+              {task.assignedTo?.user?.name?.charAt(0).toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
-          <span>{task.assignedTo.user.name || "Unknown"}</span>
+          <span>{task.assignedTo?.user?.name || "Unknown"}</span>
         </div>
       </div>
     )}
@@ -73,13 +73,13 @@ const TaskTooltip = ({ task }: TaskTooltipProps) => (
         <div className="flex items-center gap-2">
           <Avatar className="w-6 h-6">
             <AvatarImage
-              src={task.assignedBy.user.image || "/placeholder.svg"}
+              src={task.assignedBy?.user?.image || "/placeholder.svg"}
             />
             <AvatarFallback className="text-xs">
-              {task.assignedBy.user.name?.charAt(0).toUpperCase() || "U"}
+              {task.assignedBy?.user?.name?.charAt(0).toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
-          <span>{task.assignedBy.user.name || "Unknown"}</span>
+          <span>{task.assignedBy?.user?.name || "Unknown"}</span>
         </div>
       </div>
     )}
