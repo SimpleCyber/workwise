@@ -40,7 +40,7 @@ export const DeleteConfirmationModal = ({
           <DialogDescription className="text-left">
             {description}
             <br />
-            <strong className="text-red-600">"{itemName}"</strong>
+            <strong className="text-red-600">&ldquo;{itemName}&rdquo;</strong>
           </DialogDescription>
         </DialogHeader>
 
@@ -50,7 +50,6 @@ export const DeleteConfirmationModal = ({
             variant="outline"
             onClick={onClose}
             disabled={isLoading}
-            F
           >
             Cancel
           </Button>
