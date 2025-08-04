@@ -295,7 +295,7 @@ export const NotificationPanel = () => {
                   No notifications
                 </h3>
                 <p className="text-sm text-slate-500">
-                  You're all caught up! 🎉
+                  You are all caught up! 🎉
                 </p>
               </div>
             ) : (

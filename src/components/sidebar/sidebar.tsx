@@ -93,7 +93,7 @@ export const Sidebar = () => {
 
       {/* Content with stagger animations */}
       <div className="relative z-10 flex h-full w-full flex-col items-center gap-y-4">
-        <div className="animate-in fade-in-0 slide-in-from-top-5 duration-500">
+        <div >
           <WorkspaceSwitcher />
         </div>
 
@@ -102,7 +102,6 @@ export const Sidebar = () => {
           {navigationItems.map((item, index) => (
             <div
               key={item.path}
-              className={`animate-in fade-in-0 slide-in-from-left-3 duration-700 ${item.delay}`}
             >
               <SidebarButton
                 icon={item.icon}
@@ -114,8 +113,7 @@ export const Sidebar = () => {
           ))}
         </div>
 
-        {/* User button with entrance animation */}
-        <div className="mt-auto flex flex-col items-center justify-center gap-y-1 animate-in fade-in-0 slide-in-from-bottom-5 duration-500 delay-500">
+        <div className="mt-auto flex flex-col items-center justify-center gap-y-1 ">
           <UserButton />
         </div>
       </div>
