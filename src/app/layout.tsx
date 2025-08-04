@@ -32,11 +32,13 @@ const RootLayout = ({ children }: Readonly<PropsWithChildren>) => {
               <Toaster theme="light" richColors closeButton />
               <ModalProvider />
 
-              {/* Persistent panels */}
-              <CalendarPanel />
-              <NotificationPanel />
+              <div className="flex h-screen">
+                <div className="flex-1 overflow-auto">{children}</div>
 
-              {children}
+                {/* Persistent Panels */}
+                <CalendarPanel />
+                <NotificationPanel />
+              </div>
             </JotaiProvider>
           </ConvexClientProvider>
         </body>
