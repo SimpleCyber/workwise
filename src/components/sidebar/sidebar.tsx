@@ -93,16 +93,14 @@ export const Sidebar = () => {
 
       {/* Content with stagger animations */}
       <div className="relative z-10 flex h-full w-full flex-col items-center gap-y-4">
-        <div >
+        <div>
           <WorkspaceSwitcher />
         </div>
 
         {/* Navigation items with staggered entrance - centered */}
         <div className="flex flex-1 flex-col items-center justify-center gap-y-2">
           {navigationItems.map((item, index) => (
-            <div
-              key={item.path}
-            >
+            <div key={item.path}>
               <SidebarButton
                 icon={item.icon}
                 label={item.label}
