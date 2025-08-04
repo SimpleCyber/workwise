@@ -11,7 +11,7 @@ interface SidebarButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   isActive?: boolean;
 }
 
-export const SidebarButton = ({
+export const ToolbarButton = ({
   icon: Icon,
   label,
   isActive = false,
@@ -20,22 +20,6 @@ export const SidebarButton = ({
 }: SidebarButtonProps) => {
   return (
     <div className="group relative flex cursor-pointer flex-col items-center justify-center gap-y-0.5">
-      {/* Tooltip on hover */}
-      <div className="absolute left-full ml-2 hidden group-hover:block z-50">
-        <div className="whitespace-nowrap rounded-md bg-gray-300 px-2 py-1 text-xs text-black shadow-lg border border-gray-700 animate-in fade-in-0 zoom-in-95 duration-200">
-          {label}
-          <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 border-4 border-transparent border-r-gray-300 -ml-1" />
-        </div>
-      </div>
-
-      {/* Active indicator */}
-      {/* <div 
-        className={cn(
-          "absolute -left-1 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-white transition-all duration-300",
-          isActive ? "opacity-100 scale-100" : "opacity-0 scale-75"
-        )} 
-      /> */}
-
       {/* Ripple effect container */}
       <div className="relative overflow-hidden rounded-lg">
         <Button
@@ -80,7 +64,7 @@ export const SidebarButton = ({
           isActive ? "text-accent font-medium" : "text-white/80",
         )}
       >
-        {/* {label} */}
+        {label}
       </span>
 
       {/* Subtle pulse animation for active state */}

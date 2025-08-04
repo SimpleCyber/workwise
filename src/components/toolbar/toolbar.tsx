@@ -63,7 +63,7 @@ import { format } from "date-fns";
 
 import { useAtom } from "jotai";
 import { calendarOpenAtom, notificationOpenAtom } from "@/lib/panel-atoms";
-import { SidebarButton } from "../sidebar/sidebar-button";
+import { ToolbarButton } from "./toolbar-button";
 
 const searchTypes = [
   { id: "chat", label: "Chat", icon: MessageSquare },
@@ -496,7 +496,7 @@ export const Toolbar = () => {
               <FaGithub className="size-5 text-white" />
             </Link>
           </Button> */}
-          <SidebarButton
+          <ToolbarButton
             icon={Bell}
             label=""
             isActive={notificationOpen}
@@ -509,7 +509,7 @@ export const Toolbar = () => {
             }}
           />
 
-          <SidebarButton
+          <ToolbarButton
             icon={CalendarClock}
             label=""
             isActive={calendarOpen}

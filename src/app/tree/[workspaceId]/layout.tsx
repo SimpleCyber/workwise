@@ -33,7 +33,7 @@ const TreeWorkspaceLayout = ({ children }: Readonly<PropsWithChildren>) => {
           <ResizableHandle withHandle />
           <ResizablePanel
             defaultSize={80}
-            minSize={20}
+            minSize={0}
             className="flex flex-col"
           >
             <div className="flex-1 overflow-hidden">{children}</div>
