@@ -81,7 +81,7 @@ export const TreeVisualization = ({
             },
           }}
         >
-          <Background />
+          <Background className="bg-gray-200 dark:bg-gray-800" />
           <Controls />
         </ReactFlow>
       </div>

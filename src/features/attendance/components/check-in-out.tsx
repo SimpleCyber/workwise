@@ -6,6 +6,7 @@ import {
   Clock,
   Home,
   XCircle,
+  MapPin,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import type Quill from "quill";
@@ -63,9 +64,6 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
   const { mutate: checkIn, isPending: isCheckingIn } = useCheckIn();
   const { mutate: checkOut, isPending: isCheckingOutPending } = useCheckOut();
   const { mutate: generateUploadUrl } = useGenerateUploadUrl();
-
-
-
 
   const handleCheckIn = async () => {
     try {
@@ -167,21 +165,21 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
     switch (status) {
       case "approved":
         return (
-          <Badge className="bg-green-100 text-green-800">
+          <Badge className="bg-green-100 text-green-800 border-green-200">
             <CheckCircle className="w-3 h-3 mr-1" />
             Approved
           </Badge>
         );
       case "rejected":
         return (
-          <Badge className="bg-red-100 text-red-800">
+          <Badge className="bg-red-100 text-red-800 border-red-200">
             <XCircle className="w-3 h-3 mr-1" />
             Rejected
           </Badge>
         );
       case "pending":
         return (
-          <Badge className="bg-yellow-100 text-yellow-800">
+          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
             <Clock className="w-3 h-3 mr-1" />
             Pending
           </Badge>
@@ -193,101 +191,118 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
 
   return (
     <ResizablePanelGroup direction="horizontal" className="h-full">
-      {/* Main Content */}
       <ResizablePanel defaultSize={70} minSize={50}>
-        <div className="max-w-4xl mx-auto space-y-6 p-6">
-          {/* Current Status */}
+        <div className="max-w-2xl mx-auto p-6 space-y-6">
+          
+          {/* Today's Status */}
           {todayAttendance && (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="w-5 h-5" />
-                  Today Attendance
-                </CardTitle>
+                <CardTitle>Today's Attendance</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Check In</p>
-                    <p className="font-medium">
-                      {new Date(
-                        todayAttendance.checkInTime,
-                      ).toLocaleTimeString()}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {todayAttendance.workLocation === "home"
-                        ? "Work from Home"
-                        : "Office"}
-                    </p>
+                <div className="space-y-4">
+                  <div className="flex  justify-between items-center">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Check In</p>
+                      <p className="font-medium">
+                        {new Date(todayAttendance.checkInTime).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Location</p>
+                      <div className="flex items-center gap-1">
+                        {todayAttendance.workLocation === "home" ? (
+                          <>
+                            <Home className="w-4 h-4" />
+                            <span>Home</span>
+                          </>
+                        ) : (
+                          <>
+                            <Building className="w-4 h-4" />
+                            <span>Office</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Status</p>
+                      {getStatusBadge(todayAttendance.status)}
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Check Out</p>
-                    <p className="font-medium">
-                      {todayAttendance.checkOutTime
-                        ? new Date(
-                            todayAttendance.checkOutTime,
-                          ).toLocaleTimeString()
-                        : "Not checked out"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Status</p>
-                    {getStatusBadge(todayAttendance.status)}
-                  </div>
+                  
+                  {todayAttendance.checkOutTime && (
+                    <div className="pt-4 border-t">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Check Out</p>
+                          <p className="font-medium">
+                            {new Date(todayAttendance.checkOutTime).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                        <div className="text-green-600">
+                          <CheckCircle className="w-5 h-5" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {/* Check In Form */}
+          {/* Check In */}
           {!todayAttendance && (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="w-5 h-5" />
-                  Check In
-                </CardTitle>
-                <CardDescription>
-                  Start your workday by checking in
-                </CardDescription>
+                <CardTitle>Check In</CardTitle>
+                <CardDescription>Start your workday</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label className="text-base font-medium">Work Location</Label>
-                  <RadioGroup
-                    value={workLocation}
-                    onValueChange={(value) =>
-                      setWorkLocation(value as "office" | "home")
-                    }
-                    className="mt-2"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="office" id="office" />
-                      <Label
-                        htmlFor="office"
-                        className="flex items-center gap-2"
-                      >
-                        <Building className="w-4 h-4" />
-                        Office
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="home" id="home" />
-                      <Label htmlFor="home" className="flex items-center gap-2">
-                        <Home className="w-4 h-4" />
-                        Work from Home
-                      </Label>
-                    </div>
-                  </RadioGroup>
+                  <Label className="text-sm font-medium">Work Location</Label>
+                  <div className="grid grid-cols-2 gap-3 mt-2">
+                    <button
+                      type="button"
+                      onClick={() => setWorkLocation("office")}
+                      className={`p-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
+                        workLocation === "office"
+                          ? "border-blue-500 bg-blue-50 text-blue-700"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <Building className="w-4 h-4" />
+                      Office
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setWorkLocation("home")}
+                      className={`p-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
+                        workLocation === "home"
+                          ? "border-blue-500 bg-blue-50 text-blue-700"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <Home className="w-4 h-4" />
+                      Home
+                    </button>
+                  </div>
                 </div>
 
                 <div>
                   <Label htmlFor="location">Location (Optional)</Label>
                   <Input
                     id="location"
-                    placeholder="Enter your location or it will be detected automatically"
+                    placeholder="Enter location or leave blank for auto-detection"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
+                    className="mt-1"
                   />
                 </div>
 
@@ -295,10 +310,11 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
                   <Label htmlFor="notes">Notes (Optional)</Label>
                   <Textarea
                     id="notes"
-                    placeholder="Any additional notes for today..."
+                    placeholder="Any notes for today..."
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     rows={3}
+                    className="mt-1"
                   />
                 </div>
 
@@ -313,17 +329,12 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
             </Card>
           )}
 
-          {/* Check Out Form */}
+          {/* Check Out */}
           {todayAttendance && !todayAttendance.checkOutTime && (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="w-5 h-5" />
-                  Check Out
-                </CardTitle>
-                <CardDescription>
-                  End your workday by checking out and submitting your tasks
-                </CardDescription>
+                <CardTitle>Check Out</CardTitle>
+                <CardDescription>End your workday and submit your tasks</CardDescription>
               </CardHeader>
               <CardContent>
                 {!isCheckingOut ? (
@@ -336,19 +347,18 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
                 ) : (
                   <div className="space-y-4">
                     <div>
-                      <Label className="text-base font-medium">
-                        Today Tasks & Accomplishments
-                      </Label>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Describe what you accomplished today. You can format
-                        text and attach images.
+                      <Label className="text-sm font-medium">Today's Tasks</Label>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Describe what you accomplished today
                       </p>
-                      <Editor
-                        placeholder="Describe your tasks and accomplishments for today..."
-                        onSubmit={handleCheckOut}
-                        disabled={isCheckingOutPending}
-                        innerRef={editorRef}
-                      />
+                      <div className="border rounded-md">
+                        <Editor
+                          placeholder="What did you work on today?"
+                          onSubmit={handleCheckOut}
+                          disabled={isCheckingOutPending}
+                          innerRef={editorRef}
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
@@ -359,25 +369,16 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
           {/* Already Checked Out */}
           {todayAttendance && todayAttendance.checkOutTime && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-green-600">
-                  <CheckCircle className="w-5 h-5" />
-                  Work Day Complete
-                </CardTitle>
-                <CardDescription>
-                  You have successfully completed your work day
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Checked out at{" "}
-                  {new Date(todayAttendance.checkOutTime).toLocaleTimeString()}
+              <CardContent className="pt-6 text-center">
+                <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Work Day Complete</h3>
+                <p className="text-muted-foreground">
+                  Checked out at {" "}
+                  {new Date(todayAttendance.checkOutTime).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
                 </p>
-                {todayAttendance.status === "pending" && (
-                  <p className="text-sm text-yellow-600 mt-2">
-                    Your attendance is pending admin approval.
-                  </p>
-                )}
               </CardContent>
             </Card>
           )}
@@ -385,8 +386,6 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
       </ResizablePanel>
 
       <ResizableHandle withHandle />
-
-
     </ResizablePanelGroup>
   );
 };
