@@ -3,7 +3,7 @@
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,10 @@ export const PreferencesModal = ({
   );
 
   const [value, setValue] = useState(initialValue);
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
+
   const [editOpen, setEditOpen] = useState(false);
 
   const { mutate: updateWorkspace, isPending: isUpdatingWorkspace } =

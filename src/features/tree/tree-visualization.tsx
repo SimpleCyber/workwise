@@ -73,11 +73,11 @@ export const TreeVisualization = ({
           fitView
           fitViewOptions={{ padding: 50 }}
           defaultEdgeOptions={{
-            type: "default", // Use default bezier curves
+            type: "default",
             animated: true,
             style: {
               strokeWidth: 2,
-              stroke: "#94a3b8", // Default color
+              stroke: "#94a3b8",
             },
           }}
         >

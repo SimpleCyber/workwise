@@ -599,7 +599,7 @@ export const CalendarPanel = () => {
   if (!open) return null;
 
   return (
-    <div className="fixed top-10 right-0 z-50 w-96 bg-white border-l border-slate-200 h-full overflow-y-auto shadow-2xl">
+    <div className="fixed  right-0 z-50 w-96 bg-white border-l border-slate-200 h-full overflow-y-auto shadow-2xl">
       {/* Header */}
       <div className="p-2 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white sticky top-0 z-10">
         <div className="flex items-center justify-between">

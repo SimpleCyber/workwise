@@ -196,7 +196,7 @@ export const NotificationPanel = () => {
   };
 
   return (
-    <div className="fixed top-10 right-0 z-50 w-96 h-full bg-white shadow-2xl border-l border-slate-200 animate-in slide-in-from-right duration-300">
+    <div className="fixed  right-0 z-50 w-96 h-full bg-white shadow-2xl border-l border-slate-200 animate-in slide-in-from-right duration-300">
       {/* Header */}
       <div className="flex items-center justify-between p-2 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
         <div className="flex items-center gap-3">

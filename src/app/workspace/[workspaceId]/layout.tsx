@@ -12,7 +12,7 @@ import {
 import { Profile } from "@/features/members/components/profile";
 import { Thread } from "@/features/messages/components/thread";
 import { usePanel } from "@/hooks/use-panel";
-import { Toolbar } from "../../../components/toolbar/toolbar";
+// import { Toolbar } from "../../../components/toolbar/toolbar";
 import { WorkspaceSidebar } from "../../../components/workspace-header/workspace-sidebar";
 import { WorkspaceSidebarContent } from "./workspace-sidebar-content";
 
@@ -22,8 +22,8 @@ const WorkspaceIdLayout = ({ children }: Readonly<PropsWithChildren>) => {
 
   return (
     <div className="h-full">
-      <Toolbar />
-      <div className="flex h-[calc(100vh_-_40px)]">
+      {/* <Toolbar /> */}
+      <div className="flex h-[calc(100vh_-_0px)]">
         <Sidebar />
         <ResizablePanelGroup
           direction="horizontal"

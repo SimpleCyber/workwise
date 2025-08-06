@@ -2,7 +2,7 @@
 
 import type { PropsWithChildren } from "react";
 import { Sidebar } from "@/components/sidebar/sidebar";
-import { Toolbar } from "@/components/toolbar/toolbar";
+// import { Toolbar } from "@/components/toolbar/toolbar";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -13,8 +13,8 @@ import { WorkspaceSidebarContent } from "./workspace-sidebar-content";
 const TreeWorkspaceLayout = ({ children }: Readonly<PropsWithChildren>) => {
   return (
     <div className="h-full">
-      <Toolbar />
-      <div className="flex h-[calc(100vh_-_40px)]">
+      {/* <Toolbar /> */}
+      <div className="flex h-[calc(100vh_-_0px)]">
         <Sidebar />
         <ResizablePanelGroup
           direction="horizontal"
