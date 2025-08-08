@@ -52,7 +52,7 @@ const WorkspaceLayout = ({
   return (
     <div className="h-full">
       {showToolbar && toolbarComponent}
-      <div className={`flex h-[calc(100vh_-_${heightOffset})]`}>
+      <div className="flex h-[100vh]">
         <Sidebar
           isWorkspacePanelCollapsed={isCollapsed}
           onToggleWorkspacePanel={togglePanel}

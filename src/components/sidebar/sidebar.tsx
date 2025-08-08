@@ -36,37 +36,37 @@ export const Sidebar = ({
       icon: Network,
       label: "All Data",
       path: `/tree/${workspaceId}`,
-      // delay: "delay-[50ms]",
+      delay: "delay-[50ms]",
     },
     {
       icon: Kanban,
       label: "ToDo",
       path: `/todo/${workspaceId}`,
-      // delay: "delay-[100ms]",
+      delay: "delay-[100ms]",
     },
     {
       icon: ListTodo,
       label: "Project",
       path: `/projects/${workspaceId}`,
-      // delay: "delay-[150ms]",
+      delay: "delay-[150ms]",
     },
     {
       icon: MessagesSquare,
       label: "Chat",
       path: `/workspace/${workspaceId}`,
-      // delay: "delay-[200ms]",
+      delay: "delay-[200ms]",
     },
     {
       icon: Files,
       label: "Files",
       path: `/data-room/${workspaceId}`,
-      // delay: "delay-[250ms]",
+      delay: "delay-[250ms]",
     },
     {
       icon: Calendar,
       label: "Attend",
       path: `/attendance/${workspaceId}`,
-      // delay: "delay-[300ms]",
+      delay: "delay-[300ms]",
     },
   ];
 
