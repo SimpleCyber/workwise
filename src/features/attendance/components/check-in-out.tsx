@@ -198,7 +198,7 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
           {todayAttendance && (
             <Card>
               <CardHeader>
-                <CardTitle>Today's Attendance</CardTitle>
+                <CardTitle>Today Attendance</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -347,7 +347,7 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
                 ) : (
                   <div className="space-y-4">
                     <div>
-                      <Label className="text-sm font-medium">Today's Tasks</Label>
+                      <Label className="text-sm font-medium">Today Tasks</Label>
                       <p className="text-sm text-muted-foreground mb-3">
                         Describe what you accomplished today
                       </p>
