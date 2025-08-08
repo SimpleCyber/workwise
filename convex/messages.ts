@@ -198,7 +198,7 @@ export const getById = query({
 
     const user = await populateUser(ctx, member.userId);
 
-    if (!user) return null;
+    if (!user) return "/";
 
     const reactions = await populateReactions(ctx, message._id);
 

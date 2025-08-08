@@ -11,7 +11,7 @@ export const getTreeData = query({
 
     // Get current user
     const user = await ctx.db.get(userId);
-    if (!user) return null;
+    if (!user) return "/";
 
     // Get current member to check permissions
     const currentMember = await ctx.db
