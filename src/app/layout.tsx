@@ -14,7 +14,6 @@ import { CalendarPanel } from "@/components/calender/CalendarPanel";
 import { NotificationPanel } from "@/components/notification/NotificationPanel";
 
 import "./globals.css";
-import { PanelButton } from "@/components/toolbar/pannnel-button";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -37,11 +36,7 @@ const RootLayout = ({ children }: Readonly<PropsWithChildren>) => {
                 <div className="flex-1 overflow-auto">{children}</div>
 
                 {/* Persistent Panels */}
-                <PanelButton
-                  position="bottom-left"
-                  className="mb-10 -ml-1 z-500"
-                  orientation="vertical"
-                />
+
                 <CalendarPanel />
                 <NotificationPanel />
               </div>

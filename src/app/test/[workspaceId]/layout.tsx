@@ -8,7 +8,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import { WorkspaceSidebar } from "@/components/workspace-header/workspace-sidebar";
+import { WorkspaceSidebar } from "@/components/workspace-sidebar/workspace-sidebar";
 import { WorkspaceSidebarContent } from "./workspace-sidebar-content";
 
 const TreeWorkspaceLayout = ({ children }: Readonly<PropsWithChildren>) => {

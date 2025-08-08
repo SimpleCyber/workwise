@@ -13,8 +13,6 @@ import {
   FolderKanban,
   Users,
   FileText,
-  Bell,
-  CalendarClock,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -63,7 +61,6 @@ import { format } from "date-fns";
 
 import { useAtom } from "jotai";
 import { calendarOpenAtom, notificationOpenAtom } from "@/lib/panel-atoms";
-import { ToolbarButton } from "./toolbar-button";
 
 const searchTypes = [
   { id: "chat", label: "Chat", icon: MessageSquare },
@@ -496,7 +493,7 @@ export const Toolbar = () => {
               <FaGithub className="size-5 text-white" />
             </Link>
           </Button> */}
-          <ToolbarButton
+          {/* <ToolbarButton
             icon={Bell}
             label=""
             isActive={notificationOpen}
@@ -520,7 +517,7 @@ export const Toolbar = () => {
                 return next;
               });
             }}
-          />
+          /> */}
         </div>
       </nav>
 

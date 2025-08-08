@@ -3,7 +3,7 @@
 import { Loader } from "lucide-react";
 import type { PropsWithChildren } from "react";
 import type { Id } from "@/../convex/_generated/dataModel";
-import WorkspaceLayout from "@/components/sidebar/workspace-layout";
+import WorkspaceLayout from "@/components/workspace-sidebar/workspace-sidebar-layout";
 import { Profile } from "@/features/members/components/profile";
 import { Thread } from "@/features/messages/components/thread";
 import { usePanel } from "@/hooks/use-panel";
@@ -29,13 +29,6 @@ const WorkspaceIdLayout = ({ children }: Readonly<PropsWithChildren>) => {
   return (
     <WorkspaceLayout
       autoSaveId="woodls-workspace-layout"
-      defaultPanelSize={20}
-      maxPanelSize={30}
-      minPanelSize={0}
-      mainPanelMinSize={20}
-      rightPanel={rightPanelContent}
-      rightPanelMinSize={20}
-      rightPanelDefaultSize={29}
       sidebarContent={<WorkspaceSidebarContent />}
     >
       {children}

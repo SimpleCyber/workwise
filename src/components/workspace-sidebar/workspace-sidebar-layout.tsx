@@ -7,8 +7,8 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import { WorkspaceSidebar } from "@/components/workspace-header/workspace-sidebar";
-import { useWorkspacePanel } from "./use-workspace-panel";
+import { WorkspaceSidebar } from "@/components/workspace-sidebar/workspace-sidebar";
+import { useWorkspacePanel } from "./use-workspace-sidebar-panel-context";
 
 interface WorkspaceLayoutProps extends PropsWithChildren {
   autoSaveId: string;
@@ -30,7 +30,7 @@ const WorkspaceLayout = ({
   children,
   autoSaveId,
   defaultPanelSize = 20,
-  maxPanelSize = 30,
+  maxPanelSize = 15,
   minPanelSize = 0,
   mainPanelMinSize = 20,
   mainPanelDefaultSize,

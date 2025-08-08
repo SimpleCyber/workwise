@@ -11,11 +11,9 @@ export function useWorkspacePanel(defaultSize: number = 25) {
     const panel = leftPanelRef.current;
     if (panel) {
       if (isCollapsed) {
-        // Expand to default size
         panel.resize(defaultSize);
         setIsCollapsed(false);
       } else {
-        // Collapse to 0% width
         panel.resize(0);
         setIsCollapsed(true);
       }
@@ -23,7 +21,6 @@ export function useWorkspacePanel(defaultSize: number = 25) {
   }, [isCollapsed, defaultSize]);
 
   const handlePanelResize = useCallback((size: number) => {
-    // Update collapsed state based on panel size
     setIsCollapsed(size === 0);
   }, []);
 
