@@ -1,4 +1,4 @@
-import { ImageIcon, Smile, XIcon } from "lucide-react";
+import { Paperclip, Smile, XIcon } from "lucide-react";
 import Image from "next/image";
 import Quill, { type QuillOptions } from "quill";
 import type { Delta, Op } from "quill/core";
@@ -45,7 +45,7 @@ const Editor = ({
 }: EditorProps) => {
   const [text, setText] = useState("");
   const [image, setImage] = useState<File | null>(null);
-  const [isToolbarVisible, setIsToolbarVisible] = useState(true);
+  const [isToolbarVisible, setIsToolbarVisible] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const imageElementRef = useRef<HTMLInputElement>(null);
@@ -114,6 +114,12 @@ const Editor = ({
     };
 
     const quill = new Quill(editorContainer, options);
+
+    // Hide toolbar by default
+    const toolbarElement = container.querySelector(".ql-toolbar");
+    if (toolbarElement) {
+      toolbarElement.classList.add("hidden");
+    }
 
     quillRef.current = quill;
     quillRef.current.focus();
@@ -203,7 +209,7 @@ const Editor = ({
         )}
 
         <div className="z-[5] flex px-2 pb-2">
-          <Hint
+          {/* <Hint
             label={isToolbarVisible ? "Hide formatting" : "Show formatting"}
           >
             <Button
@@ -214,13 +220,7 @@ const Editor = ({
             >
               <PiTextAa className="size-4" />
             </Button>
-          </Hint>
-
-          <EmojiPopover onEmojiSelect={onEmojiSelect}>
-            <Button disabled={disabled} size="iconSm" variant="ghost">
-              <Smile className="size-4" />
-            </Button>
-          </EmojiPopover>
+          </Hint> */}
 
           {variant === "create" && (
             <Hint label="Image">
@@ -230,10 +230,16 @@ const Editor = ({
                 variant="ghost"
                 onClick={() => imageElementRef.current?.click()}
               >
-                <ImageIcon className="size-4" />
+                <Paperclip className="size-4" />
               </Button>
             </Hint>
           )}
+
+          <EmojiPopover onEmojiSelect={onEmojiSelect}>
+            <Button disabled={disabled} size="iconSm" variant="ghost">
+              <Smile className="size-4" />
+            </Button>
+          </EmojiPopover>
 
           {variant === "update" && (
             <div className="ml-auto flex items-center gap-x-2">
