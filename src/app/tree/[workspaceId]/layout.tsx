@@ -6,14 +6,18 @@ import { WorkspaceSidebarContent } from "./workspace-sidebar-content";
 
 const TreeWorkspaceLayout = ({ children }: Readonly<PropsWithChildren>) => {
   return (
-    <WorkspaceLayout
-      autoSaveId="tree-workspace-layout"
-      defaultPanelSize={25}
-      maxPanelSize={30}
-      sidebarContent={<WorkspaceSidebarContent />}
-    >
-      {children}
-    </WorkspaceLayout>
+    <div className="h-full">
+      {/* <Toolbar /> */}
+      {/* <div className="flex h-[calc(100vh_-_0px)]"></div> */}
+      <WorkspaceLayout
+        autoSaveId="tree-workspace-layout"
+        defaultPanelSize={25}
+        maxPanelSize={30}
+        sidebarContent={<WorkspaceSidebarContent />}
+      >
+        {children}
+      </WorkspaceLayout>
+    </div>
   );
 };
 
