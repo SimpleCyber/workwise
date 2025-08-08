@@ -9,6 +9,8 @@ import {
   Calendar,
   Files,
   Network,
+  PanelLeftOpen,
+  PanelLeftClose,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { UserButton } from "@/features/auth/components/user-button";
@@ -17,7 +19,15 @@ import { WorkspaceSwitcher } from "../workspace-header/workspace-switcher";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { WorkspaceManageButton } from "./workspace-manage";
 
-export const Sidebar = () => {
+interface SidebarProps {
+  isWorkspacePanelCollapsed?: boolean;
+  onToggleWorkspacePanel?: () => void;
+}
+
+export const Sidebar = ({
+  isWorkspacePanelCollapsed = false,
+  onToggleWorkspacePanel,
+}: SidebarProps) => {
   const pathname = usePathname();
   const router = useRouter();
   const workspaceId = useWorkspaceId();
@@ -59,12 +69,6 @@ export const Sidebar = () => {
       path: `/attendance/${workspaceId}`,
       delay: "delay-[300ms]",
     },
-    // {
-    //   icon: AlignStartHorizontal,
-    //   label: "Test",
-    //   path: `/test/${workspaceId}`,
-    //   delay: "delay-[350ms]"
-    // },
   ];
 
   const handleNavigation = (path: string) => {
@@ -97,6 +101,29 @@ export const Sidebar = () => {
           <WorkspaceSwitcher />
         </div>
 
+        {/* Panel Toggle Buttons - Added below WorkspaceSwitcher */}
+        {onToggleWorkspacePanel && (
+          <div className="flex flex-col gap-y-1">
+            <button
+              onClick={onToggleWorkspacePanel}
+              className="group relative flex h-9 w-9 items-center justify-center rounded-md text-gray-400 transition-all duration-200 hover:bg-gray-800 hover:text-white"
+            >
+              {isWorkspacePanelCollapsed ? (
+                <PanelLeftOpen className="h-4 w-4 transition-transform group-hover:scale-110" />
+              ) : (
+                <PanelLeftClose className="h-4 w-4 transition-transform group-hover:scale-110" />
+              )}
+
+              <div className="absolute left-full ml-2 hidden group-hover:block z-50">
+                <div className="whitespace-nowrap rounded-md bg-gray-300 px-2 py-1 text-xs text-black shadow-lg border border-gray-700 animate-in fade-in-0 zoom-in-95 duration-200">
+                  {isWorkspacePanelCollapsed ? "Open Panel" : "Close Panel"}
+                  <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 border-4 border-transparent border-r-gray-300 -ml-1" />
+                </div>
+              </div>
+            </button>
+          </div>
+        )}
+
         {/* Navigation items with staggered entrance - centered */}
         <div className="flex flex-1 flex-col items-center justify-center gap-y-2">
           {navigationItems.map((item, index) => (
@@ -111,7 +138,7 @@ export const Sidebar = () => {
           ))}
         </div>
 
-        <div className="mt-auto flex flex-col items-center justify-center gap-y-1 ">
+        <div className="mt-auto flex flex-col items-center justify-center gap-y-1">
           <UserButton />
         </div>
       </div>
