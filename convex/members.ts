@@ -60,7 +60,7 @@ export const current = query({
 
     const user = await ctx.db.get(member.userId);
 
-    if (!user) return "/";
+    if (!user) return null;
 
     return {
       ...member,
@@ -181,7 +181,7 @@ export const getById = query({
     if (!member) return null;
 
     const user = await ctx.db.get(member.userId);
-    if (!user) return "/";
+    if (!user) return null;
 
     return {
       ...member,
