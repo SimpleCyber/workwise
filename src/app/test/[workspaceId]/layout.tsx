@@ -15,23 +15,21 @@ const TreeWorkspaceLayout = ({ children }: Readonly<PropsWithChildren>) => {
   return (
     <div className="h-full">
       <Toolbar />
-      <div className="flex h-[calc(100vh_-_40px)]">
-        <Sidebar />
-        <ResizablePanelGroup
-          direction="horizontal"
-          autoSaveId="tree-workspace-layout"
-        >
-          <ResizablePanel defaultSize={20} minSize={11} className="bg-gray-900">
-            <WorkspaceSidebar>
-              <WorkspaceSidebarContent />
-            </WorkspaceSidebar>
-          </ResizablePanel>
-          <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={80} minSize={20}>
-            {children}
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      </div>
+      <Sidebar />
+      <ResizablePanelGroup
+        direction="horizontal"
+        autoSaveId="tree-workspace-layout"
+      >
+        <ResizablePanel defaultSize={20} minSize={11} className="bg-gray-900">
+          <WorkspaceSidebar>
+            <WorkspaceSidebarContent />
+          </WorkspaceSidebar>
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSize={80} minSize={20}>
+          {children}
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 };
