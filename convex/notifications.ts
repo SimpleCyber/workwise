@@ -38,7 +38,6 @@ export const createNotification = mutation({
       isRead: false,
       createdAt: Date.now(),
     });
-
     return notificationId;
   },
 });
@@ -82,7 +81,7 @@ export const getUserNotifications = query({
       });
     }
 
-    // Populate workspace and action user data
+    // Populate workspace, action user data, and attendance status
     const notificationsWithData = await Promise.all(
       notifications.map(async (notification) => {
         const workspace = await ctx.db.get(notification.workspaceId);
@@ -90,10 +89,33 @@ export const getUserNotifications = query({
           ? await ctx.db.get(notification.actionBy)
           : null;
 
+        // Check if there are any approval/rejection notifications for this attendance
+        let hasBeenProcessed = false;
+        if (
+          notification.type === "attendance_submitted" &&
+          notification.relatedId
+        ) {
+          const processedNotifications = await ctx.db
+            .query("notifications")
+            .filter((q) =>
+              q.and(
+                q.eq(q.field("relatedId"), notification.relatedId),
+                q.or(
+                  q.eq(q.field("type"), "attendance_approved"),
+                  q.eq(q.field("type"), "attendance_rejected"),
+                ),
+              ),
+            )
+            .first();
+
+          hasBeenProcessed = !!processedNotifications;
+        }
+
         return {
           ...notification,
           workspace,
           actionUser,
+          hasBeenProcessed,
         };
       }),
     );
