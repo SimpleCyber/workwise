@@ -292,6 +292,7 @@ export const createProjectTask = mutation({
           actionBy: userId,
           isRead: false,
           createdAt: Date.now(),
+          sendedmail: false, // Uncomment if you want to track email sending
         });
       }
     }
@@ -476,6 +477,7 @@ export const updateProjectTask = mutation({
           actionBy: userId,
           isRead: false,
           createdAt: Date.now(),
+          sendedmail: false,
         });
       }
     } else {
@@ -511,6 +513,7 @@ export const updateProjectTask = mutation({
           actionBy: userId,
           isRead: false,
           createdAt: Date.now(),
+          sendedmail: false,
         });
       }
 
@@ -530,6 +533,7 @@ export const updateProjectTask = mutation({
           actionBy: userId,
           isRead: false,
           createdAt: Date.now(),
+          sendedmail: false,
         });
       }
 
@@ -551,6 +555,7 @@ export const updateProjectTask = mutation({
               actionBy: userId,
               isRead: false,
               createdAt: now,
+              sendedmail: false,
             });
           }
         }
@@ -567,6 +572,7 @@ export const updateProjectTask = mutation({
             actionBy: userId,
             isRead: false,
             createdAt: now,
+            sendedmail: false,
           });
         }
       }
@@ -843,6 +849,7 @@ export const createTaskComment = mutation({
         actionBy: userId,
         isRead: false,
         createdAt: Date.now(),
+        sendedmail: false,
       });
     }
 
@@ -863,6 +870,7 @@ export const createTaskComment = mutation({
         actionBy: userId,
         isRead: false,
         createdAt: Date.now(),
+        sendedmail: false,
       });
     }
 

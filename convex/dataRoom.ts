@@ -71,6 +71,7 @@ export const uploadDataRoomFile = mutation({
             actionBy: userId,
             isRead: false,
             createdAt: Date.now(),
+            sendedmail: false,
           });
         }),
       );
@@ -91,6 +92,7 @@ export const uploadDataRoomFile = mutation({
               actionBy: userId,
               isRead: false,
               createdAt: Date.now(),
+              sendedmail: false,
             });
           }
         }),

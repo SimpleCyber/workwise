@@ -98,6 +98,7 @@ export const checkIn = mutation({
           actionBy: userId,
           isRead: false,
           createdAt: Date.now(),
+          sendedmail: false, // Uncomment if you want to track email sending
         });
       }),
     );
@@ -160,6 +161,7 @@ export const checkOut = mutation({
           actionBy: userId,
           isRead: false,
           createdAt: Date.now(),
+          sendedmail: false,
         });
       }),
     );
@@ -455,6 +457,7 @@ export const updateAttendanceStatus = mutation({
         actionBy: userId,
         isRead: false,
         createdAt: Date.now(),
+        sendedmail: false, // Uncomment if you want to track email sending
       });
     }
 
@@ -481,6 +484,7 @@ export const updateAttendanceStatus = mutation({
           actionBy: userId,
           isRead: false,
           createdAt: Date.now(),
+          sendedmail: false,
         });
       }),
     );

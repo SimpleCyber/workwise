@@ -106,11 +106,13 @@ const schema = defineSchema({
     actionBy: v.optional(v.id("users")),
     isRead: v.boolean(),
     createdAt: v.number(),
+    sendedmail: v.boolean(),
   })
     .index("by_user_id", ["userId"])
     .index("by_workspace_id", ["workspaceId"])
     .index("by_created_at", ["createdAt"])
     .index("by_is_read", ["isRead"]),
+
   // Attendance comments table
   attendanceComments: defineTable({
     attendanceId: v.id("attendance"),
