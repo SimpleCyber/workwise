@@ -107,3 +107,7 @@ export const useGetAllNotifications = (
 export const useGetNotificationStats = (workspaceId?: Id<"workspaces">) => {
   return useQuery(api.notifications.getNotificationStats, { workspaceId });
 };
+
+export const useMarkEmailAsSent = () => {
+  return useMutation(api.notifications.markEmailAsSent);
+};

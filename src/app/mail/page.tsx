@@ -38,10 +38,13 @@ import {
   MailOpen,
   Activity,
   Download,
+  Send,
+  Loader2,
 } from "lucide-react";
 import {
   useGetAllNotifications,
   useGetNotificationStats,
+  useMarkEmailAsSent,
   type NotificationCategory,
 } from "@/hooks/use-notifications";
 
@@ -67,6 +70,18 @@ const CATEGORY_COLORS: Record<string, string> = {
   default: "bg-gray-100 text-gray-800",
 };
 
+const TYPE_COLORS: Record<string, string> = {
+  attendance_approved: "bg-green-100 text-green-800 border-green-200",
+  task_completed: "bg-green-100 text-green-800 border-green-200",
+  attendance_rejected: "bg-red-100 text-red-800 border-red-200",
+  task_on_hold: "bg-red-100 text-red-800 border-red-200",
+  task_assigned: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  attendance_action_by_admin: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  document_shared: "bg-purple-100 text-purple-800 border-purple-200",
+  document_uploaded: "bg-purple-100 text-purple-800 border-purple-200",
+  default: "bg-blue-100 text-blue-800 border-blue-200",
+};
+
 export default function AdminNotificationsPage() {
   const [category, setCategory] = useState<NotificationCategory>("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -77,6 +92,7 @@ export default function AdminNotificationsPage() {
   const [emailSentFilter, setEmailSentFilter] = useState<boolean | undefined>(
     undefined,
   );
+  const [sendingEmails, setSendingEmails] = useState<Set<string>>(new Set());
 
   const notifications = useGetAllNotifications(
     limit,
@@ -87,6 +103,7 @@ export default function AdminNotificationsPage() {
     emailSentFilter,
   );
   const stats = useGetNotificationStats();
+  const markEmailAsSent = useMarkEmailAsSent();
 
   const isLoading = notifications === undefined;
 
@@ -111,6 +128,55 @@ export default function AdminNotificationsPage() {
     if (type.includes("task")) return "task";
     if (type.includes("document")) return "document";
     return "default";
+  };
+
+  const getTypeColor = (type: string): string => {
+    return TYPE_COLORS[type] || TYPE_COLORS.default;
+  };
+
+  const handleSendEmail = async (notification: any) => {
+    if (!notification.user?.email) {
+      return;
+    }
+
+    setSendingEmails((prev) => new Set(prev).add(notification._id));
+
+    try {
+      const response = await fetch("/api/send-notification-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          notificationId: notification._id,
+          type: notification.type,
+          title: notification.title,
+          message: notification.message,
+          userEmail: notification.user.email,
+          userName: notification.user.name || notification.user.email,
+          workspaceName: notification.workspace?.name || "Unknown Workspace",
+          actionBy:
+            notification.actionUser?.name || notification.actionUser?.email,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // Mark email as sent in database
+        await markEmailAsSent({ notificationId: notification._id });
+      } else {
+        throw new Error(result.error || "Failed to send email");
+      }
+    } catch (error) {
+      console.error("Error sending email:", error);
+    } finally {
+      setSendingEmails((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(notification._id);
+        return newSet;
+      });
+    }
   };
 
   const exportToCSV = () => {
@@ -383,7 +449,7 @@ export default function AdminNotificationsPage() {
                   <TableHead>Action By</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Date</TableHead>
-                  <TableHead>Related ID</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -437,11 +503,7 @@ export default function AdminNotificationsPage() {
                       <TableCell>
                         <Badge
                           variant="outline"
-                          className={
-                            CATEGORY_COLORS[
-                              getNotificationCategory(notification.type)
-                            ]
-                          }
+                          className={getTypeColor(notification.type)}
                         >
                           {NOTIFICATION_TYPE_LABELS[notification.type] ||
                             notification.type}
@@ -494,9 +556,26 @@ export default function AdminNotificationsPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="text-xs text-muted-foreground font-mono">
-                          {notification.relatedId || "-"}
-                        </div>
+                        <Button
+                          size="sm"
+                          variant={
+                            notification.sendedmail ? "outline" : "default"
+                          }
+                          onClick={() => handleSendEmail(notification)}
+                          disabled={
+                            notification.sendedmail ||
+                            sendingEmails.has(notification._id) ||
+                            !notification.user?.email
+                          }
+                          className="flex items-center gap-2"
+                        >
+                          {sendingEmails.has(notification._id) ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Send className="h-4 w-4" />
+                          )}
+                          {notification.sendedmail ? "Sent" : "Send Email"}
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))
