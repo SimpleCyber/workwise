@@ -11,34 +11,34 @@ export interface EmailTemplate {
 
 export const EMAIL_THEMES = {
   success: {
-    primaryColor: "#10b981",
-    backgroundColor: "#ecfdf5",
-    textColor: "#065f46",
-    buttonColor: "#059669",
+    primaryColor: "#00875a",
+    backgroundColor: "#ffffff",
+    textColor: "#172b4d",
+    buttonColor: "#0052cc",
   },
   warning: {
-    primaryColor: "#f59e0b",
-    backgroundColor: "#fffbeb",
-    textColor: "#92400e",
-    buttonColor: "#d97706",
+    primaryColor: "#ff8b00",
+    backgroundColor: "#ffffff",
+    textColor: "#172b4d",
+    buttonColor: "#0052cc",
   },
   danger: {
-    primaryColor: "#ef4444",
-    backgroundColor: "#fef2f2",
-    textColor: "#991b1b",
-    buttonColor: "#dc2626",
+    primaryColor: "#de350b",
+    backgroundColor: "#ffffff",
+    textColor: "#172b4d",
+    buttonColor: "#0052cc",
   },
   info: {
-    primaryColor: "#3b82f6",
-    backgroundColor: "#eff6ff",
-    textColor: "#1e40af",
-    buttonColor: "#2563eb",
+    primaryColor: "#0052cc",
+    backgroundColor: "#ffffff",
+    textColor: "#172b4d",
+    buttonColor: "#0052cc",
   },
   purple: {
-    primaryColor: "#8b5cf6",
-    backgroundColor: "#f5f3ff",
-    textColor: "#5b21b6",
-    buttonColor: "#7c3aed",
+    primaryColor: "#6554c0",
+    backgroundColor: "#ffffff",
+    textColor: "#172b4d",
+    buttonColor: "#0052cc",
   },
 } as const;
 
@@ -95,7 +95,7 @@ export function generateEmailTemplate(
   };
 
   const typeLabel = typeLabels[type] || "Notification";
-  const subject = `${typeLabel} - ${workspaceName}`;
+  const subject = `[${workspaceName}] ${typeLabel.toLowerCase()}, ${actionBy ? "added a new comment" : "made an update"}.`;
 
   const html = `
     <!DOCTYPE html>
@@ -106,187 +106,226 @@ export function generateEmailTemplate(
       <title>${subject}</title>
       <style>
         body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
           line-height: 1.6;
-          color: #333;
+          color: #172b4d;
+          margin: 0;
+          padding: 20px;
+          background-color: #ffffff;
+        }
+        
+        .container {
           max-width: 600px;
           margin: 0 auto;
-          padding: 20px;
-          background-color: #f8fafc;
         }
-        .email-container {
-          background-color: white;
-          border-radius: 12px;
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-          overflow: hidden;
-        }
+        
         .header {
-          background: linear-gradient(135deg, ${theme.primaryColor}, ${theme.buttonColor});
-          color: white;
-          padding: 30px 20px;
-          text-align: center;
+          margin-bottom: 30px;
         }
-        .header h1 {
-          margin: 0;
-          font-size: 24px;
-          font-weight: 600;
-        }
-        .content {
-          padding: 30px 20px;
-        }
-        .notification-badge {
-          display: inline-block;
-          background-color: ${theme.backgroundColor};
-          color: ${theme.textColor};
-          padding: 8px 16px;
-          border-radius: 20px;
+        
+        .sender-info {
+          color: #5e6c84;
           font-size: 14px;
-          font-weight: 500;
+          margin-bottom: 10px;
+        }
+        
+        .main-title {
+          font-size: 16px;
+          font-weight: 400;
+          color: #172b4d;
           margin-bottom: 20px;
-          border: 1px solid ${theme.primaryColor}20;
         }
-        .message-box {
-          background-color: ${theme.backgroundColor};
-          border-left: 4px solid ${theme.primaryColor};
-          padding: 20px;
-          margin: 20px 0;
-          border-radius: 0 8px 8px 0;
+        
+        .project-info {
+          color: #5e6c84;
+          font-size: 14px;
+          margin-bottom: 10px;
         }
-        .message-box h2 {
-          color: ${theme.textColor};
-          margin: 0 0 10px 0;
-          font-size: 18px;
-        }
-        .message-box p {
-          color: ${theme.textColor};
-          margin: 0;
+        
+        .task-title {
+          color: #0052cc;
           font-size: 16px;
+          text-decoration: none;
+          margin-bottom: 30px;
+          display: block;
         }
-        .details {
-          background-color: #f8fafc;
-          padding: 20px;
-          border-radius: 8px;
-          margin: 20px 0;
+        
+        .task-title:hover {
+          text-decoration: underline;
         }
-        .details h3 {
-          margin: 0 0 15px 0;
-          color: #374151;
+        
+        .section-title {
           font-size: 16px;
+          font-weight: 600;
+          color: #172b4d;
+          margin: 30px 0 15px 0;
         }
-        .detail-row {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 8px;
-          padding-bottom: 8px;
-          border-bottom: 1px solid #e5e7eb;
+        
+        .update-item {
+          margin-bottom: 20px;
+          padding-bottom: 20px;
+          border-bottom: 1px solid #dfe1e6;
         }
-        .detail-row:last-child {
+        
+        .update-item:last-child {
           border-bottom: none;
-          margin-bottom: 0;
-          padding-bottom: 0;
         }
-        .detail-label {
-          font-weight: 500;
-          color: #6b7280;
-        }
-        .detail-value {
-          color: #374151;
-          font-weight: 500;
-        }
-        .footer {
-          background-color: #f8fafc;
-          padding: 20px;
+        
+        .user-avatar {
+          display: inline-block;
+          width: 24px;
+          height: 24px;
+          background: #0052cc;
+          color: white;
+          border-radius: 50%;
           text-align: center;
-          border-top: 1px solid #e5e7eb;
+          line-height: 24px;
+          font-size: 12px;
+          font-weight: 600;
+          margin-right: 8px;
+          vertical-align: middle;
         }
-        .footer p {
-          margin: 0;
-          color: #6b7280;
-          font-size: 14px;
+        
+        .user-name {
+          font-weight: 600;
+          color: #172b4d;
         }
+        
         .timestamp {
-          color: #9ca3af;
-          font-size: 14px;
-          margin-top: 20px;
+          color: #5e6c84;
+          font-size: 12px;
+          margin-left: 5px;
         }
+        
+        .status-change {
+          margin: 10px 0;
+          font-size: 14px;
+        }
+        
+        .status {
+          color: #5e6c84;
+        }
+        
+        .status-value {
+          color: #172b4d;
+          font-weight: 500;
+        }
+        
+        .comment-section {
+          background: #f4f5f7;
+          border: 1px solid #dfe1e6;
+          border-radius: 3px;
+          padding: 15px;
+          margin: 15px 0;
+        }
+        
+        .comment-header {
+          margin-bottom: 10px;
+        }
+        
+        .comment-label {
+          font-weight: 600;
+          color: #172b4d;
+          font-size: 14px;
+        }
+        
+        .comment-text {
+          color: #172b4d;
+          font-size: 14px;
+          line-height: 1.5;
+        }
+        
+        .view-button {
+          display: inline-block;
+          background: #0052cc;
+          color: white;
+          padding: 8px 16px;
+          text-decoration: none;
+          border-radius: 3px;
+          font-size: 14px;
+          margin: 20px 0;
+        }
+        
+        .view-button:hover {
+          background: #0747a6;
+        }
+
+        a{
+         text-decoration: none;
+         color: #0052cc;
+        }
+        
         @media (max-width: 600px) {
           body {
-            padding: 10px;
+            padding: 15px;
           }
-          .content {
-            padding: 20px 15px;
-          }
-          .header {
-            padding: 20px 15px;
+          
+          .comment-section {
+            padding: 12px;
           }
         }
       </style>
     </head>
     <body>
-      <div class="email-container">
+      <div class="container">
         <div class="header">
-          <h1>📧 Notification Update</h1>
+          <div class="sender-info">Woodls (${actionBy || "System"}) &lt;noreply@woodls.com&gt;</div>
+          <div class="main-title">${userName} ${typeLabel.toLowerCase()}${actionBy ? ", added a new comment" : ", made an update"}.</div>
         </div>
         
-        <div class="content">
-          <div class="notification-badge">
-            ${typeLabel}
+        <div class="project-info">In ${workspaceName}</div>
+        
+        <a href="https://workwise-sigma.vercel.app/" class="task-title">${title}</a>
+        
+        <div class="section-title">Updates</div>
+        
+        <div class="update-item">
+          <div>
+            <span class="user-avatar">${userName.charAt(0).toUpperCase()}</span>
+            <span class="user-name">${actionBy || userName}</span>
+            <span class="timestamp">${new Date().toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+            })} ${Intl.DateTimeFormat().resolvedOptions().timeZone.split("/")[1]} Time</span>
           </div>
           
-          <p>Hello <strong>${userName}</strong>,</p>
-          
-          <div class="message-box">
-            <h2>${title}</h2>
-            <p>${message}</p>
+          ${
+            type.includes("status")
+              ? `
+          <div class="status-change">
+            <span class="status">Status:</span> 
+            <span class="status-value">Review → In Progress</span>
           </div>
-          
-          <div class="details">
-            <h3>📋 Notification Details</h3>
-            <div class="detail-row">
-              <span class="detail-label">Workspace:</span>
-              <span class="detail-value">${workspaceName}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Type:</span>
-              <span class="detail-value">${typeLabel}</span>
-            </div>
-            ${
-              actionBy
-                ? `
-            <div class="detail-row">
-              <span class="detail-label">Action by:</span>
-              <span class="detail-value">${actionBy}</span>
-            </div>
-            `
-                : ""
-            }
-            <div class="detail-row">
-              <span class="detail-label">Date:</span>
-              <span class="detail-value">${new Date().toLocaleDateString(
-                "en-US",
-                {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                },
-              )}</span>
-            </div>
-          </div>
-          
-          <p>Please log in to your workspace to view more details and take any necessary actions.</p>
-          
-          <div class="timestamp">
-            This notification was sent automatically from your workspace management system.
-          </div>
+          `
+              : ""
+          }
         </div>
         
-        <div class="footer">
-          <p>© ${new Date().getFullYear()} Your Company. All rights reserved.</p>
-          <p>This is an automated message, please do not reply to this email.</p>
+        ${
+          message !== title
+            ? `
+        <div class="section-title">Comments</div>
+        
+        <div class="comment-section">
+          <div class="comment-header">
+            <span class="user-avatar">${(actionBy || userName).charAt(0).toUpperCase()}</span>
+            <span class="user-name">${actionBy || userName}</span>
+            <span class="timestamp">${new Date().toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+            })} ${Intl.DateTimeFormat().resolvedOptions().timeZone.split("/")[1]} Time</span>
+          </div>
+          
+          <div class="comment-label">Comment:</div>
+          <div class="comment-text">${message}</div>
         </div>
+        `
+            : ""
+        }
+        
+        <a href="https://workwise-sigma.vercel.app/" class="view-button">View in Woodls</a>
       </div>
     </body>
     </html>
