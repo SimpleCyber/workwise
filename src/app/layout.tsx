@@ -10,9 +10,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { siteConfig } from "@/config";
 import { Analytics } from "@vercel/analytics/next";
 
-import { CalendarPanel } from "@/components/calender/CalendarPanel";
-import { NotificationPanel } from "@/components/notification/NotificationPanel";
-
 import "./globals.css";
 
 const inter = Inter({
@@ -36,9 +33,6 @@ const RootLayout = ({ children }: Readonly<PropsWithChildren>) => {
                 <div className="flex-1 overflow-auto">{children}</div>
 
                 {/* Persistent Panels */}
-
-                <CalendarPanel />
-                <NotificationPanel />
               </div>
             </JotaiProvider>
           </ConvexClientProvider>

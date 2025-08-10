@@ -1,13 +1,15 @@
 "use client";
 
+import type React from "react";
+
 import { useAtom } from "jotai";
 import { calendarOpenAtom } from "@/lib/panel-atoms";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Calendar,
   Clock,
@@ -18,10 +20,10 @@ import {
   ChevronLeft,
   ChevronRight,
   MapPin,
-  Mail,
   Sparkles,
   CalendarDays,
   ArrowLeft,
+  GripVertical,
 } from "lucide-react";
 import {
   format,
@@ -47,7 +49,12 @@ interface CalendarEvent {
   location?: string;
 }
 
-export const CalendarPanel = () => {
+interface Position {
+  x: number;
+  y: number;
+}
+
+export const DraggableCalendarPanel = () => {
   const [open] = useAtom(calendarOpenAtom);
   const [view, setView] = useState<"daily" | "monthly" | "all" | "create">(
     "monthly",
@@ -55,6 +62,10 @@ export const CalendarPanel = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState<Position>({ x: 0, y: 0 });
+  const cardRef = useRef<HTMLDivElement>(null);
   const [newEvent, setNewEvent] = useState({
     title: "",
     description: "",
@@ -67,20 +78,72 @@ export const CalendarPanel = () => {
     location: "",
   });
 
-  // Mock authentication status - replace with actual Google Auth
+  // Load saved position from localStorage
   useEffect(() => {
-    // Simulate authentication check
+    const savedPosition = localStorage.getItem("calendar-panel-position");
+    if (savedPosition) {
+      setPosition(JSON.parse(savedPosition));
+    } else {
+      // Default position - center top, offset from notification panel
+      setPosition({ x: window.innerWidth / 2 - 600, y: 80 });
+    }
+  }, []);
+
+  // Save position to localStorage
+  useEffect(() => {
+    localStorage.setItem("calendar-panel-position", JSON.stringify(position));
+  }, [position]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest(".no-drag")) return;
+
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y,
+    });
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
+
+    const newX = e.clientX - dragStart.x;
+    const newY = e.clientY - dragStart.y;
+
+    // Keep within viewport bounds
+    const maxX = window.innerWidth - 400;
+    const maxY = window.innerHeight - 100;
+
+    setPosition({
+      x: Math.max(0, Math.min(newX, maxX)),
+      y: Math.max(0, Math.min(newY, maxY)),
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+      return () => {
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", handleMouseUp);
+      };
+    }
+  }, [isDragging, dragStart]);
+
+  useEffect(() => {
     const checkAuth = async () => {
-      // Replace with actual Google Auth check
       setIsAuthenticated(true);
       loadEvents();
     };
     checkAuth();
   }, []);
 
-  // Mock events data - replace with actual Google Calendar API calls
   const loadEvents = async () => {
-    // Mock data - replace with actual Google Calendar API
     const mockEvents: CalendarEvent[] = [
       {
         id: "1",
@@ -113,9 +176,7 @@ export const CalendarPanel = () => {
   };
 
   const authenticateWithGoogle = async () => {
-    // Implement Google OAuth flow
     console.log("Authenticating with Google...");
-    // After successful auth, set isAuthenticated to true and load events
     setIsAuthenticated(true);
     loadEvents();
   };
@@ -129,7 +190,7 @@ export const CalendarPanel = () => {
     const endDateTime =
       newEvent.endDate && newEvent.endTime
         ? new Date(`${newEvent.endDate}T${newEvent.endTime}`)
-        : new Date(startDateTime.getTime() + 60 * 60 * 1000); // Default 1 hour
+        : new Date(startDateTime.getTime() + 60 * 60 * 1000);
 
     const event: CalendarEvent = {
       id: Date.now().toString(),
@@ -146,10 +207,7 @@ export const CalendarPanel = () => {
         : undefined,
     };
 
-    // Add to local state (replace with actual Google Calendar API call)
     setEvents((prev) => [...prev, event]);
-
-    // Reset form
     setNewEvent({
       title: "",
       description: "",
@@ -162,20 +220,16 @@ export const CalendarPanel = () => {
       location: "",
     });
     setView("monthly");
-
-    // Here you would make the actual Google Calendar API call
     console.log("Creating event:", event);
   };
 
   const deleteEvent = async (eventId: string) => {
     setEvents((prev) => prev.filter((event) => event.id !== eventId));
-    // Here you would make the actual Google Calendar API delete call
     console.log("Deleting event:", eventId);
   };
 
   const getEventsForView = () => {
     const now = new Date();
-
     switch (view) {
       case "daily":
         return events.filter((event) => isSameDay(event.start, currentDate));
@@ -218,15 +272,12 @@ export const CalendarPanel = () => {
             );
             const isCurrentMonth = isSameMonth(day, currentDate);
             const isToday = isSameDay(day, new Date());
-
             return (
               <div
                 key={day.toISOString()}
                 className={`p-2 min-h-[90px] border-r border-b border-slate-100 transition-colors hover:bg-slate-50 ${
                   isCurrentMonth ? "bg-white" : "bg-slate-50/50"
-                } ${isToday ? "bg-blue-50 border-blue-200" : ""} ${
-                  index % 7 === 6 ? "border-r-0" : ""
-                }`}
+                } ${isToday ? "bg-blue-50 border-blue-200" : ""} ${index % 7 === 6 ? "border-r-0" : ""}`}
               >
                 <div
                   className={`text-sm font-medium mb-1 ${
@@ -261,9 +312,8 @@ export const CalendarPanel = () => {
 
   const renderEventsList = () => {
     const filteredEvents = getEventsForView();
-
     return (
-      <div className="space-y-3">
+      <div className="space-y-3 max-h-[400px] overflow-y-auto">
         {filteredEvents.map((event, index) => (
           <Card
             key={event.id}
@@ -290,13 +340,11 @@ export const CalendarPanel = () => {
                           {format(event.end, "h:mm a")}
                         </span>
                       </div>
-
                       {event.description && (
                         <p className="text-sm text-slate-600 mb-3 bg-slate-50 p-2 rounded-lg">
                           {event.description}
                         </p>
                       )}
-
                       <div className="flex flex-col gap-2">
                         {event.attendees && event.attendees.length > 0 && (
                           <div className="flex items-center gap-2">
@@ -325,7 +373,6 @@ export const CalendarPanel = () => {
                             </div>
                           </div>
                         )}
-
                         {event.location && (
                           <div className="flex items-center gap-2">
                             <MapPin className="w-4 h-4 text-slate-400" />
@@ -334,7 +381,6 @@ export const CalendarPanel = () => {
                             </span>
                           </div>
                         )}
-
                         {event.meetLink && (
                           <div className="flex items-center gap-2">
                             <Video className="w-4 h-4 text-emerald-500" />
@@ -383,8 +429,7 @@ export const CalendarPanel = () => {
 
   const renderCreateEventForm = () => {
     return (
-      <div className="space-y-6">
-        {/* Back Button */}
+      <div className="space-y-6 max-h-[500px] overflow-y-auto">
         <div className="flex items-center gap-3 pb-4 border-b border-slate-200">
           <Button
             variant="ghost"
@@ -399,7 +444,6 @@ export const CalendarPanel = () => {
             Create New Event
           </h3>
         </div>
-
         <div className="space-y-4">
           <div>
             <Label htmlFor="title" className="text-slate-700 font-medium">
@@ -418,7 +462,6 @@ export const CalendarPanel = () => {
               className="mt-1"
             />
           </div>
-
           <div>
             <Label htmlFor="description" className="text-slate-700 font-medium">
               Description
@@ -437,7 +480,6 @@ export const CalendarPanel = () => {
               className="mt-1"
             />
           </div>
-
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="startDate" className="text-slate-700 font-medium">
@@ -474,7 +516,6 @@ export const CalendarPanel = () => {
               />
             </div>
           </div>
-
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="endDate" className="text-slate-700 font-medium">
@@ -511,7 +552,6 @@ export const CalendarPanel = () => {
               />
             </div>
           </div>
-
           <div>
             <Label htmlFor="attendees" className="text-slate-700 font-medium">
               Attendees
@@ -529,7 +569,6 @@ export const CalendarPanel = () => {
               className="mt-1"
             />
           </div>
-
           <div>
             <Label htmlFor="location" className="text-slate-700 font-medium">
               Location
@@ -547,7 +586,6 @@ export const CalendarPanel = () => {
               className="mt-1"
             />
           </div>
-
           <div className="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg">
             <input
               type="checkbox"
@@ -569,7 +607,6 @@ export const CalendarPanel = () => {
               Add Google Meet link
             </Label>
           </div>
-
           <div className="flex gap-3 pt-4">
             <Button
               variant="outline"
@@ -591,7 +628,6 @@ export const CalendarPanel = () => {
   };
 
   const [isOpen, setIsOpen] = useAtom(calendarOpenAtom);
-
   const handleClose = () => {
     setIsOpen(false);
   };
@@ -599,11 +635,23 @@ export const CalendarPanel = () => {
   if (!open) return null;
 
   return (
-    <div className="fixed  right-0 z-50 w-96 bg-white border-l border-slate-200 h-full overflow-y-auto shadow-2xl">
-      {/* Header */}
-      <div className="p-2 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white sticky top-0 z-10">
+    <Card
+      ref={cardRef}
+      className="fixed z-50 w-96 bg-white shadow-2xl border border-slate-200 max-h-[80vh] flex flex-col"
+      style={{
+        left: position.x,
+        top: position.y,
+        cursor: isDragging ? "grabbing" : "default",
+      }}
+    >
+      {/* Draggable Header */}
+      <CardHeader
+        className="p-2 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white cursor-grab active:cursor-grabbing"
+        onMouseDown={handleMouseDown}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
+            <GripVertical className="w-4 h-4 text-gray-400" />
             <div className="p-2 rounded-xl bg-purple-50 border border-purple-100">
               <Calendar className="w-5 h-5 text-purple-600" />
             </div>
@@ -611,7 +659,7 @@ export const CalendarPanel = () => {
               <h2 className="text-lg font-semibold text-slate-900">Calendar</h2>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 no-drag">
             {!isAuthenticated && view !== "create" && (
               <Button
                 onClick={authenticateWithGoogle}
@@ -631,90 +679,95 @@ export const CalendarPanel = () => {
             </Button>
           </div>
         </div>
-      </div>
+      </CardHeader>
 
-      {!isAuthenticated ? (
-        <div className="text-center py-12 px-6">
-          <div className="p-6 rounded-full bg-gradient-to-br from-blue-50 to-purple-50 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-            <Calendar className="w-12 h-12 text-purple-500" />
+      <CardContent className="p-0 flex-1 overflow-hidden">
+        {!isAuthenticated ? (
+          <div className="text-center py-12 px-6">
+            <div className="p-6 rounded-full bg-gradient-to-br from-blue-50 to-purple-50 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+              <Calendar className="w-12 h-12 text-purple-500" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">
+              Connect your calendar
+            </h3>
+            <p className="text-slate-600 mb-6 leading-relaxed">
+              Sync with Google Calendar to view and manage your events
+              seamlessly
+            </p>
+            <Button
+              onClick={authenticateWithGoogle}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Connect Google Calendar
+            </Button>
           </div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">
-            Connect your calendar
-          </h3>
-          <p className="text-slate-600 mb-6 leading-relaxed">
-            Sync with Google Calendar to view and manage your events seamlessly
-          </p>
-          <Button
-            onClick={authenticateWithGoogle}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
-          >
-            <Sparkles className="w-4 h-4 mr-2" />
-            Connect Google Calendar
-          </Button>
-        </div>
-      ) : view === "create" ? (
-        <div className="p-6">{renderCreateEventForm()}</div>
-      ) : (
-        <div className="p-6">
-          {/* View Toggle */}
-          <div className="bg-slate-100 rounded-xl p-1 mb-6">
-            <div className="grid grid-cols-3 gap-1">
-              {(["daily", "monthly", "all"] as const).map((viewType) => (
+        ) : view === "create" ? (
+          <div className="p-6 no-drag">{renderCreateEventForm()}</div>
+        ) : (
+          <div className="p-6 no-drag">
+            {/* View Toggle */}
+            <div className="bg-slate-100 rounded-xl p-1 mb-6">
+              <div className="grid grid-cols-3 gap-1">
+                {(["daily", "monthly", "all"] as const).map((viewType) => (
+                  <Button
+                    key={viewType}
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setView(viewType)}
+                    className={`capitalize rounded-lg transition-all ${
+                      view === viewType
+                        ? "bg-white shadow-sm text-slate-900 font-medium"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                    }`}
+                  >
+                    {viewType}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Month Navigation for Monthly View */}
+            {view === "monthly" && (
+              <div className="flex items-center justify-between mb-6 bg-slate-50 rounded-xl p-3">
                 <Button
-                  key={viewType}
                   variant="ghost"
                   size="sm"
-                  onClick={() => setView(viewType)}
-                  className={`capitalize rounded-lg transition-all ${
-                    view === viewType
-                      ? "bg-white shadow-sm text-slate-900 font-medium"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
-                  }`}
+                  onClick={() => setCurrentDate(subMonths(currentDate, 1))}
+                  className="rounded-lg hover:bg-white"
                 >
-                  {viewType}
+                  <ChevronLeft className="w-4 h-4" />
                 </Button>
-              ))}
+                <h3 className="font-semibold text-slate-900">
+                  {format(currentDate, "MMMM yyyy")}
+                </h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCurrentDate(addMonths(currentDate, 1))}
+                  className="rounded-lg hover:bg-white"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+
+            {/* Create Event Button */}
+            <Button
+              onClick={() => setView("create")}
+              className="w-full mb-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Event
+            </Button>
+
+            {/* Calendar Content */}
+            <div className="max-h-[400px] overflow-y-auto">
+              {view === "monthly" ? renderCalendarGrid() : renderEventsList()}
             </div>
           </div>
-
-          {/* Month Navigation for Monthly View */}
-          {view === "monthly" && (
-            <div className="flex items-center justify-between mb-6 bg-slate-50 rounded-xl p-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setCurrentDate(subMonths(currentDate, 1))}
-                className="rounded-lg hover:bg-white"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <h3 className="font-semibold text-slate-900">
-                {format(currentDate, "MMMM yyyy")}
-              </h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setCurrentDate(addMonths(currentDate, 1))}
-                className="rounded-lg hover:bg-white"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
-
-          {/* Create Event Button */}
-          <Button
-            onClick={() => setView("create")}
-            className="w-full mb-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Event
-          </Button>
-
-          {/* Calendar Content */}
-          {view === "monthly" ? renderCalendarGrid() : renderEventsList()}
-        </div>
-      )}
-    </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
