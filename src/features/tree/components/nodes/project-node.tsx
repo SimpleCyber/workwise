@@ -1,4 +1,7 @@
 "use client";
+
+import type React from "react";
+
 import { useState } from "react";
 import { Goal, ExternalLink, X, Check } from "lucide-react";
 import { Handle, Position, type NodeProps } from "reactflow";
@@ -14,6 +17,10 @@ import { useRemoveProjectBoard } from "../../../projects/api/use-remove-project-
 import { useUpdateProjectBoard } from "../../../projects/api/use-update-project-board";
 import { toast } from "sonner";
 import type { Id } from "../../../../../convex/_generated/dataModel";
+
+// Add this import at the top
+import { useQuery } from "convex/react";
+import { api } from "../../../../../convex/_generated/api";
 
 interface EditProjectFormProps {
   boardId: Id<"projectBoards">;
@@ -78,7 +85,6 @@ const EditProjectForm = ({
               <X className="h-4 w-4" />
             </Button>
           </div>
-
           <form onSubmit={handleSubmit} className="space-y-3">
             <div className="space-y-1">
               <Label htmlFor="project-name" className="text-xs font-medium">
@@ -94,7 +100,6 @@ const EditProjectForm = ({
                 autoFocus
               />
             </div>
-
             <div className="space-y-1">
               <Label
                 htmlFor="project-description"
@@ -111,14 +116,13 @@ const EditProjectForm = ({
                 rows={2}
               />
             </div>
-
             <div className="flex justify-end gap-2 pt-2">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={handleClose}
-                className="h-7 px-3 text-xs"
+                className="h-7 px-3 text-xs bg-transparent"
               >
                 Cancel
               </Button>
@@ -152,13 +156,50 @@ export const ProjectNode = ({ data }: NodeProps) => {
   const { mutate: deleteProject, isPending: isDeleting } =
     useRemoveProjectBoard();
 
+  // Add this inside the ProjectNode component, right after the existing hooks
+  const lists = useQuery(api.projects.getProjectLists, {
+    boardId: data.projectId,
+  });
+
+  const holdTaskList = lists?.find((list) => list.name === "Hold Task");
+
+  const holdTasks = useQuery(
+    api.projects.getProjectTasks,
+    holdTaskList ? { listId: holdTaskList._id } : "skip",
+  );
+
+  const holdTasksCount = holdTasks?.length || 0;
+  const hasHoldTasks = holdTasksCount > 0;
+
+  // Check if there are tasks in hold - you need to pass this in data prop
+  // const hasHoldTasks = data.holdTasksCount && data.holdTasksCount > 0
+
+  // Check if there are tasks in hold - assuming this is passed in data prop
+  // const hasHoldTasks = data.holdTasksCount > 0
+
+  // Define color schemes based on hold tasks
+  const colorScheme = hasHoldTasks
+    ? {
+        border: "border-red-400",
+        ring: "ring-red-500",
+        iconBg: data.isActive ? "bg-red-200" : "bg-red-100",
+        iconColor: "text-red-600",
+        // pulseIconBg: "bg-red-100 animate-flicker-bg-red",
+      }
+    : {
+        border: "border-green-400",
+        ring: "ring-green-500",
+        iconBg: data.isActive ? "bg-green-200" : "bg-green-100",
+        iconColor: "text-green-600",
+        // pulseIconBg: "bg-green-100 animate-flicker-bg",
+      };
+
   const handleDeleteProject = async () => {
     try {
       await deleteProject({ boardId: data.projectId });
       toast.success("Project deleted successfully!", {
         description: `${data.name} has been deleted.`,
       });
-
       setShowDeleteProject(false);
     } catch (error) {
       console.error("Failed to delete project:", error);
@@ -178,9 +219,9 @@ export const ProjectNode = ({ data }: NodeProps) => {
     <div className="relative" {...hoverProps}>
       <div className="flex flex-col items-center">
         <Card
-          className={`shadow-md cursor-pointer hover:shadow-lg transition-all duration-300 border-green-400 ${
+          className={`shadow-md cursor-pointer hover:shadow-lg transition-all duration-300 ${hasHoldTasks ? "border-red-400" : "border-green-400"} ${
             data.isListsExpanded ? "w-20 h-20 animate-pulse" : "w-16 h-16"
-          } ${data.isActive ? "ring-2 ring-green-500" : ""} relative`}
+          } ${data.isActive ? `ring-2 ${hasHoldTasks ? "ring-red-500" : "ring-green-500"}` : ""} relative`}
           onClick={() => data.onToggleLists?.(data.projectId)}
         >
           <CardContent className="flex items-center justify-center h-full p-2">
@@ -188,17 +229,29 @@ export const ProjectNode = ({ data }: NodeProps) => {
               <div className="flex items-center justify-center">
                 <div
                   className={`flex items-center justify-center w-8 h-8 rounded ${
-                    data.isActive ? "bg-green-200" : "bg-green-100"
+                    hasHoldTasks
+                      ? data.isActive
+                        ? "bg-red-200"
+                        : "bg-red-100"
+                      : data.isActive
+                        ? "bg-green-200"
+                        : "bg-green-100"
                   }`}
                 >
-                  <Goal className="w-5 h-5 text-green-600" />
+                  <Goal
+                    className={`w-5 h-5 ${hasHoldTasks ? "text-red-600" : "text-green-600"}`}
+                  />
                 </div>
               </div>
             ) : (
               <div className="flex items-center justify-center">
                 <div className="animate-bounce">
-                  <div className="flex items-center justify-center w-8 h-8 rounded bg-green-100 animate-flicker-bg">
-                    <Goal className="w-5 h-5 text-green-600" />
+                  <div
+                  // className={`flex items-center justify-center w-8 h-8 rounded ${hasHoldTasks ? "bg-red-100" : "bg-green-100"} animate-flicker-bg`}
+                  >
+                    <Goal
+                      className={`w-5 h-5 ${hasHoldTasks ? "text-red-600" : "text-green-600"}`}
+                    />
                   </div>
                 </div>
               </div>
@@ -240,6 +293,7 @@ export const ProjectNode = ({ data }: NodeProps) => {
             <Badge variant="secondary" className="text-xs">
               {data.totalTasks} tasks
             </Badge>
+
             {data.isListsExpanded && (
               <Button
                 size="sm"
