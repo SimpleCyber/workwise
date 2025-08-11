@@ -11,6 +11,7 @@ import { siteConfig } from "@/config";
 import { Analytics } from "@vercel/analytics/next";
 
 import "./globals.css";
+import { FloatingSearchBar } from "@/components/toolbar/floating-search-bar";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -33,6 +34,7 @@ const RootLayout = ({ children }: Readonly<PropsWithChildren>) => {
                 <div className="flex-1 overflow-auto">{children}</div>
 
                 {/* Persistent Panels */}
+                <FloatingSearchBar />
               </div>
             </JotaiProvider>
           </ConvexClientProvider>
