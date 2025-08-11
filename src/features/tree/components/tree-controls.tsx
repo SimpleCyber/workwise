@@ -39,7 +39,7 @@ export const TreeControls = ({
   return (
     <div className="flex items-center justify-between p-3 bg-gray-50 border-b flex-shrink-0">
       <div className="flex items-center gap-3">
-        <h3 className="font-medium">Organization Tree</h3>
+        <h3 className="font-medium">All Data</h3>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-xs">
             {totalProjects} projects

@@ -50,8 +50,11 @@ import { useUpdateProjectBoard } from "@/features/projects/api/use-update-projec
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import type { Id } from "../../../../convex/_generated/dataModel";
 
+import { WorkspaceTree } from "./workspace-tree";
+
 const ProjectsWorkspacePage = () => {
   const workspaceId = useWorkspaceId();
+  const workspaceIdTree = useWorkspaceId();
   const { data: workspace, isLoading: workspaceLoading } = useGetWorkspaceInfo({
     id: workspaceId,
   });
@@ -295,8 +298,14 @@ const ProjectsWorkspacePage = () => {
         </Dialog>
       </div>
 
-      <div className="flex-1 p-8">
-        <div className="mx-auto max-w-7xl">
+      <div className="flex-1 flex flex-col md:flex-row p-4 gap-4 bg-gray-200">
+        {/* Tree sidebar - hidden on mobile, 30% width on md and up */}
+        <div className="hidden md:block md:w-[30%] lg:w-[150%] bg-white rounded-lg shadow-sm border border-slate-200 p-4 overflow-auto">
+          <WorkspaceTree workspaceId={workspaceId} />
+        </div>
+
+        {/* Main content - 100% width on mobile, 70% on md and up */}
+        <div className="w-full md:w-[70%]">
           {!boards || boards.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div className="text-center max-w-md">
@@ -321,7 +330,7 @@ const ProjectsWorkspacePage = () => {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6">
               {boards.map((board) => (
                 <div key={board._id} className="group relative">
                   <Link
