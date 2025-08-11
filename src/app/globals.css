@@ -151,3 +151,14 @@
 .animate-line-fade {
   animation: line-fade 1s ease-out;
 }
+
+
+/* Hide scrollbar but keep scrolling */
+::-webkit-scrollbar {
+  display: none;
+}
+
+html, body {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
