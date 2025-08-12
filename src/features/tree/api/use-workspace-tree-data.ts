@@ -148,6 +148,7 @@ export const useWorkspaceTreeData = ({
           name: project.name,
           boardCode: project.boardCode,
           projectId: project._id,
+          workspaceId: workspaceId,
           listCount: project.lists.length,
           totalTasks: project.totalTasks,
           onProjectClick: handleProjectClick,

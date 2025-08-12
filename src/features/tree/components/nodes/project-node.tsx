@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 
 import type React from "react";
 
@@ -153,6 +154,7 @@ export const ProjectNode = ({ data }: NodeProps) => {
   const { isHovered, hoverProps } = useHoverActions();
   const [showEditProject, setShowEditProject] = useState(false);
   const [showDeleteProject, setShowDeleteProject] = useState(false);
+  const router = useRouter();
   const { mutate: deleteProject, isPending: isDeleting } =
     useRemoveProjectBoard();
 
@@ -170,6 +172,10 @@ export const ProjectNode = ({ data }: NodeProps) => {
 
   const holdTasksCount = holdTasks?.length || 0;
   const hasHoldTasks = holdTasksCount > 0;
+
+  const handleGoToProject = () => {
+    router.push(`/projects/${data.workspaceId}/board/${data.projectId}`);
+  };
 
   // Check if there are tasks in hold - you need to pass this in data prop
   // const hasHoldTasks = data.holdTasksCount && data.holdTasksCount > 0
@@ -325,6 +331,7 @@ export const ProjectNode = ({ data }: NodeProps) => {
           <ActionOverlay
             onEdit={handleEditProject}
             onDelete={() => setShowDeleteProject(true)}
+            onLink={handleGoToProject}
             position="top"
             isVisible={isHovered}
           />
