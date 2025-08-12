@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Link2 } from "lucide-react";
 
 interface ActionOverlayProps {
   onAdd?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  onLink?: () => void;
   position?: "top" | "bottom" | "left" | "right";
   isVisible: boolean;
 }
@@ -15,6 +16,7 @@ export const ActionOverlay = ({
   onAdd,
   onEdit,
   onDelete,
+  onLink,
   position = "top",
   isVisible,
 }: ActionOverlayProps) => {
@@ -44,6 +46,19 @@ export const ActionOverlay = ({
           title="Add"
         >
           <Plus className="w-4 h-4" />
+        </button>
+      )}
+
+      {onLink && (
+        <button
+          className="w-8 h-8 flex items-center justify-center hover:bg-purple-100 rounded text-gray-400 hover:text-purple-600 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            onLink();
+          }}
+          title="Go to Projects"
+        >
+          <Link2 className="w-4 h-4" />
         </button>
       )}
 

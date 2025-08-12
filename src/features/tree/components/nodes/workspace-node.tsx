@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Building2, X, Check } from "lucide-react";
 import { Handle, Position, type NodeProps } from "reactflow";
@@ -143,6 +144,7 @@ const CreateProjectForm = ({
 export const WorkspaceNode = ({ data }: NodeProps) => {
   const { isHovered, hoverProps } = useHoverActions();
   const [showCreateProject, setShowCreateProject] = useState(false);
+  const router = useRouter();
 
   const handleAddProject = () => {
     setShowCreateProject(true);
@@ -150,6 +152,10 @@ export const WorkspaceNode = ({ data }: NodeProps) => {
 
   const handleCloseForm = () => {
     setShowCreateProject(false);
+  };
+
+  const handleGoToProjects = () => {
+    router.push(`/projects/${data.workspaceId}`);
   };
 
   return (
@@ -197,6 +203,7 @@ export const WorkspaceNode = ({ data }: NodeProps) => {
         <div>
           <ActionOverlay
             onAdd={handleAddProject}
+            onLink={handleGoToProjects}
             position="top"
             isVisible={isHovered}
           />
