@@ -15,7 +15,6 @@ import { ProjectNode } from "./components/nodes/project-node";
 import { ListNode } from "./components/nodes/list-node";
 import { TaskNode } from "./components/nodes/task-node";
 import { TreeControls } from "./components/tree-controls";
-import { MinimapLegend } from "./components/minimap-legend";
 import type { TreeData } from "./api/tree-types";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { useTreeData } from "./api/use-tree-data";
@@ -144,12 +143,6 @@ export const TreeVisualization = ({
           />
         </ReactFlow>
       </div>
-
-      {/* Minimap Legend */}
-      <MinimapLegend
-        isVisible={showLegend}
-        onToggle={() => setShowLegend(!showLegend)}
-      />
     </div>
   );
 };

@@ -49,8 +49,7 @@ import { useRemoveProjectBoard } from "@/features/projects/api/use-remove-projec
 import { useUpdateProjectBoard } from "@/features/projects/api/use-update-project-board";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import type { Id } from "../../../../convex/_generated/dataModel";
-
-import { WorkspaceTree } from "./workspace-tree";
+import { WorkspaceOnlyTree } from "./workspace-tree";
 
 const ProjectsWorkspacePage = () => {
   const workspaceId = useWorkspaceId();
@@ -301,7 +300,7 @@ const ProjectsWorkspacePage = () => {
       <div className="flex-1 flex flex-col md:flex-row p-4 gap-4 bg-gray-200">
         {/* Tree sidebar - hidden on mobile, 30% width on md and up */}
         <div className="hidden md:block md:w-[30%] lg:w-[150%] bg-white rounded-lg shadow-sm border border-slate-200 p-4 overflow-auto">
-          <WorkspaceTree workspaceId={workspaceId} />
+          <WorkspaceOnlyTree />
         </div>
 
         {/* Main content - 100% width on mobile, 70% on md and up */}

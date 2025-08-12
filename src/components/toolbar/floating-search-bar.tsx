@@ -222,7 +222,13 @@ export const FloatingSearchBar: React.FC<FloatingSearchBarProps> = ({
     };
   };
 
-  const resultsPosition = getResultsPosition();
+  const resultsPosition = (() => {
+    if (typeof window === "undefined") {
+      // Default to something safe on server
+      return { x: 0, y: 0 };
+    }
+    return getResultsPosition();
+  })();
 
   return (
     <>
