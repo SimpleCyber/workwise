@@ -236,6 +236,7 @@ export const useTreeData = ({ data, workspaceId }: UseTreeDataProps) => {
               name: project.name,
               boardCode: project.boardCode,
               projectId: project._id,
+              workspaceId: workspace._id,
               listCount: project.lists.length,
               totalTasks: project.totalTasks,
               onProjectClick: handleProjectClick,
