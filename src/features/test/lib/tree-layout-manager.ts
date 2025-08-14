@@ -1,4 +1,4 @@
-import type { Node, Edge } from "@xyflow/react";
+import type { Node, Edge } from "reactflow";
 
 export class TreeLayoutManager {
   private readonly HORIZONTAL_SPACING = 400; // Increased from 300 to 400 for more space between siblings

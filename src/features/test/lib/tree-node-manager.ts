@@ -1,4 +1,4 @@
-import type { Node, Edge } from "@xyflow/react";
+import type { Node, Edge } from "reactflow";
 
 export class TreeNodeManager {
   /**

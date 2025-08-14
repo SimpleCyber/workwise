@@ -8,6 +8,7 @@ import { EditableField } from "./editable-field";
 import { UserAvatars } from "./user-avatars";
 import { NodeActions } from "./node-actions";
 import { StatusBadge } from "./status-badge";
+import { NodePopup } from "./node-popup";
 
 interface TreeNodeData {
   label: string;
@@ -75,7 +76,9 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
 
   const handleCardClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Popup functionality removed as requested
+    if (data.onTogglePopup) {
+      data.onTogglePopup();
+    }
   };
 
   const trimmedDescription =
@@ -89,6 +92,20 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
+       <NodePopup
+        show={isHovered || data.isPopupOpen || false}
+        nodeId={id}
+        label={label}
+        description={description}
+        status={status}
+        uniqueId={uniqueId}
+        isPersistent={data.isPopupOpen || false}
+        childNodes={data.childNodes || []}
+        onClose={data.onClosePopup || (() => {})}
+        workspaceId={data.workspaceId}
+      />
+
+
       <Card
         className="min-w-[300px] max-w-[300px] shadow-lg border-2 hover:shadow-xl transition-all duration-200 cursor-pointer"
         onDoubleClick={handleDoubleClick}
