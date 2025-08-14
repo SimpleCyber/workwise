@@ -11,7 +11,7 @@ import { Check, X, MapPin } from "lucide-react";
 interface EditableFieldProps {
   value: string;
   onChange: (value: string) => void;
-  type: "title" | "description" | "id";
+  type: "title" | "description";
   placeholder: string;
   displayValue?: string;
 }
@@ -53,18 +53,6 @@ export function EditableField({
             placeholder={placeholder}
             autoFocus
           />
-        ) : type === "id" ? (
-          <div className="flex items-center gap-1">
-            <MapPin className="w-3 h-3 text-gray-500" />
-            <Input
-              value={tempValue}
-              onChange={(e) => setTempValue(e.target.value)}
-              className="text-xs font-mono h-6 w-20"
-              onKeyDown={handleKeyDown}
-              placeholder={placeholder}
-              autoFocus
-            />
-          </div>
         ) : (
           <Input
             value={tempValue}
@@ -94,19 +82,6 @@ export function EditableField({
             <X className="w-3 h-3" />
           </Button>
         </div>
-      </div>
-    );
-  }
-
-  if (type === "id") {
-    return (
-      <div
-        className="flex items-center gap-1 text-xs text-gray-500 cursor-pointer hover:bg-gray-50 p-1 rounded"
-        onClick={() => setIsEditing(true)}
-        title="Click to edit ID"
-      >
-        <MapPin className="w-3 h-3" />
-        <span className="font-mono">{value}</span>
       </div>
     );
   }

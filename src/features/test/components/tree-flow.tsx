@@ -95,10 +95,7 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
           label: node.title,
           description: node.description || "No description",
           status: node.status,
-          uniqueId:
-            node.nodeId.length > 15
-              ? `...${node.nodeId.slice(-8)}`
-              : node.nodeId,
+          uniqueId: node.nodeId,
           users:
             node.users?.map((user: any) => ({
               id: user.memberId,
@@ -287,6 +284,7 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
         onTogglePopup: () => {}, // Disable popup functionality
         onClosePopup: closePopup,
         members: members || [],
+        workspaceId: workspaceId || "your-workspace-id",
       },
     };
   });

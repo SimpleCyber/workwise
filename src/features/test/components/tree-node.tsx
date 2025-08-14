@@ -9,6 +9,7 @@ import { UserAvatars } from "./user-avatars";
 import { NodeActions } from "./node-actions";
 import { StatusBadge } from "./status-badge";
 import { NodePopup } from "./node-popup";
+import { MapPin } from "lucide-react";
 
 interface TreeNodeData {
   label: string;
@@ -36,10 +37,9 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
   const [description, setDescription] = useState(
     data.description || "Default description for this node",
   );
-  const [status, setStatus] = useState(data.status || "in-progress"); // Default status changed to in-progress
-  const [uniqueId, setUniqueId] = useState(
-    data.uniqueId || `NODE-${id.toString().padStart(5, "0")}`,
-  );
+  const [status, setStatus] = useState(data.status || "in-progress"); //
+
+  const uniqueId = data.uniqueId;
   const [users, setUsers] = useState(data.users || []);
 
   const [isHovered, setIsHovered] = useState(false);
@@ -139,12 +139,10 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
             />
 
             <div className="flex items-center justify-between pt-1">
-              <EditableField
-                value={uniqueId}
-                onChange={setUniqueId}
-                type="id"
-                placeholder="Enter ID"
-              />
+              <p className="text-xs text-gray-500">
+                {" "}
+                <MapPin /> {uniqueId}
+              </p>
 
               <UserAvatars
                 users={users}

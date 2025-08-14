@@ -28,10 +28,11 @@ interface NodePopupProps {
   label: string;
   description: string;
   status: string;
-  uniqueId: string;
+  uniqueId: any;
   isPersistent: boolean;
   childNodes: ChildNode[];
   onClose: () => void;
+  workspaceId: string;
 }
 
 export function NodePopup({
@@ -42,6 +43,7 @@ export function NodePopup({
   uniqueId,
   isPersistent,
   childNodes = [],
+  workspaceId,
   onClose,
 }: NodePopupProps) {
   const [activeTab, setActiveTab] = useState("Details");
@@ -112,6 +114,7 @@ export function NodePopup({
               description={description}
               status={status}
               uniqueId={uniqueId}
+              workspaceId={workspaceId}
             />
           )}
           {activeTab === "Nodes" && childNodes.length > 0 && (

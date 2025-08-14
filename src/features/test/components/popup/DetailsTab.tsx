@@ -1,5 +1,5 @@
-import { Calendar, Shield, Table, User } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Calendar, Shield, User } from "lucide-react";
+import { useGetNodeDetails } from "../../api/use-get-node-details";
 
 const statusColors = [
   { name: "Open", class: "bg-blue-100 text-blue-800" },
@@ -13,11 +13,48 @@ interface DetailsTabProps {
   description: string;
   status: string;
   uniqueId: string;
+  workspaceId: any;
 }
 
-export function DetailsTab({ description, status, uniqueId }: DetailsTabProps) {
-  const currentStatusColor =
-    statusColors.find((s) => s.name === status)?.class || statusColors[0].class;
+export function DetailsTab({
+  description,
+  status,
+  uniqueId,
+  workspaceId,
+}: DetailsTabProps) {
+  const { data: nodeDetails, isLoading } = useGetNodeDetails({
+    nodeId: uniqueId,
+    workspaceId: workspaceId,
+  });
+
+  // Access the creator information
+  const creatorName = nodeDetails?.creator?.name;
+  const creatorRole = nodeDetails?.creator?.role;
+  const nodeMembers = nodeDetails?.assignedUsers || [];
+  console.log("Node Members:", nodeMembers);
+
+  const membersExcludingCreator = nodeMembers.filter(
+    (member) => member.role !== "creator",
+  );
+  const memberCount = membersExcludingCreator.length;
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+  };
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
 
   return (
     <>
@@ -29,40 +66,41 @@ export function DetailsTab({ description, status, uniqueId }: DetailsTabProps) {
         </div>
         <div className="flex items-center gap-2 ml-5">
           <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium">
-            JS
+            {creatorName ? getInitials(creatorName) : "JS"}
           </div>
           <div>
-            <div className="text-xs font-medium">John Smith</div>
-            <div className="text-xs text-gray-500">Project Manager</div>
+            <div className="text-xs font-medium">{creatorName}</div>
+            <div className="text-xs text-gray-500">{creatorRole}</div>
           </div>
         </div>
       </div>
 
-      {/* Admins */}
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-xs font-medium text-gray-700">
           <Shield className="w-3 h-3" />
-          Admins (2)
+          Members ({memberCount})
         </div>
         <div className="ml-5 space-y-1">
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-medium">
-              SW
-            </div>
-            <div>
-              <div className="text-xs font-medium">Sarah Wilson</div>
-              <div className="text-xs text-gray-500">Admin</div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs font-medium">
-              MJ
-            </div>
-            <div>
-              <div className="text-xs font-medium">Mike Johnson</div>
-              <div className="text-xs text-gray-500">Lead Developer</div>
-            </div>
-          </div>
+          {membersExcludingCreator.length > 0 ? (
+            membersExcludingCreator.map((member, index) => (
+              <div
+                key={member.memberId || index}
+                className="flex items-center gap-2"
+              >
+                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-medium">
+                  {getInitials(member.name)}
+                </div>
+                <div>
+                  <div className="text-xs font-medium">{member.name}</div>
+                  <div className="text-xs text-gray-500">
+                    {formatDate(new Date(member.addedAt).toISOString())}
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-xs text-gray-500">No members assigned</div>
+          )}
         </div>
       </div>
 
@@ -75,7 +113,7 @@ export function DetailsTab({ description, status, uniqueId }: DetailsTabProps) {
       </div>
 
       {/* Table Data */}
-      <div className="space-y-2">
+      {/* <div className="space-y-2">
         <div className="flex items-center gap-2 text-xs font-medium text-gray-700">
           <Table className="w-3 h-3" />
           Details
@@ -98,7 +136,7 @@ export function DetailsTab({ description, status, uniqueId }: DetailsTabProps) {
             <span className="font-medium">3 months</span>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* ID */}
       <div className="space-y-1">
