@@ -92,7 +92,7 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-       <NodePopup
+      <NodePopup
         show={isHovered || data.isPopupOpen || false}
         nodeId={id}
         label={label}
@@ -104,7 +104,6 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
         onClose={data.onClosePopup || (() => {})}
         workspaceId={data.workspaceId}
       />
-
 
       <Card
         className="min-w-[300px] max-w-[300px] shadow-lg border-2 hover:shadow-xl transition-all duration-200 cursor-pointer"
