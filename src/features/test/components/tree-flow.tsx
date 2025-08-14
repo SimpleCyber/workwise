@@ -76,11 +76,7 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
   }, [workspaceId, createNode]);
 
   useEffect(() => {
-    if (!treeNodes) return;
-
-    if (treeNodes.length === 0) {
-      return;
-    }
+    if (!treeNodes || treeNodes.length === 0) return;
 
     const reactFlowNodes: Node[] = [];
     const reactFlowEdges: Edge[] = [];
@@ -90,39 +86,11 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
       nodeMap.set(node.nodeId, node);
     });
 
-    // Calculate proper positions for tree structure
-    const rootNodes = treeNodes.filter((node) => !node.parentId);
-    const levelWidth = 350;
-    const levelHeight = 200;
-
-    const calculatePosition = (
-      node: any,
-      level: number,
-      siblingIndex: number,
-      totalSiblings: number,
-    ) => {
-      const x = level * levelWidth + 100;
-      const y = (siblingIndex - (totalSiblings - 1) / 2) * levelHeight + 300;
-      return { x, y };
-    };
-
-    const processNode = (
-      node: any,
-      level: number,
-      siblingIndex: number,
-      totalSiblings: number,
-    ) => {
-      const position = calculatePosition(
-        node,
-        level,
-        siblingIndex,
-        totalSiblings,
-      );
-
+    const processNode = (node: any) => {
       const reactFlowNode: Node = {
         id: node.nodeId,
         type: "treeNode",
-        position,
+        position: { x: 0, y: 0 }, // let layout manager handle positions
         data: {
           label: node.title,
           description: node.description || "No description",
@@ -130,7 +98,7 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
           uniqueId:
             node.nodeId.length > 15
               ? `...${node.nodeId.slice(-8)}`
-              : node.nodeId, // Shortened node ID display
+              : node.nodeId,
           users:
             node.users?.map((user: any) => ({
               id: user.memberId,
@@ -149,32 +117,19 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
       };
       reactFlowNodes.push(reactFlowNode);
 
-      // Create edges for parent-child relationships
       if (node.parentId) {
-        const edge: Edge = {
+        reactFlowEdges.push({
           id: `e${node.parentId}-${node.nodeId}`,
           source: node.parentId,
           target: node.nodeId,
           ...edgeOptions,
-        };
-        reactFlowEdges.push(edge);
+        });
       }
-
-      // Process children
-      const children = treeNodes.filter(
-        (child) => child.parentId === node.nodeId,
-      );
-      children.forEach((child, index) => {
-        processNode(child, level + 1, index, children.length);
-      });
     };
 
-    // Process all root nodes
-    rootNodes.forEach((rootNode, index) => {
-      processNode(rootNode, 0, index, rootNodes.length);
-    });
+    treeNodes.forEach(processNode);
 
-    // Update hasChildren and childNodes for each node
+    // Update child metadata
     reactFlowNodes.forEach((node) => {
       const children = reactFlowEdges
         .filter((edge) => edge.source === node.id)
@@ -194,7 +149,13 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
       node.data.childNodes = children;
     });
 
-    setNodes(reactFlowNodes);
+    // Apply symmetrical layout
+    const positionedNodes = layoutManager.recalculateTreeLayout(
+      reactFlowNodes,
+      reactFlowEdges,
+    );
+
+    setNodes(positionedNodes);
     setEdges(reactFlowEdges);
   }, [treeNodes, workspaceId, setNodes, setEdges]);
 
