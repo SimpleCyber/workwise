@@ -42,6 +42,7 @@ interface NodePopupProps {
   isPersistent: boolean;
   childNodes: ChildNode[];
   onClose: () => void;
+  workspaceId?: string;
 }
 
 const statusColors = [
@@ -62,6 +63,7 @@ export function NodePopup({
   isPersistent,
   childNodes = [],
   onClose,
+  workspaceId,
 }: NodePopupProps) {
   const [activeTab, setActiveTab] = useState("Details");
   const [comments, setComments] = useState<Comment[]>([

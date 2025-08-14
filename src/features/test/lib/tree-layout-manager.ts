@@ -1,10 +1,10 @@
 import type { Node, Edge } from "@xyflow/react";
 
 export class TreeLayoutManager {
-  private readonly HORIZONTAL_SPACING = 400;
-  private readonly VERTICAL_SPACING = 250;
+  private readonly HORIZONTAL_SPACING = 400; // Increased from 300 to 400 for more space between siblings
+  private readonly VERTICAL_SPACING = 300; // Increased from 200 to 300 for more space between parent and child
   private readonly ROOT_POSITION = { x: 600, y: 100 };
-  private readonly MIN_NODE_WIDTH = 200;
+  private readonly MIN_NODE_WIDTH = 280; // Increased from 250 to match node width
 
   /**
    * Recalculates the entire tree layout for perfect symmetry
@@ -170,8 +170,11 @@ export class TreeLayoutManager {
       totalWidth += subtreeWidths.get(childId) || this.MIN_NODE_WIDTH;
     });
 
-    // Add spacing between subtrees
-    totalWidth += (children.length - 1) * this.HORIZONTAL_SPACING;
+    const spacingBetweenSubtrees = Math.max(
+      this.HORIZONTAL_SPACING,
+      this.MIN_NODE_WIDTH * 0.7,
+    );
+    totalWidth += (children.length - 1) * spacingBetweenSubtrees;
 
     // Calculate starting position
     let currentX = parentCenterX - totalWidth / 2;
@@ -181,7 +184,7 @@ export class TreeLayoutManager {
     children.forEach((childId) => {
       const childWidth = subtreeWidths.get(childId) || this.MIN_NODE_WIDTH;
       positions.push(currentX + childWidth / 2);
-      currentX += childWidth + this.HORIZONTAL_SPACING;
+      currentX += childWidth + spacingBetweenSubtrees;
     });
 
     return positions;
