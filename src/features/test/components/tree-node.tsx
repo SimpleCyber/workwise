@@ -1,97 +1,80 @@
-"use client";
+"use client"
 
-import type React from "react";
-import { useState, useCallback } from "react";
-import { Handle, Position, type NodeProps } from "@xyflow/react";
-import { Card, CardContent } from "@/components/ui/card";
-import { NodePopup } from "./node-popup";
-import { EditableField } from "./editable-field";
-import { UserAvatars } from "./user-avatars";
-import { NodeActions } from "./node-actions";
-import { StatusBadge } from "./status-badge";
+import type React from "react"
+import { useState } from "react"
+import { Handle, Position, type NodeProps } from "reactflow"
+import { Card, CardContent } from "@/components/ui/card"
+import { NodePopup } from "./node-popup"
+import { EditableField } from "./editable-field"
+import { UserAvatars } from "./user-avatars"
+import { NodeActions } from "./node-actions"
+import { StatusBadge } from "./status-badge"
 
 interface TreeNodeData {
-  label: string;
-  description?: string;
-  status?: string;
-  uniqueId?: string;
-  users?: Array<{ id: string; name: string; initials: string }>;
-  onAddChild: () => void;
-  onDelete: () => void;
-  onUpdateNode?: (updates: any) => void;
-  isRoot?: boolean;
-  hasChildren?: boolean;
-  childNodes?: Array<{ id: string; label: string; status: string }>;
-  isPopupOpen?: boolean;
-  onTogglePopup?: () => void;
-  onClosePopup?: () => void;
+  label: string
+  description?: string
+  status?: string
+  uniqueId?: string
+  users?: Array<{ id: string; name: string; initials: string }>
+  onAddChild: () => void
+  onDelete: () => void
+  isRoot?: boolean
+  hasChildren?: boolean
+  childNodes?: Array<{ id: string; label: string; status: string }>
+  isPopupOpen?: boolean
+  onTogglePopup?: () => void
+  onClosePopup?: () => void
+  workspaceId?: string
+  onUpdateNode?: (nodeId: string, updates: Partial<{ title: string; description: string; status: string }>) => void
 }
 
 export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
-  const [isHovered, setIsHovered] = useState(false);
-  const [lastTap, setLastTap] = useState(0);
+  const [label, setLabel] = useState(data.label)
+  const [description, setDescription] = useState(data.description || "Default description for this node")
+  const [status, setStatus] = useState(data.status || "Open")
+  const [uniqueId, setUniqueId] = useState(data.uniqueId || `NODE-${id.toString().padStart(5, "0")}`)
+  const [users, setUsers] = useState(data.users || [])
 
-  const handleLabelChange = useCallback(
-    (newLabel: string) => {
-      if (data.onUpdateNode) {
-        data.onUpdateNode({ title: newLabel });
-      }
-    },
-    [data.onUpdateNode],
-  );
+  const [isHovered, setIsHovered] = useState(false)
+  const [lastTap, setLastTap] = useState(0)
 
-  const handleDescriptionChange = useCallback(
-    (newDescription: string) => {
-      if (data.onUpdateNode) {
-        data.onUpdateNode({ description: newDescription });
-      }
-    },
-    [data.onUpdateNode],
-  );
+  const handleLabelChange = (newLabel: string) => {
+    setLabel(newLabel)
+    data.onUpdateNode?.(id, { title: newLabel })
+  }
 
-  const handleStatusChange = useCallback(
-    (newStatus: string) => {
-      if (data.onUpdateNode) {
-        data.onUpdateNode({ status: newStatus });
-      }
-    },
-    [data.onUpdateNode],
-  );
+  const handleDescriptionChange = (newDescription: string) => {
+    setDescription(newDescription)
+    data.onUpdateNode?.(id, { description: newDescription })
+  }
 
-  const handleUniqueIdChange = useCallback(
-    (newId: string) => {
-      if (data.onUpdateNode) {
-        data.onUpdateNode({ nodeId: newId });
-      }
-    },
-    [data.onUpdateNode],
-  );
+  const handleStatusChange = (newStatus: string) => {
+    setStatus(newStatus)
+    data.onUpdateNode?.(id, { status: newStatus })
+  }
 
   const handleDoubleClick = () => {
-    data.onAddChild();
-  };
+    data.onAddChild()
+  }
 
   const handleTouchEnd = () => {
-    const now = Date.now();
-    const DOUBLE_TAP_DELAY = 300;
+    const now = Date.now()
+    const DOUBLE_TAP_DELAY = 300
 
     if (lastTap && now - lastTap < DOUBLE_TAP_DELAY) {
-      data.onAddChild();
+      data.onAddChild()
     }
-    setLastTap(now);
-  };
+    setLastTap(now)
+  }
 
   const handleCardClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+    e.stopPropagation()
     if (data.onTogglePopup) {
-      data.onTogglePopup();
+      data.onTogglePopup()
     }
-  };
+  }
 
-  const trimmedDescription =
-    data.description && data.description.length > 50
-      ? data.description.substring(0, 50) + "..."
-      : data.description || "No description";
+  const trimmedDescription = description.length > 50 ? description.substring(0, 50) + "..." : description
 
   return (
     <div
@@ -102,13 +85,14 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
       <NodePopup
         show={isHovered || data.isPopupOpen || false}
         nodeId={id}
-        label={data.label}
-        description={data.description || ""}
-        status={data.status || "Open"}
-        uniqueId={data.uniqueId || ""}
+        label={label}
+        description={description}
+        status={status}
+        uniqueId={uniqueId}
         isPersistent={data.isPopupOpen || false}
         childNodes={data.childNodes || []}
         onClose={data.onClosePopup || (() => {})}
+        workspaceId={data.workspaceId}
       />
 
       <Card
@@ -118,29 +102,15 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
         onClick={handleCardClick}
       >
         <CardContent className="p-3">
-          {!data.isRoot && (
-            <Handle
-              type="target"
-              position={Position.Top}
-              className="w-3 h-3 !bg-primary"
-            />
-          )}
+          {!data.isRoot && <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-primary" />}
 
           <div className="space-y-2">
-            <EditableField
-              value={data.label}
-              onChange={handleLabelChange}
-              type="title"
-              placeholder="Enter title"
-            />
+            <EditableField value={label} onChange={handleLabelChange} type="title" placeholder="Enter title" />
 
-            <StatusBadge
-              status={data.status || "Open"}
-              onChange={handleStatusChange}
-            />
+            <StatusBadge status={status} onChange={handleStatusChange} />
 
             <EditableField
-              value={data.description || ""}
+              value={description}
               onChange={handleDescriptionChange}
               type="description"
               placeholder="Enter description"
@@ -148,25 +118,13 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
             />
 
             <div className="flex items-center justify-between pt-1">
-              <EditableField
-                value={data.uniqueId || ""}
-                onChange={handleUniqueIdChange}
-                type="id"
-                placeholder="Enter ID"
-              />
+              <EditableField value={uniqueId} onChange={setUniqueId} type="id" placeholder="Enter ID" />
 
-              <UserAvatars
-                users={data.users || []}
-                onUsersChange={() => {}} // TODO: Implement user management
-              />
+              <UserAvatars users={users} onUsersChange={setUsers} workspaceId={data.workspaceId} nodeId={id} />
             </div>
           </div>
 
-          <Handle
-            type="source"
-            position={Position.Bottom}
-            className="w-3 h-3 !bg-primary"
-          />
+          <Handle type="source" position={Position.Bottom} className="w-3 h-3 !bg-primary" />
         </CardContent>
       </Card>
 
@@ -174,8 +132,8 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
         isVisible={isHovered}
         onAddChild={data.onAddChild}
         onDelete={data.onDelete}
-        canDelete={id !== "1"}
+        canDelete={!data.isRoot}
       />
     </div>
-  );
+  )
 }

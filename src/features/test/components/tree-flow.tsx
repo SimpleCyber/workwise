@@ -1,8 +1,6 @@
-"use client";
+"use client"
 
-import { useCallback, useState, useEffect } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
+import { useCallback, useState, useEffect } from "react"
 import {
   ReactFlow,
   MiniMap,
@@ -15,14 +13,15 @@ import {
   type Edge,
   type Connection,
   BackgroundVariant,
-} from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
-import { TreeNode } from "./tree-node";
-import { TreeLayoutManager } from "../lib/tree-layout-manager";
+} from "reactflow"
+import "reactflow/dist/style.css"
+import { TreeNode } from "./tree-node"
+import { TreeLayoutManager } from "../lib/tree-layout-manager"
+import type { TreeFlowProps } from "./tree-flow-props"
 
 const nodeTypes = {
   treeNode: TreeNode,
-};
+}
 
 const edgeOptions = {
   animated: true,
@@ -35,151 +34,223 @@ const edgeOptions = {
   pathOptions: {
     borderRadius: 20,
   },
-};
-
-interface TreeFlowProps {
-  workspaceId: string;
 }
 
 export function TreeFlow({ workspaceId }: TreeFlowProps) {
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [activePopup, setActivePopup] = useState<string | null>(null);
+  const [nodes, setNodes, onNodesChange] = useNodesState([])
+  const [edges, setEdges, onEdgesChange] = useEdgesState([])
+  const [activePopup, setActivePopup] = useState<string | null>(null)
+  const [nodeCounter, setNodeCounter] = useState(1)
 
-  const treeNodes = useQuery(api.advancetree.getTreeNodes, { workspaceId });
-  const createNode = useMutation(api.advancetree.createTreeNode);
-  const createChildNode = useMutation(api.advancetree.createChildNode);
-  const deleteNode = useMutation(api.advancetree.deleteTreeNode);
-  const updateNode = useMutation(api.advancetree.updateNodeWithPermission);
-
-  const layoutManager = new TreeLayoutManager();
+  const layoutManager = new TreeLayoutManager()
 
   useEffect(() => {
-    if (!treeNodes) return;
-
-    const flowNodes: Node[] = treeNodes.map((node) => ({
-      id: node.nodeId,
+    // Start with just the workspace root node
+    const rootNodeId = `workspace-root-${workspaceId}`
+    const rootNode: Node = {
+      id: rootNodeId,
       type: "treeNode",
-      position: { x: node.positionX || 0, y: node.positionY || 0 },
+      position: { x: 400, y: 100 },
       data: {
-        label: node.title,
-        description: node.description,
-        status: node.status,
-        uniqueId: node.nodeId,
-        users:
-          node.assignedUsers?.map((user) => ({
-            id: user.userId,
-            name: user.member?.name || "Unknown",
-            initials:
-              user.member?.name
-                ?.split(" ")
-                .map((n) => n[0])
-                .join("") || "??",
-          })) || [],
-        onAddChild: () => addChildNode(node.nodeId),
-        onDelete: () => handleDeleteNode(node.nodeId),
-        isRoot: !node.parentId,
-        hasChildren: treeNodes.some((n) => n.parentId === node.nodeId),
-        childNodes: treeNodes
-          .filter((n) => n.parentId === node.nodeId)
-          .map((child) => ({
-            id: child.nodeId,
-            label: child.title,
-            status: child.status,
-          })),
-        isPopupOpen: activePopup === node.nodeId,
-        onTogglePopup: () => togglePopup(node.nodeId),
-        onClosePopup: closePopup,
-        onUpdateNode: (updates: any) => handleUpdateNode(node.nodeId, updates),
+        label: "Workspace Root",
+        description: "Main workspace root node",
+        status: "Open",
+        uniqueId: rootNodeId,
+        users: [],
+        onAddChild: () => addChildNodeHandler(rootNodeId),
+        onDelete: () => {}, // Root node cannot be deleted
+        isRoot: true,
+        hasChildren: false,
+        childNodes: [],
       },
-    }));
+    }
 
-    const flowEdges: Edge[] = treeNodes
-      .filter((node) => node.parentId)
-      .map((node) => ({
-        id: `${node.parentId}-${node.nodeId}`,
-        source: node.parentId!,
-        target: node.nodeId,
+    setNodes([rootNode])
+    setEdges([])
+  }, [workspaceId, setNodes, setEdges])
+
+  const onConnect = useCallback((params: Connection) => setEdges((eds) => addEdge(params, eds)), [setEdges])
+
+  const addChildNodeHandler = useCallback(
+    (parentId: string) => {
+      const newNodeId = `node-${Date.now()}-${nodeCounter}`
+      setNodeCounter((prev) => prev + 1)
+
+      const newNode: Node = {
+        id: newNodeId,
+        type: "treeNode",
+        position: { x: 0, y: 0 }, // Will be recalculated by layout manager
+        data: {
+          label: `New Node ${nodeCounter}`,
+          description: "New child node",
+          status: "Open",
+          uniqueId: newNodeId,
+          users: [],
+          onAddChild: () => addChildNodeHandler(newNodeId),
+          onDelete: () => deleteNodeHandler(newNodeId),
+          isRoot: false,
+          hasChildren: false,
+          childNodes: [],
+        },
+      }
+
+      const newEdge: Edge = {
+        id: `e${parentId}-${newNodeId}`,
+        source: parentId,
+        target: newNodeId,
         ...edgeOptions,
-      }));
+      }
 
-    const positionedNodes = layoutManager.recalculateTreeLayout(
-      flowNodes,
-      flowEdges,
-    );
+      setNodes((prevNodes) => {
+        const updatedNodes = [...prevNodes, newNode]
+        // Recalculate layout with new node
+        const layoutedNodes = layoutManager.recalculateTreeLayout(updatedNodes, [...edges, newEdge])
+        return layoutedNodes
+      })
 
-    setNodes(positionedNodes);
-    setEdges(flowEdges);
-  }, [treeNodes, activePopup]);
+      setEdges((prevEdges) => [...prevEdges, newEdge])
 
-  const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges],
-  );
+      // Update parent node to show it has children
+      setNodes((prevNodes) =>
+        prevNodes.map((node) =>
+          node.id === parentId
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  hasChildren: true,
+                  childNodes: [
+                    ...(node.data.childNodes || []),
+                    {
+                      id: newNodeId,
+                      label: `New Node ${nodeCounter}`,
+                      status: "Open",
+                    },
+                  ],
+                },
+              }
+            : node,
+        ),
+      )
+    },
+    [nodeCounter, edges, layoutManager, setNodes, setEdges],
+  )
 
-  const addChildNode = useCallback(
-    async (parentId: string) => {
-      try {
-        await createChildNode({
-          workspaceId,
-          parentId,
-          title: `New Node`,
-          description: "New node description",
-        });
-      } catch (error) {
-        console.error("Failed to create child node:", error);
+  const deleteNodeHandler = useCallback(
+    (nodeId: string) => {
+      // Find all descendant nodes to delete
+      const nodesToDelete = new Set([nodeId])
+      const findDescendants = (parentId: string) => {
+        edges.forEach((edge) => {
+          if (edge.source === parentId) {
+            nodesToDelete.add(edge.target)
+            findDescendants(edge.target)
+          }
+        })
+      }
+      findDescendants(nodeId)
+
+      // Remove nodes and edges
+      setNodes((prevNodes) => {
+        const remainingNodes = prevNodes.filter((node) => !nodesToDelete.has(node.id))
+        // Recalculate layout after deletion
+        const remainingEdges = edges.filter(
+          (edge) => !nodesToDelete.has(edge.source) && !nodesToDelete.has(edge.target),
+        )
+        const layoutedNodes = layoutManager.recalculateTreeLayout(remainingNodes, remainingEdges)
+        return layoutedNodes
+      })
+
+      setEdges((prevEdges) =>
+        prevEdges.filter((edge) => !nodesToDelete.has(edge.source) && !nodesToDelete.has(edge.target)),
+      )
+
+      // Update parent nodes to reflect children changes
+      const parentEdge = edges.find((edge) => edge.target === nodeId)
+      if (parentEdge) {
+        setNodes((prevNodes) =>
+          prevNodes.map((node) => {
+            if (node.id === parentEdge.source) {
+              const remainingChildren = node.data.childNodes?.filter((child: any) => !nodesToDelete.has(child.id)) || []
+              return {
+                ...node,
+                data: {
+                  ...node.data,
+                  hasChildren: remainingChildren.length > 0,
+                  childNodes: remainingChildren,
+                },
+              }
+            }
+            return node
+          }),
+        )
       }
     },
-    [workspaceId, createChildNode],
-  );
+    [edges, layoutManager, setNodes, setEdges],
+  )
 
-  const handleDeleteNode = useCallback(
-    async (nodeId: string) => {
-      try {
-        await deleteNode({ workspaceId, nodeId });
-      } catch (error) {
-        console.error("Failed to delete node:", error);
-      }
+  const updateNodeHandler = useCallback(
+    (nodeId: string, updates: Partial<{ title: string; description: string; status: string }>) => {
+      setNodes((prevNodes) =>
+        prevNodes.map((node) =>
+          node.id === nodeId
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  label: updates.title || node.data.label,
+                  description: updates.description || node.data.description,
+                  status: updates.status || node.data.status,
+                },
+              }
+            : node,
+        ),
+      )
     },
-    [workspaceId, deleteNode],
-  );
-
-  const handleUpdateNode = useCallback(
-    async (nodeId: string, updates: any) => {
-      try {
-        await updateNode({
-          workspaceId,
-          nodeId,
-          ...updates,
-        });
-      } catch (error) {
-        console.error("Failed to update node:", error);
-      }
-    },
-    [workspaceId, updateNode],
-  );
+    [setNodes],
+  )
 
   const closePopup = useCallback(() => {
-    setActivePopup(null);
-  }, []);
+    setActivePopup(null)
+  }, [])
 
   const togglePopup = useCallback((nodeId: string) => {
-    setActivePopup((prev) => (prev === nodeId ? null : nodeId));
-  }, []);
+    setActivePopup((prev) => (prev === nodeId ? null : nodeId))
+  }, [])
 
-  if (!treeNodes) {
-    return (
-      <div className="w-full h-full flex items-center justify-center">
-        <div className="text-lg">Loading tree structure...</div>
-      </div>
-    );
-  }
+  const nodesWithCallbacks = nodes.map((node) => {
+    const childNodes = nodes
+      .filter((n) => edges.some((e) => e.source === node.id && e.target === n.id))
+      .map((child) => ({
+        id: child.id,
+        label: child.data.label,
+        status: child.data.status,
+      }))
+
+    return {
+      ...node,
+      data: {
+        ...node.data,
+        childNodes,
+        isPopupOpen: activePopup === node.id,
+        onTogglePopup: () => togglePopup(node.id),
+        onClosePopup: closePopup,
+        workspaceId,
+        onUpdateNode: updateNodeHandler,
+      },
+    }
+  })
+
+  const styledEdges = edges.map((edge) => ({
+    ...edge,
+    ...edgeOptions,
+  }))
 
   return (
     <div className="w-full h-full" onClick={closePopup}>
       <ReactFlow
-        nodes={nodes}
-        edges={edges}
+        nodes={nodesWithCallbacks}
+        edges={styledEdges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
@@ -198,13 +269,8 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
           zoomable={true}
           className="bg-background border border-border rounded-lg"
         />
-        <Background
-          variant={BackgroundVariant.Dots}
-          gap={20}
-          size={1}
-          className="opacity-30"
-        />
+        <Background variant={BackgroundVariant.Dots} gap={20} size={1} className="opacity-30" />
       </ReactFlow>
     </div>
-  );
+  )
 }
