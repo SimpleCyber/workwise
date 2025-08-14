@@ -2,11 +2,9 @@ import { GitBranch } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const statusColors = [
-  { name: "Open", class: "bg-blue-100 text-blue-800" },
-  { name: "In Progress", class: "bg-yellow-100 text-yellow-800" },
-  { name: "Completed", class: "bg-green-100 text-green-800" },
-  { name: "Blocked", class: "bg-red-100 text-red-800" },
-  { name: "Review", class: "bg-purple-100 text-purple-800" },
+  { name: "in-progress", class: "bg-blue-100 text-blue-800" },
+  { name: "done", class: "bg-green-100 text-green-800" },
+  { name: "blocked", class: "bg-red-100 text-red-800" },
 ];
 
 interface ChildNode {
