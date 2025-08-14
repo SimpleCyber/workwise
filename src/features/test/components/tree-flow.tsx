@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useEffect, useMemo } from "react";
+import { useCallback, useState, useEffect } from "react";
 import {
   ReactFlow,
   MiniMap,
@@ -58,14 +58,10 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
   const updateNode = useUpdateTreeNode();
   const deleteNode = useDeleteTreeNode();
 
-  const layoutManager = useMemo(() => new TreeLayoutManager(), []);
+  const layoutManager = new TreeLayoutManager();
 
   useEffect(() => {
-    if (!treeNodes || treeNodes.length === 0) {
-      setNodes([]);
-      setEdges([]);
-      return;
-    }
+    if (!treeNodes || treeNodes.length === 0) return;
 
     const reactFlowNodes: Node[] = [];
     const reactFlowEdges: Edge[] = [];
@@ -95,8 +91,6 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
           workspaceId,
           onUpdateNode: updateNodeHandler,
         },
-        width: 280,
-        height: 120,
       };
       reactFlowNodes.push(reactFlowNode);
 
@@ -132,14 +126,9 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
       node.data.childNodes = children;
     });
 
-    const layoutedNodes = layoutManager.recalculateTreeLayout(
-      reactFlowNodes,
-      reactFlowEdges,
-    );
-
-    setNodes(layoutedNodes);
+    setNodes(reactFlowNodes);
     setEdges(reactFlowEdges);
-  }, [treeNodes, workspaceId, layoutManager, setNodes, setEdges]); // Removed recalculateLayout dependency
+  }, [treeNodes, workspaceId, setNodes, setEdges]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
