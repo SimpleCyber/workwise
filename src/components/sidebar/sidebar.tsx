@@ -9,6 +9,7 @@ import {
   Network,
   PanelLeftOpen,
   PanelLeftClose,
+  TestTubeDiagonalIcon,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { UserButton } from "@/features/auth/components/user-button";
@@ -32,6 +33,12 @@ export const Sidebar = ({
   const workspaceId = useWorkspaceId();
 
   const navigationItems = [
+    {
+      icon: TestTubeDiagonalIcon,
+      label: "Testing",
+      path: `/test/${workspaceId}`,
+      delay: "delay-[50ms]",
+    },
     {
       icon: Network,
       label: "All Data",

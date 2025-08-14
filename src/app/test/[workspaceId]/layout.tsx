@@ -1,36 +1,17 @@
 "use client";
 
 import type { PropsWithChildren } from "react";
-import { Sidebar } from "@/components/sidebar/sidebar";
-import { Toolbar } from "@/components/toolbar/toolbar";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
-import { WorkspaceSidebar } from "@/components/workspace-sidebar/workspace-sidebar";
 import { WorkspaceSidebarContent } from "./workspace-sidebar-content";
+import WorkspaceLayout from "@/components/workspace-sidebar/workspace-sidebar-layout";
 
 const TreeWorkspaceLayout = ({ children }: Readonly<PropsWithChildren>) => {
   return (
-    <div className="h-full">
-      <Toolbar />
-      <Sidebar />
-      <ResizablePanelGroup
-        direction="horizontal"
-        autoSaveId="tree-workspace-layout"
-      >
-        <ResizablePanel defaultSize={20} minSize={11} className="bg-gray-900">
-          <WorkspaceSidebar>
-            <WorkspaceSidebarContent />
-          </WorkspaceSidebar>
-        </ResizablePanel>
-        <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={80} minSize={20}>
-          {children}
-        </ResizablePanel>
-      </ResizablePanelGroup>
-    </div>
+    <WorkspaceLayout
+      autoSaveId="todo-workspace-layout"
+      sidebarContent={<WorkspaceSidebarContent />}
+    >
+      {children}
+    </WorkspaceLayout>
   );
 };
 

@@ -327,6 +327,87 @@ const schema = defineSchema({
     .index("by_workspace_id", ["workspaceId"])
     .index("by_uploader_id", ["uploaderId"])
     .index("by_created_at", ["createdAt"]),
+  // Advanced Tree Structure tables
+  treeNodes: defineTable({
+    title: v.string(),
+    description: v.optional(v.string()),
+    nodeId: v.string(), // Unique identifier like "node-1", "node-2"
+    parentId: v.optional(v.string()), // Parent node ID for hierarchy
+    workspaceId: v.id("workspaces"),
+    createdById: v.id("members"),
+    status: v.union(
+      v.literal("todo"),
+      v.literal("in-progress"),
+      v.literal("review"),
+      v.literal("done"),
+    ),
+    position: v.object({
+      x: v.number(),
+      y: v.number(),
+    }),
+    level: v.number(), // Tree depth level
+    isArchived: v.optional(v.boolean()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_workspace_id", ["workspaceId"])
+    .index("by_created_by", ["createdById"])
+    .index("by_parent_id", ["parentId"])
+    .index("by_node_id", ["nodeId"])
+    .index("by_workspace_archived", ["workspaceId", "isArchived"]),
+
+  treeNodeUsers: defineTable({
+    nodeId: v.string(),
+    memberId: v.id("members"),
+    workspaceId: v.id("workspaces"),
+    role: v.union(
+      v.literal("creator"),
+      v.literal("admin"),
+      v.literal("member"),
+    ),
+    addedAt: v.number(),
+    addedById: v.id("members"),
+  })
+    .index("by_node_id", ["nodeId"])
+    .index("by_member_id", ["memberId"])
+    .index("by_workspace_id", ["workspaceId"]),
+
+  treeNodeComments: defineTable({
+    nodeId: v.string(),
+    memberId: v.id("members"),
+    workspaceId: v.id("workspaces"),
+    content: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+    isEdited: v.optional(v.boolean()),
+  })
+    .index("by_node_id", ["nodeId"])
+    .index("by_member_id", ["memberId"])
+    .index("by_workspace_id", ["workspaceId"])
+    .index("by_created_at", ["createdAt"]),
+
+  treeNodeTasks: defineTable({
+    nodeId: v.string(),
+    title: v.string(),
+    description: v.optional(v.string()),
+    assignedToId: v.optional(v.id("members")),
+    assignedById: v.id("members"),
+    workspaceId: v.id("workspaces"),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("in-progress"),
+      v.literal("completed"),
+    ),
+    priority: v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
+    dueDate: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_node_id", ["nodeId"])
+    .index("by_assigned_to", ["assignedToId"])
+    .index("by_assigned_by", ["assignedById"])
+    .index("by_workspace_id", ["workspaceId"])
+    .index("by_status", ["status"]),
 });
 
 export default schema;

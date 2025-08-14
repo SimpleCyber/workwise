@@ -4,7 +4,7 @@ import { Loader2, TriangleAlert } from "lucide-react";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { useGetTreeData } from "@/features/test/api/use-get-tree-data";
 import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info";
-import NotesOrganizer from "@/features/test/components/tree-visualization";
+import { TreeFlow } from "@/features/test/components/tree-flow";
 
 export default function TreeWorkspacePage({
   params,
@@ -44,7 +44,7 @@ export default function TreeWorkspacePage({
         <h1 className="text-lg font-semibold">All Data - {workspace.name}</h1>
       </div>
       <div className="flex-1 overflow-auto p-6">
-        <NotesOrganizer />
+        <TreeFlow workspaceId={workspaceId} />
       </div>
     </div>
   );

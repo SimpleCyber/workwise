@@ -13,6 +13,7 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as advancetree from "../advancetree.js";
 import type * as attendance from "../attendance.js";
 import type * as attendanceComments from "../attendanceComments.js";
 import type * as auth from "../auth.js";
@@ -41,6 +42,7 @@ import type * as workspaces from "../workspaces.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  advancetree: typeof advancetree;
   attendance: typeof attendance;
   attendanceComments: typeof attendanceComments;
   auth: typeof auth;
