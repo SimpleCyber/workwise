@@ -9,7 +9,7 @@ import { UserAvatars } from "./user-avatars";
 import { NodeActions } from "./node-actions";
 import { StatusBadge } from "./status-badge";
 import { NodePopup } from "./node-popup";
-import { MapPin } from "lucide-react";
+import { Lightbulb } from "lucide-react";
 
 interface TreeNodeData {
   label: string;
@@ -139,9 +139,9 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
             />
 
             <div className="flex items-center justify-between pt-1">
-              <p className="text-xs text-gray-500">
-                {" "}
-                <MapPin /> {uniqueId}
+              <p className="flex items-center text-xs text-gray-500 space-x-1">
+                <Lightbulb className="w-3 h-3 font-bold text-yellow-500" />
+                <span>{uniqueId}</span>
               </p>
 
               <UserAvatars
