@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Handle, Position, type NodeProps } from "reactflow";
 import { Card, CardContent } from "@/components/ui/card";
 import { EditableField } from "./editable-field";
@@ -37,13 +37,25 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
   const [description, setDescription] = useState(
     data.description || "Default description for this node",
   );
-  const [status, setStatus] = useState(data.status || "in-progress"); //
+  const [status, setStatus] = useState(data.status || "in-progress");
 
   const uniqueId = data.uniqueId;
   const [users, setUsers] = useState(data.users || []);
 
   const [isHovered, setIsHovered] = useState(false);
+  const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
   const [lastTap, setLastTap] = useState(0);
+
+  const handleMouseEnter = () => {
+    if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    hoverTimeout.current = setTimeout(() => {
+      setIsHovered(false);
+    }, 300); // delay in ms before hiding popup
+  };
 
   const handleLabelChange = (newLabel: string) => {
     setLabel(newLabel);
@@ -89,8 +101,8 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
   return (
     <div
       className="relative flex items-center"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <NodePopup
         show={isHovered || data.isPopupOpen || false}
