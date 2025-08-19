@@ -161,6 +161,7 @@ export const WorkspaceNode = ({ data }: NodeProps) => {
   return (
     <div className="relative" {...hoverProps}>
       <Card
+        onDoubleClick={handleGoToProjects}
         className={`min-w-[200px] shadow-md border-purple-200 cursor-pointer hover:shadow-lg transition-shadow ${
           data.isActive ? "ring-2 ring-purple-500" : ""
         }`}

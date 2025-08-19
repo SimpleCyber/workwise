@@ -225,6 +225,7 @@ export const ProjectNode = ({ data }: NodeProps) => {
     <div className="relative" {...hoverProps}>
       <div className="flex flex-col items-center">
         <Card
+          onDoubleClick={handleGoToProject}
           className={`shadow-md cursor-pointer hover:shadow-lg transition-all duration-300 ${hasHoldTasks ? "border-red-400" : "border-green-400"} ${
             data.isListsExpanded ? "w-20 h-20 animate-pulse" : "w-16 h-16"
           } ${data.isActive ? `ring-2 ${hasHoldTasks ? "ring-red-500" : "ring-green-500"}` : ""} relative`}

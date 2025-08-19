@@ -74,10 +74,7 @@ export function NodePopup({
   ];
 
   return (
-    <div
-      ref={popupRef}
-      className="absolute top-0 right-full mr-4 z-[9999] w-80"
-    >
+    <div ref={popupRef} className="fixed  top-0 right-full mr-4 z-[9999] w-80">
       <Card className="shadow-xl border-2 bg-white">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between mb-2">
