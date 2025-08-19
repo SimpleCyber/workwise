@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { useRealtimeSearch } from "@/features/search/api/use-realtime-search";
 import { SearchResults } from "@/features/search/components/search-results";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
+import { useRouter } from "next/navigation";
 
 interface Position {
   x: number;
@@ -38,6 +39,49 @@ export const FloatingSearchBar: React.FC<FloatingSearchBarProps> = ({
   const resultsRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number>();
+
+  const commands: Record<string, string> = {
+    todo: `/todo/${workspaceId}`,
+    project: `/projects/${workspaceId}`,
+    chat: `/workspace/${workspaceId}`,
+    files: `/data-room/${workspaceId}`,
+    attend: `/attendance/${workspaceId}`,
+    data: `/tree/${workspaceId}`,
+    testing: `/test/${workspaceId}`,
+  };
+
+  const commandTriggers = ["goto", "navigate", "open"];
+
+  const router = useRouter();
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      const normalized = searchQuery.toLowerCase().trim();
+      const words = normalized.split(" ");
+      const lastWord = words[words.length - 1];
+
+      // Case 1: Just a command word → open all
+      if (commandTriggers.includes(normalized)) {
+        setShowResults(true);
+        return;
+      }
+
+      // Case 2: Command + destination word
+      if (commandTriggers.includes(words[0]) && commands[lastWord]) {
+        router.push(commands[lastWord]);
+        setSearchQuery("");
+        setShowResults(false);
+        return;
+      }
+
+      // Case 3: Direct match (no prefix)
+      if (commands[normalized]) {
+        router.push(commands[normalized]);
+        setSearchQuery("");
+        setShowResults(false);
+      }
+    }
+  };
 
   // Debounce search query
   useEffect(() => {
@@ -209,7 +253,7 @@ export const FloatingSearchBar: React.FC<FloatingSearchBarProps> = ({
   const getResultsPosition = () => {
     const searchBarHeight = 50;
     const windowHeight = window.innerHeight;
-    const resultsHeight = 400;
+    const resultsHeight = 250;
 
     // If search bar is in bottom half, show results above
     const showAbove = position.y > windowHeight / 2;
@@ -217,7 +261,7 @@ export const FloatingSearchBar: React.FC<FloatingSearchBarProps> = ({
     return {
       x: position.x,
       y: showAbove
-        ? position.y - resultsHeight - 10
+        ? position.y - resultsHeight - 20
         : position.y + searchBarHeight + 10,
     };
   };
@@ -278,6 +322,7 @@ export const FloatingSearchBar: React.FC<FloatingSearchBarProps> = ({
                 placeholder="Search anything..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
                 className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 h-auto p-0 text-sm placeholder:text-muted-foreground"
                 autoFocus
               />
@@ -315,7 +360,7 @@ export const FloatingSearchBar: React.FC<FloatingSearchBarProps> = ({
       </div>
 
       {/* Search Results */}
-      {showResults && isExpanded && (
+      {isExpanded && (
         <div
           ref={resultsRef}
           className="fixed z-40 w-96 max-h-96 overflow-hidden transition-all duration-200"
@@ -325,22 +370,48 @@ export const FloatingSearchBar: React.FC<FloatingSearchBarProps> = ({
           }}
         >
           <Card className="shadow-xl border-2 bg-background/95 backdrop-blur-sm">
-            <div className="p-4 border-b">
-              <div className="flex items-center justify-between">
-                <h3 className="font-medium text-sm">Search Results</h3>
-                <span className="text-xs text-muted-foreground">
-                  {searchResults?.total || 0} results
-                </span>
+            {/* 🔹 Case 1: Command Dropdown */}
+            {searchQuery &&
+            commandTriggers.includes(searchQuery.toLowerCase()) ? (
+              <div className="p-2">
+                <div className="text-xs text-muted-foreground px-2 pb-1">
+                  Available pages
+                </div>
+                {Object.keys(commands).map((key) => (
+                  <button
+                    key={key}
+                    onClick={() => {
+                      router.push(commands[key]);
+                      setSearchQuery("");
+                      setShowResults(false);
+                    }}
+                    className="w-full text-left px-2 py-1 hover:bg-accent hover:text-accent-foreground rounded-md"
+                  >
+                    {key.charAt(0).toUpperCase() + key.slice(1)}
+                  </button>
+                ))}
               </div>
-            </div>
-            <div className="max-h-80 overflow-y-auto">
-              <SearchResults
-                results={searchResults?.results || []}
-                total={searchResults?.total || 0}
-                isLoading={isLoading}
-                query={debouncedQuery}
-              />
-            </div>
+            ) : (
+              /* 🔹 Case 2: Search Results */
+              <>
+                <div className="p-4 border-b">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium text-sm">Search Results</h3>
+                    <span className="text-xs text-muted-foreground">
+                      {searchResults?.total || 0} results
+                    </span>
+                  </div>
+                </div>
+                <div className="max-h-80 overflow-y-auto">
+                  <SearchResults
+                    results={searchResults?.results || []}
+                    total={searchResults?.total || 0}
+                    isLoading={isLoading}
+                    query={debouncedQuery}
+                  />
+                </div>
+              </>
+            )}
           </Card>
         </div>
       )}
