@@ -23,9 +23,12 @@ import { useCreateTreeNode } from "../api/use-create-tree-node";
 import { useUpdateTreeNode } from "../api/use-update-tree-node";
 import { useDeleteTreeNode } from "../api/use-delete-tree-node";
 import { useGetWorkspaceMembers } from "../api/use-get-workspace-members";
+import { useExpandNodeWithAI } from "../api/use-ai-tree-generation";
 import { toast } from "sonner";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AITreeDialog } from "./ai-tree-dialog";
+import { aiTreeService } from "@/lib/ai-service";
 
 const nodeTypes = {
   treeNode: TreeNode,
@@ -48,6 +51,7 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [activePopup, setActivePopup] = useState<string | null>(null);
+  const [isAIDialogOpen, setIsAIDialogOpen] = useState(false);
 
   const { data: treeNodes, isLoading: nodesLoading } = useGetTreeNodes({
     workspaceId,
@@ -58,6 +62,7 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
   const createNode = useCreateTreeNode();
   const updateNode = useUpdateTreeNode();
   const deleteNode = useDeleteTreeNode();
+  const expandWithAI = useExpandNodeWithAI();
 
   const layoutManager = new TreeLayoutManager();
 
@@ -75,6 +80,54 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
     }
   }, [workspaceId, createNode]);
 
+  const expandNodeWithAIHandler = useCallback(
+    async (nodeId: string, customPrompt?: string) => {
+      try {
+        const node = treeNodes?.find((n) => n.nodeId === nodeId);
+        if (!node) {
+          toast.error("Node not found");
+          return;
+        }
+
+        toast.info("Generating child nodes with AI...");
+
+        const rootNode = treeNodes?.find((n) => n.level === 0);
+        const projectContext = rootNode
+          ? `${rootNode.title}: ${rootNode.description}`
+          : "General project";
+
+        const childNodes = customPrompt
+          ? await aiTreeService.expandNodeWithPrompt(
+              node.title,
+              node.description || "",
+              customPrompt,
+              projectContext,
+            )
+          : await aiTreeService.expandNode(
+              node.title,
+              node.description || "",
+              projectContext,
+            );
+
+        await expandWithAI({
+          workspaceId,
+          parentNodeId: nodeId,
+          childNodes,
+        });
+
+        toast.success("Node expanded with AI successfully!");
+      } catch (error) {
+        console.error("AI Node Expansion Error:", error);
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to expand node with AI",
+        );
+      }
+    },
+    [workspaceId, expandWithAI, treeNodes],
+  );
+
   useEffect(() => {
     if (!treeNodes || treeNodes.length === 0) return;
 
@@ -90,7 +143,7 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
       const reactFlowNode: Node = {
         id: node.nodeId,
         type: "treeNode",
-        position: { x: 0, y: 0 }, // let layout manager handle positions
+        position: { x: 0, y: 0 },
         data: {
           label: node.title,
           description: node.description || "No description",
@@ -105,6 +158,8 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
             })) || [],
           onAddChild: () => addChildNodeHandler(node.nodeId),
           onDelete: () => deleteNodeHandler(node.nodeId),
+          onExpandWithAI: (prompt: string) =>
+            expandNodeWithAIHandler(node.nodeId, prompt),
           isRoot: node.level === 0,
           hasChildren: false,
           childNodes: [],
@@ -126,7 +181,6 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
 
     treeNodes.forEach(processNode);
 
-    // Update child metadata
     reactFlowNodes.forEach((node) => {
       const children = reactFlowEdges
         .filter((edge) => edge.source === node.id)
@@ -146,7 +200,6 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
       node.data.childNodes = children;
     });
 
-    // Apply symmetrical layout
     const positionedNodes = layoutManager.recalculateTreeLayout(
       reactFlowNodes,
       reactFlowEdges,
@@ -154,7 +207,7 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
 
     setNodes(positionedNodes);
     setEdges(reactFlowEdges);
-  }, [treeNodes, workspaceId, setNodes, setEdges]);
+  }, [treeNodes, workspaceId, setNodes, setEdges, expandNodeWithAIHandler]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -259,17 +312,29 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
               Start Your Workspace Tree
             </h3>
             <p className="text-sm text-gray-500 mb-4">
-              Create your first workspace node to begin organizing your project
+              Create your first workspace node manually or let AI generate a
+              complete project breakdown
             </p>
           </div>
-          <Button
-            onClick={createInitialWorkspaceNode}
-            className="flex items-center gap-2"
-            size="lg"
-          >
-            <Plus className="w-4 h-4" />
-            Create Workspace Node
-          </Button>
+          <div className="flex gap-3">
+            <Button
+              onClick={createInitialWorkspaceNode}
+              variant="outline"
+              className="flex items-center gap-2 bg-transparent"
+              size="lg"
+            >
+              <Plus className="w-4 h-4" />
+              Create Manually
+            </Button>
+            <Button
+              onClick={() => setIsAIDialogOpen(true)}
+              className="flex items-center gap-2"
+              size="lg"
+            >
+              <Sparkles className="w-4 h-4" />
+              Generate with AI
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -280,8 +345,8 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
       ...node,
       data: {
         ...node.data,
-        isPopupOpen: false, // Disable popup by default
-        onTogglePopup: () => {}, // Disable popup functionality
+        isPopupOpen: false,
+        onTogglePopup: () => {},
         onClosePopup: closePopup,
         members: members || [],
         workspaceId: workspaceId || "your-workspace-id",
@@ -295,35 +360,43 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
   }));
 
   return (
-    <div className="w-full h-full" onClick={closePopup}>
-      <ReactFlow
-        nodes={nodesWithCallbacks}
-        edges={styledEdges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        nodeTypes={nodeTypes}
-        fitView
-        className="bg-background"
-        panOnDrag={true}
-        zoomOnScroll={true}
-        zoomOnPinch={true}
-      >
-        <Controls />
-        <MiniMap
-          nodeColor="#3b82f6"
-          maskColor="rgba(0, 0, 0, 0.2)"
-          pannable={true}
-          zoomable={true}
-          className="bg-background border border-border rounded-lg"
-        />
-        <Background
-          variant={BackgroundVariant.Dots}
-          gap={20}
-          size={1}
-          className="opacity-30"
-        />
-      </ReactFlow>
-    </div>
+    <>
+      <div className="w-full h-full" onClick={closePopup}>
+        <ReactFlow
+          nodes={nodesWithCallbacks}
+          edges={styledEdges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          nodeTypes={nodeTypes}
+          fitView
+          className="bg-background"
+          panOnDrag={true}
+          zoomOnScroll={true}
+          zoomOnPinch={true}
+        >
+          <Controls />
+          <MiniMap
+            nodeColor="#3b82f6"
+            maskColor="rgba(0, 0, 0, 0.2)"
+            pannable={true}
+            zoomable={true}
+            className="bg-background border border-border rounded-lg"
+          />
+          <Background
+            variant={BackgroundVariant.Dots}
+            gap={20}
+            size={1}
+            className="opacity-30"
+          />
+        </ReactFlow>
+      </div>
+
+      <AITreeDialog
+        isOpen={isAIDialogOpen}
+        onClose={() => setIsAIDialogOpen(false)}
+        workspaceId={workspaceId}
+      />
+    </>
   );
 }

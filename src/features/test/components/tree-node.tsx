@@ -19,6 +19,7 @@ interface TreeNodeData {
   users?: Array<{ id: string; name: string; initials: string; image?: string }>;
   onAddChild: () => void;
   onDelete: () => void;
+  onExpandWithAI?: () => void;
   isRoot?: boolean;
   hasChildren?: boolean;
   childNodes?: Array<{ id: string; label: string; status: string }>;
@@ -177,6 +178,7 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
         isVisible={isHovered}
         onAddChild={data.onAddChild}
         onDelete={data.onDelete}
+        onExpandWithAI={data.onExpandWithAI}
         canDelete={!data.isRoot}
       />
     </div>

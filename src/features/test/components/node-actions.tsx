@@ -1,12 +1,15 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Sparkles } from "lucide-react";
+import { AIExpandInput } from "./ai-expand-input";
+import { useState } from "react";
 
 interface NodeActionsProps {
   isVisible: boolean;
   onAddChild: () => void;
   onDelete: () => void;
+  onExpandWithAI?: (prompt: string) => void; // Updated to accept prompt parameter
   canDelete: boolean;
 }
 
@@ -14,8 +17,32 @@ export function NodeActions({
   isVisible,
   onAddChild,
   onDelete,
+  onExpandWithAI,
   canDelete,
 }: NodeActionsProps) {
+  const [showAIInput, setShowAIInput] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleAIExpand = () => {
+    setShowAIInput(true);
+  };
+
+  const handleAIGenerate = async (prompt: string) => {
+    if (onExpandWithAI) {
+      setIsGenerating(true);
+      try {
+        await onExpandWithAI(prompt);
+      } finally {
+        setIsGenerating(false);
+        setShowAIInput(false);
+      }
+    }
+  };
+
+  const handleAICancel = () => {
+    setShowAIInput(false);
+  };
+
   return (
     <div
       className={`absolute left-full ml-3 flex flex-col gap-1 transition-all duration-200 ${
@@ -31,6 +58,28 @@ export function NodeActions({
       >
         <Plus className="w-4 h-4 text-blue-600" />
       </Button>
+
+      {onExpandWithAI && (
+        <div className="relative">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleAIExpand}
+            className="h-8 w-8 p-0 bg-white hover:bg-purple-50 border-purple-200"
+            title="Expand with AI"
+          >
+            <Sparkles className="w-4 h-4 text-purple-600" />
+          </Button>
+
+          {showAIInput && (
+            <AIExpandInput
+              onGenerate={handleAIGenerate}
+              onCancel={handleAICancel}
+              isGenerating={isGenerating}
+            />
+          )}
+        </div>
+      )}
 
       {canDelete && (
         <Button
