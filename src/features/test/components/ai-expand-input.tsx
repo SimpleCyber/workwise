@@ -87,8 +87,8 @@ export function AIExpandInput({
       </form>
 
       <p className="text-xs text-gray-500 mt-2">
-        Example: "Create marketing tasks for social media campaign" or "Break
-        down frontend development phases"
+        Example: {'"Create marketing tasks for social media campaign"'} or{" "}
+        {'"Breakdown frontend development phases"'}
       </p>
     </Card>
   );
