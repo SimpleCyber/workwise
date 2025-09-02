@@ -278,143 +278,6 @@ export const addUserToNode = mutation({
   },
 });
 
-// Get comments for a node
-export const getNodeComments = query({
-  args: { nodeId: v.string() },
-  handler: async (ctx, args) => {
-    const identity = await getAuthUserId(ctx);
-    if (!identity) return [];
-
-    const comments = await ctx.db
-      .query("treeNodeComments")
-      .withIndex("by_node_id", (q) => q.eq("nodeId", args.nodeId))
-      .order("desc")
-      .collect();
-
-    const commentsWithUsers = await Promise.all(
-      comments.map(async (comment) => {
-        const member = await ctx.db.get(comment.memberId);
-        const user = member ? await ctx.db.get(member.userId) : null;
-        return {
-          ...comment,
-          member,
-          user,
-        };
-      }),
-    );
-
-    return commentsWithUsers;
-  },
-});
-
-// Add comment to node
-export const addNodeComment = mutation({
-  args: {
-    nodeId: v.string(),
-    workspaceId: v.id("workspaces"),
-    content: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const identity = await getAuthUserId(ctx);
-    if (!identity) throw new Error("Unauthorized");
-
-    const member = await ctx.db
-      .query("members")
-      .withIndex("by_workspace_id_user_id", (q) =>
-        q.eq("workspaceId", args.workspaceId).eq("userId", identity),
-      )
-      .first();
-
-    if (!member) throw new Error("Member not found");
-
-    return await ctx.db.insert("treeNodeComments", {
-      nodeId: args.nodeId,
-      memberId: member._id,
-      workspaceId: args.workspaceId,
-      content: args.content,
-      createdAt: Date.now(),
-      isEdited: false,
-    });
-  },
-});
-
-// Get tasks for a node
-export const getNodeTasks = query({
-  args: { nodeId: v.string() },
-  handler: async (ctx, args) => {
-    const identity = await getAuthUserId(ctx);
-    if (!identity) return [];
-
-    const tasks = await ctx.db
-      .query("treeNodeTasks")
-      .withIndex("by_node_id", (q) => q.eq("nodeId", args.nodeId))
-      .collect();
-
-    const tasksWithUsers = await Promise.all(
-      tasks.map(async (task) => {
-        const assignedMember = task.assignedToId
-          ? await ctx.db.get(task.assignedToId)
-          : null;
-        const assignedUser = assignedMember
-          ? await ctx.db.get(assignedMember.userId)
-          : null;
-        const assignedByMember = await ctx.db.get(task.assignedById);
-        const assignedByUser = assignedByMember
-          ? await ctx.db.get(assignedByMember.userId)
-          : null;
-
-        return {
-          ...task,
-          assignedTo: assignedUser,
-          assignedBy: assignedByUser,
-        };
-      }),
-    );
-
-    return tasksWithUsers;
-  },
-});
-
-// Add task to node
-export const addNodeTask = mutation({
-  args: {
-    nodeId: v.string(),
-    workspaceId: v.id("workspaces"),
-    title: v.string(),
-    description: v.optional(v.string()),
-    assignedToId: v.optional(v.id("members")),
-    priority: v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
-    dueDate: v.optional(v.number()),
-  },
-  handler: async (ctx, args) => {
-    const identity = await getAuthUserId(ctx);
-    if (!identity) throw new Error("Unauthorized");
-
-    const member = await ctx.db
-      .query("members")
-      .withIndex("by_workspace_id_user_id", (q) =>
-        q.eq("workspaceId", args.workspaceId).eq("userId", identity),
-      )
-      .first();
-
-    if (!member) throw new Error("Member not found");
-
-    return await ctx.db.insert("treeNodeTasks", {
-      nodeId: args.nodeId,
-      title: args.title,
-      description: args.description,
-      assignedToId: args.assignedToId,
-      assignedById: member._id,
-      workspaceId: args.workspaceId,
-      status: "pending",
-      priority: args.priority,
-      dueDate: args.dueDate,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    });
-  },
-});
-
 // Check if user has permission to edit a node
 export const checkNodePermission = query({
   args: {
@@ -496,73 +359,6 @@ export const checkNodePermission = query({
   },
 });
 
-// Create workspace root node
-export const createWorkspaceRootNode = mutation({
-  args: {
-    workspaceId: v.id("workspaces"),
-    workspaceName: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const identity = await getAuthUserId(ctx);
-    if (!identity) throw new Error("Unauthorized");
-
-    const member = await ctx.db
-      .query("members")
-      .withIndex("by_workspace_id_user_id", (q) =>
-        q.eq("workspaceId", args.workspaceId).eq("userId", identity),
-      )
-      .first();
-
-    if (!member || member.role !== "admin") {
-      throw new Error("Only workspace admins can create root node");
-    }
-
-    // Check if root node already exists
-    const existingRoot = await ctx.db
-      .query("treeNodes")
-      .withIndex("by_workspace_id", (q) =>
-        q.eq("workspaceId", args.workspaceId),
-      )
-      .filter((q) => q.eq(q.field("level"), 0))
-      .first();
-
-    if (existingRoot) {
-      throw new Error("Workspace root node already exists");
-    }
-
-    const nodeId = `workspace-root-${args.workspaceId}`;
-
-    const nodeData = {
-      title: args.workspaceName,
-      description: "Workspace Root Node",
-      nodeId,
-      parentId: undefined,
-      workspaceId: args.workspaceId,
-      createdById: member._id,
-      status: "in-progress" as const,
-      position: { x: 0, y: 0 },
-      level: 0,
-      isArchived: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-
-    const newNodeId = await ctx.db.insert("treeNodes", nodeData);
-
-    // Add workspace admin as creator
-    await ctx.db.insert("treeNodeUsers", {
-      nodeId,
-      memberId: member._id,
-      workspaceId: args.workspaceId,
-      role: "creator",
-      addedAt: Date.now(),
-      addedById: member._id,
-    });
-
-    return newNodeId;
-  },
-});
-
 // Get available members for assignment
 export const getAvailableMembers = query({
   args: { workspaceId: v.id("workspaces") },
@@ -588,97 +384,6 @@ export const getAvailableMembers = query({
     );
 
     return membersWithUsers.filter((m) => m.user);
-  },
-});
-
-// Create child node with permission check
-export const createChildNode = mutation({
-  args: {
-    workspaceId: v.id("workspaces"),
-    parentId: v.string(),
-    title: v.string(),
-    description: v.optional(v.string()),
-    position: v.object({ x: v.number(), y: v.number() }),
-    assignedMemberId: v.optional(v.id("members")),
-    assignedRole: v.optional(v.union(v.literal("admin"), v.literal("member"))),
-  },
-  handler: async (ctx, args) => {
-    const identity = await getAuthUserId(ctx);
-    if (!identity) throw new Error("Unauthorized");
-
-    const member = await ctx.db
-      .query("members")
-      .withIndex("by_workspace_id_user_id", (q) =>
-        q.eq("workspaceId", args.workspaceId).eq("userId", identity),
-      )
-      .first();
-
-    if (!member) throw new Error("Member not found");
-
-    // Check permission to create child on parent node
-    const hasPermission = await ctx.runQuery(
-      api.advancetree.checkNodePermission,
-      {
-        nodeId: args.parentId,
-        workspaceId: args.workspaceId,
-        action: "create_child",
-      },
-    );
-
-    if (!hasPermission && member.role !== "admin") {
-      throw new Error("No permission to create child node");
-    }
-
-    // Get parent node for level calculation
-    const parent = await ctx.db
-      .query("treeNodes")
-      .withIndex("by_node_id", (q) => q.eq("nodeId", args.parentId))
-      .first();
-
-    if (!parent) throw new Error("Parent node not found");
-
-    const nodeId = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-    const nodeData = {
-      title: args.title,
-      description: args.description,
-      nodeId,
-      parentId: args.parentId,
-      workspaceId: args.workspaceId,
-      createdById: member._id,
-      status: "in-progress" as const,
-      position: args.position,
-      level: parent.level + 1,
-      isArchived: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-
-    const newNodeId = await ctx.db.insert("treeNodes", nodeData);
-
-    // Add creator as admin
-    await ctx.db.insert("treeNodeUsers", {
-      nodeId,
-      memberId: member._id,
-      workspaceId: args.workspaceId,
-      role: "creator",
-      addedAt: Date.now(),
-      addedById: member._id,
-    });
-
-    // Add assigned member if specified
-    if (args.assignedMemberId && args.assignedRole) {
-      await ctx.db.insert("treeNodeUsers", {
-        nodeId,
-        memberId: args.assignedMemberId,
-        workspaceId: args.workspaceId,
-        role: args.assignedRole,
-        addedAt: Date.now(),
-        addedById: member._id,
-      });
-    }
-
-    return newNodeId;
   },
 });
 
@@ -744,481 +449,6 @@ export const updateNodeWithPermission = mutation({
   },
 });
 
-// Bulk update node positions
-export const bulkUpdateNodePositions = mutation({
-  args: {
-    workspaceId: v.id("workspaces"),
-    updates: v.array(
-      v.object({
-        nodeId: v.string(),
-        position: v.object({ x: v.number(), y: v.number() }),
-      }),
-    ),
-  },
-  handler: async (ctx, args) => {
-    const identity = await getAuthUserId(ctx);
-    if (!identity) throw new Error("Unauthorized");
-
-    const member = await ctx.db
-      .query("members")
-      .withIndex("by_workspace_id_user_id", (q) =>
-        q.eq("workspaceId", args.workspaceId).eq("userId", identity),
-      )
-      .first();
-
-    if (!member) throw new Error("Member not found");
-
-    const results = [];
-    for (const update of args.updates) {
-      const node = await ctx.db
-        .query("treeNodes")
-        .withIndex("by_node_id", (q) => q.eq("nodeId", update.nodeId))
-        .first();
-
-      if (node && node.workspaceId === args.workspaceId) {
-        await ctx.db.patch(node._id, {
-          position: update.position,
-          updatedAt: Date.now(),
-        });
-        results.push(update.nodeId);
-      }
-    }
-
-    return { updatedNodes: results.length };
-  },
-});
-
-// Node search functionality
-export const searchTreeNodes = query({
-  args: {
-    workspaceId: v.id("workspaces"),
-    searchTerm: v.string(),
-    status: v.optional(
-      v.union(
-        v.literal("in-progress"),
-        v.literal("blocked"),
-        v.literal("done"),
-      ),
-    ),
-    level: v.optional(v.number()),
-  },
-  handler: async (ctx, args) => {
-    const identity = await getAuthUserId(ctx);
-    if (!identity) return [];
-
-    let query = ctx.db
-      .query("treeNodes")
-      .withIndex("by_workspace_id", (q) =>
-        q.eq("workspaceId", args.workspaceId),
-      )
-      .filter((q) => q.neq(q.field("isArchived"), true));
-
-    if (args.status) {
-      query = query.filter((q) => q.eq(q.field("status"), args.status));
-    }
-
-    if (args.level !== undefined) {
-      query = query.filter((q) => q.eq(q.field("level"), args.level));
-    }
-
-    const nodes = await query.collect();
-
-    // Filter by search term
-    const filteredNodes = nodes.filter(
-      (node) =>
-        node.title.toLowerCase().includes(args.searchTerm.toLowerCase()) ||
-        (node.description &&
-          node.description
-            .toLowerCase()
-            .includes(args.searchTerm.toLowerCase())),
-    );
-
-    return filteredNodes;
-  },
-});
-
-// Node statistics
-export const getNodeStatistics = query({
-  args: { workspaceId: v.id("workspaces") },
-  handler: async (ctx, args) => {
-    const identity = await getAuthUserId(ctx);
-    if (!identity) return null;
-
-    const nodes = await ctx.db
-      .query("treeNodes")
-      .withIndex("by_workspace_id", (q) =>
-        q.eq("workspaceId", args.workspaceId),
-      )
-      .filter((q) => q.neq(q.field("isArchived"), true))
-      .collect();
-
-    const stats = {
-      totalNodes: nodes.length,
-      nodesByStatus: {
-        "in-progress": nodes.filter((n) => n.status === "in-progress").length,
-        blocked: nodes.filter((n) => n.status === "blocked").length,
-        done: nodes.filter((n) => n.status === "done").length,
-      },
-      nodesByLevel: {} as Record<number, number>,
-      averageLevel: 0,
-      maxLevel: 0,
-    };
-
-    // Calculate level statistics
-    nodes.forEach((node) => {
-      stats.nodesByLevel[node.level] =
-        (stats.nodesByLevel[node.level] || 0) + 1;
-      stats.maxLevel = Math.max(stats.maxLevel, node.level);
-    });
-
-    stats.averageLevel =
-      nodes.length > 0
-        ? nodes.reduce((sum, node) => sum + node.level, 0) / nodes.length
-        : 0;
-
-    return stats;
-  },
-});
-
-// Comment editing functionality
-export const updateNodeComment = mutation({
-  args: {
-    commentId: v.id("treeNodeComments"),
-    content: v.string(),
-    workspaceId: v.id("workspaces"),
-  },
-  handler: async (ctx, args) => {
-    const identity = await getAuthUserId(ctx);
-    if (!identity) throw new Error("Unauthorized");
-
-    const member = await ctx.db
-      .query("members")
-      .withIndex("by_workspace_id_user_id", (q) =>
-        q.eq("workspaceId", args.workspaceId).eq("userId", identity),
-      )
-      .first();
-
-    if (!member) throw new Error("Member not found");
-
-    const comment = await ctx.db.get(args.commentId);
-    if (!comment) throw new Error("Comment not found");
-
-    // Only comment author can edit
-    if (comment.memberId !== member._id) {
-      throw new Error("Only comment author can edit");
-    }
-
-    await ctx.db.patch(args.commentId, {
-      content: args.content,
-      isEdited: true,
-      updatedAt: Date.now(),
-    });
-
-    return args.commentId;
-  },
-});
-
-// Comment deletion
-export const deleteNodeComment = mutation({
-  args: {
-    commentId: v.id("treeNodeComments"),
-    workspaceId: v.id("workspaces"),
-  },
-  handler: async (ctx, args) => {
-    const identity = await getAuthUserId(ctx);
-    if (!identity) throw new Error("Unauthorized");
-
-    const member = await ctx.db
-      .query("members")
-      .withIndex("by_workspace_id_user_id", (q) =>
-        q.eq("workspaceId", args.workspaceId).eq("userId", identity),
-      )
-      .first();
-
-    if (!member) throw new Error("Member not found");
-
-    const comment = await ctx.db.get(args.commentId);
-    if (!comment) throw new Error("Comment not found");
-
-    // Only comment author or workspace admin can delete
-    if (comment.memberId !== member._id && member.role !== "admin") {
-      throw new Error("No permission to delete comment");
-    }
-
-    await ctx.db.delete(args.commentId);
-    return { success: true };
-  },
-});
-
-// Task status update
-export const updateNodeTaskStatus = mutation({
-  args: {
-    taskId: v.id("treeNodeTasks"),
-    status: v.union(
-      v.literal("pending"),
-      v.literal("in-progress"),
-      v.literal("completed"),
-    ),
-    workspaceId: v.id("workspaces"),
-  },
-  handler: async (ctx, args) => {
-    const identity = await getAuthUserId(ctx);
-    if (!identity) throw new Error("Unauthorized");
-
-    const member = await ctx.db
-      .query("members")
-      .withIndex("by_workspace_id_user_id", (q) =>
-        q.eq("workspaceId", args.workspaceId).eq("userId", identity),
-      )
-      .first();
-
-    if (!member) throw new Error("Member not found");
-
-    const task = await ctx.db.get(args.taskId);
-    if (!task) throw new Error("Task not found");
-
-    // Only assigned user or task creator can update status
-    if (
-      task.assignedToId !== member._id &&
-      task.assignedById !== member._id &&
-      member.role !== "admin"
-    ) {
-      throw new Error("No permission to update task status");
-    }
-
-    await ctx.db.patch(args.taskId, {
-      status: args.status,
-      updatedAt: Date.now(),
-    });
-
-    return args.taskId;
-  },
-});
-
-// Node duplication functionality
-export const duplicateNode = mutation({
-  args: {
-    nodeId: v.string(),
-    workspaceId: v.id("workspaces"),
-    newParentId: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const identity = await getAuthUserId(ctx);
-    if (!identity) throw new Error("Unauthorized");
-
-    const member = await ctx.db
-      .query("members")
-      .withIndex("by_workspace_id_user_id", (q) =>
-        q.eq("workspaceId", args.workspaceId).eq("userId", identity),
-      )
-      .first();
-
-    if (!member) throw new Error("Member not found");
-
-    const originalNode = await ctx.db
-      .query("treeNodes")
-      .withIndex("by_node_id", (q) => q.eq("nodeId", args.nodeId))
-      .first();
-
-    if (!originalNode) throw new Error("Node not found");
-
-    // Generate new node ID
-    const newNodeId = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-    // Calculate level based on new parent
-    let level = 0;
-    if (args.newParentId) {
-      const parentNode = await ctx.db
-        .query("treeNodes")
-        .withIndex("by_node_id", (q) => q.eq("nodeId", args.newParentId!))
-        .first();
-
-      if (parentNode) {
-        level = parentNode.level + 1;
-      }
-    }
-
-    const duplicatedNodeData = {
-      title: `${originalNode.title} (Copy)`,
-      description: originalNode.description,
-      nodeId: newNodeId,
-      parentId: args.newParentId,
-      workspaceId: args.workspaceId,
-      createdById: member._id,
-      status: "in-progress" as const, // Use valid status value
-      position: {
-        x: originalNode.position.x + 50,
-        y: originalNode.position.y + 50,
-      },
-      level,
-      isArchived: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-
-    await ctx.db.insert("treeNodes", duplicatedNodeData);
-
-    // Add creator as admin user to the new node
-    await ctx.db.insert("treeNodeUsers", {
-      nodeId: newNodeId,
-      memberId: member._id,
-      workspaceId: args.workspaceId,
-      role: "creator",
-      addedAt: Date.now(),
-      addedById: member._id,
-    });
-
-    return newNodeId;
-  },
-});
-
-// Node archiving/unarchiving
-export const toggleNodeArchive = mutation({
-  args: {
-    nodeId: v.string(),
-    workspaceId: v.id("workspaces"),
-    archive: v.boolean(),
-  },
-  handler: async (ctx, args) => {
-    const identity = await getAuthUserId(ctx);
-    if (!identity) throw new Error("Unauthorized");
-
-    const member = await ctx.db
-      .query("members")
-      .withIndex("by_workspace_id_user_id", (q) =>
-        q.eq("workspaceId", args.workspaceId).eq("userId", identity),
-      )
-      .first();
-
-    if (!member) throw new Error("Member not found");
-
-    // Check permission
-    const hasPermission = await ctx.runQuery(
-      api.advancetree.checkNodePermission,
-      {
-        nodeId: args.nodeId,
-        workspaceId: args.workspaceId,
-        action: "edit",
-      },
-    );
-
-    if (!hasPermission && member.role !== "admin") {
-      throw new Error("No permission to archive/unarchive this node");
-    }
-
-    const node = await ctx.db
-      .query("treeNodes")
-      .withIndex("by_node_id", (q) => q.eq("nodeId", args.nodeId))
-      .first();
-
-    if (!node) throw new Error("Node not found");
-
-    await ctx.db.patch(node._id, {
-      isArchived: args.archive,
-      updatedAt: Date.now(),
-    });
-
-    return { nodeId: args.nodeId, archived: args.archive };
-  },
-});
-
-// Advanced permission check with inheritance
-export const getNodePermissions = query({
-  args: {
-    nodeId: v.string(),
-    workspaceId: v.id("workspaces"),
-  },
-  handler: async (ctx, args) => {
-    const identity = await getAuthUserId(ctx);
-    if (!identity) return null;
-
-    const member = await ctx.db
-      .query("members")
-      .withIndex("by_workspace_id_user_id", (q) =>
-        q.eq("workspaceId", args.workspaceId).eq("userId", identity),
-      )
-      .first();
-
-    if (!member) return null;
-
-    const permissions = {
-      canView: false,
-      canEdit: false,
-      canCreateChild: false,
-      canDelete: false,
-      canAssignUsers: false,
-      role: "none" as
-        | "none"
-        | "member"
-        | "admin"
-        | "creator"
-        | "workspace_admin",
-    };
-
-    // Workspace admin has all permissions
-    if (member.role === "admin") {
-      return {
-        canView: true,
-        canEdit: true,
-        canCreateChild: true,
-        canDelete: true,
-        canAssignUsers: true,
-        role: "workspace_admin" as const,
-      };
-    }
-
-    const node = await ctx.db
-      .query("treeNodes")
-      .withIndex("by_node_id", (q) => q.eq("nodeId", args.nodeId))
-      .first();
-
-    if (!node) return permissions;
-
-    // Check direct node assignment
-    const nodeUser = await ctx.db
-      .query("treeNodeUsers")
-      .withIndex("by_node_id", (q) => q.eq("nodeId", args.nodeId))
-      .filter((q) => q.eq(q.field("memberId"), member._id))
-      .first();
-
-    if (nodeUser) {
-      permissions.canView = true;
-      permissions.role = nodeUser.role as any;
-
-      if (nodeUser.role === "creator" || nodeUser.role === "admin") {
-        permissions.canEdit = true;
-        permissions.canCreateChild = true;
-        permissions.canDelete = nodeUser.role === "creator";
-        permissions.canAssignUsers = true;
-      }
-    }
-
-    // Check parent permissions (inheritance)
-    if (!permissions.canEdit && node.parentId) {
-      const parentPermissions = await ctx.runQuery(
-        api.advancetree.getNodePermissions,
-        {
-          nodeId: node.parentId,
-          workspaceId: args.workspaceId,
-        },
-      );
-
-      if (
-        parentPermissions &&
-        (parentPermissions.role === "creator" ||
-          parentPermissions.role === "admin")
-      ) {
-        permissions.canView = true;
-        permissions.canEdit = true;
-        permissions.canCreateChild = true;
-        permissions.canAssignUsers = true;
-      }
-    }
-
-    return permissions;
-  },
-});
-
 // Get node details for popup component
 export const getNodeDetails = query({
   args: {
@@ -1266,202 +496,6 @@ export const getNodeDetails = query({
       },
       assignedUsers: assignedUsersWithDetails,
     };
-  },
-});
-
-// Create node comment alias for consistency
-export const createNodeComment = mutation({
-  args: {
-    nodeId: v.string(),
-    memberId: v.id("members"),
-    workspaceId: v.id("workspaces"),
-    content: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const identity = await getAuthUserId(ctx);
-    if (!identity) throw new Error("Unauthorized");
-
-    return await ctx.db.insert("treeNodeComments", {
-      nodeId: args.nodeId,
-      memberId: args.memberId,
-      workspaceId: args.workspaceId,
-      content: args.content,
-      createdAt: Date.now(),
-      isEdited: false,
-    });
-  },
-});
-
-// Get children of a tree node
-export const getTreeNodeChildren = query({
-  args: {
-    parentId: v.string(),
-    workspaceId: v.id("workspaces"),
-  },
-  handler: async (ctx, args) => {
-    const identity = await getAuthUserId(ctx);
-    if (!identity) return [];
-
-    return await ctx.db
-      .query("treeNodes")
-      .withIndex("by_parent_id", (q) => q.eq("parentId", args.parentId))
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("workspaceId"), args.workspaceId),
-          q.neq(q.field("isArchived"), true),
-        ),
-      )
-      .collect();
-  },
-});
-
-// Get statistics for tree nodes under a parent
-export const getTreeNodeStats = query({
-  args: {
-    workspaceId: v.id("workspaces"),
-    parentId: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const identity = await getAuthUserId(ctx);
-    if (!identity) return { total: 0, inProgress: 0, blocked: 0, done: 0 };
-
-    let query = ctx.db
-      .query("treeNodes")
-      .withIndex("by_workspace_id", (q) =>
-        q.eq("workspaceId", args.workspaceId),
-      )
-      .filter((q) => q.neq(q.field("isArchived"), true));
-
-    if (args.parentId) {
-      query = query.filter((q) => q.eq(q.field("parentId"), args.parentId));
-    }
-
-    const nodes = await query.collect();
-
-    return {
-      total: nodes.length,
-      inProgress: nodes.filter((n) => n.status === "in-progress").length,
-      blocked: nodes.filter((n) => n.status === "blocked").length,
-      done: nodes.filter((n) => n.status === "done").length,
-    };
-  },
-});
-
-export const createAIGeneratedTree = mutation({
-  args: {
-    workspaceId: v.id("workspaces"),
-    rootTitle: v.string(),
-    rootDescription: v.string(),
-    treeData: v.array(v.any()), // TreeNodeInput[]
-    rootPosition: v.object({ x: v.number(), y: v.number() }),
-  },
-  handler: async (ctx, args) => {
-    const identity = await getAuthUserId(ctx);
-    if (!identity) throw new Error("Unauthorized");
-
-    const member = await ctx.db
-      .query("members")
-      .withIndex("by_workspace_id_user_id", (q) =>
-        q.eq("workspaceId", args.workspaceId).eq("userId", identity),
-      )
-      .first();
-
-    if (!member) throw new Error("Member not found");
-
-    // Create root node
-    const rootNodeId = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-    await ctx.db.insert("treeNodes", {
-      title: args.rootTitle,
-      description: args.rootDescription,
-      nodeId: rootNodeId,
-      parentId: undefined,
-      workspaceId: args.workspaceId,
-      createdById: member._id,
-      status: "in-progress",
-      position: args.rootPosition,
-      level: 0,
-      isArchived: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    });
-
-    // Add creator as admin to root node
-    await ctx.db.insert("treeNodeUsers", {
-      nodeId: rootNodeId,
-      memberId: member._id,
-      workspaceId: args.workspaceId,
-      role: "creator",
-      addedAt: Date.now(),
-      addedById: member._id,
-    });
-
-    // Recursively create child nodes
-    const createChildNodes = async (
-      nodes: TreeNodeInput[],
-      parentId: string,
-      level: number,
-      baseX: number,
-      baseY: number,
-    ) => {
-      for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[i];
-        const nodeId = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-        // Calculate position (spread children horizontally)
-        const position = {
-          x: baseX + (i - (nodes.length - 1) / 2) * 300,
-          y: baseY + 200,
-        };
-
-        await ctx.db.insert("treeNodes", {
-          title: node.title,
-          description: node.description,
-          nodeId,
-          parentId,
-          workspaceId: args.workspaceId,
-          createdById: member._id,
-          status: "in-progress",
-          position,
-          level,
-          isArchived: false,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        // Add creator as admin to child node
-        await ctx.db.insert("treeNodeUsers", {
-          nodeId,
-          memberId: member._id,
-          workspaceId: args.workspaceId,
-          role: "creator",
-          addedAt: Date.now(),
-          addedById: member._id,
-        });
-
-        // Recursively create grandchildren
-        if (node.children && node.children.length > 0) {
-          await createChildNodes(
-            node.children,
-            nodeId,
-            level + 1,
-            position.x,
-            position.y,
-          );
-        }
-      }
-    };
-
-    // Create all child nodes
-    await createChildNodes(
-      args.treeData,
-      rootNodeId,
-      1,
-      args.rootPosition.x,
-      args.rootPosition.y,
-    );
-
-    return { rootNodeId, message: "AI-generated tree created successfully" };
   },
 });
 
@@ -1560,3 +594,135 @@ export const expandNodeWithAI = mutation({
     return { message: "Node expanded with AI successfully" };
   },
 });
+
+// latter :)
+
+// // Get comments for a node
+// export const getNodeComments = query({
+//   args: { nodeId: v.string() },
+//   handler: async (ctx, args) => {
+//     const identity = await getAuthUserId(ctx);
+//     if (!identity) return [];
+
+//     const comments = await ctx.db
+//       .query("treeNodeComments")
+//       .withIndex("by_node_id", (q) => q.eq("nodeId", args.nodeId))
+//       .order("desc")
+//       .collect();
+
+//     const commentsWithUsers = await Promise.all(
+//       comments.map(async (comment) => {
+//         const member = await ctx.db.get(comment.memberId);
+//         const user = member ? await ctx.db.get(member.userId) : null;
+//         return {
+//           ...comment,
+//           member,
+//           user,
+//         };
+//       }),
+//     );
+
+//     return commentsWithUsers;
+//   },
+// });
+
+// // Add comment to node
+// export const addNodeComment = mutation({
+//   args: {
+//     nodeId: v.string(),
+//     workspaceId: v.id("workspaces"),
+//     content: v.string(),
+//   },
+//   handler: async (ctx, args) => {
+//     const identity = await getAuthUserId(ctx);
+//     if (!identity) throw new Error("Unauthorized");
+
+//     const member = await ctx.db
+//       .query("members")
+//       .withIndex("by_workspace_id_user_id", (q) =>
+//         q.eq("workspaceId", args.workspaceId).eq("userId", identity),
+//       )
+//       .first();
+
+//     if (!member) throw new Error("Member not found");
+
+//     return await ctx.db.insert("treeNodeComments", {
+//       nodeId: args.nodeId,
+//       memberId: member._id,
+//       workspaceId: args.workspaceId,
+//       content: args.content,
+//       createdAt: Date.now(),
+//       isEdited: false,
+//     });
+//   },
+// });
+
+// // Comment editing functionality
+// export const updateNodeComment = mutation({
+//   args: {
+//     commentId: v.id("treeNodeComments"),
+//     content: v.string(),
+//     workspaceId: v.id("workspaces"),
+//   },
+//   handler: async (ctx, args) => {
+//     const identity = await getAuthUserId(ctx);
+//     if (!identity) throw new Error("Unauthorized");
+
+//     const member = await ctx.db
+//       .query("members")
+//       .withIndex("by_workspace_id_user_id", (q) =>
+//         q.eq("workspaceId", args.workspaceId).eq("userId", identity),
+//       )
+//       .first();
+
+//     if (!member) throw new Error("Member not found");
+
+//     const comment = await ctx.db.get(args.commentId);
+//     if (!comment) throw new Error("Comment not found");
+
+//     // Only comment author can edit
+//     if (comment.memberId !== member._id) {
+//       throw new Error("Only comment author can edit");
+//     }
+
+//     await ctx.db.patch(args.commentId, {
+//       content: args.content,
+//       isEdited: true,
+//       updatedAt: Date.now(),
+//     });
+
+//     return args.commentId;
+//   },
+// });
+
+// // Comment deletion
+// export const deleteNodeComment = mutation({
+//   args: {
+//     commentId: v.id("treeNodeComments"),
+//     workspaceId: v.id("workspaces"),
+//   },
+//   handler: async (ctx, args) => {
+//     const identity = await getAuthUserId(ctx);
+//     if (!identity) throw new Error("Unauthorized");
+
+//     const member = await ctx.db
+//       .query("members")
+//       .withIndex("by_workspace_id_user_id", (q) =>
+//         q.eq("workspaceId", args.workspaceId).eq("userId", identity),
+//       )
+//       .first();
+
+//     if (!member) throw new Error("Member not found");
+
+//     const comment = await ctx.db.get(args.commentId);
+//     if (!comment) throw new Error("Comment not found");
+
+//     // Only comment author or workspace admin can delete
+//     if (comment.memberId !== member._id && member.role !== "admin") {
+//       throw new Error("No permission to delete comment");
+//     }
+
+//     await ctx.db.delete(args.commentId);
+//     return { success: true };
+//   },
+// });

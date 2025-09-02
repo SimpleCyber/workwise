@@ -57,16 +57,16 @@ export const createProjectBoard = mutation({
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
-    await ctx.db.insert("projectLists", {
-      name: "In Progress",
-      boardId,
-      memberId: member._id,
-      workspaceId: args.workspaceId,
-      position: 1,
-      isArchived: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    });
+    // await ctx.db.insert("projectLists", {
+    //   name: "In Progress",
+    //   boardId,
+    //   memberId: member._id,
+    //   workspaceId: args.workspaceId,
+    //   position: 1,
+    //   isArchived: false,
+    //   createdAt: Date.now(),
+    //   updatedAt: Date.now(),
+    // });
     await ctx.db.insert("projectLists", {
       name: "Hold Task",
       boardId,
@@ -77,16 +77,16 @@ export const createProjectBoard = mutation({
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
-    await ctx.db.insert("projectLists", {
-      name: "In Review",
-      boardId,
-      memberId: member._id,
-      workspaceId: args.workspaceId,
-      position: 3,
-      isArchived: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    });
+    // await ctx.db.insert("projectLists", {
+    //   name: "In Review",
+    //   boardId,
+    //   memberId: member._id,
+    //   workspaceId: args.workspaceId,
+    //   position: 3,
+    //   isArchived: false,
+    //   createdAt: Date.now(),
+    //   updatedAt: Date.now(),
+    // });
     await ctx.db.insert("projectLists", {
       name: "Done",
       boardId,

@@ -9,6 +9,7 @@ import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProjectKanbanBoard } from "@/features/projects/components/project-kanban-board";
 import { useGetWorkspaceMembers } from "@/features/projects/api/use-get-workspace-members";
+import AIAssistantUI from "@/features/projects/components/chatbot/AIAssistantUI";
 
 export default function ProjectBoardPage({
   params,
@@ -104,12 +105,18 @@ export default function ProjectBoardPage({
           })}
         </div>
       </div>
-      <div className="flex-1 overflow-hidden">
-        <ProjectKanbanBoard
-          boardId={boardId}
-          lists={lists || []}
-          selectedMemberIds={selectedMemberIds}
-        />
+      <div className="flex overflow-hidden w-full h-full">
+        <div className="basis-[50%] flex-shrink-0 flex-grow">
+          <ProjectKanbanBoard
+            boardId={boardId}
+            lists={lists || []}
+            selectedMemberIds={selectedMemberIds}
+          />
+        </div>
+
+        <div className="basis-[50%] flex-shrink-0 flex-grow border-l-[3px] border-gray-200">
+          <AIAssistantUI />
+        </div>
       </div>
     </div>
   );

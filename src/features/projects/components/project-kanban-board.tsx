@@ -333,7 +333,7 @@ export const ProjectKanbanBoard = ({
             ))}
             {provided.placeholder}
             {/* Add List Column */}
-            <div className="flex-shrink-0 w-72"></div>
+            {/* <div className="flex-shrink-0 w-72"></div> */}
           </div>
         )}
       </Droppable>
