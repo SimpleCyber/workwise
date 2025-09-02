@@ -1,16 +1,17 @@
-export type ChatRole = "user" | "assistant" | "system"
+export type ChatRole = "user" | "assistant" | "system";
 
 export interface ChatMessageInput {
-  role: ChatRole
-  content: string
+  role: ChatRole;
+  content: string;
 }
 
 export class ChatService {
-  private apiKey: string
-  private baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+  private apiKey: string;
+  private baseUrl =
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
   constructor(apiKey: string) {
-    this.apiKey = apiKey
+    this.apiKey = apiKey;
   }
 
   /**
@@ -23,17 +24,22 @@ export class ChatService {
 - Provide practical, accurate answers grounded in the conversation.
 - When offering steps, keep them actionable and sequential.
 - If you lack context, ask a brief clarifying question.
-- Output plain text only.`
+- Output plain text only.`;
 
     // Convert messages into a readable transcript for a single prompt text input
     const transcript = messages
       .map((m) => {
-        const role = m.role === "assistant" ? "Assistant" : m.role === "system" ? "System" : "User"
-        return `${role}: ${m.content}`
+        const role =
+          m.role === "assistant"
+            ? "Assistant"
+            : m.role === "system"
+              ? "System"
+              : "User";
+        return `${role}: ${m.content}`;
       })
-      .join("\n")
+      .join("\n");
 
-    const prompt = `${systemPreamble}\n\nConversation so far:\n${transcript}\n\nAssistant:`
+    const prompt = `${systemPreamble}\n\nConversation so far:\n${transcript}\n\nAssistant:`;
 
     try {
       const res = await fetch(`${this.baseUrl}?key=${this.apiKey}`, {
@@ -46,27 +52,27 @@ export class ChatService {
             },
           ],
         }),
-      })
+      });
 
       if (!res.ok) {
-        throw new Error(`Gemini API error: ${res.status}`)
+        throw new Error(`Gemini API error: ${res.status}`);
       }
 
-      const data = await res.json()
-      const generatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text
+      const data = await res.json();
+      const generatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
       if (!generatedText) {
-        throw new Error("No response from Gemini API")
+        throw new Error("No response from Gemini API");
       }
 
-      return generatedText
+      return generatedText;
     } catch (err) {
-      console.error("ChatService generateReply error:", err)
-      throw new Error("Failed to generate assistant reply. Please try again.")
+      console.error("ChatService generateReply error:", err);
+      throw new Error("Failed to generate assistant reply. Please try again.");
     }
   }
 }
 
 // Singleton instance (reuse the same env pattern as ai-service.ts)
 export const chatService = new ChatService(
-  `${process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY || ""}`,
-)
+  `${process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || ""}`,
+);

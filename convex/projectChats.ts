@@ -1,5 +1,5 @@
-import { query, mutation } from "./_generated/server"
-import { v } from "convex/values"
+import { query, mutation } from "./_generated/server";
+import { v } from "convex/values";
 
 export const listForBoard = query({
   args: { boardId: v.id("projectBoards") },
@@ -8,7 +8,7 @@ export const listForBoard = query({
       .query("projectChats")
       .withIndex("by_board", (q) => q.eq("boardId", boardId))
       .order("desc")
-      .collect()
+      .collect();
 
     const enriched = await Promise.all(
       chats.map(async (c) => {
@@ -16,27 +16,27 @@ export const listForBoard = query({
           .query("projectChatMessages")
           .withIndex("by_chat", (q) => q.eq("chatId", c._id))
           .order("desc")
-          .take(1)
-        const last = msgs[0]
+          .take(1);
+        const last = msgs[0];
 
         const allForCount = await ctx.db
           .query("projectChatMessages")
           .withIndex("by_chat", (q) => q.eq("chatId", c._id))
-          .collect()
-        const messageCount = allForCount.length
+          .collect();
+        const messageCount = allForCount.length;
 
         return {
           ...c,
           id: c._id,
           preview: last?.content ?? "Ask anything…",
           messageCount,
-        }
+        };
       }),
-    )
+    );
 
-    return enriched
+    return enriched;
   },
-})
+});
 
 export const getMessages = query({
   args: { chatId: v.id("projectChats"), limit: v.optional(v.number()) },
@@ -45,10 +45,10 @@ export const getMessages = query({
       .query("projectChatMessages")
       .withIndex("by_chat", (q) => q.eq("chatId", chatId))
       .order("asc")
-      .take(limit)
-    return msgs.map((m) => ({ ...m, id: m._id }))
+      .take(limit);
+    return msgs.map((m) => ({ ...m, id: m._id }));
   },
-})
+});
 
 export const create = mutation({
   args: {
@@ -58,7 +58,7 @@ export const create = mutation({
     createdBy: v.id("users"),
   },
   handler: async (ctx, { workspaceId, boardId, title, createdBy }) => {
-    const now = new Date().toISOString()
+    const now = new Date().toISOString();
     const chatId = await ctx.db.insert("projectChats", {
       workspaceId,
       boardId,
@@ -67,31 +67,31 @@ export const create = mutation({
       createdBy,
       createdAt: now,
       updatedAt: now,
-    })
-    return chatId
+    });
+    return chatId;
   },
-})
+});
 
 export const rename = mutation({
   args: { chatId: v.id("projectChats"), title: v.string() },
   handler: async (ctx, { chatId, title }) => {
-    const chat = await ctx.db.get(chatId)
-    if (!chat) throw new Error("Chat not found")
-    await ctx.db.patch(chatId, { title, updatedAt: new Date().toISOString() })
+    const chat = await ctx.db.get(chatId);
+    if (!chat) throw new Error("Chat not found");
+    await ctx.db.patch(chatId, { title, updatedAt: new Date().toISOString() });
   },
-})
+});
 
 export const togglePin = mutation({
   args: { chatId: v.id("projectChats") },
   handler: async (ctx, { chatId }) => {
-    const chat = await ctx.db.get(chatId)
-    if (!chat) throw new Error("Chat not found")
+    const chat = await ctx.db.get(chatId);
+    if (!chat) throw new Error("Chat not found");
     await ctx.db.patch(chatId, {
       pinned: !chat.pinned,
       updatedAt: new Date().toISOString(),
-    })
+    });
   },
-})
+});
 
 export const remove = mutation({
   args: { chatId: v.id("projectChats") },
@@ -100,12 +100,12 @@ export const remove = mutation({
     const msgs = await ctx.db
       .query("projectChatMessages")
       .withIndex("by_chat", (q) => q.eq("chatId", chatId))
-      .collect()
-    await Promise.all(msgs.map((m) => ctx.db.delete(m._id)))
+      .collect();
+    await Promise.all(msgs.map((m) => ctx.db.delete(m._id)));
     // Delete chat
-    await ctx.db.delete(chatId)
+    await ctx.db.delete(chatId);
   },
-})
+});
 
 export const appendMessage = mutation({
   args: {
@@ -115,14 +115,14 @@ export const appendMessage = mutation({
     userId: v.optional(v.id("users")),
   },
   handler: async (ctx, { chatId, role, content, userId }) => {
-    const now = new Date().toISOString()
+    const now = new Date().toISOString();
     await ctx.db.insert("projectChatMessages", {
       chatId,
       role,
       content,
       createdAt: now,
       userId,
-    })
-    await ctx.db.patch(chatId, { updatedAt: now })
+    });
+    await ctx.db.patch(chatId, { updatedAt: now });
   },
-})
+});

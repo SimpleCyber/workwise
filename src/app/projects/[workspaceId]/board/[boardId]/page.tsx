@@ -5,7 +5,7 @@ import { api } from "../../../../../../convex/_generated/api";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProjectKanbanBoard } from "@/features/projects/components/project-kanban-board";
 import { useGetWorkspaceMembers } from "@/features/projects/api/use-get-workspace-members";
@@ -24,6 +24,20 @@ export default function ProjectBoardPage({
   const [selectedMemberIds, setSelectedMemberIds] = useState<Id<"members">[]>(
     [],
   ); // Change to array
+
+  // Derive a best-effort currentUserId from the members list.
+  // Ideally, you'd fetch the authenticated user's "users" table id explicitly.
+  // If available, prefer a member with a matching "isCurrentUser" flag or similar.
+  // As a fallback, pick the first member's userId to avoid failing Convex mutations.
+  const currentUserId = useMemo(() => {
+    if (!workspaceMembers || workspaceMembers.length === 0)
+      return undefined as unknown as Id<"users"> | undefined;
+    // Try to find a member flagged as the current user if such data exists
+    const self =
+      (workspaceMembers as any[]).find((m) => m.isCurrentUser) ||
+      (workspaceMembers as any[])[0];
+    return self?.userId as Id<"users"> | undefined;
+  }, [workspaceMembers]);
 
   if (!board || !lists || membersLoading) {
     return (
@@ -88,9 +102,7 @@ export default function ProjectBoardPage({
                 title={`${isSelected ? "Remove filter for" : "Filter tasks assigned to"} ${member.user?.name || "Unknown User"}`}
               >
                 <Avatar
-                  className={`h-9 w-9 border-2 ${
-                    isSelected ? "border-blue-500" : "border-transparent"
-                  }`}
+                  className={`h-9 w-9 border-2 ${isSelected ? "border-blue-500" : "border-transparent"}`}
                 >
                   <AvatarImage src={member.user?.image || "/placeholder.svg"} />
                   <AvatarFallback className="text-xs">
@@ -115,7 +127,19 @@ export default function ProjectBoardPage({
         </div>
 
         <div className="basis-[50%] flex-shrink-0 flex-grow border-l-[3px] border-gray-200">
-          <AIAssistantUI />
+          {/* Ensure AIAssistantUI receives required props */}
+          {currentUserId ? (
+            <AIAssistantUI
+              workspaceId={workspaceId}
+              boardId={boardId}
+              currentUserId={currentUserId}
+            />
+          ) : (
+            // Defensive UI if we couldn't derive the current user id yet
+            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+              Loading your chat session...
+            </div>
+          )}
         </div>
       </div>
     </div>

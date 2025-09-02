@@ -21,6 +21,13 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/features/projects/components/chatbot/ComposerActionsPopover.tsx", "src/features/projects/components/chatbot/Tooltip.jsx"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "src/features/projects/components/chatbot/ComposerActionsPopover.tsx",
+    "src/features/projects/components/chatbot/Tooltip.jsx"
+  ],
   "exclude": ["node_modules"]
 }

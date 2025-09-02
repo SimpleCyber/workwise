@@ -56,7 +56,7 @@ const schema = defineSchema({
     .index("by_message_id", ["messageId"])
     .index("by_member_id", ["memberId"]),
 
-     projectChats: defineTable({
+  projectChats: defineTable({
     workspaceId: v.id("workspaces"), // the parent workspace
     boardId: v.id("projectBoards"), // per-board chat space
     title: v.string(),

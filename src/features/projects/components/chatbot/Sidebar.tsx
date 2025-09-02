@@ -1,5 +1,7 @@
 "use client";
 import { motion, AnimatePresence } from "framer-motion";
+import type React from "react";
+
 import {
   PanelLeftClose,
   SearchIcon,
@@ -17,6 +19,31 @@ import {
 import { cls } from "./utils";
 import { useMemo, useState, useEffect, useRef } from "react";
 import SearchModal from "./SearchModal";
+import type { UIConversation } from "./types"; // add shared UI types
+
+interface SidebarProps {
+  open: boolean;
+  onClose: () => void;
+  collapsed: { pinned: boolean; recent: boolean };
+  setCollapsed: React.Dispatch<
+    React.SetStateAction<{ pinned: boolean; recent: boolean }>
+  >;
+  conversations: UIConversation[];
+  pinned: UIConversation[];
+  recent: UIConversation[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  togglePin: (id: string) => void;
+  query: string;
+  setQuery: React.Dispatch<React.SetStateAction<string>>;
+  searchRef?: React.RefObject<HTMLInputElement> | null;
+  createNewChat: () => void | Promise<void>;
+  sidebarCollapsed?: boolean;
+  setSidebarCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
+  onRename: (id: string, title: string) => void | Promise<void>;
+  onDelete: (id: string) => void | Promise<void>;
+  user?: { name?: string; plan?: string };
+}
 
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(false);
@@ -33,36 +60,41 @@ function useIsDesktop() {
   return isDesktop;
 }
 
-export default function Sidebar({
-  open,
-  onClose,
-  collapsed,
-  setCollapsed,
-  conversations,
-  pinned,
-  recent,
-  selectedId,
-  onSelect,
-  togglePin,
-  query,
-  setQuery,
-  searchRef,
-  createNewChat,
-  sidebarCollapsed = false,
-  setSidebarCollapsed = () => {},
-  onRename = () => {},
-  onDelete = () => {},
-  user = { name: "User", plan: "Free" },
-}) {
+export default function Sidebar(props: SidebarProps) {
+  const {
+    open,
+    onClose,
+    collapsed,
+    setCollapsed,
+    conversations,
+    pinned,
+    recent,
+    selectedId,
+    onSelect,
+    togglePin,
+    query,
+    setQuery,
+    searchRef,
+    createNewChat,
+    sidebarCollapsed = false,
+    setSidebarCollapsed,
+    onRename,
+    onDelete,
+    user = { name: "User", plan: "Free" },
+  } = props;
+
   const isDesktop = useIsDesktop(); // use media check
-  const rootRef = useRef(null);
-  const navRef = useRef(null); // ref to scroll recent list to top on updates
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const navRef = useRef<HTMLDivElement | null>(null); // ref to scroll recent list to top on updates
+
   useEffect(() => {
-    function onDocClick(e) {
+    function onDocClick(e: MouseEvent) {
+      const target = e.target as HTMLElement | null;
       if (
         rootRef.current &&
-        !e.target.closest("[data-conv-menu]") &&
-        !e.target.closest("[data-conv-menu-trigger]")
+        target &&
+        !target.closest("[data-conv-menu]") &&
+        !target.closest("[data-conv-menu-trigger]")
       ) {
         setOpenMenuForId(null);
       }
@@ -73,30 +105,30 @@ export default function Sidebar({
 
   useEffect(() => {
     if (navRef.current) {
-      navRef.current.scrollTop = 0;
+      navRef.current.scrollTop = 0; // navRef typed, safe access
     }
   }, [conversations, selectedId]);
 
   const [showSearchModal, setShowSearchModal] = useState(false);
-  const [openMenuForId, setOpenMenuForId] = useState(null);
-  const [editingId, setEditingId] = useState(null);
+  const [openMenuForId, setOpenMenuForId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [draftTitle, setDraftTitle] = useState("");
-  const [flashId, setFlashId] = useState(null);
+  const [flashId, setFlashId] = useState<string | null>(null);
 
   const allChats = useMemo(() => {
     const all = Array.isArray(conversations) ? conversations.slice() : [];
     return all.sort((a, b) => {
       if (a.pinned && !b.pinned) return -1;
       if (!a.pinned && b.pinned) return 1;
-      return new Date(b.updatedAt) - new Date(a.updatedAt);
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
     });
   }, [conversations]);
 
   async function handleNewChat() {
     try {
       const res = createNewChat?.();
-      if (res && typeof res.then === "function") {
-        await res;
+      if (res && typeof (res as Promise<void>).then === "function") {
+        await (res as Promise<void>);
       }
     } finally {
       if (typeof window !== "undefined") {
@@ -105,7 +137,7 @@ export default function Sidebar({
     }
   }
 
-  function handleRenameAndFlash(id, title) {
+  function handleRenameAndFlash(id: string, title: string) {
     onRename?.(id, title);
     setEditingId(null);
     setDraftTitle("");
@@ -261,12 +293,12 @@ export default function Sidebar({
               {allChats.some((c) => c.pinned) && (
                 <button
                   onClick={() =>
-                    setCollapsed?.((s) => ({ ...s, pinned: !s?.pinned }))
+                    setCollapsed((s) => ({ ...s, pinned: !s.pinned }))
                   }
                   className="mt-3 flex w-full items-center gap-2 rounded-md px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-zinc-100"
-                  aria-expanded={!collapsed?.pinned}
+                  aria-expanded={!collapsed.pinned}
                 >
-                  {collapsed?.pinned ? (
+                  {collapsed.pinned ? (
                     <ChevronRight className="h-3.5 w-3.5" />
                   ) : (
                     <ChevronDown className="h-3.5 w-3.5" />
@@ -282,7 +314,7 @@ export default function Sidebar({
               className="mt-2 flex min-h-0 flex-1 flex-col overflow-y-auto px-2 pb-4"
             >
               {allChats.filter((c) => c.pinned).length > 0 &&
-                !collapsed?.pinned && (
+                !collapsed.pinned && (
                   <ul className="mb-2 space-y-1">
                     {allChats
                       .filter((c) => c.pinned)
@@ -400,22 +432,20 @@ export default function Sidebar({
 
               <button
                 onClick={() =>
-                  setCollapsed?.((s) => ({ ...s, recent: !s?.recent }))
+                  setCollapsed((s) => ({ ...s, recent: !s.recent }))
                 }
                 className="mt-2 mb-1 flex w-full items-center gap-2 rounded-md px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-zinc-100"
-                aria-expanded={!collapsed?.recent}
+                aria-expanded={!collapsed.recent}
               >
-                {collapsed?.recent ? (
+                {collapsed.recent ? (
                   <ChevronRight className="h-3.5 w-3.5" />
                 ) : (
                   <ChevronDown className="h-3.5 w-3.5" />
                 )}
-                <Clock className="h-3.5 w-3.5" />{" "}
-                {/* add icon before 'Recent' */}
-                <span>Recent</span>
+                <Clock className="h-3.5 w-3.5" /> <span>Recent</span>
               </button>
 
-              {!collapsed?.recent && (
+              {!collapsed.recent && (
                 <ul className="space-y-1">
                   {allChats
                     .filter((c) => !c.pinned)

@@ -1,21 +1,21 @@
-"use client"
-import { useState } from "react"
-import { MoreHorizontal, Menu, BrainCircuit, ChevronDown } from "lucide-react"
-import GhostIconButton from "./GhostIconButton"
+"use client";
+import { useState } from "react";
+import { MoreHorizontal, Menu, BrainCircuit, ChevronDown } from "lucide-react";
+import GhostIconButton from "./GhostIconButton";
 
 type ModelDropdownProps = {
-  value: string
-  onChange?: (id: string) => void
-}
+  value: string;
+  onChange?: (id: string) => void;
+};
 
 function ModelDropdown({ value, onChange }: ModelDropdownProps) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
   const models = [
     { id: "gpt-4o", name: "GPT-4o" },
     { id: "gpt-4o-mini", name: "GPT-4o mini" },
     { id: "gpt-4.1", name: "GPT-4.1" },
-  ]
-  const active = models.find((m) => m.id === value) ?? models[0]
+  ];
+  const active = models.find((m) => m.id === value) ?? models[0];
   return (
     <div className="relative">
       <button
@@ -39,8 +39,8 @@ function ModelDropdown({ value, onChange }: ModelDropdownProps) {
               key={m.id}
               role="menuitem"
               onClick={() => {
-                onChange?.(m.id)
-                setOpen(false)
+                onChange?.(m.id);
+                setOpen(false);
               }}
               className="block w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-zinc-100"
             >
@@ -58,17 +58,21 @@ function ModelDropdown({ value, onChange }: ModelDropdownProps) {
         />
       )}
     </div>
-  )
+  );
 }
 
 type HeaderProps = {
-  createNewChat: () => void
-  sidebarCollapsed: boolean
-  setSidebarOpen: (open: boolean) => void
-}
+  createNewChat: () => void;
+  sidebarCollapsed: boolean;
+  setSidebarOpen: (open: boolean) => void;
+};
 
-export default function Header({ createNewChat, sidebarCollapsed, setSidebarOpen }: HeaderProps) {
-  const [model, setModel] = useState("gpt-4o")
+export default function Header({
+  createNewChat,
+  sidebarCollapsed,
+  setSidebarOpen,
+}: HeaderProps) {
+  const [model, setModel] = useState("gpt-4o");
 
   return (
     <div className="sticky top-0 z-30 flex items-center gap-2 border-b border-zinc-200 bg-white/80 px-4 py-3 backdrop-blur">
@@ -90,5 +94,5 @@ export default function Header({ createNewChat, sidebarCollapsed, setSidebarOpen
         </GhostIconButton>
       </div>
     </div>
-  )
+  );
 }

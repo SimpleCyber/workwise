@@ -1,34 +1,74 @@
-"use client"
-import type React from "react"
-import { useState } from "react"
-import { Paperclip, Bot, Search, Palette, BookOpen, MoreHorizontal, Globe, ChevronRight } from "lucide-react"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+"use client";
+import type React from "react";
+import { useState } from "react";
+import {
+  Paperclip,
+  Bot,
+  Search,
+  Palette,
+  BookOpen,
+  MoreHorizontal,
+  Globe,
+  ChevronRight,
+} from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 type ComposerActionsPopoverProps = {
-  children: React.ReactNode
-}
+  children: React.ReactNode;
+};
 
 type ActionItem = {
-  icon: React.ElementType
-  label: string
-  action: () => void
-  badge?: string
-}
+  icon: React.ElementType;
+  label: string;
+  action: () => void;
+  badge?: string;
+};
 
-export default function ComposerActionsPopover({ children }: ComposerActionsPopoverProps) {
-  const [open, setOpen] = useState(false)
-  const [showMore, setShowMore] = useState(false)
+export default function ComposerActionsPopover({
+  children,
+}: ComposerActionsPopoverProps) {
+  const [open, setOpen] = useState(false);
+  const [showMore, setShowMore] = useState(false);
 
   const mainActions: ActionItem[] = [
-    { icon: Paperclip, label: "Add photos & files", action: () => console.log("Add photos & files") },
-    { icon: Bot, label: "Agent mode", badge: "NEW", action: () => console.log("Agent mode") },
-    { icon: Search, label: "Deep research", action: () => console.log("Deep research") },
-    { icon: Palette, label: "Create image", action: () => console.log("Create image") },
-    { icon: BookOpen, label: "Study and learn", action: () => console.log("Study and learn") },
-  ]
+    {
+      icon: Paperclip,
+      label: "Add photos & files",
+      action: () => console.log("Add photos & files"),
+    },
+    {
+      icon: Bot,
+      label: "Agent mode",
+      badge: "NEW",
+      action: () => console.log("Agent mode"),
+    },
+    {
+      icon: Search,
+      label: "Deep research",
+      action: () => console.log("Deep research"),
+    },
+    {
+      icon: Palette,
+      label: "Create image",
+      action: () => console.log("Create image"),
+    },
+    {
+      icon: BookOpen,
+      label: "Study and learn",
+      action: () => console.log("Study and learn"),
+    },
+  ];
 
   const moreActions: ActionItem[] = [
-    { icon: Globe, label: "Web search", action: () => console.log("Web search") },
+    {
+      icon: Globe,
+      label: "Web search",
+      action: () => console.log("Web search"),
+    },
     {
       icon: Palette,
       label: "Canvas",
@@ -61,20 +101,20 @@ export default function ComposerActionsPopover({ children }: ComposerActionsPopo
       label: "Connect Sharepoint",
       action: () => console.log("Connect Sharepoint"),
     },
-  ]
+  ];
 
   const handleAction = (action: () => void) => {
-    action()
-    setOpen(false)
-    setShowMore(false)
-  }
+    action();
+    setOpen(false);
+    setShowMore(false);
+  };
 
-  const handleMoreClick = () => setShowMore(true)
+  const handleMoreClick = () => setShowMore(true);
 
   const handleOpenChange = (newOpen: boolean) => {
-    setOpen(newOpen)
-    if (!newOpen) setShowMore(false)
-  }
+    setOpen(newOpen);
+    if (!newOpen) setShowMore(false);
+  };
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
@@ -84,7 +124,7 @@ export default function ComposerActionsPopover({ children }: ComposerActionsPopo
           <div className="p-3">
             <div className="space-y-1">
               {mainActions.map((action, index) => {
-                const IconComponent = action.icon
+                const IconComponent = action.icon;
                 return (
                   <button
                     key={index}
@@ -99,7 +139,7 @@ export default function ComposerActionsPopover({ children }: ComposerActionsPopo
                       </span>
                     )}
                   </button>
-                )
+                );
               })}
               <button
                 onClick={handleMoreClick}
@@ -116,7 +156,7 @@ export default function ComposerActionsPopover({ children }: ComposerActionsPopo
             <div className="flex-1 p-3 border-r border-zinc-200 dark:border-zinc-800">
               <div className="space-y-1">
                 {mainActions.map((action, index) => {
-                  const IconComponent = action.icon
+                  const IconComponent = action.icon;
                   return (
                     <button
                       key={index}
@@ -131,7 +171,7 @@ export default function ComposerActionsPopover({ children }: ComposerActionsPopo
                         </span>
                       )}
                     </button>
-                  )
+                  );
                 })}
                 <button
                   onClick={handleMoreClick}
@@ -146,7 +186,7 @@ export default function ComposerActionsPopover({ children }: ComposerActionsPopo
             <div className="flex-1 p-3">
               <div className="space-y-1">
                 {moreActions.map((action, index) => {
-                  const IconComponent = action.icon
+                  const IconComponent = action.icon;
                   return (
                     <button
                       key={index}
@@ -156,7 +196,7 @@ export default function ComposerActionsPopover({ children }: ComposerActionsPopo
                       <IconComponent className="h-4 w-4" />
                       <span>{action.label}</span>
                     </button>
-                  )
+                  );
                 })}
               </div>
             </div>
@@ -164,5 +204,5 @@ export default function ComposerActionsPopover({ children }: ComposerActionsPopo
         )}
       </PopoverContent>
     </Popover>
-  )
+  );
 }

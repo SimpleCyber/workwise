@@ -1,11 +1,11 @@
-import type React from "react"
+import type React from "react";
 
 export default function GhostIconButton({
   label,
   children,
 }: {
-  label: string
-  children: React.ReactNode
+  label: string;
+  children: React.ReactNode;
 }) {
   return (
     <button
@@ -15,5 +15,5 @@ export default function GhostIconButton({
     >
       {children}
     </button>
-  )
+  );
 }
