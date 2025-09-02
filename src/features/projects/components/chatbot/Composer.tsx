@@ -162,6 +162,7 @@ const Composer = forwardRef<ComposerHandle, ComposerProps>(function Composer(
   }
 
   function removeAttachment(idx: number) {
+    console.log(attachments);
     setAttachments((prev) => prev.filter((_, i) => i !== idx));
   }
 

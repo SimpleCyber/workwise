@@ -151,7 +151,7 @@ const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
     } catch {}
   }
 
-  if (!conversation) {
+  if (!conversation || !conversation.messages?.length) {
     return (
       <div className="flex h-full min-h-0 flex-1 flex-col">
         <div className="grid flex-1 place-items-center px-4">

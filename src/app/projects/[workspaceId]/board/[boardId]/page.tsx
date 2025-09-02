@@ -104,10 +104,6 @@ export default function ProjectBoardPage({
     }
   }
 
-  // Derive a best-effort currentUserId from the members list.
-  // Ideally, you'd fetch the authenticated user's "users" table id explicitly.
-  // If available, prefer a member with a matching "isCurrentUser" flag or similar.
-  // As a fallback, pick the first member's userId to avoid failing Convex mutations.
   const currentUserId = useMemo(() => {
     if (!workspaceMembers || workspaceMembers.length === 0)
       return undefined as unknown as Id<"users"> | undefined;
