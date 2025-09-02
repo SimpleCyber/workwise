@@ -12,6 +12,11 @@ import { useRenameProjectChat } from "../../api/use-rename-project-chat";
 import { useTogglePinProjectChat } from "../../api/use-toggle-pin-project-chat";
 import { useDeleteProjectChat } from "../../api/use-delete-project-chat";
 import { useDeleteMessagesFrom } from "../../api/use-delete-project-messages-from"; // new hook
+import { useGetProjectHooks } from "../../api/use-get-project-hooks"; // new hook
+import {
+  useToggleProjectHook,
+  useSetProjectHookSelected,
+} from "../../api/use-toggle-project-hook"; // new hook
 import type { Id } from "../../../../../convex/_generated/dataModel";
 import { sortChatsByUpdatedAt } from "./utils";
 import type { ChatPaneHandle, UIConversation, UIMessage } from "./types"; // import shared types
@@ -46,6 +51,9 @@ export default function AIAssistantUI({
   const { togglePin } = useTogglePinProjectChat();
   const { deleteChat } = useDeleteProjectChat();
   const { deleteFrom } = useDeleteMessagesFrom(); //
+  const { hooks } = useGetProjectHooks(selectedId as any);
+  const { toggleHook } = useToggleProjectHook();
+  const { setHookSelected } = useSetProjectHookSelected();
 
   const [isThinking, setIsThinking] = useState(false);
   const [thinkingConvId, setThinkingConvId] = useState<string | null>(null);
@@ -191,6 +199,11 @@ export default function AIAssistantUI({
         role: m.role as "user" | "assistant",
         content: m.content as string,
       }));
+
+      const selectedHooks = (hooks || [])
+        .filter((h: any) => h.selected)
+        .map((h: any) => h.content as string);
+
       const res = await fetch("/api/ai", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -198,6 +211,7 @@ export default function AIAssistantUI({
           workspaceId,
           boardId,
           messages: apiMessages.concat([{ role: "user", content }]),
+          hooks: selectedHooks,
         }),
       });
       const data = await res.json().catch(() => ({}) as any);
@@ -273,6 +287,14 @@ export default function AIAssistantUI({
     await onSend(prevUser.content as string);
   }
 
+  const selectedHookMessageIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const h of hooks || []) {
+      if (h.selected && h.messageId) set.add(h.messageId as any);
+    }
+    return set;
+  }, [hooks]);
+
   const selected: UIConversation | null = selectedChatId
     ? {
         id: selectedChatId as any,
@@ -332,6 +354,14 @@ export default function AIAssistantUI({
                 createNewChat={createNewChat}
                 sidebarCollapsed={sidebarCollapsed}
                 setSidebarOpen={setSidebarOpen}
+                hooks={(hooks || []).map((h: any) => ({
+                  id: h.id,
+                  content: h.content,
+                  selected: !!h.selected,
+                }))}
+                onToggleHookSelected={async (hookId, selected) => {
+                  await setHookSelected(hookId as any, selected);
+                }}
               />
               <ChatPane
                 ref={composerRef}
@@ -347,6 +377,15 @@ export default function AIAssistantUI({
                 onDeleteFrom={(messageId: string) => onDeleteFrom(messageId)}
                 onRegenerate={(m) => onRegenerateMessage(m)} //
                 currentUser={currentUser} //
+                selectedHookMessageIds={selectedHookMessageIds}
+                onHook={async (m) => {
+                  if (!selectedId) return;
+                  await toggleHook({
+                    chatId: selectedId as any,
+                    messageId: m.id as any,
+                    content: m.content,
+                  });
+                }}
               />
             </main>
           </>

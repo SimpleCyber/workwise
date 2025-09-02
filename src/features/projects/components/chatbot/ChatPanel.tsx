@@ -45,6 +45,7 @@ type ChatPaneProps = {
   onHook?: (m: UIMessage) => void;
   onDeleteFrom?: (messageId: string) => void;
   currentUser?: { name?: string; email?: string; image?: string }; // new
+  selectedHookMessageIds?: Set<string> | string[]; // new
 };
 
 type ComposerHandle = {
@@ -64,6 +65,7 @@ const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
     onHook,
     onDeleteFrom,
     currentUser,
+    selectedHookMessageIds,
   },
   ref,
 ) {
@@ -314,7 +316,16 @@ const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
 
                     <div className="relative group">
                       <button
-                        className="inline-flex items-center rounded-md p-1 hover:bg-zinc-100"
+                        className={cls(
+                          "inline-flex items-center rounded-md p-1 hover:bg-zinc-100",
+                          (Array.isArray(selectedHookMessageIds)
+                            ? (selectedHookMessageIds as string[]).includes(
+                                m.id,
+                              )
+                            : (selectedHookMessageIds as Set<string>)?.has?.(
+                                m.id,
+                              )) && "text-green-600",
+                        )}
                         aria-label="Hook"
                         title="Hook"
                         onClick={() => onHook?.(m)}

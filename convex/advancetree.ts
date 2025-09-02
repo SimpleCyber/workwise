@@ -845,7 +845,6 @@ export const deleteNodeComment = mutation({
   },
 });
 
-
 // Create node comment alias for consistency
 export const createNodeComment = mutation({
   args: {
@@ -866,5 +865,42 @@ export const createNodeComment = mutation({
       createdAt: Date.now(),
       isEdited: false,
     });
+  },
+});
+
+// Get tasks for a node
+export const getNodeTasks = query({
+  args: { nodeId: v.string() },
+  handler: async (ctx, args) => {
+    const identity = await getAuthUserId(ctx);
+    if (!identity) return [];
+
+    const tasks = await ctx.db
+      .query("treeNodeTasks")
+      .withIndex("by_node_id", (q) => q.eq("nodeId", args.nodeId))
+      .collect();
+
+    const tasksWithUsers = await Promise.all(
+      tasks.map(async (task) => {
+        const assignedMember = task.assignedToId
+          ? await ctx.db.get(task.assignedToId)
+          : null;
+        const assignedUser = assignedMember
+          ? await ctx.db.get(assignedMember.userId)
+          : null;
+        const assignedByMember = await ctx.db.get(task.assignedById);
+        const assignedByUser = assignedByMember
+          ? await ctx.db.get(assignedByMember.userId)
+          : null;
+
+        return {
+          ...task,
+          assignedTo: assignedUser,
+          assignedBy: assignedByUser,
+        };
+      }),
+    );
+
+    return tasksWithUsers;
   },
 });

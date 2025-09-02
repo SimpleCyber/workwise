@@ -7,6 +7,7 @@ export async function POST(req: NextRequest) {
     const messages = (body?.messages ?? []) as ChatMessageInput[];
     const _workspaceId = body?.workspaceId;
     const _boardId = body?.boardId;
+    const hooks = (body?.hooks ?? []) as string[];
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json(
@@ -20,6 +21,18 @@ export async function POST(req: NextRequest) {
       content: m.content,
     }));
 
+    const hooksSystem: ChatMessageInput[] =
+      Array.isArray(hooks) && hooks.length > 0
+        ? [
+            {
+              role: "system" as any,
+              content:
+                "Use the following saved hooks as context when answering:\n" +
+                hooks.map((h, i) => `- ${h}`).join("\n"),
+            },
+          ]
+        : [];
+
     const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
@@ -32,7 +45,7 @@ export async function POST(req: NextRequest) {
     }
 
     const service = new ChatService(apiKey);
-    const text = await service.generateReply(safeMessages);
+    const text = await service.generateReply([...hooksSystem, ...safeMessages]);
     return NextResponse.json({ text });
   } catch (err: any) {
     console.error("[/api/ai] error:", err?.message || err);

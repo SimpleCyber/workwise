@@ -152,3 +152,53 @@ export const deleteFromMessage = mutation({
     await ctx.db.patch(chatId, { updatedAt: new Date().toISOString() });
   },
 });
+
+export const listHooks = query({
+  args: { chatId: v.id("projectChats") },
+  handler: async (ctx, { chatId }) => {
+    const hooks = await ctx.db
+      .query("projectChatHooks")
+      .withIndex("by_chat", (q) => q.eq("chatId", chatId))
+      .order("asc")
+      .collect();
+    return hooks.map((h) => ({ ...h, id: h._id }));
+  },
+});
+
+export const toggleHook = mutation({
+  args: {
+    chatId: v.id("projectChats"),
+    messageId: v.id("projectChatMessages"),
+    content: v.string(),
+  },
+  handler: async (ctx, { chatId, messageId, content }) => {
+    const existing = await ctx.db
+      .query("projectChatHooks")
+      .withIndex("by_chat_message", (q) =>
+        q.eq("chatId", chatId).eq("messageId", messageId),
+      )
+      .unique()
+      .catch(() => null as any);
+
+    const now = new Date().toISOString();
+    if (!existing) {
+      await ctx.db.insert("projectChatHooks", {
+        chatId,
+        messageId,
+        content,
+        selected: true,
+        createdAt: now,
+      });
+    } else {
+      await ctx.db.patch(existing._id, { selected: !existing.selected });
+    }
+    await ctx.db.patch(chatId, { updatedAt: now });
+  },
+});
+
+export const setHookSelected = mutation({
+  args: { hookId: v.id("projectChatHooks"), selected: v.boolean() },
+  handler: async (ctx, { hookId, selected }) => {
+    await ctx.db.patch(hookId, { selected });
+  },
+});

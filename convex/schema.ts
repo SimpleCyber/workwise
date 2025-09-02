@@ -76,6 +76,17 @@ const schema = defineSchema({
     createdAt: v.string(), // ISO
     userId: v.optional(v.id("users")), // present for "user" role
   }).index("by_chat", ["chatId", "createdAt"]),
+
+  projectChatHooks: defineTable({
+    chatId: v.id("projectChats"),
+    messageId: v.id("projectChatMessages"),
+    content: v.string(),
+    selected: v.boolean(),
+    createdAt: v.string(), // ISO
+  })
+    .index("by_chat", ["chatId", "createdAt"])
+    .index("by_chat_message", ["chatId", "messageId"]),
+
   // Attendance table
   attendance: defineTable({
     memberId: v.id("members"),

@@ -65,14 +65,19 @@ type HeaderProps = {
   createNewChat: () => void;
   sidebarCollapsed: boolean;
   setSidebarOpen: (open: boolean) => void;
+  hooks?: { id: string; content: string; selected: boolean }[];
+  onToggleHookSelected?: (hookId: string, selected: boolean) => void;
 };
 
 export default function Header({
   createNewChat,
   sidebarCollapsed,
   setSidebarOpen,
+  hooks = [],
+  onToggleHookSelected,
 }: HeaderProps) {
   const [model, setModel] = useState("gpt-4o");
+  const [moreOpen, setMoreOpen] = useState(false);
 
   return (
     <div className="sticky top-0 z-30 flex items-center gap-2 border-b border-zinc-200 bg-white/80 px-4 py-3 backdrop-blur">
@@ -88,10 +93,63 @@ export default function Header({
 
       <ModelDropdown value={model} onChange={setModel} />
 
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto relative flex items-center gap-2">
         <GhostIconButton label="More">
-          <MoreHorizontal className="h-4 w-4" />
+          <button
+            type="button"
+            onClick={() => setMoreOpen((v) => !v)}
+            className="inline-flex items-center justify-center rounded-md p-2 hover:bg-zinc-100"
+            aria-haspopup="menu"
+            aria-expanded={moreOpen}
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </button>
         </GhostIconButton>
+
+        {moreOpen && (
+          <div
+            role="menu"
+            className="absolute right-0 top-full z-50 mt-2 w-72 rounded-lg border border-zinc-200 bg-white p-2 shadow-lg"
+          >
+            <div className="px-2 pb-2 text-xs font-medium text-zinc-500">
+              Saved hooks for this chat
+            </div>
+            <div className="max-h-64 overflow-auto">
+              {hooks.length === 0 ? (
+                <div className="px-2 py-3 text-sm text-zinc-500">
+                  No hooks saved yet. Click the hook icon on a reply.
+                </div>
+              ) : (
+                hooks.map((h) => (
+                  <label
+                    key={h.id}
+                    className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 hover:bg-zinc-50"
+                  >
+                    <input
+                      type="checkbox"
+                      className="mt-0.5"
+                      checked={!!h.selected}
+                      onChange={(e) =>
+                        onToggleHookSelected?.(h.id, e.target.checked)
+                      }
+                    />
+                    <span className="text-sm text-zinc-800 line-clamp-3">
+                      {h.content}
+                    </span>
+                  </label>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+        {moreOpen && (
+          <button
+            aria-hidden
+            tabIndex={-1}
+            className="fixed inset-0 z-40 cursor-default"
+            onClick={() => setMoreOpen(false)}
+          />
+        )}
       </div>
     </div>
   );
