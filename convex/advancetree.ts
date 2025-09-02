@@ -595,6 +595,124 @@ export const expandNodeWithAI = mutation({
   },
 });
 
+export const createAIGeneratedTree = mutation({
+  args: {
+    workspaceId: v.id("workspaces"),
+    rootTitle: v.string(),
+    rootDescription: v.string(),
+    treeData: v.array(v.any()), // TreeNodeInput[]
+    rootPosition: v.object({ x: v.number(), y: v.number() }),
+  },
+  handler: async (ctx, args) => {
+    const identity = await getAuthUserId(ctx);
+    if (!identity) throw new Error("Unauthorized");
+
+    const member = await ctx.db
+      .query("members")
+      .withIndex("by_workspace_id_user_id", (q) =>
+        q.eq("workspaceId", args.workspaceId).eq("userId", identity),
+      )
+      .first();
+
+    if (!member) throw new Error("Member not found");
+
+    // Create root node
+    const rootNodeId = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    await ctx.db.insert("treeNodes", {
+      title: args.rootTitle,
+      description: args.rootDescription,
+      nodeId: rootNodeId,
+      parentId: undefined,
+      workspaceId: args.workspaceId,
+      createdById: member._id,
+      status: "in-progress",
+      position: args.rootPosition,
+      level: 0,
+      isArchived: false,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    // Add creator as admin to root node
+    await ctx.db.insert("treeNodeUsers", {
+      nodeId: rootNodeId,
+      memberId: member._id,
+      workspaceId: args.workspaceId,
+      role: "creator",
+      addedAt: Date.now(),
+      addedById: member._id,
+    });
+
+    // Recursively create child nodes
+    const createChildNodes = async (
+      nodes: TreeNodeInput[],
+      parentId: string,
+      level: number,
+      baseX: number,
+      baseY: number,
+    ) => {
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        const nodeId = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+        // Calculate position (spread children horizontally)
+        const position = {
+          x: baseX + (i - (nodes.length - 1) / 2) * 300,
+          y: baseY + 200,
+        };
+
+        await ctx.db.insert("treeNodes", {
+          title: node.title,
+          description: node.description,
+          nodeId,
+          parentId,
+          workspaceId: args.workspaceId,
+          createdById: member._id,
+          status: "in-progress",
+          position,
+          level,
+          isArchived: false,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+
+        // Add creator as admin to child node
+        await ctx.db.insert("treeNodeUsers", {
+          nodeId,
+          memberId: member._id,
+          workspaceId: args.workspaceId,
+          role: "creator",
+          addedAt: Date.now(),
+          addedById: member._id,
+        });
+
+        // Recursively create grandchildren
+        if (node.children && node.children.length > 0) {
+          await createChildNodes(
+            node.children,
+            nodeId,
+            level + 1,
+            position.x,
+            position.y,
+          );
+        }
+      }
+    };
+
+    // Create all child nodes
+    await createChildNodes(
+      args.treeData,
+      rootNodeId,
+      1,
+      args.rootPosition.x,
+      args.rootPosition.y,
+    );
+
+    return { rootNodeId, message: "AI-generated tree created successfully" };
+  },
+});
+
 // latter :)
 
 // // Get comments for a node
