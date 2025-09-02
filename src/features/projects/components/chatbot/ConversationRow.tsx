@@ -1,40 +1,33 @@
-"use client";
+"use client"
 
-import { useState, useRef, useEffect } from "react";
-import { Star, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import { cls } from "./utils";
+import { useState, useRef, useEffect } from "react"
+import { Star, MoreHorizontal, Pencil, Trash2 } from "lucide-react"
+import { cls } from "./utils"
 
-export default function ConversationRow({
-  data,
-  active,
-  onSelect,
-  onTogglePin,
-  onRename,
-  onDelete,
-}) {
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [title, setTitle] = useState(data.title || "");
-  const rowRef = useRef(null);
+export default function ConversationRow({ data, active, onSelect, onTogglePin, onRename, onDelete }) {
+  const [open, setOpen] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [title, setTitle] = useState(data.title || "")
+  const rowRef = useRef(null)
 
   useEffect(() => {
     function onDoc(e) {
       if (open && rowRef.current && !rowRef.current.contains(e.target)) {
-        setOpen(false);
+        setOpen(false)
       }
     }
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, [open]);
+    document.addEventListener("mousedown", onDoc)
+    return () => document.removeEventListener("mousedown", onDoc)
+  }, [open])
 
   function commitRename() {
-    const t = (title || "").trim();
+    const t = (title || "").trim()
     if (!t) {
-      setEditing(false);
-      return;
+      setEditing(false)
+      return
     }
-    onRename?.(t);
-    setEditing(false);
+    onRename?.(t)
+    setEditing(false)
   }
 
   return (
@@ -54,8 +47,8 @@ export default function ConversationRow({
             onChange={(e) => setTitle(e.target.value)}
             onBlur={commitRename}
             onKeyDown={(e) => {
-              if (e.key === "Enter") commitRename();
-              else if (e.key === "Escape") setEditing(false);
+              if (e.key === "Enter") commitRename()
+              else if (e.key === "Escape") setEditing(false)
             }}
             className="w-full rounded-md border border-zinc-300 px-2 py-1 text-sm outline-none"
           />
@@ -65,8 +58,8 @@ export default function ConversationRow({
 
         <button
           onClick={(e) => {
-            e.stopPropagation();
-            setOpen((s) => !s);
+            e.stopPropagation()
+            setOpen((s) => !s)
           }}
           title="Options"
           className="ml-auto rounded-md p-1 text-zinc-500 opacity-0 transition group-hover:opacity-100 hover:bg-zinc-200/50"
@@ -82,10 +75,10 @@ export default function ConversationRow({
             <button
               className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-zinc-100"
               onClick={(e) => {
-                e.stopPropagation();
-                setOpen(false);
-                setTitle(data.title || "");
-                setEditing(true);
+                e.stopPropagation()
+                setOpen(false)
+                setTitle(data.title || "")
+                setEditing(true)
               }}
             >
               <Pencil className="h-4 w-4" /> Rename
@@ -99,17 +92,12 @@ export default function ConversationRow({
             <button
               className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-zinc-100"
               onClick={(e) => {
-                e.stopPropagation();
-                setOpen(false);
-                onTogglePin?.();
+                e.stopPropagation()
+                setOpen(false)
+                onTogglePin?.()
               }}
             >
-              <Star
-                className={cls(
-                  "h-4 w-4",
-                  data.pinned ? "fill-zinc-800 text-zinc-800" : "",
-                )}
-              />
+              <Star className={cls("h-4 w-4", data.pinned ? "fill-zinc-800 text-zinc-800" : "")} />
               {data.pinned ? "Unstar" : "Star"}
             </button>
             <span className="pointer-events-none absolute left-2 top-full mt-1 rounded-md bg-zinc-900 px-1.5 py-0.5 text-[10px] text-white opacity-0 group-hover:opacity-100">
@@ -121,9 +109,9 @@ export default function ConversationRow({
             <button
               className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-red-600 hover:bg-red-50"
               onClick={(e) => {
-                e.stopPropagation();
-                setOpen(false);
-                onDelete?.();
+                e.stopPropagation()
+                setOpen(false)
+                onDelete?.()
               }}
             >
               <Trash2 className="h-4 w-4" /> Delete
@@ -135,5 +123,5 @@ export default function ConversationRow({
         </div>
       )}
     </div>
-  );
+  )
 }

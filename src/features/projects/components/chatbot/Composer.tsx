@@ -1,74 +1,63 @@
-"use client";
+"use client"
 
-import {
-  useRef,
-  useState,
-  forwardRef,
-  useImperativeHandle,
-  useEffect,
-} from "react";
-import { Send, Loader2, Plus, Mic } from "lucide-react";
-import ComposerActionsPopover from "./ComposerActionsPopover";
-import { cls } from "./utils";
+import { useRef, useState, forwardRef, useImperativeHandle, useEffect } from "react"
+import { Send, Loader2, Plus, Mic } from "lucide-react"
+import ComposerActionsPopover from "./ComposerActionsPopover"
+import { cls } from "./utils"
 
 const Composer = forwardRef(function Composer({ onSend, busy }, ref) {
-  const [value, setValue] = useState("");
-  const [sending, setSending] = useState(false);
-  const inputRef = useRef(null);
+  const [value, setValue] = useState("")
+  const [sending, setSending] = useState(false)
+  const inputRef = useRef(null)
 
   useEffect(() => {
     if (inputRef.current) {
-      const textarea = inputRef.current;
-      const lineHeight = 20;
-      const minHeight = 40;
-      textarea.style.height = "auto";
-      const scrollHeight = textarea.scrollHeight;
-      const calculatedLines = Math.max(
-        1,
-        Math.floor((scrollHeight - 16) / lineHeight),
-      );
+      const textarea = inputRef.current
+      const lineHeight = 20
+      const minHeight = 40
+      textarea.style.height = "auto"
+      const scrollHeight = textarea.scrollHeight
+      const calculatedLines = Math.max(1, Math.floor((scrollHeight - 16) / lineHeight))
       if (calculatedLines <= 12) {
-        textarea.style.height = `${Math.max(minHeight, scrollHeight)}px`;
-        textarea.style.overflowY = "hidden";
+        textarea.style.height = `${Math.max(minHeight, scrollHeight)}px`
+        textarea.style.overflowY = "hidden"
       } else {
-        textarea.style.height = `${minHeight + 11 * lineHeight}px`;
-        textarea.style.overflowY = "auto";
+        textarea.style.height = `${minHeight + 11 * lineHeight}px`
+        textarea.style.overflowY = "auto"
       }
     }
-  }, [value]);
+  }, [value])
 
   useImperativeHandle(
     ref,
     () => ({
       insertTemplate: (templateContent) => {
         setValue((prev) => {
-          const newValue = prev
-            ? `${prev}\n\n${templateContent}`
-            : templateContent;
+          const newValue = prev ? `${prev}\n\n${templateContent}` : templateContent
           setTimeout(() => {
-            inputRef.current?.focus();
-            const length = newValue.length;
-            inputRef.current?.setSelectionRange(length, length);
-          }, 0);
-          return newValue;
-        });
+            inputRef.current?.focus()
+            const length = newValue.length
+            inputRef.current?.setSelectionRange(length, length)
+          }, 0)
+          return newValue
+        })
       },
       focus: () => {
-        inputRef.current?.focus();
+        inputRef.current?.focus()
       },
     }),
     [],
-  );
+  )
 
   async function handleSend() {
-    if (!value.trim() || sending) return;
-    setSending(true);
+    if (!value.trim() || sending) return
+    setSending(true)
     try {
-      await onSend?.(value);
-      setValue("");
-      inputRef.current?.focus();
+      await onSend?.(value)
+      setValue("")
+      inputRef.current?.focus()
     } finally {
-      setSending(false);
+      setSending(false)
     }
   }
 
@@ -93,8 +82,8 @@ const Composer = forwardRef(function Composer({ onSend, busy }, ref) {
             )}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
+                e.preventDefault()
+                handleSend()
               }
             }}
           />
@@ -122,21 +111,16 @@ const Composer = forwardRef(function Composer({ onSend, busy }, ref) {
               disabled={sending || busy || !value.trim()}
               className={cls(
                 "inline-flex shrink-0 items-center gap-2 rounded-full bg-zinc-900 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
-                (sending || busy || !value.trim()) &&
-                  "opacity-50 cursor-not-allowed",
+                (sending || busy || !value.trim()) && "opacity-50 cursor-not-allowed",
               )}
             >
-              {sending || busy ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
+              {sending || busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </button>
           </div>
         </div>
       </div>
     </div>
-  );
-});
+  )
+})
 
-export default Composer;
+export default Composer

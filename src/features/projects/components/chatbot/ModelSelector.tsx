@@ -1,28 +1,27 @@
-"use client";
+"use client"
 
-import { useEffect, useRef, useState } from "react";
-import { ChevronDown, BrainCircuit } from "lucide-react";
+import { useEffect, useRef, useState } from "react"
+import { ChevronDown, BrainCircuit } from "lucide-react"
 
 const MODELS = [
   { id: "gpt-4o", name: "GPT-4o" },
   { id: "gpt-4o-mini", name: "GPT-4o mini" },
   { id: "gpt-4.1", name: "GPT-4.1" },
-];
+]
 
 export default function ModelSelector({ value = "gpt-4o", onChange }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
 
   useEffect(() => {
     function onClick(e) {
-      if (open && ref.current && !ref.current.contains(e.target))
-        setOpen(false);
+      if (open && ref.current && !ref.current.contains(e.target)) setOpen(false)
     }
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
-  }, [open]);
+    document.addEventListener("mousedown", onClick)
+    return () => document.removeEventListener("mousedown", onClick)
+  }, [open])
 
-  const active = MODELS.find((m) => m.id === value) || MODELS[0];
+  const active = MODELS.find((m) => m.id === value) || MODELS[0]
 
   return (
     <div ref={ref} className="relative">
@@ -48,8 +47,8 @@ export default function ModelSelector({ value = "gpt-4o", onChange }) {
               key={m.id}
               role="menuitem"
               onClick={() => {
-                onChange?.(m.id);
-                setOpen(false);
+                onChange?.(m.id)
+                setOpen(false)
               }}
               className="block w-full cursor-pointer px-3 py-2 text-left text-sm hover:bg-gray-50"
             >
@@ -59,5 +58,5 @@ export default function ModelSelector({ value = "gpt-4o", onChange }) {
         </div>
       )}
     </div>
-  );
+  )
 }

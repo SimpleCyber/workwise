@@ -1,4 +1,4 @@
-import AIAssistantUI from "../components/chatbot/AIAssistantUI";
+import AIAssistantUI from "./chatbot/AIAssistantUI";
 
 export default function Page() {
   return <AIAssistantUI />;

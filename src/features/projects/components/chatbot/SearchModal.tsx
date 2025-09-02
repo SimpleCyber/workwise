@@ -1,18 +1,18 @@
-"use client";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, SearchIcon, Plus, Clock } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+"use client"
+import { motion, AnimatePresence } from "framer-motion"
+import { X, SearchIcon, Plus, Clock } from "lucide-react"
+import { useState, useEffect, useMemo } from "react"
 
 function getTimeGroup(dateString) {
-  const date = new Date(dateString);
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-  const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-  if (date >= today) return "Today";
-  if (date >= yesterday) return "Yesterday";
-  if (date >= sevenDaysAgo) return "Previous 7 Days";
-  return "Older";
+  const date = new Date(dateString)
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000)
+  const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
+  if (date >= today) return "Today"
+  if (date >= yesterday) return "Yesterday"
+  if (date >= sevenDaysAgo) return "Previous 7 Days"
+  return "Older"
 }
 
 export default function SearchModal({
@@ -24,17 +24,13 @@ export default function SearchModal({
   togglePin,
   createNewChat,
 }) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState("")
 
   const filteredConversations = useMemo(() => {
-    if (!query.trim()) return conversations;
-    const q = query.toLowerCase();
-    return conversations.filter(
-      (c) =>
-        c.title.toLowerCase().includes(q) ||
-        c.preview.toLowerCase().includes(q),
-    );
-  }, [conversations, query]);
+    if (!query.trim()) return conversations
+    const q = query.toLowerCase()
+    return conversations.filter((c) => c.title.toLowerCase().includes(q) || c.preview.toLowerCase().includes(q))
+  }, [conversations, query])
 
   const groupedConversations = useMemo(() => {
     const groups = {
@@ -42,30 +38,30 @@ export default function SearchModal({
       Yesterday: [],
       "Previous 7 Days": [],
       Older: [],
-    };
+    }
     filteredConversations
       .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
       .forEach((conv) => {
-        const group = getTimeGroup(conv.updatedAt);
-        groups[group].push(conv);
-      });
-    return groups;
-  }, [filteredConversations]);
+        const group = getTimeGroup(conv.updatedAt)
+        groups[group].push(conv)
+      })
+    return groups
+  }, [filteredConversations])
 
   const handleClose = () => {
-    setQuery("");
-    onClose();
-  };
+    setQuery("")
+    onClose()
+  }
 
   useEffect(() => {
     const handleEscape = (e) => {
-      if (e.key === "Escape") handleClose();
-    };
-    if (isOpen) {
-      document.addEventListener("keydown", handleEscape);
-      return () => document.removeEventListener("keydown", handleEscape);
+      if (e.key === "Escape") handleClose()
     }
-  }, [isOpen]);
+    if (isOpen) {
+      document.addEventListener("keydown", handleEscape)
+      return () => document.removeEventListener("keydown", handleEscape)
+    }
+  }, [isOpen])
 
   return (
     <AnimatePresence>
@@ -94,10 +90,7 @@ export default function SearchModal({
                 className="flex-1 bg-transparent text-lg outline-none placeholder:text-zinc-400"
                 autoFocus
               />
-              <button
-                onClick={handleClose}
-                className="rounded-lg p-1.5 hover:bg-zinc-100"
-              >
+              <button onClick={handleClose} className="rounded-lg p-1.5 hover:bg-zinc-100">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -113,50 +106,37 @@ export default function SearchModal({
                 </button>
               </div>
 
-              {Object.entries(groupedConversations).map(
-                ([groupName, convs]) => {
-                  if (convs.length === 0) return null;
-                  return (
-                    <div
-                      key={groupName}
-                      className="border-b border-zinc-200 p-2 last:border-b-0"
-                    >
-                      <div className="px-3 py-2 text-xs font-medium text-zinc-500">
-                        {groupName}
-                      </div>
-                      <div className="space-y-1">
-                        {convs.map((conv) => (
-                          <button
-                            key={conv.id}
-                            onClick={() => {
-                              onSelect(conv.id);
-                              handleClose();
-                            }}
-                            className="flex w-full items-center gap-3 rounded-lg p-3 text-left hover:bg-zinc-100"
-                          >
-                            <Clock className="h-4 w-4 text-zinc-400 shrink-0" />
-                            <div className="min-w-0 flex-1">
-                              <div className="truncate font-medium">
-                                {conv.title}
-                              </div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
+              {Object.entries(groupedConversations).map(([groupName, convs]) => {
+                if (convs.length === 0) return null
+                return (
+                  <div key={groupName} className="border-b border-zinc-200 p-2 last:border-b-0">
+                    <div className="px-3 py-2 text-xs font-medium text-zinc-500">{groupName}</div>
+                    <div className="space-y-1">
+                      {convs.map((conv) => (
+                        <button
+                          key={conv.id}
+                          onClick={() => {
+                            onSelect(conv.id)
+                            handleClose()
+                          }}
+                          className="flex w-full items-center gap-3 rounded-lg p-3 text-left hover:bg-zinc-100"
+                        >
+                          <Clock className="h-4 w-4 text-zinc-400 shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate font-medium">{conv.title}</div>
+                          </div>
+                        </button>
+                      ))}
                     </div>
-                  );
-                },
-              )}
+                  </div>
+                )
+              })}
 
               {filteredConversations.length === 0 && query.trim() && (
                 <div className="p-8 text-center">
                   <SearchIcon className="mx-auto h-12 w-12 text-zinc-300" />
-                  <div className="mt-4 text-lg font-medium text-zinc-900">
-                    No chats found
-                  </div>
-                  <div className="mt-2 text-sm text-zinc-500">
-                    Try searching with different keywords
-                  </div>
+                  <div className="mt-4 text-lg font-medium text-zinc-900">No chats found</div>
+                  <div className="mt-2 text-sm text-zinc-500">Try searching with different keywords</div>
                 </div>
               )}
             </div>
@@ -164,5 +144,5 @@ export default function SearchModal({
         </>
       )}
     </AnimatePresence>
-  );
+  )
 }

@@ -1,24 +1,11 @@
-"use client";
-import { useState } from "react";
-import {
-  Paperclip,
-  Bot,
-  Search,
-  Palette,
-  BookOpen,
-  MoreHorizontal,
-  Globe,
-  ChevronRight,
-} from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+"use client"
+import { useState } from "react"
+import { Paperclip, Bot, Search, Palette, BookOpen, MoreHorizontal, Globe, ChevronRight } from "lucide-react"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 export default function ComposerActionsPopover({ children }) {
-  const [open, setOpen] = useState(false);
-  const [showMore, setShowMore] = useState(false);
+  const [open, setOpen] = useState(false)
+  const [showMore, setShowMore] = useState(false)
 
   const mainActions = [
     {
@@ -47,7 +34,7 @@ export default function ComposerActionsPopover({ children }) {
       label: "Study and learn",
       action: () => console.log("Study and learn"),
     },
-  ];
+  ]
 
   const moreActions = [
     {
@@ -87,24 +74,24 @@ export default function ComposerActionsPopover({ children }) {
       label: "Connect Sharepoint",
       action: () => console.log("Connect Sharepoint"),
     },
-  ];
+  ]
 
   const handleAction = (action) => {
-    action();
-    setOpen(false);
-    setShowMore(false);
-  };
+    action()
+    setOpen(false)
+    setShowMore(false)
+  }
 
   const handleMoreClick = () => {
-    setShowMore(true);
-  };
+    setShowMore(true)
+  }
 
   const handleOpenChange = (newOpen) => {
-    setOpen(newOpen);
+    setOpen(newOpen)
     if (!newOpen) {
-      setShowMore(false);
+      setShowMore(false)
     }
-  };
+  }
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
@@ -115,7 +102,7 @@ export default function ComposerActionsPopover({ children }) {
           <div className="p-3">
             <div className="space-y-1">
               {mainActions.map((action, index) => {
-                const IconComponent = action.icon;
+                const IconComponent = action.icon
                 return (
                   <button
                     key={index}
@@ -130,7 +117,7 @@ export default function ComposerActionsPopover({ children }) {
                       </span>
                     )}
                   </button>
-                );
+                )
               })}
               <button
                 onClick={handleMoreClick}
@@ -148,7 +135,7 @@ export default function ComposerActionsPopover({ children }) {
             <div className="flex-1 p-3 border-r border-zinc-200 dark:border-zinc-800">
               <div className="space-y-1">
                 {mainActions.map((action, index) => {
-                  const IconComponent = action.icon;
+                  const IconComponent = action.icon
                   return (
                     <button
                       key={index}
@@ -163,7 +150,7 @@ export default function ComposerActionsPopover({ children }) {
                         </span>
                       )}
                     </button>
-                  );
+                  )
                 })}
                 <button
                   onClick={handleMoreClick}
@@ -178,21 +165,17 @@ export default function ComposerActionsPopover({ children }) {
             <div className="flex-1 p-3">
               <div className="space-y-1">
                 {moreActions.map((action, index) => {
-                  const IconComponent = action.icon;
+                  const IconComponent = action.icon
                   return (
                     <button
                       key={index}
                       onClick={() => handleAction(action.action)}
                       className="flex items-center gap-3 w-full p-2 text-sm text-left hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg"
                     >
-                      {typeof IconComponent === "function" ? (
-                        <IconComponent />
-                      ) : (
-                        <IconComponent className="h-4 w-4" />
-                      )}
+                      {typeof IconComponent === "function" ? <IconComponent /> : <IconComponent className="h-4 w-4" />}
                       <span>{action.label}</span>
                     </button>
-                  );
+                  )
                 })}
               </div>
             </div>
@@ -200,5 +183,5 @@ export default function ComposerActionsPopover({ children }) {
         )}
       </PopoverContent>
     </Popover>
-  );
+  )
 }

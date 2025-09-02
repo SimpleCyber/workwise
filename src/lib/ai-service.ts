@@ -28,7 +28,7 @@ Project Description: "${projectDescription}"
 Rules:
 1. Each node must have a clear, specific title (max 50 characters)
 2. Each node must have a detailed description (2-3 sentences explaining purpose, scope, or functionality)
-3. Create 3-7 main branches representing major project areas
+3. Create 1-2 main branches representing major project areas
 4. Each main branch should have 2-5 child nodes with specific tasks/components
 5. If needed, add grandchild nodes for complex modules
 6. Maintain clarity, precision, and completeness
@@ -119,7 +119,7 @@ Node to Expand:
 - Project Context: "${projectContext}"
 
 Rules:
-1. Generate 2-5 child nodes that break down this parent node
+1. Generate 1-2 child nodes that break down this parent node
 2. Each child must have a clear, specific title (max 50 characters)
 3. Each child must have a detailed description (2-3 sentences)
 4. Focus on actionable, specific tasks or components

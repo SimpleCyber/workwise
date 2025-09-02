@@ -55,6 +55,27 @@ const schema = defineSchema({
     .index("by_workspace_id", ["workspaceId"])
     .index("by_message_id", ["messageId"])
     .index("by_member_id", ["memberId"]),
+
+     projectChats: defineTable({
+    workspaceId: v.id("workspaces"), // the parent workspace
+    boardId: v.id("projectBoards"), // per-board chat space
+    title: v.string(),
+    pinned: v.boolean(),
+    createdBy: v.id("users"),
+    createdAt: v.string(), // ISO
+    updatedAt: v.string(), // ISO
+  })
+    .index("by_board", ["boardId", "updatedAt"])
+    .index("by_workspace", ["workspaceId", "updatedAt"])
+    .index("by_pinned", ["boardId", "pinned", "updatedAt"]),
+
+  projectChatMessages: defineTable({
+    chatId: v.id("projectChats"),
+    role: v.union(v.literal("user"), v.literal("assistant")),
+    content: v.string(),
+    createdAt: v.string(), // ISO
+    userId: v.optional(v.id("users")), // present for "user" role
+  }).index("by_chat", ["chatId", "createdAt"]),
   // Attendance table
   attendance: defineTable({
     memberId: v.id("members"),

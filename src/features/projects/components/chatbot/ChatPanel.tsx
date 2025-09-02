@@ -1,26 +1,10 @@
-"use client";
+"use client"
 
-import {
-  useState,
-  forwardRef,
-  useImperativeHandle,
-  useRef,
-  useEffect,
-} from "react";
-import {
-  Pencil,
-  Check,
-  X,
-  Copy,
-  RefreshCcw,
-  Volume2,
-  Webhook,
-  Brain,
-  Trash2,
-} from "lucide-react";
-import Message from "./Message";
-import Composer from "./Composer";
-import { cls } from "./utils";
+import { useState, forwardRef, useImperativeHandle, useRef, useEffect } from "react"
+import { Pencil, Check, X, Copy, RefreshCcw, Volume2, Webhook, Brain, Trash2 } from "lucide-react"
+import Message from "./Message"
+import Composer from "./Composer"
+import { cls } from "./utils"
 
 function ThinkingMessage() {
   return (
@@ -30,93 +14,79 @@ function ThinkingMessage() {
         <span className="text-sm text-zinc-500">Thinking…</span>
       </div>
     </Message>
-  );
+  )
 }
 
 const ChatPane = forwardRef(function ChatPane(
-  {
-    conversation,
-    onSend,
-    onEditMessage,
-    isThinking,
-    onPauseThinking,
-    onRegenerate,
-    onSpeak,
-    onHook,
-    onDeleteFrom,
-  },
+  { conversation, onSend, onEditMessage, isThinking, onPauseThinking, onRegenerate, onSpeak, onHook, onDeleteFrom },
   ref,
 ) {
-  const [editingId, setEditingId] = useState(null);
-  const [draft, setDraft] = useState("");
-  const [busy, setBusy] = useState(false);
-  const composerRef = useRef(null);
-  const [copiedId, setCopiedId] = useState(null);
-  const listRef = useRef(null); // container ref for auto-scroll
+  const [editingId, setEditingId] = useState(null)
+  const [draft, setDraft] = useState("")
+  const [busy, setBusy] = useState(false)
+  const composerRef = useRef(null)
+  const [copiedId, setCopiedId] = useState(null)
+  const listRef = useRef(null) // container ref for auto-scroll
 
   useImperativeHandle(
     ref,
     () => ({
       insertTemplate: (templateContent) => {
-        composerRef.current?.insertTemplate(templateContent);
+        composerRef.current?.insertTemplate(templateContent)
       },
     }),
     [],
-  );
+  )
 
-  const msgCount = Array.isArray(conversation?.messages)
-    ? conversation.messages.length
-    : 0;
+  const msgCount = Array.isArray(conversation?.messages) ? conversation.messages.length : 0
 
   const scrollToBottom = () => {
     if (listRef.current) {
-      const el = listRef.current;
-      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+      const el = listRef.current
+      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" })
     } else if (typeof window !== "undefined") {
-      const doc = document.documentElement || document.body;
-      window.scrollTo({ top: doc.scrollHeight, behavior: "smooth" });
+      const doc = document.documentElement || document.body
+      window.scrollTo({ top: doc.scrollHeight, behavior: "smooth" })
     }
-  };
+  }
 
   useEffect(() => {
     function handleNewChatScroll() {
-      scrollToBottom();
+      scrollToBottom()
     }
     // listen once per mount
-    window.addEventListener("v0:new-chat", handleNewChatScroll);
-    return () => window.removeEventListener("v0:new-chat", handleNewChatScroll);
-  }, []);
+    window.addEventListener("v0:new-chat", handleNewChatScroll)
+    return () => window.removeEventListener("v0:new-chat", handleNewChatScroll)
+  }, [])
 
   useEffect(() => {
-    scrollToBottom();
-  }, [msgCount, isThinking, conversation?.id]);
+    scrollToBottom()
+  }, [msgCount, isThinking, conversation?.id])
 
-  if (!conversation) return null;
+  if (!conversation) return null
 
-  const messages = Array.isArray(conversation.messages)
-    ? conversation.messages
-    : [];
+  const messages = Array.isArray(conversation.messages) ? conversation.messages : []
 
   function startEdit(m) {
-    if (m.role !== "user") return;
-    setEditingId(m.id);
-    setDraft(m.content);
+    if (m.role !== "user") return
+    setEditingId(m.id)
+    setDraft(m.content)
   }
   function cancelEdit() {
-    setEditingId(null);
-    setDraft("");
+    setEditingId(null)
+    setDraft("")
   }
   function saveEdit() {
-    if (!editingId) return;
-    onEditMessage?.(editingId, draft);
-    cancelEdit();
+    if (!editingId) return
+    onEditMessage?.(editingId, draft)
+    cancelEdit()
   }
 
   async function copyToClipboard(id, text) {
     try {
-      await navigator.clipboard.writeText(text || "");
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 900);
+      await navigator.clipboard.writeText(text || "")
+      setCopiedId(id)
+      setTimeout(() => setCopiedId(null), 900)
     } catch {}
   }
 
@@ -125,31 +95,26 @@ const ChatPane = forwardRef(function ChatPane(
       <div className="flex h-full min-h-0 flex-1 flex-col">
         <div className="grid flex-1 place-items-center px-4">
           <div className="w-full max-w-3xl">
-            <h1 className="mb-6 text-center text-3xl font-semibold text-zinc-800">
-              What are you working on?
-            </h1>
+            <h1 className="mb-6 text-center text-3xl font-semibold text-zinc-800">What are you working on?</h1>
             <Composer
               ref={composerRef}
               onSend={async (text) => {
-                if (!text.trim()) return;
-                setBusy(true);
-                await onSend?.(text);
-                setBusy(false);
+                if (!text.trim()) return
+                setBusy(true)
+                await onSend?.(text)
+                setBusy(false)
               }}
               busy={busy}
             />
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">
-      <div
-        ref={listRef}
-        className="flex-1 space-y-5 overflow-y-auto px-4 py-6 sm:px-8"
-      >
+      <div ref={listRef} className="flex-1 space-y-5 overflow-y-auto px-4 py-6 sm:px-8">
         {messages.map((m) => (
           <div key={m.id} className="space-y-2 group/message">
             {editingId === m.id ? (
@@ -234,11 +199,7 @@ const ChatPane = forwardRef(function ChatPane(
                     </div>
                   </div>
                 ) : (
-                  <div
-                    className={cls(
-                      "mt-1 flex gap-2 text-[11px] text-zinc-500 justify-start ml-10",
-                    )}
-                  >
+                  <div className={cls("mt-1 flex gap-2 text-[11px] text-zinc-500 justify-start ml-10")}>
                     <div className="relative group">
                       <button
                         className={cls(
@@ -276,14 +237,11 @@ const ChatPane = forwardRef(function ChatPane(
                         aria-label="Speak"
                         title="Speak"
                         onClick={() => {
-                          if (onSpeak) return onSpeak(m);
-                          if (
-                            typeof window !== "undefined" &&
-                            "speechSynthesis" in window
-                          ) {
-                            const u = new SpeechSynthesisUtterance(m.content);
-                            window.speechSynthesis.cancel();
-                            window.speechSynthesis.speak(u);
+                          if (onSpeak) return onSpeak(m)
+                          if (typeof window !== "undefined" && "speechSynthesis" in window) {
+                            const u = new SpeechSynthesisUtterance(m.content)
+                            window.speechSynthesis.cancel()
+                            window.speechSynthesis.speak(u)
                           }
                         }}
                       >
@@ -319,15 +277,15 @@ const ChatPane = forwardRef(function ChatPane(
       <Composer
         ref={composerRef}
         onSend={async (text) => {
-          if (!text.trim()) return;
-          setBusy(true);
-          await onSend?.(text);
-          setBusy(false);
+          if (!text.trim()) return
+          setBusy(true)
+          await onSend?.(text)
+          setBusy(false)
         }}
         busy={busy}
       />
     </div>
-  );
-});
+  )
+})
 
-export default ChatPane;
+export default ChatPane

@@ -24,6 +24,7 @@ import type * as http from "../http.js";
 import type * as members from "../members.js";
 import type * as messages from "../messages.js";
 import type * as notifications from "../notifications.js";
+import type * as projectChats from "../projectChats.js";
 import type * as projects from "../projects.js";
 import type * as reactions from "../reactions.js";
 import type * as search from "../search.js";
@@ -53,6 +54,7 @@ declare const fullApi: ApiFromModules<{
   members: typeof members;
   messages: typeof messages;
   notifications: typeof notifications;
+  projectChats: typeof projectChats;
   projects: typeof projects;
   reactions: typeof reactions;
   search: typeof search;
