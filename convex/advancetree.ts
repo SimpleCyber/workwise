@@ -715,132 +715,156 @@ export const createAIGeneratedTree = mutation({
 
 // latter :)
 
-// // Get comments for a node
-// export const getNodeComments = query({
-//   args: { nodeId: v.string() },
-//   handler: async (ctx, args) => {
-//     const identity = await getAuthUserId(ctx);
-//     if (!identity) return [];
+// Get comments for a node
+export const getNodeComments = query({
+  args: { nodeId: v.string() },
+  handler: async (ctx, args) => {
+    const identity = await getAuthUserId(ctx);
+    if (!identity) return [];
 
-//     const comments = await ctx.db
-//       .query("treeNodeComments")
-//       .withIndex("by_node_id", (q) => q.eq("nodeId", args.nodeId))
-//       .order("desc")
-//       .collect();
+    const comments = await ctx.db
+      .query("treeNodeComments")
+      .withIndex("by_node_id", (q) => q.eq("nodeId", args.nodeId))
+      .order("desc")
+      .collect();
 
-//     const commentsWithUsers = await Promise.all(
-//       comments.map(async (comment) => {
-//         const member = await ctx.db.get(comment.memberId);
-//         const user = member ? await ctx.db.get(member.userId) : null;
-//         return {
-//           ...comment,
-//           member,
-//           user,
-//         };
-//       }),
-//     );
+    const commentsWithUsers = await Promise.all(
+      comments.map(async (comment) => {
+        const member = await ctx.db.get(comment.memberId);
+        const user = member ? await ctx.db.get(member.userId) : null;
+        return {
+          ...comment,
+          member,
+          user,
+        };
+      }),
+    );
 
-//     return commentsWithUsers;
-//   },
-// });
+    return commentsWithUsers;
+  },
+});
 
-// // Add comment to node
-// export const addNodeComment = mutation({
-//   args: {
-//     nodeId: v.string(),
-//     workspaceId: v.id("workspaces"),
-//     content: v.string(),
-//   },
-//   handler: async (ctx, args) => {
-//     const identity = await getAuthUserId(ctx);
-//     if (!identity) throw new Error("Unauthorized");
+// Add comment to node
+export const addNodeComment = mutation({
+  args: {
+    nodeId: v.string(),
+    workspaceId: v.id("workspaces"),
+    content: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await getAuthUserId(ctx);
+    if (!identity) throw new Error("Unauthorized");
 
-//     const member = await ctx.db
-//       .query("members")
-//       .withIndex("by_workspace_id_user_id", (q) =>
-//         q.eq("workspaceId", args.workspaceId).eq("userId", identity),
-//       )
-//       .first();
+    const member = await ctx.db
+      .query("members")
+      .withIndex("by_workspace_id_user_id", (q) =>
+        q.eq("workspaceId", args.workspaceId).eq("userId", identity),
+      )
+      .first();
 
-//     if (!member) throw new Error("Member not found");
+    if (!member) throw new Error("Member not found");
 
-//     return await ctx.db.insert("treeNodeComments", {
-//       nodeId: args.nodeId,
-//       memberId: member._id,
-//       workspaceId: args.workspaceId,
-//       content: args.content,
-//       createdAt: Date.now(),
-//       isEdited: false,
-//     });
-//   },
-// });
+    return await ctx.db.insert("treeNodeComments", {
+      nodeId: args.nodeId,
+      memberId: member._id,
+      workspaceId: args.workspaceId,
+      content: args.content,
+      createdAt: Date.now(),
+      isEdited: false,
+    });
+  },
+});
 
-// // Comment editing functionality
-// export const updateNodeComment = mutation({
-//   args: {
-//     commentId: v.id("treeNodeComments"),
-//     content: v.string(),
-//     workspaceId: v.id("workspaces"),
-//   },
-//   handler: async (ctx, args) => {
-//     const identity = await getAuthUserId(ctx);
-//     if (!identity) throw new Error("Unauthorized");
+// Comment editing functionality
+export const updateNodeComment = mutation({
+  args: {
+    commentId: v.id("treeNodeComments"),
+    content: v.string(),
+    workspaceId: v.id("workspaces"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await getAuthUserId(ctx);
+    if (!identity) throw new Error("Unauthorized");
 
-//     const member = await ctx.db
-//       .query("members")
-//       .withIndex("by_workspace_id_user_id", (q) =>
-//         q.eq("workspaceId", args.workspaceId).eq("userId", identity),
-//       )
-//       .first();
+    const member = await ctx.db
+      .query("members")
+      .withIndex("by_workspace_id_user_id", (q) =>
+        q.eq("workspaceId", args.workspaceId).eq("userId", identity),
+      )
+      .first();
 
-//     if (!member) throw new Error("Member not found");
+    if (!member) throw new Error("Member not found");
 
-//     const comment = await ctx.db.get(args.commentId);
-//     if (!comment) throw new Error("Comment not found");
+    const comment = await ctx.db.get(args.commentId);
+    if (!comment) throw new Error("Comment not found");
 
-//     // Only comment author can edit
-//     if (comment.memberId !== member._id) {
-//       throw new Error("Only comment author can edit");
-//     }
+    // Only comment author can edit
+    if (comment.memberId !== member._id) {
+      throw new Error("Only comment author can edit");
+    }
 
-//     await ctx.db.patch(args.commentId, {
-//       content: args.content,
-//       isEdited: true,
-//       updatedAt: Date.now(),
-//     });
+    await ctx.db.patch(args.commentId, {
+      content: args.content,
+      isEdited: true,
+      updatedAt: Date.now(),
+    });
 
-//     return args.commentId;
-//   },
-// });
+    return args.commentId;
+  },
+});
 
-// // Comment deletion
-// export const deleteNodeComment = mutation({
-//   args: {
-//     commentId: v.id("treeNodeComments"),
-//     workspaceId: v.id("workspaces"),
-//   },
-//   handler: async (ctx, args) => {
-//     const identity = await getAuthUserId(ctx);
-//     if (!identity) throw new Error("Unauthorized");
+// Comment deletion
+export const deleteNodeComment = mutation({
+  args: {
+    commentId: v.id("treeNodeComments"),
+    workspaceId: v.id("workspaces"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await getAuthUserId(ctx);
+    if (!identity) throw new Error("Unauthorized");
 
-//     const member = await ctx.db
-//       .query("members")
-//       .withIndex("by_workspace_id_user_id", (q) =>
-//         q.eq("workspaceId", args.workspaceId).eq("userId", identity),
-//       )
-//       .first();
+    const member = await ctx.db
+      .query("members")
+      .withIndex("by_workspace_id_user_id", (q) =>
+        q.eq("workspaceId", args.workspaceId).eq("userId", identity),
+      )
+      .first();
 
-//     if (!member) throw new Error("Member not found");
+    if (!member) throw new Error("Member not found");
 
-//     const comment = await ctx.db.get(args.commentId);
-//     if (!comment) throw new Error("Comment not found");
+    const comment = await ctx.db.get(args.commentId);
+    if (!comment) throw new Error("Comment not found");
 
-//     // Only comment author or workspace admin can delete
-//     if (comment.memberId !== member._id && member.role !== "admin") {
-//       throw new Error("No permission to delete comment");
-//     }
+    // Only comment author or workspace admin can delete
+    if (comment.memberId !== member._id && member.role !== "admin") {
+      throw new Error("No permission to delete comment");
+    }
 
-//     await ctx.db.delete(args.commentId);
-//     return { success: true };
-//   },
-// });
+    await ctx.db.delete(args.commentId);
+    return { success: true };
+  },
+});
+
+
+// Create node comment alias for consistency
+export const createNodeComment = mutation({
+  args: {
+    nodeId: v.string(),
+    memberId: v.id("members"),
+    workspaceId: v.id("workspaces"),
+    content: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await getAuthUserId(ctx);
+    if (!identity) throw new Error("Unauthorized");
+
+    return await ctx.db.insert("treeNodeComments", {
+      nodeId: args.nodeId,
+      memberId: args.memberId,
+      workspaceId: args.workspaceId,
+      content: args.content,
+      createdAt: Date.now(),
+      isEdited: false,
+    });
+  },
+});
