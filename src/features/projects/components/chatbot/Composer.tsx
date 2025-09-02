@@ -5,10 +5,19 @@ import { Send, Loader2, Plus, Mic } from "lucide-react"
 import ComposerActionsPopover from "./ComposerActionsPopover"
 import { cls } from "./utils"
 
-const Composer = forwardRef(function Composer({ onSend, busy }, ref) {
+export type ComposerHandle = {
+  insertTemplate: (templateContent: string) => void
+  focus: () => void
+}
+type ComposerProps = {
+  onSend?: (text: string) => void | Promise<void>
+  busy?: boolean
+}
+
+const Composer = forwardRef<ComposerHandle, ComposerProps>(function Composer({ onSend, busy }, ref) {
   const [value, setValue] = useState("")
   const [sending, setSending] = useState(false)
-  const inputRef = useRef(null)
+  const inputRef = useRef<HTMLTextAreaElement | null>(null)
 
   useEffect(() => {
     if (inputRef.current) {
@@ -31,7 +40,7 @@ const Composer = forwardRef(function Composer({ onSend, busy }, ref) {
   useImperativeHandle(
     ref,
     () => ({
-      insertTemplate: (templateContent) => {
+      insertTemplate: (templateContent: string) => {
         setValue((prev) => {
           const newValue = prev ? `${prev}\n\n${templateContent}` : templateContent
           setTimeout(() => {
@@ -108,7 +117,7 @@ const Composer = forwardRef(function Composer({ onSend, busy }, ref) {
             </button>
             <button
               onClick={handleSend}
-              disabled={sending || busy || !value.trim()}
+              disabled={sending || !!busy || !value.trim()}
               className={cls(
                 "inline-flex shrink-0 items-center gap-2 rounded-full bg-zinc-900 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
                 (sending || busy || !value.trim()) && "opacity-50 cursor-not-allowed",

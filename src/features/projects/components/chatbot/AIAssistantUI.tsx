@@ -13,6 +13,7 @@ import { useTogglePinProjectChat } from "../../api/use-toggle-pin-project-chat"
 import { useDeleteProjectChat } from "../../api/use-delete-project-chat"
 import type { Id } from "../../../../../convex/_generated/dataModel"
 import { sortChatsByUpdatedAt } from "./utils"
+import type { ChatPaneHandle, UIConversation } from "./types" // import shared types
 
 type Props = {
   workspaceId: Id<"workspaces">
@@ -41,7 +42,7 @@ export default function AIAssistantUI({ workspaceId, boardId, currentUserId, cla
   const [thinkingConvId, setThinkingConvId] = useState<string | null>(null)
 
   const [query, setQuery] = useState("")
-  const composerRef = useRef<any>(null)
+  const composerRef = useRef<ChatPaneHandle | null>(null) // type the ref handle
 
   useEffect(() => {
     if (!selectedId && chats.length > 0) {
@@ -98,13 +99,17 @@ export default function AIAssistantUI({ workspaceId, boardId, currentUserId, cla
     setIsThinking(true)
     setThinkingConvId(chatId as any)
     try {
+      const apiMessages = (messages || []).map((m: any) => ({
+        role: m.role as "user" | "assistant",
+        content: m.content as string,
+      }))
       const res = await fetch("/api/ai", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           workspaceId,
           boardId,
-          messages: messages.concat([{ role: "user", content }]),
+          messages: apiMessages.concat([{ role: "user", content }]),
         }),
       })
       const data = await res.json()
@@ -139,12 +144,12 @@ export default function AIAssistantUI({ workspaceId, boardId, currentUserId, cla
     await deleteChat(id)
   }
 
-  const selected = selectedChatId
+  const selected: UIConversation | null = selectedChatId
     ? {
-        id: selectedChatId,
+        id: selectedChatId as any,
         title: chats.find((c: any) => c.id === selectedChatId)?.title ?? "Chat",
         updatedAt: chats.find((c: any) => c.id === selectedChatId)?.updatedAt ?? new Date().toISOString(),
-        messages,
+        messages: messages as any,
         preview: messages[messages.length - 1]?.content ?? "Ask anything…",
         pinned: chats.find((c: any) => c.id === selectedChatId)?.pinned ?? false,
       }

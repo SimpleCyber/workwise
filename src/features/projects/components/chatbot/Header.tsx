@@ -3,7 +3,12 @@ import { useState } from "react"
 import { MoreHorizontal, Menu, BrainCircuit, ChevronDown } from "lucide-react"
 import GhostIconButton from "./GhostIconButton"
 
-function ModelDropdown({ value, onChange }) {
+type ModelDropdownProps = {
+  value: string
+  onChange?: (id: string) => void
+}
+
+function ModelDropdown({ value, onChange }: ModelDropdownProps) {
   const [open, setOpen] = useState(false)
   const models = [
     { id: "gpt-4o", name: "GPT-4o" },
@@ -56,7 +61,13 @@ function ModelDropdown({ value, onChange }) {
   )
 }
 
-export default function Header({ createNewChat, sidebarCollapsed, setSidebarOpen }) {
+type HeaderProps = {
+  createNewChat: () => void
+  sidebarCollapsed: boolean
+  setSidebarOpen: (open: boolean) => void
+}
+
+export default function Header({ createNewChat, sidebarCollapsed, setSidebarOpen }: HeaderProps) {
   const [model, setModel] = useState("gpt-4o")
 
   return (

@@ -4,15 +4,31 @@ import { useState, useRef, useEffect } from "react"
 import { Star, MoreHorizontal, Pencil, Trash2 } from "lucide-react"
 import { cls } from "./utils"
 
-export default function ConversationRow({ data, active, onSelect, onTogglePin, onRename, onDelete }) {
+type ConversationRowProps = {
+  data: { id: string; title: string; pinned?: boolean }
+  active?: boolean
+  onSelect?: () => void
+  onTogglePin?: () => void
+  onRename?: (newTitle: string) => void
+  onDelete?: () => void
+}
+
+export default function ConversationRow({
+  data,
+  active,
+  onSelect,
+  onTogglePin,
+  onRename,
+  onDelete,
+}: ConversationRowProps) {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(data.title || "")
-  const rowRef = useRef(null)
+  const rowRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    function onDoc(e) {
-      if (open && rowRef.current && !rowRef.current.contains(e.target)) {
+    function onDoc(e: MouseEvent) {
+      if (open && rowRef.current && !rowRef.current.contains(e.target as Node)) {
         setOpen(false)
       }
     }

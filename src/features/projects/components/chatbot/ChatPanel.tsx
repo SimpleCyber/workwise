@@ -5,6 +5,7 @@ import { Pencil, Check, X, Copy, RefreshCcw, Volume2, Webhook, Brain, Trash2 } f
 import Message from "./Message"
 import Composer from "./Composer"
 import { cls } from "./utils"
+import type { ChatPaneHandle, UIConversation, UIMessage } from "./types" // use shared types
 
 function ThinkingMessage() {
   return (
@@ -17,35 +18,52 @@ function ThinkingMessage() {
   )
 }
 
-const ChatPane = forwardRef(function ChatPane(
+type ChatPaneProps = {
+  conversation: UIConversation | null
+  onSend?: (text: string) => void | Promise<void>
+  onEditMessage?: (messageId: string, newContent: string) => void
+  isThinking?: boolean
+  onPauseThinking?: () => void
+  onRegenerate?: (m: UIMessage) => void
+  onSpeak?: (m: UIMessage) => void
+  onHook?: (m: UIMessage) => void
+  onDeleteFrom?: (messageId: string) => void
+}
+
+type ComposerHandle = {
+  insertTemplate: (templateContent: string) => void
+  focus: () => void
+}
+
+const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
   { conversation, onSend, onEditMessage, isThinking, onPauseThinking, onRegenerate, onSpeak, onHook, onDeleteFrom },
   ref,
 ) {
-  const [editingId, setEditingId] = useState(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [draft, setDraft] = useState("")
   const [busy, setBusy] = useState(false)
-  const composerRef = useRef(null)
-  const [copiedId, setCopiedId] = useState(null)
-  const listRef = useRef(null) // container ref for auto-scroll
+  const composerRef = useRef<ComposerHandle | null>(null)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const listRef = useRef<HTMLDivElement | null>(null) // container ref for auto-scroll
 
   useImperativeHandle(
     ref,
     () => ({
-      insertTemplate: (templateContent) => {
+      insertTemplate: (templateContent: string) => {
         composerRef.current?.insertTemplate(templateContent)
       },
     }),
     [],
   )
 
-  const msgCount = Array.isArray(conversation?.messages) ? conversation.messages.length : 0
+  const msgCount = Array.isArray(conversation?.messages) ? conversation!.messages.length : 0
 
   const scrollToBottom = () => {
     if (listRef.current) {
       const el = listRef.current
       el.scrollTo({ top: el.scrollHeight, behavior: "smooth" })
     } else if (typeof window !== "undefined") {
-      const doc = document.documentElement || document.body
+      const doc = document.documentElement || (document.body as HTMLElement)
       window.scrollTo({ top: doc.scrollHeight, behavior: "smooth" })
     }
   }
@@ -63,11 +81,9 @@ const ChatPane = forwardRef(function ChatPane(
     scrollToBottom()
   }, [msgCount, isThinking, conversation?.id])
 
-  if (!conversation) return null
+  const messages: UIMessage[] = Array.isArray(conversation?.messages) ? (conversation.messages as any) : []
 
-  const messages = Array.isArray(conversation.messages) ? conversation.messages : []
-
-  function startEdit(m) {
+  function startEdit(m: UIMessage) {
     if (m.role !== "user") return
     setEditingId(m.id)
     setDraft(m.content)
@@ -82,7 +98,7 @@ const ChatPane = forwardRef(function ChatPane(
     cancelEdit()
   }
 
-  async function copyToClipboard(id, text) {
+  async function copyToClipboard(id: string, text: string) {
     try {
       await navigator.clipboard.writeText(text || "")
       setCopiedId(id)
@@ -90,14 +106,14 @@ const ChatPane = forwardRef(function ChatPane(
     } catch {}
   }
 
-  if (messages.length === 0) {
+  if (!conversation) {
     return (
       <div className="flex h-full min-h-0 flex-1 flex-col">
         <div className="grid flex-1 place-items-center px-4">
           <div className="w-full max-w-3xl">
             <h1 className="mb-6 text-center text-3xl font-semibold text-zinc-800">What are you working on?</h1>
             <Composer
-              ref={composerRef}
+              ref={composerRef as any}
               onSend={async (text) => {
                 if (!text.trim()) return
                 setBusy(true)
@@ -275,7 +291,7 @@ const ChatPane = forwardRef(function ChatPane(
       </div>
 
       <Composer
-        ref={composerRef}
+        ref={composerRef as any}
         onSend={async (text) => {
           if (!text.trim()) return
           setBusy(true)

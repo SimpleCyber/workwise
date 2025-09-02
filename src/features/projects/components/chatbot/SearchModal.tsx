@@ -1,9 +1,17 @@
 "use client"
+import { useMemo, useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, SearchIcon, Plus, Clock } from "lucide-react"
-import { useState, useEffect, useMemo } from "react"
 
-function getTimeGroup(dateString) {
+type ConversationListItem = {
+  id: string
+  title: string
+  preview: string
+  updatedAt: string // ISO
+}
+type TimeGroup = "Today" | "Yesterday" | "Previous 7 Days" | "Older"
+
+function getTimeGroup(dateString: string): TimeGroup {
   const date = new Date(dateString)
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -15,6 +23,16 @@ function getTimeGroup(dateString) {
   return "Older"
 }
 
+type SearchModalProps = {
+  isOpen: boolean
+  onClose: () => void
+  conversations: ConversationListItem[]
+  selectedId: string | null
+  onSelect: (id: string) => void
+  togglePin: (id: string) => void
+  createNewChat: () => void
+}
+
 export default function SearchModal({
   isOpen,
   onClose,
@@ -23,24 +41,26 @@ export default function SearchModal({
   onSelect,
   togglePin,
   createNewChat,
-}) {
+}: SearchModalProps) {
   const [query, setQuery] = useState("")
 
   const filteredConversations = useMemo(() => {
     if (!query.trim()) return conversations
     const q = query.toLowerCase()
-    return conversations.filter((c) => c.title.toLowerCase().includes(q) || c.preview.toLowerCase().includes(q))
+    return conversations.filter(
+      (c) => (c.title || "").toLowerCase().includes(q) || (c.preview || "").toLowerCase().includes(q),
+    )
   }, [conversations, query])
 
   const groupedConversations = useMemo(() => {
-    const groups = {
+    const groups: Record<TimeGroup, ConversationListItem[]> = {
       Today: [],
       Yesterday: [],
       "Previous 7 Days": [],
       Older: [],
     }
     filteredConversations
-      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       .forEach((conv) => {
         const group = getTimeGroup(conv.updatedAt)
         groups[group].push(conv)
@@ -54,7 +74,7 @@ export default function SearchModal({
   }
 
   useEffect(() => {
-    const handleEscape = (e) => {
+    const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") handleClose()
     }
     if (isOpen) {
@@ -107,7 +127,7 @@ export default function SearchModal({
               </div>
 
               {Object.entries(groupedConversations).map(([groupName, convs]) => {
-                if (convs.length === 0) return null
+                if (!convs.length) return null
                 return (
                   <div key={groupName} className="border-b border-zinc-200 p-2 last:border-b-0">
                     <div className="px-3 py-2 text-xs font-medium text-zinc-500">{groupName}</div>

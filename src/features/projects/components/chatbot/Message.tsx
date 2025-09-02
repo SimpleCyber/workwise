@@ -1,7 +1,14 @@
+import type React from "react"
 import { cls } from "./utils"
 import { User, Sparkles } from "lucide-react"
+import type { UIRole } from "./types"
 
-export default function Message({ role, children }) {
+type MessageProps = {
+  role: UIRole
+  children: React.ReactNode
+}
+
+export default function Message({ role, children }: MessageProps) {
   const isUser = role === "user"
   return (
     <div className={cls("flex items-start gap-2", isUser ? "justify-end" : "justify-start")}>

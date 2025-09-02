@@ -9,13 +9,18 @@ const MODELS = [
   { id: "gpt-4.1", name: "GPT-4.1" },
 ]
 
-export default function ModelSelector({ value = "gpt-4o", onChange }) {
+type ModelSelectorProps = {
+  value?: string
+  onChange?: (id: string) => void
+}
+
+export default function ModelSelector({ value = "gpt-4o", onChange }: ModelSelectorProps) {
   const [open, setOpen] = useState(false)
-  const ref = useRef(null)
+  const ref = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    function onClick(e) {
-      if (open && ref.current && !ref.current.contains(e.target)) setOpen(false)
+    function onClick(e: MouseEvent) {
+      if (open && ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
     document.addEventListener("mousedown", onClick)
     return () => document.removeEventListener("mousedown", onClick)

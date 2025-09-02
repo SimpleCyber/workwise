@@ -10,7 +10,6 @@ export const listForBoard = query({
       .order("desc")
       .collect()
 
-    // Enrich with last message preview and count
     const enriched = await Promise.all(
       chats.map(async (c) => {
         const msgs = await ctx.db
@@ -19,15 +18,18 @@ export const listForBoard = query({
           .order("desc")
           .take(1)
         const last = msgs[0]
-        const count = await ctx.db
+
+        const allForCount = await ctx.db
           .query("projectChatMessages")
           .withIndex("by_chat", (q) => q.eq("chatId", c._id))
-        //   .count()
+          .collect()
+        const messageCount = allForCount.length
+
         return {
           ...c,
           id: c._id,
           preview: last?.content ?? "Ask anything…",
-          messageCount: count,
+          messageCount,
         }
       }),
     )
