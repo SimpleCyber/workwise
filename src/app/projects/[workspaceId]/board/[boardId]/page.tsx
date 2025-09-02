@@ -5,11 +5,14 @@ import { api } from "../../../../../../convex/_generated/api";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProjectKanbanBoard } from "@/features/projects/components/project-kanban-board";
 import { useGetWorkspaceMembers } from "@/features/projects/api/use-get-workspace-members";
 import AIAssistantUI from "@/features/projects/components/chatbot/AIAssistantUI";
+import { DragDropContext, Droppable, type DropResult } from "@hello-pangea/dnd";
+import { useUpdateProjectTask } from "@/features/projects/api/use-update-project-task";
+import { toast } from "sonner";
 
 export default function ProjectBoardPage({
   params,
@@ -24,6 +27,82 @@ export default function ProjectBoardPage({
   const [selectedMemberIds, setSelectedMemberIds] = useState<Id<"members">[]>(
     [],
   ); // Change to array
+  const { mutate: updateTask } = useUpdateProjectTask();
+  const lastDragPayloadRef = useRef<any | null>(null);
+
+  useEffect(() => {
+    function handleDragStartEvt(ev: any) {
+      lastDragPayloadRef.current = ev?.detail || null;
+    }
+    window.addEventListener("kanban:task-drag-start", handleDragStartEvt);
+    return () =>
+      window.removeEventListener("kanban:task-drag-start", handleDragStartEvt);
+  }, []);
+
+  function handleDragEnd(result: DropResult) {
+    const { destination, source, draggableId, type } = result;
+    if (!destination) return;
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    )
+      return;
+
+    if (type === "task") {
+      // Dropped into chat -> attach to chat and do not reorder
+      if (destination.droppableId === "chat-dropzone") {
+        const payload = lastDragPayloadRef.current;
+        if (payload?.type === "project-task" && payload?.task) {
+          try {
+            window.dispatchEvent(
+              new CustomEvent("kanban:task-drop-to-chat", { detail: payload }),
+            );
+          } catch {}
+        } else {
+          // Fallback minimal payload
+          window.dispatchEvent(
+            new CustomEvent("kanban:task-drop-to-chat", {
+              detail: {
+                type: "project-task",
+                task: { taskId: String(draggableId) },
+              },
+            }),
+          );
+        }
+        return;
+      }
+
+      // Otherwise perform normal move/reorder
+      const taskId = draggableId as Id<"projectTasks">;
+      if (source.droppableId !== destination.droppableId) {
+        const newListId = destination.droppableId as Id<"projectLists">;
+        updateTask(
+          {
+            taskId,
+            listId: newListId,
+            position: destination.index,
+          },
+          {
+            onError: (error) => {
+              toast.error(error.message || "Failed to move task");
+            },
+          },
+        );
+      } else {
+        updateTask(
+          {
+            taskId,
+            position: destination.index,
+          },
+          {
+            onError: (error) => {
+              toast.error(error.message || "Failed to reorder task");
+            },
+          },
+        );
+      }
+    }
+  }
 
   // Derive a best-effort currentUserId from the members list.
   // Ideally, you'd fetch the authenticated user's "users" table id explicitly.
@@ -125,36 +204,49 @@ export default function ProjectBoardPage({
           })}
         </div>
       </div>
-      <div className="flex overflow-hidden w-full h-full">
-        <div className="basis-[50%] flex-shrink-0 flex-grow">
-          <ProjectKanbanBoard
-            boardId={boardId}
-            lists={lists || []}
-            selectedMemberIds={selectedMemberIds}
-          />
-        </div>
-
-        <div className="basis-[50%] flex-shrink-0 flex-grow border-l-[3px] border-gray-200">
-          {/* Ensure AIAssistantUI receives required props */}
-          {currentUserId ? (
-            <AIAssistantUI
-              workspaceId={workspaceId}
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <div className="flex overflow-hidden w-full h-full">
+          <div className="basis-[50%] flex-shrink-0 flex-grow">
+            <ProjectKanbanBoard
               boardId={boardId}
-              currentUserId={currentUserId}
-              currentUser={{
-                name: currentUser?.name,
-                email: currentUser?.email,
-                image: currentUser?.image,
-              }}
+              lists={lists || []}
+              selectedMemberIds={selectedMemberIds}
             />
-          ) : (
-            // Defensive UI if we couldn't derive the current user id yet
-            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-              Loading your chat session...
-            </div>
-          )}
+          </div>
+
+          {/* Chat side as a Droppable target */}
+          <Droppable droppableId="chat-dropzone" type="task">
+            {(provided, snapshot) => (
+              <div
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                className={
+                  "basis-[50%] flex-shrink-0 flex-grow border-l-[3px] border-gray-200 " +
+                  (snapshot.isDraggingOver ? "bg-blue-50" : "")
+                }
+              >
+                {currentUserId ? (
+                  <AIAssistantUI
+                    workspaceId={workspaceId}
+                    boardId={boardId}
+                    currentUserId={currentUserId}
+                    currentUser={{
+                      name: currentUser?.name,
+                      email: currentUser?.email,
+                      image: currentUser?.image,
+                    }}
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                    Loading your chat session...
+                  </div>
+                )}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
         </div>
-      </div>
+      </DragDropContext>
     </div>
   );
 }

@@ -1,32 +1,13 @@
 "use client";
 
-import {
-  DragDropContext,
-  Draggable,
-  type DropResult,
-  Droppable,
-} from "@hello-pangea/dnd";
-import {
-  Archive,
-  Edit,
-  Loader,
-  MoreHorizontal,
-  Plus,
-  Trash2,
-  X,
-} from "lucide-react";
+import { Draggable, Droppable, type DropResult } from "@hello-pangea/dnd";
+import { Loader, Plus, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -291,7 +272,7 @@ export const ProjectKanbanBoard = ({
     .sort((a, b) => a.position - b.position);
 
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
+    <>
       <Droppable droppableId="board" type="list" direction="horizontal">
         {(provided) => (
           <div
@@ -328,12 +309,10 @@ export const ProjectKanbanBoard = ({
                 editingListName={editingListName}
                 setEditingListId={setEditingListId}
                 setEditingListName={setEditingListName}
-                selectedMemberIds={selectedMemberIds} // Change to array
+                selectedMemberIds={selectedMemberIds}
               />
             ))}
             {provided.placeholder}
-            {/* Add List Column */}
-            {/* <div className="flex-shrink-0 w-72"></div> */}
           </div>
         )}
       </Droppable>
@@ -343,7 +322,7 @@ export const ProjectKanbanBoard = ({
         onOpenChange={setIsTaskModalOpen}
         lists={lists || []}
       />
-    </DragDropContext>
+    </>
   );
 };
 
@@ -493,6 +472,76 @@ const ProjectKanbanList = ({
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
                             className={snapshot.isDragging ? "rotate-2" : ""}
+                            onDragStart={(e) => {
+                              try {
+                                const payload = {
+                                  type: "project-task",
+                                  task: {
+                                    taskId: String(task._id),
+                                    taskCode: task.taskCode,
+                                    title: task.title,
+                                    description: task.description,
+                                    priority: task.priority,
+                                    dueDate: task.dueDate || null,
+                                    labels: Array.isArray(task.labels)
+                                      ? task.labels
+                                      : [],
+                                    boardId: String(task.boardId),
+                                    listId: String(task.listId),
+                                    assignedTo: task.assignedTo?.user
+                                      ? {
+                                          id: String(task.assignedTo.user._id),
+                                          name:
+                                            task.assignedTo.user.name || null,
+                                          email:
+                                            task.assignedTo.user.email || null,
+                                          image:
+                                            task.assignedTo.user.image || null,
+                                        }
+                                      : null,
+                                    assignedBy: task.assignedBy?.user
+                                      ? {
+                                          id: String(task.assignedBy.user._id),
+                                          name:
+                                            task.assignedBy.user.name || null,
+                                          email:
+                                            task.assignedBy.user.email || null,
+                                          image:
+                                            task.assignedBy.user.image || null,
+                                        }
+                                      : null,
+                                    createdBy: task.createdBy?.user
+                                      ? {
+                                          id: String(task.createdBy.user._id),
+                                          name:
+                                            task.createdBy.user.name || null,
+                                          email:
+                                            task.createdBy.user.email || null,
+                                          image:
+                                            task.createdBy.user.image || null,
+                                        }
+                                      : null,
+                                  },
+                                };
+                                const json = JSON.stringify(payload);
+                                // Provide both MIME types for broad browser support
+                                e.dataTransfer?.setData(
+                                  "application/json",
+                                  json,
+                                );
+                                e.dataTransfer?.setData("text/plain", json);
+                                e.dataTransfer!.effectAllowed = "copy";
+                                // Emit a global event so page-level onDragEnd can access full payload
+                                (window as any).__lastTaskDragPayload = payload;
+                                window.dispatchEvent(
+                                  new CustomEvent("kanban:task-drag-start", {
+                                    detail: payload,
+                                  }),
+                                );
+                              } catch {
+                                // ignore
+                              }
+                            }}
                           >
                             <ProjectTaskCard
                               task={task}

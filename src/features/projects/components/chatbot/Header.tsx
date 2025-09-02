@@ -93,12 +93,12 @@ export default function Header({
 
       <ModelDropdown value={model} onChange={setModel} />
 
-      <div className="ml-auto relative flex items-center gap-2">
+      <div className="ml-auto relative flex items-center gap-1">
         <GhostIconButton label="More">
           <button
             type="button"
             onClick={() => setMoreOpen((v) => !v)}
-            className="inline-flex items-center justify-center rounded-md p-2 hover:bg-zinc-100"
+            className="inline-flex items-center justify-center rounded-md hover:bg-zinc-100"
             aria-haspopup="menu"
             aria-expanded={moreOpen}
           >

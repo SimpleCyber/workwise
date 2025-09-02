@@ -19,7 +19,13 @@ import {
 } from "../../api/use-toggle-project-hook"; // new hook
 import type { Id } from "../../../../../convex/_generated/dataModel";
 import { sortChatsByUpdatedAt } from "./utils";
-import type { ChatPaneHandle, UIConversation, UIMessage } from "./types"; // import shared types
+import type {
+  ChatPaneHandle,
+  UIConversation,
+  UIMessage,
+  TaskAttachment,
+  ChatSendPayload,
+} from "./types"; // import shared types
 
 type Props = {
   workspaceId: Id<"workspaces">;
@@ -66,6 +72,42 @@ export default function AIAssistantUI({
       setSelectedId(chats[0].id);
     }
   }, [chats, selectedId]);
+
+  useEffect(() => {
+    function onTaskDropToChat(e: any) {
+      const incoming = (e?.detail?.task || null) as TaskAttachment | null;
+      let enriched: TaskAttachment | null = incoming;
+      try {
+        const cached = (window as any).__lastDraggedTask as
+          | TaskAttachment
+          | undefined;
+        if (cached) {
+          const sameId =
+            (incoming &&
+              cached &&
+              incoming.taskId &&
+              cached.taskId &&
+              String(incoming.taskId) === String(cached.taskId)) ||
+            (incoming &&
+              cached &&
+              incoming.taskCode &&
+              cached.taskCode &&
+              incoming.taskCode === cached.taskCode);
+          if (!incoming && cached) {
+            enriched = cached;
+          } else if (incoming && cached && sameId) {
+            enriched = { ...cached, ...incoming };
+          }
+        }
+      } catch {}
+      if (enriched) {
+        composerRef.current?.addAttachmentFromTask(enriched);
+      }
+    }
+    window.addEventListener("kanban:task-drop-to-chat", onTaskDropToChat);
+    return () =>
+      window.removeEventListener("kanban:task-drop-to-chat", onTaskDropToChat);
+  }, []);
 
   const filtered = useMemo(() => {
     const base = chats.map((c) => ({ ...c }));
@@ -157,7 +199,10 @@ export default function AIAssistantUI({
     } catch {}
   }
 
-  async function onSend(content: string) {
+  async function onSend(payload: ChatSendPayload) {
+    const content = payload.text;
+    const attachments = payload.attachments || [];
+
     // ensure a chat exists
     const willCreateNew = !selectedChatId;
     const existingMsgCount = Array.isArray(messages)
@@ -187,8 +232,7 @@ export default function AIAssistantUI({
         await renameChat(chatId, newTitle);
       }
     } catch (e) {
-      // it's safe to ignore rename errors to not block the flow
-      // console.log("[v0] auto-rename failed", e)
+      // ignore rename errors
     }
 
     // 2) call AI
@@ -212,6 +256,7 @@ export default function AIAssistantUI({
           boardId,
           messages: apiMessages.concat([{ role: "user", content }]),
           hooks: selectedHooks,
+          attachments,
         }),
       });
       const data = await res.json().catch(() => ({}) as any);
@@ -240,7 +285,7 @@ export default function AIAssistantUI({
         fromMessageId: messageId as any,
       });
     } catch {}
-    await onSend(newContent);
+    await onSend({ text: newContent });
   }
 
   function pauseThinking() {
@@ -284,7 +329,7 @@ export default function AIAssistantUI({
       fromMessageId: (m as any).id,
     });
     // resend the previous user prompt
-    await onSend(prevUser.content as string);
+    await onSend({ text: prevUser.content as string });
   }
 
   const selectedHookMessageIds = useMemo(() => {
@@ -366,7 +411,7 @@ export default function AIAssistantUI({
               <ChatPane
                 ref={composerRef}
                 conversation={selected}
-                onSend={(text: string) => onSend(text)}
+                onSend={(payload: ChatSendPayload) => onSend(payload)} //
                 onEditMessage={(messageId: string, newContent: string) =>
                   onEditMessage(messageId, newContent)
                 }

@@ -21,7 +21,13 @@ import {
 import Message from "./Message";
 import Composer from "./Composer";
 import { cls } from "./utils";
-import type { ChatPaneHandle, UIConversation, UIMessage } from "./types"; // use shared types
+import type {
+  ChatPaneHandle,
+  UIConversation,
+  UIMessage,
+  TaskAttachment,
+  ChatSendPayload,
+} from "./types"; //
 
 function ThinkingMessage() {
   return (
@@ -36,7 +42,7 @@ function ThinkingMessage() {
 
 type ChatPaneProps = {
   conversation: UIConversation | null;
-  onSend?: (text: string) => void | Promise<void>;
+  onSend?: (payload: ChatSendPayload) => void | Promise<void>; //
   onEditMessage?: (messageId: string, newContent: string) => void;
   isThinking?: boolean;
   onPauseThinking?: () => void;
@@ -51,6 +57,7 @@ type ChatPaneProps = {
 type ComposerHandle = {
   insertTemplate: (templateContent: string) => void;
   focus: () => void;
+  addAttachmentFromTask: (task: TaskAttachment) => void; // new
 };
 
 const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
@@ -81,6 +88,10 @@ const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
     () => ({
       insertTemplate: (templateContent: string) => {
         composerRef.current?.insertTemplate(templateContent);
+      },
+      // new
+      addAttachmentFromTask: (task: TaskAttachment) => {
+        composerRef.current?.addAttachmentFromTask(task);
       },
     }),
     [],
@@ -150,10 +161,11 @@ const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
             </h1>
             <Composer
               ref={composerRef as any}
-              onSend={async (text) => {
+              onSend={async (payload) => {
+                const text = payload?.text || "";
                 if (!text.trim()) return;
                 setBusy(true);
-                await onSend?.(text);
+                await onSend?.(payload as any);
                 setBusy(false);
               }}
               busy={busy}
@@ -347,10 +359,11 @@ const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
 
       <Composer
         ref={composerRef as any}
-        onSend={async (text) => {
+        onSend={async (payload) => {
+          const text = payload?.text || "";
           if (!text.trim()) return;
           setBusy(true);
-          await onSend?.(text);
+          await onSend?.(payload as any);
           setBusy(false);
         }}
         busy={busy}

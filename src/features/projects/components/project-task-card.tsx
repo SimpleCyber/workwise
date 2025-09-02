@@ -3,6 +3,7 @@
 import { format } from "date-fns";
 import { AlertCircle, Edit, MoreHorizontal, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { useGetTaskComments } from "@/features/projects/api/use-task-comments"; // fetch comments for payload
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -137,6 +138,8 @@ export const ProjectTaskCard = ({
 }: ProjectTaskCardProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const { data: taskComments } = useGetTaskComments(task._id as any, "asc");
+
   const isDueSoon =
     task.dueDate && task.dueDate < Date.now() + 24 * 60 * 60 * 1000;
   const isOverdue = task.dueDate && task.dueDate < Date.now();
@@ -191,6 +194,17 @@ export const ProjectTaskCard = ({
         draggable
         onDragStart={(e) => {
           try {
+            const comments =
+              Array.isArray(taskComments) && taskComments.length
+                ? taskComments.map((c: any) => ({
+                    content: c.content as string,
+                    authorName: c?.member?.user?.name || null,
+                    authorEmail: c?.member?.user?.email || null,
+                    createdAt: c?.createdAt as number,
+                    imageUrl: c?.imageUrl || null,
+                  }))
+                : [];
+
             const payload = {
               type: "project-task",
               task: {
@@ -198,10 +212,46 @@ export const ProjectTaskCard = ({
                 taskCode: task.taskCode,
                 title: task.title,
                 description: task.description,
+                priority: task.priority,
+                dueDate: task.dueDate || null,
+                labels: Array.isArray(task.labels) ? task.labels : [],
+                boardId: String(task.boardId),
+                listId: String(task.listId),
+                assignedTo: task.assignedTo?.user
+                  ? {
+                      id: String(task.assignedTo.user._id),
+                      name: task.assignedTo.user.name || null,
+                      email: task.assignedTo.user.email || null,
+                      image: task.assignedTo.user.image || null,
+                    }
+                  : null,
+                assignedBy: task.assignedBy?.user
+                  ? {
+                      id: String(task.assignedBy.user._id),
+                      name: task.assignedBy.user.name || null,
+                      email: task.assignedBy.user.email || null,
+                      image: task.assignedBy.user.image || null,
+                    }
+                  : null,
+                createdBy: task.createdBy?.user
+                  ? {
+                      id: String(task.createdBy.user._id),
+                      name: task.createdBy.user.name || null,
+                      email: task.createdBy.user.email || null,
+                      image: task.createdBy.user.image || null,
+                    }
+                  : null,
+                comments,
               },
             };
-            e.dataTransfer.setData("application/json", JSON.stringify(payload));
+            const json = JSON.stringify(payload);
+            e.dataTransfer.setData("application/json", json);
+            e.dataTransfer.setData("text/plain", json);
             e.dataTransfer.effectAllowed = "copy";
+
+            try {
+              (window as any).__lastDraggedTask = payload.task;
+            } catch {}
           } catch {}
         }}
       >

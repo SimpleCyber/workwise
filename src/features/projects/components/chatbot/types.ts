@@ -61,4 +61,47 @@ export interface UIConversation {
 // Exposed methods from ChatPane via forwardRef
 export interface ChatPaneHandle {
   insertTemplate: (templateContent: string) => void;
+  addAttachmentFromTask: (task: TaskAttachment) => void;
 }
+
+export type ChatSendPayload = {
+  text: string;
+  attachments?: TaskAttachment[];
+};
+
+export type TaskAttachment = {
+  taskId: string;
+  taskCode?: string;
+  title?: string;
+  description?: string;
+  priority?: "low" | "medium" | "high" | "urgent";
+  dueDate?: number | null;
+  labels?: string[];
+  boardId?: string;
+  listId?: string;
+  assignedTo?: {
+    id: string;
+    name: string | null;
+    email: string | null;
+    image: string | null;
+  } | null;
+  assignedBy?: {
+    id: string;
+    name: string | null;
+    email: string | null;
+    image: string | null;
+  } | null;
+  createdBy?: {
+    id: string;
+    name: string | null;
+    email: string | null;
+    image: string | null;
+  } | null;
+  comments?: {
+    content: string;
+    authorName?: string | null;
+    authorEmail?: string | null;
+    createdAt?: number;
+    imageUrl?: string | null;
+  }[];
+};
