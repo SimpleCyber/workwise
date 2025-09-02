@@ -39,6 +39,14 @@ export default function ProjectBoardPage({
     return self?.userId as Id<"users"> | undefined;
   }, [workspaceMembers]);
 
+  const currentUser = useMemo(() => {
+    if (!workspaceMembers || workspaceMembers.length === 0) return undefined;
+    const self =
+      (workspaceMembers as any[]).find((m) => m.isCurrentUser) ||
+      (workspaceMembers as any[])[0];
+    return self?.user || undefined;
+  }, [workspaceMembers]);
+
   if (!board || !lists || membersLoading) {
     return (
       <div className="flex h-full flex-1 flex-col items-center justify-center gap-2">
@@ -133,6 +141,11 @@ export default function ProjectBoardPage({
               workspaceId={workspaceId}
               boardId={boardId}
               currentUserId={currentUserId}
+              currentUser={{
+                name: currentUser?.name,
+                email: currentUser?.email,
+                image: currentUser?.image,
+              }}
             />
           ) : (
             // Defensive UI if we couldn't derive the current user id yet

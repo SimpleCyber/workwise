@@ -44,6 +44,7 @@ type ChatPaneProps = {
   onSpeak?: (m: UIMessage) => void;
   onHook?: (m: UIMessage) => void;
   onDeleteFrom?: (messageId: string) => void;
+  currentUser?: { name?: string; email?: string; image?: string }; // new
 };
 
 type ComposerHandle = {
@@ -62,6 +63,7 @@ const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
     onSpeak,
     onHook,
     onDeleteFrom,
+    currentUser,
   },
   ref,
 ) {
@@ -193,7 +195,7 @@ const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
               </div>
             ) : (
               <>
-                <Message role={m.role}>
+                <Message role={m.role} currentUser={currentUser}>
                   <div className="whitespace-pre-wrap">{m.content}</div>
                 </Message>
 

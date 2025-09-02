@@ -1,47 +1,84 @@
 import type React from "react";
 import { cls } from "./utils";
-import { User, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import type { UIRole } from "./types";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type MessageProps = {
   role: UIRole;
   children: React.ReactNode;
+  currentUser?: { name?: string; email?: string; image?: string };
 };
 
-export default function Message({ role, children }: MessageProps) {
+export default function Message({ role, children, currentUser }: MessageProps) {
   const isUser = role === "user";
+  const initials = (currentUser?.name?.trim()?.[0]?.toUpperCase() ||
+    currentUser?.email?.trim()?.[0]?.toUpperCase() ||
+    "U") as string;
+
   return (
-    <div
-      className={cls(
-        "flex items-start gap-2",
-        isUser ? "justify-end" : "justify-start",
-      )}
-    >
-      {!isUser && (
-        <div className="relative mt-0.5 grid h-8 w-8 place-items-center rounded-full">
-          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 p-[1.5px]">
-            <div className="h-full w-full rounded-full bg-white" />
-          </div>
-          <div className="relative z-10 grid h-8 w-8 place-items-center text-zinc-700">
-            <Sparkles className="h-4 w-4" />
-          </div>
-        </div>
-      )}
+    <TooltipProvider>
       <div
         className={cls(
-          "max-w-[80%] rounded-2xl px-3 py-2 text-sm",
-          isUser
-            ? "bg-zinc-100 text-zinc-900"
-            : "bg-white text-zinc-900 border border-zinc-200",
+          "flex items-start gap-2",
+          isUser ? "justify-end" : "justify-start",
         )}
       >
-        {children}
-      </div>
-      {isUser && (
-        <div className="mt-0.5 grid h-8 w-8 place-items-center rounded-full bg-zinc-900 text-white">
-          <User className="h-4 w-4" />
+        {!isUser && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="relative mt-0.5 grid h-8 w-8 place-items-center rounded-full">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 p-[1.5px]">
+                  <div className="h-full w-full rounded-full bg-white" />
+                </div>
+                <div className="relative z-10 grid h-8 w-8 place-items-center text-zinc-700">
+                  <Sparkles className="h-4 w-4" />
+                </div>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>AI Assistant</TooltipContent>
+          </Tooltip>
+        )}
+        <div
+          className={cls(
+            "max-w-[80%] rounded-2xl px-3 py-2 text-sm",
+            isUser
+              ? "bg-zinc-100 text-zinc-900"
+              : "bg-white text-zinc-900 border border-zinc-200",
+          )}
+        >
+          {children}
         </div>
-      )}
-    </div>
+        {isUser && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="mt-0.5">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage
+                    src={currentUser?.image || undefined}
+                    alt={currentUser?.name || currentUser?.email || "User"}
+                  />
+                  <AvatarFallback>{initials}</AvatarFallback>
+                </Avatar>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <div className="text-xs">
+                <div className="font-medium">{currentUser?.name || "User"}</div>
+                {currentUser?.email && (
+                  <div className="text-zinc-400">{currentUser.email}</div>
+                )}
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </div>
+    </TooltipProvider>
   );
 }

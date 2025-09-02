@@ -11,14 +11,16 @@ import { useAppendProjectMessage } from "../../api/use-append-project-message";
 import { useRenameProjectChat } from "../../api/use-rename-project-chat";
 import { useTogglePinProjectChat } from "../../api/use-toggle-pin-project-chat";
 import { useDeleteProjectChat } from "../../api/use-delete-project-chat";
+import { useDeleteMessagesFrom } from "../../api/use-delete-project-messages-from"; // new hook
 import type { Id } from "../../../../../convex/_generated/dataModel";
 import { sortChatsByUpdatedAt } from "./utils";
-import type { ChatPaneHandle, UIConversation } from "./types"; // import shared types
+import type { ChatPaneHandle, UIConversation, UIMessage } from "./types"; // import shared types
 
 type Props = {
   workspaceId: Id<"workspaces">;
   boardId: Id<"projectBoards">;
   currentUserId: Id<"users">;
+  currentUser?: { name?: string; email?: string; image?: string }; //
   className?: string;
 };
 
@@ -26,6 +28,7 @@ export default function AIAssistantUI({
   workspaceId,
   boardId,
   currentUserId,
+  currentUser,
   className = "",
 }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -42,6 +45,7 @@ export default function AIAssistantUI({
   const { renameChat } = useRenameProjectChat();
   const { togglePin } = useTogglePinProjectChat();
   const { deleteChat } = useDeleteProjectChat();
+  const { deleteFrom } = useDeleteMessagesFrom(); //
 
   const [isThinking, setIsThinking] = useState(false);
   const [thinkingConvId, setThinkingConvId] = useState<string | null>(null);
@@ -76,14 +80,59 @@ export default function AIAssistantUI({
   function deriveChatTitle(text: string) {
     const cleaned = (text || "").replace(/\s+/g, " ").trim();
     if (!cleaned) return "New chat";
-    // prefer first sentence or up to ~60 chars
-    const firstSentence = cleaned.split(/(?<=[.!?])\s/)[0] || cleaned;
-    const truncated =
-      firstSentence.length > 60
-        ? firstSentence.slice(0, 57).trimEnd() + "…"
-        : firstSentence;
-    // capitalize first letter
-    return truncated.charAt(0).toUpperCase() + truncated.slice(1);
+    const stop = new Set([
+      "the",
+      "a",
+      "an",
+      "and",
+      "or",
+      "but",
+      "to",
+      "of",
+      "in",
+      "for",
+      "with",
+      "on",
+      "at",
+      "from",
+      "by",
+      "about",
+      "as",
+      "is",
+      "are",
+      "be",
+      "can",
+      "could",
+      "should",
+      "would",
+      "how",
+      "what",
+      "why",
+      "when",
+      "which",
+      "this",
+      "that",
+      "these",
+      "those",
+      "please",
+      "make",
+      "create",
+      "help",
+      "need",
+    ]);
+    const tokens = cleaned
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .split(/\s+/)
+      .filter((t) => t && !stop.has(t));
+    const words = tokens.slice(0, 3);
+    if (words.length === 0) {
+      // fallback to first two words from the original sentence
+      const fallback = cleaned.split(/\s+/).slice(0, 3).join(" ");
+      return fallback.replace(/\b\w/g, (m) => m.toUpperCase());
+    }
+    const title = words.join(" ").replace(/\b\w/g, (m) => m.toUpperCase());
+    return title;
   }
 
   async function createNewChat() {
@@ -169,7 +218,15 @@ export default function AIAssistantUI({
   }
 
   async function onEditMessage(messageId: string, newContent: string) {
-    // Optional: add a Convex mutation to edit message content if needed.
+    if (!selectedChatId) return;
+    // delete from the edited message and resend the new content
+    try {
+      await deleteFrom({
+        chatId: selectedChatId as any,
+        fromMessageId: messageId as any,
+      });
+    } catch {}
+    await onSend(newContent);
   }
 
   function pauseThinking() {
@@ -184,6 +241,36 @@ export default function AIAssistantUI({
   async function onDelete(id: Id<"projectChats">) {
     if (selectedId === id) setSelectedId(null);
     await deleteChat(id);
+  }
+
+  async function onDeleteFrom(messageId: string) {
+    if (!selectedChatId) return;
+    await deleteFrom({
+      chatId: selectedChatId as any,
+      fromMessageId: messageId as any,
+    });
+  }
+
+  async function onRegenerateMessage(m: UIMessage) {
+    if (!selectedChatId || !Array.isArray(messages)) return;
+    // find the previous user message before this assistant message
+    const idx = (messages as any[]).findIndex((x) => x.id === (m as any).id);
+    if (idx === -1) return;
+    let prevUser: any = null;
+    for (let i = idx - 1; i >= 0; i--) {
+      if ((messages as any[])[i]?.role === "user") {
+        prevUser = (messages as any[])[i];
+        break;
+      }
+    }
+    if (!prevUser) return;
+    // delete from the assistant message
+    await deleteFrom({
+      chatId: selectedChatId as any,
+      fromMessageId: (m as any).id,
+    });
+    // resend the previous user prompt
+    await onSend(prevUser.content as string);
   }
 
   const selected: UIConversation | null = selectedChatId
@@ -233,7 +320,11 @@ export default function AIAssistantUI({
               createNewChat={createNewChat}
               onRename={(id: any, t: string) => onRename(id, t)}
               onDelete={(id: any) => onDelete(id)}
-              user={{ name: "User", plan: "Free" }}
+              user={{
+                name: currentUser?.name || "User",
+                email: currentUser?.email,
+                image: currentUser?.image,
+              }} //
             />
 
             <main className="relative flex min-w-0 flex-1 flex-col">
@@ -253,9 +344,9 @@ export default function AIAssistantUI({
                   isThinking && (thinkingConvId as any) === selected?.id
                 }
                 onPauseThinking={pauseThinking}
-                onDeleteFrom={(messageId: string) => {
-                  // Optional: implement a mutation to delete from a point onward.
-                }}
+                onDeleteFrom={(messageId: string) => onDeleteFrom(messageId)}
+                onRegenerate={(m) => onRegenerateMessage(m)} //
+                currentUser={currentUser} //
               />
             </main>
           </>

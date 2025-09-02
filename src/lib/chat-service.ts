@@ -71,8 +71,3 @@ export class ChatService {
     }
   }
 }
-
-// Singleton instance (reuse the same env pattern as ai-service.ts)
-export const chatService = new ChatService(
-  `${process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || ""}`,
-);

@@ -126,3 +126,29 @@ export const appendMessage = mutation({
     await ctx.db.patch(chatId, { updatedAt: now });
   },
 });
+
+export const deleteFromMessage = mutation({
+  args: {
+    chatId: v.id("projectChats"),
+    fromMessageId: v.id("projectChatMessages"),
+  },
+  handler: async (ctx, { chatId, fromMessageId }) => {
+    const fromMsg = await ctx.db.get(fromMessageId);
+    if (!fromMsg) throw new Error("Message not found");
+    if (fromMsg.chatId !== chatId)
+      throw new Error("Message does not belong to chat");
+
+    // delete all messages with createdAt >= fromMsg.createdAt
+    const toDelete = await ctx.db
+      .query("projectChatMessages")
+      .withIndex("by_chat", (q) => q.eq("chatId", chatId))
+      .order("asc")
+      .collect();
+
+    const boundary = fromMsg.createdAt;
+    const del = toDelete.filter((m) => m.createdAt >= boundary);
+    await Promise.all(del.map((m) => ctx.db.delete(m._id)));
+
+    await ctx.db.patch(chatId, { updatedAt: new Date().toISOString() });
+  },
+});

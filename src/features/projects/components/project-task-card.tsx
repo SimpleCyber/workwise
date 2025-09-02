@@ -1,20 +1,10 @@
 "use client";
 
 import { format } from "date-fns";
-import {
-  AlertCircle,
-  Archive,
-  Calendar,
-  Edit,
-  MoreHorizontal,
-  Trash2,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { AlertCircle, Edit, MoreHorizontal, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -151,7 +141,7 @@ export const ProjectTaskCard = ({
     task.dueDate && task.dueDate < Date.now() + 24 * 60 * 60 * 1000;
   const isOverdue = task.dueDate && task.dueDate < Date.now();
 
-  const trimDescription = (text: string, maxLength: number = 50) => {
+  const trimDescription = (text: string, maxLength = 50) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + "...";
   };
@@ -198,6 +188,22 @@ export const ProjectTaskCard = ({
       <Card
         className="cursor-pointer hover:bg-gray-50 transition-colors bg-white shadow-none border border-gray-200 rounded-lg relative w-[100%] mx-auto overflow-hidden"
         onClick={() => onEdit?.()}
+        draggable
+        onDragStart={(e) => {
+          try {
+            const payload = {
+              type: "project-task",
+              task: {
+                taskId: String(task._id),
+                taskCode: task.taskCode,
+                title: task.title,
+                description: task.description,
+              },
+            };
+            e.dataTransfer.setData("application/json", JSON.stringify(payload));
+            e.dataTransfer.effectAllowed = "copy";
+          } catch {}
+        }}
       >
         {/* Unique colored left border for each user */}
         <div className={`absolute left-0 top-0 bottom-0 w-1 ${userColor}`} />

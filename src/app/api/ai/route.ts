@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "Missing Gemini API key. Please set GEMINI_API_KEY in Project Settings.",
+            "Missing Gemini API key. Please set GEMINI_API_KEY in Project Settings (server-only).",
         },
         { status: 500 },
       );

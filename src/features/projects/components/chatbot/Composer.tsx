@@ -6,10 +6,18 @@ import {
   forwardRef,
   useImperativeHandle,
   useEffect,
+  type DragEvent,
 } from "react";
-import { Send, Loader2, Plus, Mic } from "lucide-react";
+import { Send, Loader2, Plus, Mic, Clover as Close } from "lucide-react";
 import ComposerActionsPopover from "./ComposerActionsPopover";
 import { cls } from "./utils";
+
+type TaskAttachment = {
+  taskId: string;
+  taskCode?: string;
+  title?: string;
+  description?: string;
+};
 
 export type ComposerHandle = {
   insertTemplate: (templateContent: string) => void;
@@ -26,6 +34,7 @@ const Composer = forwardRef<ComposerHandle, ComposerProps>(function Composer(
 ) {
   const [value, setValue] = useState("");
   const [sending, setSending] = useState(false);
+  const [attachments, setAttachments] = useState<TaskAttachment[]>([]);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
@@ -72,12 +81,72 @@ const Composer = forwardRef<ComposerHandle, ComposerProps>(function Composer(
     [],
   );
 
+  function stripDescription(raw?: string) {
+    if (!raw) return "";
+    try {
+      const parsed = JSON.parse(raw as string);
+      if (Array.isArray(parsed?.ops)) {
+        return parsed.ops
+          .map((op: any) => (typeof op.insert === "string" ? op.insert : ""))
+          .join("")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+    } catch {}
+    return String(raw);
+  }
+
+  function handleDragOver(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+  }
+  function handleDrop(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    try {
+      const json = e.dataTransfer.getData("application/json");
+      if (!json) return;
+      const data = JSON.parse(json);
+      if (data?.type === "project-task" && data?.task) {
+        const t = data.task as TaskAttachment;
+        setAttachments((prev) => {
+          // de-dupe by taskId or taskCode
+          const exists = prev.some(
+            (a) =>
+              a.taskId === String(t.taskId) ||
+              (t.taskCode && a.taskCode === t.taskCode),
+          );
+          return exists ? prev : prev.concat([{ ...t }]);
+        });
+      }
+    } catch {
+      // ignore malformed drops
+    }
+  }
+
+  function removeAttachment(idx: number) {
+    setAttachments((prev) => prev.filter((_, i) => i !== idx));
+  }
+
   async function handleSend() {
-    if (!value.trim() || sending) return;
+    if ((!value.trim() && attachments.length === 0) || sending) return;
     setSending(true);
     try {
-      await onSend?.(value);
+      const context =
+        attachments.length > 0
+          ? `\n\n---\nContext:\n${attachments
+              .map(
+                (a) =>
+                  `Task ${a.taskCode || a.taskId}${a.title ? ` — ${a.title}` : ""}${
+                    a.description
+                      ? `\nDescription: ${stripDescription(a.description)}`
+                      : ""
+                  }`,
+              )
+              .join("\n\n")}`
+          : "";
+      const payload = `${value.trim()}${context}`;
+      await onSend?.(payload);
       setValue("");
+      setAttachments([]);
       inputRef.current?.focus();
     } finally {
       setSending(false);
@@ -85,13 +154,38 @@ const Composer = forwardRef<ComposerHandle, ComposerProps>(function Composer(
   }
 
   return (
-    <div className="p-4">
+    <div className="p-4" onDragOver={handleDragOver} onDrop={handleDrop}>
       <div
         className={cls(
           "mx-auto flex flex-col rounded-2xl border bg-white shadow-sm transition-all duration-200",
           "max-w-3xl border-zinc-300 p-3",
         )}
       >
+        {attachments.length > 0 && (
+          <div className="mb-2 flex flex-wrap gap-2">
+            {attachments.map((a, idx) => (
+              <span
+                key={(a.taskCode || a.taskId || String(idx)) + idx}
+                className="inline-flex items-center gap-2 rounded-full border border-zinc-300 bg-zinc-50 px-2 py-1 text-xs"
+                title={a.title || a.taskCode || a.taskId}
+              >
+                <span className="font-mono">{a.taskCode || a.taskId}</span>
+                {a.title && (
+                  <span className="max-w-[180px] truncate">{a.title}</span>
+                )}
+                <button
+                  onClick={() => removeAttachment(idx)}
+                  className="rounded-full p-1 hover:bg-zinc-200"
+                  aria-label="Remove attachment"
+                  title="Remove"
+                >
+                  <Close className="h-3.5 w-3.5" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
         <div className="flex-1 relative">
           <textarea
             ref={inputRef}
@@ -131,10 +225,14 @@ const Composer = forwardRef<ComposerHandle, ComposerProps>(function Composer(
             </button>
             <button
               onClick={handleSend}
-              disabled={sending || !!busy || !value.trim()}
+              disabled={
+                sending || !!busy || (!value.trim() && attachments.length === 0)
+              }
               className={cls(
                 "inline-flex shrink-0 items-center gap-2 rounded-full bg-zinc-900 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
-                (sending || busy || !value.trim()) &&
+                (sending ||
+                  busy ||
+                  (!value.trim() && attachments.length === 0)) &&
                   "opacity-50 cursor-not-allowed",
               )}
             >

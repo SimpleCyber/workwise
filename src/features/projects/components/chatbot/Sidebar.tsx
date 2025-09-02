@@ -20,6 +20,13 @@ import { cls } from "./utils";
 import { useMemo, useState, useEffect, useRef } from "react";
 import SearchModal from "./SearchModal";
 import type { UIConversation } from "./types"; // add shared UI types
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface SidebarProps {
   open: boolean;
@@ -42,7 +49,7 @@ interface SidebarProps {
   setSidebarCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
   onRename: (id: string, title: string) => void | Promise<void>;
   onDelete: (id: string) => void | Promise<void>;
-  user?: { name?: string; plan?: string };
+  user?: { name?: string; email?: string; image?: string };
 }
 
 function useIsDesktop() {
@@ -80,7 +87,7 @@ export default function Sidebar(props: SidebarProps) {
     setSidebarCollapsed,
     onRename,
     onDelete,
-    user = { name: "User", plan: "Free" },
+    user = { name: "User", email: "", image: "" },
   } = props;
 
   const isDesktop = useIsDesktop(); // use media check
@@ -562,15 +569,43 @@ export default function Sidebar(props: SidebarProps) {
 
             <div className="border-t border-zinc-200 px-3 py-3">
               <div className="flex items-center gap-2">
-                <div className="grid h-8 w-8 place-items-center rounded-full bg-zinc-900 text-xs font-semibold text-white">
-                  {user?.name?.[0]?.toUpperCase() || "U"}
-                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div>
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage
+                            src={user?.image || undefined}
+                            alt={user?.name || user?.email || "User"}
+                          />
+                          <AvatarFallback>
+                            {
+                              (user?.name?.[0]?.toUpperCase() ||
+                                user?.email?.[0]?.toUpperCase() ||
+                                "U") as string
+                            }
+                          </AvatarFallback>
+                        </Avatar>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <div className="text-xs">
+                        <div className="font-medium">
+                          {user?.name || "User"}
+                        </div>
+                        {user?.email && (
+                          <div className="text-zinc-400">{user.email}</div>
+                        )}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <div className="min-w-0">
                   <div className="truncate text-sm font-medium">
-                    {user?.name || "User"}
+                    {user?.name || (user?.email ?? "User")}
                   </div>
                   <div className="truncate text-xs text-zinc-500">
-                    {user?.plan || "Free"}
+                    {user?.email || ""}
                   </div>
                 </div>
               </div>
