@@ -444,7 +444,7 @@ export const expandNodeWithAI = mutation({
 
     if (!parentNode) throw new Error("Parent node not found");
 
-    // Recursively create child nodes
+    // Recursively create child nodes with linked project boards
     const createChildNodes = async (
       nodes: TreeNodeInput[],
       parentId: string,
@@ -454,7 +454,15 @@ export const expandNodeWithAI = mutation({
     ) => {
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i];
-        const nodeId = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+        // Create linked project board and use its id as the nodeId (like in createTreeNode)
+        const boardId = await createLinkedProjectBoard(ctx, {
+          name: node.title,
+          description: node.description,
+          workspaceId: args.workspaceId as Id<"workspaces">,
+          creatorMemberId: member._id as Id<"members">,
+        });
+        const nodeId = boardId as unknown as string;
 
         // Calculate position (spread children horizontally)
         const position = {
@@ -465,7 +473,7 @@ export const expandNodeWithAI = mutation({
         await ctx.db.insert("treeNodes", {
           title: node.title,
           description: node.description,
-          nodeId,
+          nodeId, // Use the board ID as nodeId
           parentId,
           workspaceId: args.workspaceId,
           createdById: member._id,
@@ -534,8 +542,14 @@ export const createAIGeneratedTree = mutation({
 
     if (!member) throw new Error("Member not found");
 
-    // Create root node
-    const rootNodeId = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // Create root node with linked project board
+    const rootBoardId = await createLinkedProjectBoard(ctx, {
+      name: args.rootTitle,
+      description: args.rootDescription,
+      workspaceId: args.workspaceId as Id<"workspaces">,
+      creatorMemberId: member._id as Id<"members">,
+    });
+    const rootNodeId = rootBoardId as unknown as string;
 
     await ctx.db.insert("treeNodes", {
       title: args.rootTitle,
@@ -562,7 +576,7 @@ export const createAIGeneratedTree = mutation({
       addedById: member._id,
     });
 
-    // Recursively create child nodes
+    // Recursively create child nodes with linked project boards
     const createChildNodes = async (
       nodes: TreeNodeInput[],
       parentId: string,
@@ -572,7 +586,15 @@ export const createAIGeneratedTree = mutation({
     ) => {
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i];
-        const nodeId = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+        // Create linked project board and use its id as the nodeId
+        const boardId = await createLinkedProjectBoard(ctx, {
+          name: node.title,
+          description: node.description,
+          workspaceId: args.workspaceId as Id<"workspaces">,
+          creatorMemberId: member._id as Id<"members">,
+        });
+        const nodeId = boardId as unknown as string;
 
         // Calculate position (spread children horizontally)
         const position = {
@@ -583,7 +605,7 @@ export const createAIGeneratedTree = mutation({
         await ctx.db.insert("treeNodes", {
           title: node.title,
           description: node.description,
-          nodeId,
+          nodeId, // Use the board ID as nodeId
           parentId,
           workspaceId: args.workspaceId,
           createdById: member._id,
