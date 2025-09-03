@@ -5,7 +5,7 @@ import { api } from "../../../../../../convex/_generated/api";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProjectKanbanBoard } from "@/features/projects/components/project-kanban-board";
 import { useGetWorkspaceMembers } from "@/features/projects/api/use-get-workspace-members";
@@ -14,19 +14,26 @@ import { DragDropContext, Droppable, type DropResult } from "@hello-pangea/dnd";
 import { useUpdateProjectTask } from "@/features/projects/api/use-update-project-task";
 import { toast } from "sonner";
 
+import { useCurrentUser } from "../../../../../features/auth/api/use-current-user";
+
 export default function ProjectBoardPage({
   params,
 }: {
   params: { workspaceId: Id<"workspaces">; boardId: Id<"projectBoards"> };
 }) {
   const { workspaceId, boardId } = params;
+
+  // ✅ get the signed-in user directly from auth
+  const { data: currentUser, isLoading: userLoading } = useCurrentUser();
+
   const board = useQuery(api.projects.getProjectBoard, { boardId });
   const lists = useQuery(api.projects.getProjectLists, { boardId });
   const { data: workspaceMembers, isLoading: membersLoading } =
     useGetWorkspaceMembers({ workspaceId });
+
   const [selectedMemberIds, setSelectedMemberIds] = useState<Id<"members">[]>(
     [],
-  ); // Change to array
+  );
   const { mutate: updateTask } = useUpdateProjectTask();
   const lastDragPayloadRef = useRef<any | null>(null);
 
@@ -49,17 +56,13 @@ export default function ProjectBoardPage({
       return;
 
     if (type === "task") {
-      // Dropped into chat -> attach to chat and do not reorder
       if (destination.droppableId === "chat-dropzone") {
         const payload = lastDragPayloadRef.current;
         if (payload?.type === "project-task" && payload?.task) {
-          try {
-            window.dispatchEvent(
-              new CustomEvent("kanban:task-drop-to-chat", { detail: payload }),
-            );
-          } catch {}
+          window.dispatchEvent(
+            new CustomEvent("kanban:task-drop-to-chat", { detail: payload }),
+          );
         } else {
-          // Fallback minimal payload
           window.dispatchEvent(
             new CustomEvent("kanban:task-drop-to-chat", {
               detail: {
@@ -72,57 +75,28 @@ export default function ProjectBoardPage({
         return;
       }
 
-      // Otherwise perform normal move/reorder
       const taskId = draggableId as Id<"projectTasks">;
       if (source.droppableId !== destination.droppableId) {
         const newListId = destination.droppableId as Id<"projectLists">;
         updateTask(
+          { taskId, listId: newListId, position: destination.index },
           {
-            taskId,
-            listId: newListId,
-            position: destination.index,
-          },
-          {
-            onError: (error) => {
-              toast.error(error.message || "Failed to move task");
-            },
+            onError: (err) => toast.error(err.message || "Failed to move task"),
           },
         );
       } else {
         updateTask(
+          { taskId, position: destination.index },
           {
-            taskId,
-            position: destination.index,
-          },
-          {
-            onError: (error) => {
-              toast.error(error.message || "Failed to reorder task");
-            },
+            onError: (err) =>
+              toast.error(err.message || "Failed to reorder task"),
           },
         );
       }
     }
   }
 
-  const currentUserId = useMemo(() => {
-    if (!workspaceMembers || workspaceMembers.length === 0)
-      return undefined as unknown as Id<"users"> | undefined;
-    // Try to find a member flagged as the current user if such data exists
-    const self =
-      (workspaceMembers as any[]).find((m) => m.isCurrentUser) ||
-      (workspaceMembers as any[])[0];
-    return self?.userId as Id<"users"> | undefined;
-  }, [workspaceMembers]);
-
-  const currentUser = useMemo(() => {
-    if (!workspaceMembers || workspaceMembers.length === 0) return undefined;
-    const self =
-      (workspaceMembers as any[]).find((m) => m.isCurrentUser) ||
-      (workspaceMembers as any[])[0];
-    return self?.user || undefined;
-  }, [workspaceMembers]);
-
-  if (!board || !lists || membersLoading) {
+  if (!board || !lists || membersLoading || userLoading) {
     return (
       <div className="flex h-full flex-1 flex-col items-center justify-center gap-2">
         <Loader2 className="size-5 animate-spin text-muted-foreground" />
@@ -131,17 +105,14 @@ export default function ProjectBoardPage({
   }
 
   const handleMemberToggle = (memberId: Id<"members">) => {
-    setSelectedMemberIds(
-      (prev) =>
-        prev.includes(memberId)
-          ? prev.filter((id) => id !== memberId) // Remove if already selected
-          : [...prev, memberId], // Add if not selected
+    setSelectedMemberIds((prev) =>
+      prev.includes(memberId)
+        ? prev.filter((id) => id !== memberId)
+        : [...prev, memberId],
     );
   };
 
-  const handleClearFilter = () => {
-    setSelectedMemberIds([]);
-  };
+  const handleClearFilter = () => setSelectedMemberIds([]);
 
   return (
     <div className="flex h-full flex-col">
@@ -200,6 +171,7 @@ export default function ProjectBoardPage({
           })}
         </div>
       </div>
+
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex overflow-hidden w-full h-full">
           <div className="basis-[50%] flex-shrink-0 flex-grow">
@@ -210,7 +182,6 @@ export default function ProjectBoardPage({
             />
           </div>
 
-          {/* Chat side as a Droppable target */}
           <Droppable droppableId="chat-dropzone" type="task">
             {(provided, snapshot) => (
               <div
@@ -221,15 +192,15 @@ export default function ProjectBoardPage({
                   (snapshot.isDraggingOver ? "bg-blue-50" : "")
                 }
               >
-                {currentUserId ? (
+                {currentUser ? (
                   <AIAssistantUI
                     workspaceId={workspaceId}
                     boardId={boardId}
-                    currentUserId={currentUserId}
+                    currentUserId={currentUser._id} // ✅ from useCurrentUser
                     currentUser={{
-                      name: currentUser?.name,
-                      email: currentUser?.email,
-                      image: currentUser?.image,
+                      name: currentUser.name,
+                      email: currentUser.email,
+                      image: currentUser.image,
                     }}
                   />
                 ) : (
