@@ -67,6 +67,8 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
   const layoutManager = new TreeLayoutManager();
 
   const createInitialWorkspaceNode = useCallback(async () => {
+    // Close any pending AI dialog open state before creating a manual node
+    setIsAIDialogOpen(false);
     try {
       await createNode({
         workspaceId,
@@ -305,38 +307,47 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
 
   if (!treeNodes || treeNodes.length === 0) {
     return (
-      <div className="w-full h-full flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4 p-8 border-2 border-dashed border-gray-300 rounded-lg">
-          <div className="text-center">
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">
-              Start Your Workspace Tree
-            </h3>
-            <p className="text-sm text-gray-500 mb-4">
-              Create your first workspace node manually or let AI generate a
-              complete project breakdown
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <Button
-              onClick={createInitialWorkspaceNode}
-              variant="outline"
-              className="flex items-center gap-2 bg-transparent"
-              size="lg"
-            >
-              <Plus className="w-4 h-4" />
-              Create Manually
-            </Button>
-            <Button
-              onClick={() => setIsAIDialogOpen(true)}
-              className="flex items-center gap-2"
-              size="lg"
-            >
-              <Sparkles className="w-4 h-4" />
-              Generate with AI
-            </Button>
+      <>
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4 p-8 border-2 border-dashed border-gray-300 rounded-lg">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                Start Your Workspace Tree
+              </h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Create your first workspace node manually or let AI generate a
+                complete project breakdown
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                onClick={createInitialWorkspaceNode}
+                variant="outline"
+                className="flex items-center gap-2 bg-transparent"
+                size="lg"
+              >
+                <Plus className="w-4 h-4" />
+                Create Manually
+              </Button>
+              <Button
+                onClick={() => setIsAIDialogOpen(true)}
+                className="flex items-center gap-2"
+                size="lg"
+              >
+                <Sparkles className="w-4 h-4" />
+                Generate with AI
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+
+        {/* Mount the dialog even in empty state so it can open immediately */}
+        <AITreeDialog
+          isOpen={isAIDialogOpen}
+          onClose={() => setIsAIDialogOpen(false)}
+          workspaceId={workspaceId}
+        />
+      </>
     );
   }
 

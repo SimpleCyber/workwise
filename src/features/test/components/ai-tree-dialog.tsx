@@ -17,7 +17,7 @@ import { Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { aiTreeService } from "@/lib/ai-service";
 import { useCreateAIGeneratedTree } from "../api/use-ai-tree-generation";
-import { Id } from "../../../../convex/_generated/dataModel";
+import type { Id } from "../../../../convex/_generated/dataModel";
 
 interface AITreeDialogProps {
   isOpen: boolean;
@@ -74,7 +74,12 @@ export function AITreeDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
