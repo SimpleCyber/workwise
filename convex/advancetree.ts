@@ -2,11 +2,76 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { api } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 
 interface TreeNodeInput {
   title: string;
   description: string;
   children?: TreeNodeInput[];
+}
+
+// Helper to create a linked project board inline and return its id
+async function createLinkedProjectBoard(
+  ctx: any,
+  args: {
+    name: string;
+    description?: string;
+    workspaceId: Id<"workspaces">;
+    creatorMemberId: Id<"members">;
+  },
+) {
+  // Generate board code (B01, B02, etc.) similar to createProjectBoard
+  const existingBoards = await ctx.db
+    .query("projectBoards")
+    .withIndex("by_workspace_id", (q: any) =>
+      q.eq("workspaceId", args.workspaceId),
+    )
+    .collect();
+  const boardNumber = existingBoards.length + 1;
+  const boardCode = `B${boardNumber.toString().padStart(2, "0")}`;
+
+  const boardId: Id<"projectBoards"> = await ctx.db.insert("projectBoards", {
+    name: args.name,
+    description: args.description,
+    background: undefined,
+    boardCode,
+    memberId: args.creatorMemberId,
+    workspaceId: args.workspaceId,
+    isStarred: false,
+    isArchived: true,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  });
+
+  await ctx.db.insert("projectLists", {
+    name: "To Do",
+    boardId,
+    memberId: args.creatorMemberId,
+    workspaceId: args.workspaceId,
+    position: 0,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  });
+  await ctx.db.insert("projectLists", {
+    name: "In Progress",
+    boardId,
+    memberId: args.creatorMemberId,
+    workspaceId: args.workspaceId,
+    position: 1,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  });
+  await ctx.db.insert("projectLists", {
+    name: "Done",
+    boardId,
+    memberId: args.creatorMemberId,
+    workspaceId: args.workspaceId,
+    position: 2,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  });
+
+  return boardId;
 }
 
 // Get all tree nodes for a workspace
@@ -77,9 +142,6 @@ export const createTreeNode = mutation({
 
     if (!member) throw new Error("Member not found");
 
-    // Generate unique node ID
-    const nodeId = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
     // Calculate level based on parent
     let level = 0;
     if (args.parentId) {
@@ -87,20 +149,28 @@ export const createTreeNode = mutation({
         .query("treeNodes")
         .withIndex("by_node_id", (q) => q.eq("nodeId", args.parentId!))
         .first();
-
       if (parentNode) {
         level = parentNode.level + 1;
       }
     }
 
+    // Create linked project board and use its id as the nodeId
+    const boardId = await createLinkedProjectBoard(ctx, {
+      name: args.title,
+      description: args.description,
+      workspaceId: args.workspaceId as Id<"workspaces">,
+      creatorMemberId: member._id as Id<"members">,
+    });
+    const nodeId = boardId as unknown as string; // keep nodeId as string while equal to board id
+
     const nodeData = {
       title: args.title,
       description: args.description,
-      nodeId,
+      nodeId, // equals project board id
       parentId: args.parentId,
       workspaceId: args.workspaceId,
       createdById: member._id,
-      status: "in-progress" as const, // Use valid status value
+      status: "in-progress" as const,
       position: args.position,
       level,
       isArchived: false,
@@ -147,7 +217,6 @@ export const updateTreeNode = mutation({
       .query("treeNodes")
       .withIndex("by_node_id", (q) => q.eq("nodeId", args.nodeId))
       .first();
-
     if (!node) throw new Error("Node not found");
 
     const updateData: any = { updatedAt: Date.now() };
@@ -158,6 +227,21 @@ export const updateTreeNode = mutation({
     if (args.position !== undefined) updateData.position = args.position;
 
     await ctx.db.patch(node._id, updateData);
+
+    // Also update the linked project board (nodeId equals board id)
+    try {
+      const boardId = args.nodeId as unknown as Id<"projectBoards">;
+      const boardUpdates: any = { updatedAt: Date.now() };
+      if (args.title !== undefined) boardUpdates.name = args.title;
+      if (args.description !== undefined)
+        boardUpdates.description = args.description;
+      if (Object.keys(boardUpdates).length > 0) {
+        await ctx.db.patch(boardId, boardUpdates);
+      }
+    } catch (_e) {
+      // ignore if cast fails or board is missing
+    }
+
     return node._id;
   },
 });
@@ -199,7 +283,7 @@ export const deleteTreeNode = mutation({
         .first();
 
       if (node) {
-        await ctx.db.patch(node._id, { isArchived: true });
+        await ctx.db.delete(node._id);
       }
 
       // Delete users
@@ -231,9 +315,64 @@ export const deleteTreeNode = mutation({
       for (const task of tasks) {
         await ctx.db.delete(task._id);
       }
+
+      try {
+        const boardId = nodeId as unknown as Id<"projectBoards">;
+
+        // Delete all project tasks for this board
+        const boardTasks = await ctx.db
+          .query("projectTasks")
+          .withIndex("by_board_id", (q) => q.eq("boardId", boardId))
+          .collect();
+        for (const t of boardTasks) {
+          await ctx.db.delete(t._id);
+        }
+
+        // Delete all project lists for this board
+        const boardLists = await ctx.db
+          .query("projectLists")
+          .withIndex("by_board_id", (q) => q.eq("boardId", boardId))
+          .collect();
+        for (const l of boardLists) {
+          await ctx.db.delete(l._id);
+        }
+
+        // Finally delete the board itself
+        await ctx.db.delete(boardId);
+      } catch (_e) {
+        // ignore if cast fails or board missing
+      }
     }
 
     return { deletedNodes: nodeIdsToDelete.length };
+  },
+});
+
+// Get available members for assignment
+export const getAvailableMembers = query({
+  args: { workspaceId: v.id("workspaces") },
+  handler: async (ctx, args) => {
+    const identity = await getAuthUserId(ctx);
+    if (!identity) return [];
+
+    const members = await ctx.db
+      .query("members")
+      .withIndex("by_workspace_id", (q) =>
+        q.eq("workspaceId", args.workspaceId),
+      )
+      .collect();
+
+    const membersWithUsers = await Promise.all(
+      members.map(async (member) => {
+        const user = await ctx.db.get(member.userId);
+        return {
+          ...member,
+          user,
+        };
+      }),
+    );
+
+    return membersWithUsers.filter((m) => m.user);
   },
 });
 
@@ -275,227 +414,6 @@ export const addUserToNode = mutation({
       addedAt: Date.now(),
       addedById: member._id,
     });
-  },
-});
-
-// Check if user has permission to edit a node
-export const checkNodePermission = query({
-  args: {
-    nodeId: v.string(),
-    workspaceId: v.id("workspaces"),
-    action: v.union(
-      v.literal("edit"),
-      v.literal("view"),
-      v.literal("create_child"),
-    ),
-  },
-  handler: async (ctx, args) => {
-    const identity = await getAuthUserId(ctx);
-    if (!identity) return false;
-
-    const member = await ctx.db
-      .query("members")
-      .withIndex("by_workspace_id_user_id", (q) =>
-        q.eq("workspaceId", args.workspaceId).eq("userId", identity),
-      )
-      .first();
-
-    if (!member) return false;
-
-    // Workspace admin has all permissions
-    if (member.role === "admin") return true;
-
-    const node = await ctx.db
-      .query("treeNodes")
-      .withIndex("by_node_id", (q) => q.eq("nodeId", args.nodeId))
-      .first();
-
-    if (!node) return false;
-
-    // Check if user is assigned to this node
-    const nodeUser = await ctx.db
-      .query("treeNodeUsers")
-      .withIndex("by_node_id", (q) => q.eq("nodeId", args.nodeId))
-      .filter((q) => q.eq(q.field("memberId"), member._id))
-      .first();
-
-    if (nodeUser) {
-      // Node creator or admin can edit
-      if (nodeUser.role === "creator" || nodeUser.role === "admin") {
-        return true;
-      }
-      // Members can only view
-      if (args.action === "view") return true;
-    }
-
-    // Check if user has permission on parent nodes (can manage children)
-    const checkParentPermission = async (
-      currentNodeId: string,
-    ): Promise<boolean> => {
-      const currentNode = await ctx.db
-        .query("treeNodes")
-        .withIndex("by_node_id", (q) => q.eq("nodeId", currentNodeId))
-        .first();
-
-      if (!currentNode || !currentNode.parentId) return false;
-
-      const parentNodeUser = await ctx.db
-        .query("treeNodeUsers")
-        .withIndex("by_node_id", (q) => q.eq("nodeId", currentNode.parentId!))
-        .filter((q) => q.eq(q.field("memberId"), member._id))
-        .first();
-
-      if (
-        parentNodeUser &&
-        (parentNodeUser.role === "creator" || parentNodeUser.role === "admin")
-      ) {
-        return true;
-      }
-
-      return await checkParentPermission(currentNode.parentId!);
-    };
-
-    return await checkParentPermission(args.nodeId);
-  },
-});
-
-// Get available members for assignment
-export const getAvailableMembers = query({
-  args: { workspaceId: v.id("workspaces") },
-  handler: async (ctx, args) => {
-    const identity = await getAuthUserId(ctx);
-    if (!identity) return [];
-
-    const members = await ctx.db
-      .query("members")
-      .withIndex("by_workspace_id", (q) =>
-        q.eq("workspaceId", args.workspaceId),
-      )
-      .collect();
-
-    const membersWithUsers = await Promise.all(
-      members.map(async (member) => {
-        const user = await ctx.db.get(member.userId);
-        return {
-          ...member,
-          user,
-        };
-      }),
-    );
-
-    return membersWithUsers.filter((m) => m.user);
-  },
-});
-
-// Update node with permission check
-export const updateNodeWithPermission = mutation({
-  args: {
-    nodeId: v.string(),
-    workspaceId: v.id("workspaces"),
-    title: v.optional(v.string()),
-    description: v.optional(v.string()),
-    status: v.optional(
-      v.union(
-        v.literal("in-progress"),
-        v.literal("blocked"),
-        v.literal("done"),
-      ),
-    ),
-    position: v.optional(v.object({ x: v.number(), y: v.number() })),
-  },
-  handler: async (ctx, args) => {
-    const identity = await getAuthUserId(ctx);
-    if (!identity) throw new Error("Unauthorized");
-
-    const member = await ctx.db
-      .query("members")
-      .withIndex("by_workspace_id_user_id", (q) =>
-        q.eq("workspaceId", args.workspaceId).eq("userId", identity),
-      )
-      .first();
-
-    if (!member) throw new Error("Member not found");
-
-    // Check edit permission
-    const hasPermission = await ctx.runQuery(
-      api.advancetree.checkNodePermission,
-      {
-        nodeId: args.nodeId,
-        workspaceId: args.workspaceId,
-        action: "edit",
-      },
-    );
-
-    if (!hasPermission && member.role !== "admin") {
-      throw new Error("No permission to edit this node");
-    }
-
-    const node = await ctx.db
-      .query("treeNodes")
-      .withIndex("by_node_id", (q) => q.eq("nodeId", args.nodeId))
-      .first();
-
-    if (!node) throw new Error("Node not found");
-
-    const updateData: any = { updatedAt: Date.now() };
-    if (args.title !== undefined) updateData.title = args.title;
-    if (args.description !== undefined)
-      updateData.description = args.description;
-    if (args.status !== undefined) updateData.status = args.status;
-    if (args.position !== undefined) updateData.position = args.position;
-
-    await ctx.db.patch(node._id, updateData);
-    return node._id;
-  },
-});
-
-// Get node details for popup component
-export const getNodeDetails = query({
-  args: {
-    nodeId: v.string(),
-    workspaceId: v.id("workspaces"),
-  },
-  handler: async (ctx, args) => {
-    const identity = await getAuthUserId(ctx);
-    if (!identity) return null;
-
-    const node = await ctx.db
-      .query("treeNodes")
-      .withIndex("by_node_id", (q) => q.eq("nodeId", args.nodeId))
-      .first();
-
-    if (!node) return null;
-
-    // Get creator details
-    const creator = await ctx.db.get(node.createdById);
-    const creatorUser = creator ? await ctx.db.get(creator.userId) : null;
-
-    // Get assigned users
-    const assignedUsers = await ctx.db
-      .query("treeNodeUsers")
-      .withIndex("by_node_id", (q) => q.eq("nodeId", args.nodeId))
-      .collect();
-
-    const assignedUsersWithDetails = await Promise.all(
-      assignedUsers.map(async (assignment) => {
-        const member = await ctx.db.get(assignment.memberId);
-        const user = member ? await ctx.db.get(member.userId) : null;
-        return {
-          ...assignment,
-          name: user?.name || "Unknown User",
-          role: assignment.role,
-        };
-      }),
-    );
-
-    return {
-      ...node,
-      creator: {
-        name: creatorUser?.name || "Unknown User",
-        role: creator?.role || "member",
-      },
-      assignedUsers: assignedUsersWithDetails,
-    };
   },
 });
 
@@ -865,6 +783,213 @@ export const createNodeComment = mutation({
       createdAt: Date.now(),
       isEdited: false,
     });
+  },
+});
+
+// Check if user has permission to edit a node
+export const checkNodePermission = query({
+  args: {
+    nodeId: v.string(),
+    workspaceId: v.id("workspaces"),
+    action: v.union(
+      v.literal("edit"),
+      v.literal("view"),
+      v.literal("create_child"),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const identity = await getAuthUserId(ctx);
+    if (!identity) return false;
+
+    const member = await ctx.db
+      .query("members")
+      .withIndex("by_workspace_id_user_id", (q) =>
+        q.eq("workspaceId", args.workspaceId).eq("userId", identity),
+      )
+      .first();
+
+    if (!member) return false;
+
+    // Workspace admin has all permissions
+    if (member.role === "admin") return true;
+
+    const node = await ctx.db
+      .query("treeNodes")
+      .withIndex("by_node_id", (q) => q.eq("nodeId", args.nodeId))
+      .first();
+
+    if (!node) return false;
+
+    // Check if user is assigned to this node
+    const nodeUser = await ctx.db
+      .query("treeNodeUsers")
+      .withIndex("by_node_id", (q) => q.eq("nodeId", args.nodeId))
+      .filter((q) => q.eq(q.field("memberId"), member._id))
+      .first();
+
+    if (nodeUser) {
+      // Node creator or admin can edit
+      if (nodeUser.role === "creator" || nodeUser.role === "admin") {
+        return true;
+      }
+      // Members can only view
+      if (args.action === "view") return true;
+    }
+
+    // Check if user has permission on parent nodes (can manage children)
+    const checkParentPermission = async (
+      currentNodeId: string,
+    ): Promise<boolean> => {
+      const currentNode = await ctx.db
+        .query("treeNodes")
+        .withIndex("by_node_id", (q) => q.eq("nodeId", currentNodeId))
+        .first();
+
+      if (!currentNode || !currentNode.parentId) return false;
+
+      const parentNodeUser = await ctx.db
+        .query("treeNodeUsers")
+        .withIndex("by_node_id", (q) => q.eq("nodeId", currentNode.parentId!))
+        .filter((q) => q.eq(q.field("memberId"), member._id))
+        .first();
+
+      if (
+        parentNodeUser &&
+        (parentNodeUser.role === "creator" || parentNodeUser.role === "admin")
+      ) {
+        return true;
+      }
+
+      return await checkParentPermission(currentNode.parentId!);
+    };
+
+    return await checkParentPermission(args.nodeId);
+  },
+});
+
+// Update node with permission check
+export const updateNodeWithPermission = mutation({
+  args: {
+    nodeId: v.string(),
+    workspaceId: v.id("workspaces"),
+    title: v.optional(v.string()),
+    description: v.optional(v.string()),
+    status: v.optional(
+      v.union(
+        v.literal("in-progress"),
+        v.literal("blocked"),
+        v.literal("done"),
+      ),
+    ),
+    position: v.optional(v.object({ x: v.number(), y: v.number() })),
+  },
+  handler: async (ctx, args) => {
+    const identity = await getAuthUserId(ctx);
+    if (!identity) throw new Error("Unauthorized");
+
+    const member = await ctx.db
+      .query("members")
+      .withIndex("by_workspace_id_user_id", (q) =>
+        q.eq("workspaceId", args.workspaceId).eq("userId", identity),
+      )
+      .first();
+
+    if (!member) throw new Error("Member not found");
+
+    // Check edit permission
+    const hasPermission = await ctx.runQuery(
+      api.advancetree.checkNodePermission,
+      {
+        nodeId: args.nodeId,
+        workspaceId: args.workspaceId,
+        action: "edit",
+      },
+    );
+
+    if (!hasPermission && member.role !== "admin") {
+      throw new Error("No permission to edit this node");
+    }
+
+    const node = await ctx.db
+      .query("treeNodes")
+      .withIndex("by_node_id", (q) => q.eq("nodeId", args.nodeId))
+      .first();
+
+    if (!node) throw new Error("Node not found");
+
+    const updateData: any = { updatedAt: Date.now() };
+    if (args.title !== undefined) updateData.title = args.title;
+    if (args.description !== undefined)
+      updateData.description = args.description;
+    if (args.status !== undefined) updateData.status = args.status;
+    if (args.position !== undefined) updateData.position = args.position;
+
+    await ctx.db.patch(node._id, updateData);
+
+    try {
+      const boardId = args.nodeId as unknown as Id<"projectBoards">;
+      const boardUpdates: any = { updatedAt: Date.now() };
+      if (args.title !== undefined) boardUpdates.name = args.title;
+      if (args.description !== undefined)
+        boardUpdates.description = args.description;
+      if (Object.keys(boardUpdates).length > 0) {
+        await ctx.db.patch(boardId, boardUpdates);
+      }
+    } catch (_e) {
+      // ignore if cast fails or board missing
+    }
+
+    return node._id;
+  },
+});
+
+// Get node details for popup component
+export const getNodeDetails = query({
+  args: {
+    nodeId: v.string(),
+    workspaceId: v.id("workspaces"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await getAuthUserId(ctx);
+    if (!identity) return null;
+
+    const node = await ctx.db
+      .query("treeNodes")
+      .withIndex("by_node_id", (q) => q.eq("nodeId", args.nodeId))
+      .first();
+
+    if (!node) return null;
+
+    // Get creator details
+    const creator = await ctx.db.get(node.createdById);
+    const creatorUser = creator ? await ctx.db.get(creator.userId) : null;
+
+    // Get assigned users
+    const assignedUsers = await ctx.db
+      .query("treeNodeUsers")
+      .withIndex("by_node_id", (q) => q.eq("nodeId", args.nodeId))
+      .collect();
+
+    const assignedUsersWithDetails = await Promise.all(
+      assignedUsers.map(async (assignment) => {
+        const member = await ctx.db.get(assignment.memberId);
+        const user = member ? await ctx.db.get(member.userId) : null;
+        return {
+          ...assignment,
+          name: user?.name || "Unknown User",
+          role: assignment.role,
+        };
+      }),
+    );
+
+    return {
+      ...node,
+      creator: {
+        name: creatorUser?.name || "Unknown User",
+        role: creator?.role || "member",
+      },
+      assignedUsers: assignedUsersWithDetails,
+    };
   },
 });
 

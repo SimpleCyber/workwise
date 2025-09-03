@@ -10,6 +10,8 @@ import { NodeActions } from "./node-actions";
 import { StatusBadge } from "./status-badge";
 import { NodePopup } from "./node-popup";
 import { Lightbulb } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useWorkspaceId } from "@/hooks/use-workspace-id";
 
 interface TreeNodeData {
   label: string;
@@ -34,6 +36,9 @@ interface TreeNodeData {
 }
 
 export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
+  const workspaceId = useWorkspaceId();
+  const router = useRouter();
+
   const [label, setLabel] = useState(data.label);
   const [description, setDescription] = useState(
     data.description || "Default description for this node",
@@ -74,7 +79,7 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
   };
 
   const handleDoubleClick = () => {
-    data.onAddChild();
+    router.push(`/projects/${workspaceId}/board/${id}`);
   };
 
   const handleTouchEnd = () => {
