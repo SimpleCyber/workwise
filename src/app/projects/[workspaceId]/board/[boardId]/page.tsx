@@ -58,20 +58,16 @@ export default function ProjectBoardPage({
     if (type === "task") {
       if (destination.droppableId === "chat-dropzone") {
         const payload = lastDragPayloadRef.current;
-        if (payload?.type === "project-task" && payload?.task) {
-          window.dispatchEvent(
-            new CustomEvent("kanban:task-drop-to-chat", { detail: payload }),
-          );
-        } else {
-          window.dispatchEvent(
-            new CustomEvent("kanban:task-drop-to-chat", {
-              detail: {
-                type: "project-task",
-                task: { taskId: String(draggableId) },
-              },
-            }),
-          );
-        }
+        const cached = (window as any).__lastDraggedTask;
+        const detail =
+          (payload?.type === "project-task" && payload?.task && payload) ||
+          (cached
+            ? { type: "project-task", task: cached }
+            : { type: "project-task", task: { taskId: String(draggableId) } });
+
+        window.dispatchEvent(
+          new CustomEvent("kanban:task-drop-to-chat", { detail }),
+        );
         return;
       }
 

@@ -74,13 +74,35 @@ export default function AIAssistantUI({
   }, [chats, selectedId]);
 
   useEffect(() => {
+    function onTaskDragStart(ev: any) {
+      const detail = ev?.detail;
+      // accept either { task } or full payload with type === "project-task"
+      const candidate =
+        detail?.task ??
+        (detail?.type === "project-task" ? detail.task : detail);
+      if (candidate) {
+        (window as any).__lastDraggedTask = candidate;
+      }
+    }
+    window.addEventListener("kanban:task-drag-start", onTaskDragStart);
+    return () =>
+      window.removeEventListener("kanban:task-drag-start", onTaskDragStart);
+  }, []);
+
+  useEffect(() => {
     function onTaskDropToChat(e: any) {
-      const incoming = (e?.detail?.task || null) as TaskAttachment | null;
+      // accept both shapes: { detail: { task } } and { detail: { type: 'project-task', task } }
+      const incoming = (e?.detail?.task ??
+        (e?.detail?.type === "project-task"
+          ? e.detail.task
+          : e?.detail)) as TaskAttachment | null;
+
       let enriched: TaskAttachment | null = incoming;
       try {
         const cached = (window as any).__lastDraggedTask as
           | TaskAttachment
           | undefined;
+
         if (cached) {
           const sameId =
             (incoming &&
@@ -90,9 +112,10 @@ export default function AIAssistantUI({
               String(incoming.taskId) === String(cached.taskId)) ||
             (incoming &&
               cached &&
-              incoming.taskCode &&
-              cached.taskCode &&
-              incoming.taskCode === cached.taskCode);
+              (incoming as any).taskCode &&
+              (cached as any).taskCode &&
+              (incoming as any).taskCode === (cached as any).taskCode);
+
           if (!incoming && cached) {
             enriched = cached;
           } else if (incoming && cached && sameId) {
@@ -100,10 +123,12 @@ export default function AIAssistantUI({
           }
         }
       } catch {}
+
       if (enriched) {
         composerRef.current?.addAttachmentFromTask(enriched);
       }
     }
+
     window.addEventListener("kanban:task-drop-to-chat", onTaskDropToChat);
     return () =>
       window.removeEventListener("kanban:task-drop-to-chat", onTaskDropToChat);

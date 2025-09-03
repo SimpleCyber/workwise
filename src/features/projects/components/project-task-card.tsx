@@ -126,6 +126,59 @@ const priorityColors = {
   urgent: "text-red-600",
 };
 
+function buildTaskPayload(task: any, taskComments: any[]) {
+  const comments =
+    Array.isArray(taskComments) && taskComments.length
+      ? taskComments.map((c: any) => ({
+          content: c.content as string,
+          authorName: c?.member?.user?.name || null,
+          authorEmail: c?.member?.user?.email || null,
+          createdAt: c?.createdAt as number,
+          imageUrl: c?.imageUrl || null,
+        }))
+      : [];
+
+  return {
+    type: "project-task",
+    task: {
+      taskId: String(task._id),
+      taskCode: task.taskCode,
+      title: task.title,
+      description: task.description,
+      priority: task.priority,
+      dueDate: task.dueDate || null,
+      labels: Array.isArray(task.labels) ? task.labels : [],
+      boardId: String(task.boardId),
+      listId: String(task.listId),
+      assignedTo: task.assignedTo?.user
+        ? {
+            id: String(task.assignedTo.user._id),
+            name: task.assignedTo.user.name || null,
+            email: task.assignedTo.user.email || null,
+            image: task.assignedTo.user.image || null,
+          }
+        : null,
+      assignedBy: task.assignedBy?.user
+        ? {
+            id: String(task.assignedBy.user._id),
+            name: task.assignedBy.user.name || null,
+            email: task.assignedBy.user.email || null,
+            image: task.assignedBy.user.image || null,
+          }
+        : null,
+      createdBy: task.createdBy?.user
+        ? {
+            id: String(task.createdBy.user._id),
+            name: task.createdBy.user.name || null,
+            email: task.createdBy.user.email || null,
+            image: task.createdBy.user.image || null,
+          }
+        : null,
+      comments,
+    },
+  };
+}
+
 export const ProjectTaskCard = ({
   task,
   onEdit,
@@ -143,11 +196,6 @@ export const ProjectTaskCard = ({
   const isDueSoon =
     task.dueDate && task.dueDate < Date.now() + 24 * 60 * 60 * 1000;
   const isOverdue = task.dueDate && task.dueDate < Date.now();
-
-  const trimDescription = (text: string, maxLength = 50) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + "...";
-  };
 
   // Generate unique color for user based on their ID
   const getUserColor = (userId: string) => {
@@ -192,58 +240,18 @@ export const ProjectTaskCard = ({
         className="cursor-pointer hover:bg-gray-50 transition-colors bg-white shadow-none border border-gray-200 rounded-lg relative w-[100%] mx-auto overflow-hidden"
         onClick={() => onEdit?.()}
         draggable
+        onPointerDown={(e) => {
+          try {
+            const payload = buildTaskPayload(task, taskComments || []);
+            (window as any).__lastDraggedTask = payload.task;
+            window.dispatchEvent(
+              new CustomEvent("kanban:task-drag-start", { detail: payload }),
+            );
+          } catch {}
+        }}
         onDragStart={(e) => {
           try {
-            const comments =
-              Array.isArray(taskComments) && taskComments.length
-                ? taskComments.map((c: any) => ({
-                    content: c.content as string,
-                    authorName: c?.member?.user?.name || null,
-                    authorEmail: c?.member?.user?.email || null,
-                    createdAt: c?.createdAt as number,
-                    imageUrl: c?.imageUrl || null,
-                  }))
-                : [];
-
-            const payload = {
-              type: "project-task",
-              task: {
-                taskId: String(task._id),
-                taskCode: task.taskCode,
-                title: task.title,
-                description: task.description,
-                priority: task.priority,
-                dueDate: task.dueDate || null,
-                labels: Array.isArray(task.labels) ? task.labels : [],
-                boardId: String(task.boardId),
-                listId: String(task.listId),
-                assignedTo: task.assignedTo?.user
-                  ? {
-                      id: String(task.assignedTo.user._id),
-                      name: task.assignedTo.user.name || null,
-                      email: task.assignedTo.user.email || null,
-                      image: task.assignedTo.user.image || null,
-                    }
-                  : null,
-                assignedBy: task.assignedBy?.user
-                  ? {
-                      id: String(task.assignedBy.user._id),
-                      name: task.assignedBy.user.name || null,
-                      email: task.assignedBy.user.email || null,
-                      image: task.assignedBy.user.image || null,
-                    }
-                  : null,
-                createdBy: task.createdBy?.user
-                  ? {
-                      id: String(task.createdBy.user._id),
-                      name: task.createdBy.user.name || null,
-                      email: task.createdBy.user.email || null,
-                      image: task.createdBy.user.image || null,
-                    }
-                  : null,
-                comments,
-              },
-            };
+            const payload = buildTaskPayload(task, taskComments || []);
             const json = JSON.stringify(payload);
             e.dataTransfer.setData("application/json", json);
             e.dataTransfer.setData("text/plain", json);
@@ -251,6 +259,9 @@ export const ProjectTaskCard = ({
 
             try {
               (window as any).__lastDraggedTask = payload.task;
+              window.dispatchEvent(
+                new CustomEvent("kanban:task-drag-start", { detail: payload }),
+              );
             } catch {}
           } catch {}
         }}
