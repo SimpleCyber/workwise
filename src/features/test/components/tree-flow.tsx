@@ -22,6 +22,8 @@ import { useGetTreeNodes } from "../api/use-get-tree-nodes";
 import { useCreateTreeNode } from "../api/use-create-tree-node";
 import { useUpdateTreeNode } from "../api/use-update-tree-node";
 import { useDeleteTreeNode } from "../api/use-delete-tree-node";
+import { useToggleStar } from "../api/use-toggle-stars";
+
 import { useGetWorkspaceMembers } from "../api/use-get-workspace-members";
 import { useExpandNodeWithAI } from "../api/use-ai-tree-generation";
 import { toast } from "sonner";
@@ -47,6 +49,16 @@ const edgeOptions = {
   },
 };
 
+const getMiniMapNodeColor = (node: Node) => {
+  if (node.data.isStarred) {
+    return "#ef4444";
+  }
+  if (node.data.level == 0) {
+    return "#FFF000";
+  }
+  return "#3b82f6";
+};
+
 export function TreeFlow({ workspaceId }: TreeFlowProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -63,6 +75,7 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
   const updateNode = useUpdateTreeNode();
   const deleteNode = useDeleteTreeNode();
   const expandWithAI = useExpandNodeWithAI();
+  const toggleStar = useToggleStar();
 
   const layoutManager = new TreeLayoutManager();
 
@@ -150,7 +163,9 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
           label: node.title,
           description: node.description || "No description",
           status: node.status,
+          isStarred: node.isStarred || false,
           uniqueId: node.nodeId,
+          level: node.level || 0,
           users:
             node.users?.map((user: any) => ({
               id: user.memberId,
@@ -263,6 +278,13 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
       }
     },
     [deleteNode],
+  );
+
+  const togglestar = useCallback(
+    async (nodeId: string) => {
+      toggleStar({ nodeId });
+    },
+    [toggleStar],
   );
 
   const updateNodeHandler = useCallback(
@@ -388,7 +410,7 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
         >
           <Controls />
           <MiniMap
-            nodeColor="#3b82f6"
+            nodeColor={getMiniMapNodeColor}
             maskColor="rgba(0, 0, 0, 0.2)"
             pannable={true}
             zoomable={true}

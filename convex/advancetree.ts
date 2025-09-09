@@ -1051,3 +1051,31 @@ export const getNodeTasks = query({
     return tasksWithUsers;
   },
 });
+
+// Toggle node starred status
+export const toggleNodeStarred = mutation({
+  args: {
+    nodeId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const node = await ctx.db
+      .query("treeNodes")
+      .withIndex("by_node_id", (q) => q.eq("nodeId", args.nodeId))
+      .first();
+
+    if (!node) throw new Error("Node not found");
+
+    // Toggle the isStarred status
+    const newIsStarred = !node.isStarred;
+
+    await ctx.db.patch(node._id, {
+      isStarred: newIsStarred,
+      updatedAt: Date.now(),
+    });
+
+    return {
+      nodeId: args.nodeId,
+      isStarred: newIsStarred,
+    };
+  },
+});

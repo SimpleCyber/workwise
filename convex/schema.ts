@@ -363,6 +363,7 @@ const schema = defineSchema({
   treeNodes: defineTable({
     title: v.string(),
     description: v.optional(v.string()),
+    isStarred: v.optional(v.boolean()),
     nodeId: v.string(), // Unique identifier like "node-1", "node-2"
     parentId: v.optional(v.string()), // Parent node ID for hierarchy
     workspaceId: v.id("workspaces"),

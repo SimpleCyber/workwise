@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Handle, Position, type NodeProps } from "reactflow";
 import { Card, CardContent } from "@/components/ui/card";
 import { EditableField } from "./editable-field";
@@ -9,13 +9,15 @@ import { UserAvatars } from "./user-avatars";
 import { NodeActions } from "./node-actions";
 import { StatusBadge } from "./status-badge";
 import { NodePopup } from "./node-popup";
-import { Lightbulb } from "lucide-react";
+import { Lightbulb, Pin, Network, Crown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
+import { useToggleStar } from "../api/use-toggle-stars"; // Import the hook
 
 interface TreeNodeData {
   label: string;
   description?: string;
+  level?: number;
   status?: string;
   uniqueId?: string;
   users?: Array<{ id: string; name: string; initials: string; image?: string }>;
@@ -33,17 +35,21 @@ interface TreeNodeData {
     nodeId: string,
     updates: Partial<{ title: string; description: string; status: string }>,
   ) => void;
+  isStarred?: boolean; // Add this prop
 }
 
 export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
   const workspaceId = useWorkspaceId();
   const router = useRouter();
+  const toggleStar = useToggleStar();
 
   const [label, setLabel] = useState(data.label);
   const [description, setDescription] = useState(
     data.description || "Default description for this node",
   );
   const [status, setStatus] = useState(data.status || "in-progress");
+  const [isStarred, setIsStarred] = useState(data.isStarred || false);
+  const [level, setLevel] = useState(data.level || 0);
 
   const uniqueId = data.uniqueId;
   const [users, setUsers] = useState(data.users || []);
@@ -51,6 +57,12 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
   const [isHovered, setIsHovered] = useState(false);
   const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
   const [lastTap, setLastTap] = useState(0);
+
+  // Update isStarred when data changes
+  useEffect(() => {
+    setIsStarred(data.isStarred || false);
+    setLevel(data.level || 0);
+  }, [data.isStarred, data.level]);
 
   const handleMouseEnter = () => {
     if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
@@ -60,7 +72,7 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
   const handleMouseLeave = () => {
     hoverTimeout.current = setTimeout(() => {
       setIsHovered(false);
-    }, 300); // delay in ms before hiding popup
+    }, 300);
   };
 
   const handleLabelChange = (newLabel: string) => {
@@ -76,6 +88,16 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
   const handleStatusChange = (newStatus: string) => {
     setStatus(newStatus);
     data.onUpdateNode?.(id, { status: newStatus });
+  };
+
+  const handleStarToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const result = await toggleStar({ nodeId: id });
+      setIsStarred(result.isStarred);
+    } catch (error) {
+      console.error("Failed to toggle star:", error);
+    }
   };
 
   const handleDoubleClick = () => {
@@ -104,6 +126,8 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
       ? description.substring(0, 50) + "..."
       : description;
 
+  const isRootNode = level === 0;
+
   return (
     <div
       className="relative flex items-center"
@@ -124,11 +148,26 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
       />
 
       <Card
-        className="min-w-[300px] max-w-[300px] shadow-lg border-2 hover:shadow-xl transition-all duration-200 cursor-pointer"
+        className="min-w-[300px] max-w-[300px] shadow-lg border-2 hover:shadow-xl transition-all duration-200 cursor-pointer relative"
         onDoubleClick={handleDoubleClick}
         onTouchEnd={handleTouchEnd}
         onClick={handleCardClick}
       >
+        <div
+          className={`absolute -top-2 -right-2 z-10 p-1 rounded-full bg-background border ${
+            isStarred ? "opacity-100" : "opacity-0"
+          } ${isHovered ? "opacity-100" : ""} transition-opacity duration-200`}
+          onClick={handleStarToggle}
+        >
+          <Pin
+            className={`w-4 h-4 ${
+              isStarred
+                ? "fill-red-400 text-red-400"
+                : "text-gray-400 hover:text-red-400"
+            } cursor-pointer transition-colors`}
+          />
+        </div>
+
         <CardContent className="p-3">
           {!data.isRoot && (
             <Handle
@@ -139,12 +178,20 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
           )}
 
           <div className="space-y-2">
-            <EditableField
-              value={label}
-              onChange={handleLabelChange}
-              type="title"
-              placeholder="Enter title"
-            />
+            <div className="flex gap-1">
+              {isRootNode && (
+                <div className="rounded-full mt-1">
+                  <Crown className="w-4 h-4 fill-yellow-100 text-yellow-600" />
+                </div>
+              )}
+
+              <EditableField
+                value={label}
+                onChange={handleLabelChange}
+                type="title"
+                placeholder="Enter title"
+              />
+            </div>
 
             <StatusBadge status={status} onChange={handleStatusChange} />
 
@@ -157,10 +204,16 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
             />
 
             <div className="flex items-center justify-between pt-1">
-              <p className="flex items-center text-xs text-gray-500 space-x-1">
-                <Lightbulb className="w-3 h-3 font-bold text-yellow-500" />
-                <span>{uniqueId}</span>
-              </p>
+              <div className="flex gap-3">
+                <div className="flex items-center text-xs text-gray-500 space-x-1">
+                  <Network className="w-3 h-3 text-blue-500" />
+                  <span className="font-medium">LV-{level}</span>
+                </div>
+                <p className="flex items-center text-xs text-gray-500 space-x-1">
+                  <Lightbulb className="w-3 h-3 font-bold text-yellow-600" />
+                  <span>{uniqueId?.slice(-5)}</span>
+                </p>
+              </div>
 
               <UserAvatars
                 users={users}

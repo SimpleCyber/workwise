@@ -170,21 +170,13 @@ export default function ProjectBoardPage({
 
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex overflow-hidden w-full h-full">
-          <div className="basis-[50%] flex-shrink-0 flex-grow">
-            <ProjectKanbanBoard
-              boardId={boardId}
-              lists={lists || []}
-              selectedMemberIds={selectedMemberIds}
-            />
-          </div>
-
           <Droppable droppableId="chat-dropzone" type="task">
             {(provided, snapshot) => (
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
                 className={
-                  "basis-[50%] flex-shrink-0 flex-grow border-l-[3px] border-gray-200 " +
+                  "basis-[50%] flex-shrink-0 flex-grow border-r-[3px] border-gray-200 " +
                   (snapshot.isDraggingOver ? "bg-blue-50" : "")
                 }
               >
@@ -208,6 +200,14 @@ export default function ProjectBoardPage({
               </div>
             )}
           </Droppable>
+
+          <div className="basis-[50%] flex-shrink-0 flex-grow">
+            <ProjectKanbanBoard
+              boardId={boardId}
+              lists={lists || []}
+              selectedMemberIds={selectedMemberIds}
+            />
+          </div>
         </div>
       </DragDropContext>
     </div>
