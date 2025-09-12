@@ -17,7 +17,7 @@ import {
 import "reactflow/dist/style.css";
 import { TreeNode } from "./tree-node";
 import { TreeLayoutManager } from "../lib/tree-layout-manager";
-import type { TreeFlowProps } from "./tree-flow-props";
+import type { TreeFlowProps } from "../api/tree-flow-props";
 import { useGetTreeNodes } from "../api/use-get-tree-nodes";
 import { useCreateTreeNode } from "../api/use-create-tree-node";
 import { useUpdateTreeNode } from "../api/use-update-tree-node";

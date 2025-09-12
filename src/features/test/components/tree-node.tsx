@@ -13,6 +13,8 @@ import { Lightbulb, Pin, Network, Crown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { useToggleStar } from "../api/use-toggle-stars"; // Import the hook
+import { useGetFullProjectBoard } from "../api/use-get-all-project-board-details";
+import type { Id } from "../../../../convex/_generated/dataModel";
 
 interface TreeNodeData {
   label: string;
@@ -42,6 +44,13 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
   const workspaceId = useWorkspaceId();
   const router = useRouter();
   const toggleStar = useToggleStar();
+
+  if (!data?.uniqueId) return; // or handle it appropriately
+
+  const boardId = data.uniqueId as Id<"projectBoards">;
+
+  const { datas: boardData } = useGetFullProjectBoard({ boardId });
+  if (boardData) console.log("😎😎😎😎😎😎😎😎😎😎😎", boardData);
 
   const [label, setLabel] = useState(data.label);
   const [description, setDescription] = useState(

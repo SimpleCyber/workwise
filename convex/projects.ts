@@ -1066,3 +1066,108 @@ export const updateProjectBoard = mutation({
     });
   },
 });
+
+export const getFullProjectBoard = query({
+  args: {
+    boardId: v.id("projectBoards"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+
+    // Get board
+    const board = await ctx.db.get(args.boardId);
+    if (!board) return null;
+
+    // Check if user is a member of the workspace
+    const member = await ctx.db
+      .query("members")
+      .withIndex("by_workspace_id_user_id", (q) =>
+        q.eq("workspaceId", board.workspaceId).eq("userId", userId),
+      )
+      .unique();
+    if (!member) return null;
+
+    // Get all lists in the board
+    const lists = await ctx.db
+      .query("projectLists")
+      .withIndex("by_board_id", (q) => q.eq("boardId", args.boardId))
+      .collect();
+
+    // Get tasks for each list
+    const listsWithTasks = await Promise.all(
+      lists.map(async (list) => {
+        const tasks = await ctx.db
+          .query("projectTasks")
+          .withIndex("by_list_id", (q) => q.eq("listId", list._id))
+          .collect();
+
+        const tasksWithDetails = await Promise.all(
+          tasks.map(async (task) => {
+            // Get assignedTo, assignedBy, createdBy members
+            const assignedTo =
+              task.assignedToId && (await ctx.db.get(task.assignedToId));
+            const assignedBy =
+              task.assignedById && (await ctx.db.get(task.assignedById));
+            const createdBy =
+              task.createdById && (await ctx.db.get(task.createdById));
+
+            const assignedToUser = assignedTo
+              ? await ctx.db.get(assignedTo.userId)
+              : null;
+            const assignedByUser = assignedBy
+              ? await ctx.db.get(assignedBy.userId)
+              : null;
+            const createdByUser = createdBy
+              ? await ctx.db.get(createdBy.userId)
+              : null;
+
+            // Get comments for task
+            const comments = await ctx.db
+              .query("taskComments")
+              .withIndex("by_task_id", (q) => q.eq("taskId", task._id))
+              .collect();
+
+            const commentsWithMembers = await Promise.all(
+              comments.map(async (comment) => {
+                const commentMember = await ctx.db.get(comment.memberId);
+                const user = commentMember
+                  ? await ctx.db.get(commentMember.userId)
+                  : null;
+
+                return {
+                  ...comment,
+                  member: commentMember ? { ...commentMember, user } : null,
+                };
+              }),
+            );
+
+            return {
+              ...task,
+              assignedTo: assignedTo
+                ? { ...assignedTo, user: assignedToUser }
+                : null,
+              assignedBy: assignedBy
+                ? { ...assignedBy, user: assignedByUser }
+                : null,
+              createdBy: createdBy
+                ? { ...createdBy, user: createdByUser }
+                : null,
+              comments: commentsWithMembers,
+            };
+          }),
+        );
+
+        return {
+          ...list,
+          tasks: tasksWithDetails.sort((a, b) => a.position - b.position),
+        };
+      }),
+    );
+
+    return {
+      ...board,
+      lists: listsWithTasks.sort((a, b) => a.position - b.position),
+    };
+  },
+});
