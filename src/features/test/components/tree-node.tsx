@@ -45,12 +45,12 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
   const router = useRouter();
   const toggleStar = useToggleStar();
 
-  if (!data?.uniqueId) return; // or handle it appropriately
+  // if (!data?.uniqueId) return; // or handle it appropriately
 
-  const boardId = data.uniqueId as Id<"projectBoards">;
+  // const boardId = data.uniqueId as Id<"projectBoards">;
 
-  const { datas: boardData } = useGetFullProjectBoard({ boardId });
-  if (boardData) console.log("😎😎😎😎😎😎😎😎😎😎😎", boardData);
+  // const { datas: boardData } = useGetFullProjectBoard({ boardId });
+  // if (boardData) console.log("😎😎😎😎😎😎😎😎😎😎😎", boardData);
 
   const [label, setLabel] = useState(data.label);
   const [description, setDescription] = useState(

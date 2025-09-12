@@ -1079,3 +1079,41 @@ export const toggleNodeStarred = mutation({
     };
   },
 });
+
+export const getWorkspaceProjectsWithTasks = query({
+  args: { workspaceId: v.id("workspaces") },
+  handler: async (ctx, { workspaceId }) => {
+    // 1. Fetch all tree nodes
+    const nodes = await ctx.db
+      .query("treeNodes")
+      .filter((q) => q.eq(q.field("workspaceId"), workspaceId))
+      .collect();
+
+    // 2. For each node, get project board + its tasks
+    const results = await Promise.all(
+      nodes.map(async (node) => {
+        // ⚠️ node.nodeId is defined as string in schema, not Id<"projectBoards">
+        // So you can’t directly do ctx.db.get(node.nodeId)
+        // You likely need to store boardId separately or ensure nodeId matches projectBoard._id
+        // For now, let’s assume node.nodeId === projectBoard._id string
+        const projectBoard = await ctx.db.get(
+          node.nodeId as Id<"projectBoards">,
+        );
+        if (!projectBoard) return null;
+
+        const tasks = await ctx.db
+          .query("projectTasks")
+          .filter((q) => q.eq(q.field("boardId"), projectBoard._id))
+          .collect();
+
+        return {
+          node,
+          project: projectBoard,
+          tasks,
+        };
+      }),
+    );
+
+    return results.filter(Boolean);
+  },
+});

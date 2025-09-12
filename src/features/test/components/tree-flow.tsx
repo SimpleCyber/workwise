@@ -32,6 +32,9 @@ import { Button } from "@/components/ui/button";
 import { AITreeDialog } from "./ai-tree-dialog";
 import { aiTreeService } from "@/lib/ai-service";
 
+import { useGetWorkspaceProjects } from "../api/all-data-hook";
+import type { Id } from "../../../../convex/_generated/dataModel";
+
 const nodeTypes = {
   treeNode: TreeNode,
 };
@@ -43,7 +46,7 @@ const edgeOptions = {
     stroke: "#3b82f6",
     strokeDasharray: "8,4",
   },
-  type: "bezier",
+  type: "default",
   pathOptions: {
     borderRadius: 20,
   },
@@ -76,6 +79,9 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
   const deleteNode = useDeleteTreeNode();
   const expandWithAI = useExpandNodeWithAI();
   const toggleStar = useToggleStar();
+
+  // const { data, isLoading } = useGetWorkspaceProjects(workspaceId);
+  // console.log(data)
 
   const layoutManager = new TreeLayoutManager();
 

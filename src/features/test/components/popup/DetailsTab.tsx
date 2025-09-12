@@ -31,7 +31,7 @@ export function DetailsTab({
   const creatorName = nodeDetails?.creator?.name;
   const creatorRole = nodeDetails?.creator?.role;
   const nodeMembers = nodeDetails?.assignedUsers || [];
-  console.log("Node Members:", nodeMembers);
+  // console.log("Node Members:", nodeMembers);
 
   const membersExcludingCreator = nodeMembers.filter(
     (member) => member.role !== "creator",
