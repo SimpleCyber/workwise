@@ -9,7 +9,14 @@ import { UserAvatars } from "./user-avatars";
 import { NodeActions } from "./node-actions";
 import { StatusBadge } from "./status-badge";
 import { NodePopup } from "./node-popup";
-import { Lightbulb, Pin, Network, Crown } from "lucide-react";
+import {
+  Lightbulb,
+  Pin,
+  Network,
+  Crown,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { useToggleStar } from "../api/use-toggle-stars"; // Import the hook
@@ -28,6 +35,8 @@ interface TreeNodeData {
   onExpandWithAI?: () => void;
   isRoot?: boolean;
   hasChildren?: boolean;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
   childNodes?: Array<{ id: string; label: string; status: string }>;
   isPopupOpen?: boolean;
   onTogglePopup?: () => void;
@@ -109,6 +118,13 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
     }
   };
 
+  const handleToggleCollapse = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (data.onToggleCollapse) {
+      data.onToggleCollapse();
+    }
+  };
+
   const handleDoubleClick = () => {
     router.push(`/projects/${workspaceId}/board/${id}`);
   };
@@ -136,6 +152,9 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
       : description;
 
   const isRootNode = level === 0;
+  const hasChildren = data.hasChildren || false;
+  const isCollapsed = data.isCollapsed || false;
+  const showCollapseButton = hasChildren && (isHovered || isCollapsed);
 
   return (
     <div
@@ -162,6 +181,7 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
         onTouchEnd={handleTouchEnd}
         onClick={handleCardClick}
       >
+        {/* Star/Pin Button */}
         <div
           className={`absolute -top-2 -right-2 z-10 p-1 rounded-full bg-background border ${
             isStarred ? "opacity-100" : "opacity-0"
@@ -176,6 +196,27 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
             } cursor-pointer transition-colors`}
           />
         </div>
+
+        {/* Expand/Collapse Button */}
+        {showCollapseButton && (
+          <div
+            className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 z-10 p-1.5 rounded-full bg-background border-2 border-blue-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group"
+            onClick={handleToggleCollapse}
+            title={isCollapsed ? "Expand children" : "Collapse children"}
+          >
+            {isCollapsed ? (
+              <ChevronRight className="w-4 h-4 text-blue-600 group-hover:text-blue-700" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-blue-600 group-hover:text-blue-700" />
+            )}
+
+            {/* Tooltip */}
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-20">
+              {isCollapsed ? "Expand children" : "Collapse children"}
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-800"></div>
+            </div>
+          </div>
+        )}
 
         <CardContent className="p-3">
           {!data.isRoot && (
