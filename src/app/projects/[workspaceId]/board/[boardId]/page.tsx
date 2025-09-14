@@ -14,6 +14,8 @@ import { DragDropContext, Droppable, type DropResult } from "@hello-pangea/dnd";
 import { useUpdateProjectTask } from "@/features/projects/api/use-update-project-task";
 import { toast } from "sonner";
 
+import { useGetWorkspaceProjects } from "@/features/test/api/all-data-hook";
+
 import { useCurrentUser } from "../../../../../features/auth/api/use-current-user";
 
 export default function ProjectBoardPage({
@@ -25,6 +27,9 @@ export default function ProjectBoardPage({
 
   // ✅ get the signed-in user directly from auth
   const { data: currentUser, isLoading: userLoading } = useCurrentUser();
+  // get all project details 😵‍💫
+  const { data: projectDetails, isLoading } =
+    useGetWorkspaceProjects(workspaceId);
 
   const board = useQuery(api.projects.getProjectBoard, { boardId });
   const lists = useQuery(api.projects.getProjectLists, { boardId });
@@ -190,6 +195,7 @@ export default function ProjectBoardPage({
                       email: currentUser.email,
                       image: currentUser.image,
                     }}
+                    projectDetails={projectDetails}
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center text-sm text-muted-foreground">

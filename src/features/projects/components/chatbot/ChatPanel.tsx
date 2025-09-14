@@ -116,8 +116,8 @@ const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
       scrollToBottom();
     }
     // listen once per mount
-    window.addEventListener("v0:new-chat", handleNewChatScroll);
-    return () => window.removeEventListener("v0:new-chat", handleNewChatScroll);
+    window.addEventListener("new-chat", handleNewChatScroll);
+    return () => window.removeEventListener("new-chat", handleNewChatScroll);
   }, []);
 
   useEffect(() => {

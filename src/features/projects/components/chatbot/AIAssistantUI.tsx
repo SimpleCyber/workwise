@@ -33,6 +33,7 @@ type Props = {
   currentUserId: Id<"users">;
   currentUser?: { name?: string; email?: string; image?: string }; //
   className?: string;
+  projectDetails?: any[];
 };
 
 export default function AIAssistantUI({
@@ -41,7 +42,9 @@ export default function AIAssistantUI({
   currentUserId,
   currentUser,
   className = "",
+  projectDetails = [],
 }: Props) {
+  console.log("projectDetails lol", projectDetails);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState({ pinned: true, recent: false });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
