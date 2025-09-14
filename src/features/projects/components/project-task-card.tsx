@@ -44,6 +44,32 @@ const extractTextFromRichContent = (jsonContent: string): string => {
   }
 };
 
+const renderWithLinks = (text: string) => {
+  const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/g;
+
+  return text.split(urlRegex).map((part, index) => {
+    if (!part) return null;
+
+    if (part.match(urlRegex)) {
+      const href = part.startsWith("http") ? part : `https://${part}`;
+      return (
+        <a
+          key={index}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 font-semibold underline"
+          onClick={(e) => e.stopPropagation()} // prevent card click
+        >
+          {part}
+        </a>
+      );
+    }
+
+    return <span key={index}>{part}</span>;
+  });
+};
+
 const trimDescription = (text: string, maxLength = 200): string => {
   const trimmed = text.trim();
   return trimmed.length > maxLength
@@ -273,7 +299,7 @@ export const ProjectTaskCard = ({
           {/* Header with Title and Actions */}
           <div className="flex items-start justify-between">
             <h4 className="text-sm font-medium leading-tight text-gray-900 flex-1 pr-2">
-              {task.title}
+              {renderWithLinks(task.title)}
             </h4>
 
             {/* Actions dropdown */}
@@ -316,7 +342,9 @@ export const ProjectTaskCard = ({
           {/* Description preview */}
           {task.description && (
             <p className="text-xs text-gray-600 leading-relaxed">
-              {trimDescription(extractTextFromRichContent(task.description))}
+              {renderWithLinks(
+                trimDescription(extractTextFromRichContent(task.description)),
+              )}
             </p>
           )}
 
