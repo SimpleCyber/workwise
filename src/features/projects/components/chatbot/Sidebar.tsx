@@ -139,7 +139,7 @@ export default function Sidebar(props: SidebarProps) {
       }
     } finally {
       if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("v0:new-chat"));
+        window.dispatchEvent(new CustomEvent("new-chat"));
       }
     }
   }
