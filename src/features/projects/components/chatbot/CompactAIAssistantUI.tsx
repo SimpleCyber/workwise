@@ -1,0 +1,535 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Plus, Search, Clock, ChevronDown, ChevronRight, Archive, Clock3, BrainCircuit } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+// Header functionality moved to consolidated header
+import ChatPane from "./ChatPanel";
+import SearchModal from "./SearchModal";
+import { useGetProjectTasks } from "../../api/use-get-project-tasks";
+import { useGetProjectChats } from "../../api/use-get-project-chats";
+import { useGetProjectChatMessages } from "../../api/use-get-project-chat-messages";
+import { useCreateProjectChat } from "../../api/use-create-project-chat";
+import { useAppendProjectMessage } from "../../api/use-append-project-message";
+import { useRenameProjectChat } from "../../api/use-rename-project-chat";
+import { useTogglePinProjectChat } from "../../api/use-toggle-pin-project-chat";
+import { useDeleteProjectChat } from "../../api/use-delete-project-chat";
+import { useDeleteMessagesFrom } from "../../api/use-delete-project-messages-from";
+import { useGetProjectHooks } from "../../api/use-get-project-hooks";
+import {
+  useToggleProjectHook,
+  useSetProjectHookSelected,
+} from "../../api/use-toggle-project-hook";
+import type { Id } from "../../../../../convex/_generated/dataModel";
+import { sortChatsByUpdatedAt } from "./utils";
+import type {
+  ChatPaneHandle,
+  UIConversation,
+  UIMessage,
+  TaskAttachment,
+  ChatSendPayload,
+} from "./types";
+
+type Props = {
+  workspaceId: Id<"workspaces">;
+  boardId: Id<"projectBoards">;
+  currentUserId: Id<"users">;
+  currentUser?: { name?: string; email?: string; image?: string };
+  className?: string;
+  projectDetails?: any[];
+  lists?: Array<{
+    _id: Id<"projectLists">;
+    name: string;
+    position: number;
+    boardId: Id<"projectBoards">;
+    memberId: Id<"members">;
+    workspaceId: Id<"workspaces">;
+    isArchived?: boolean;
+    createdAt: number;
+    updatedAt: number;
+  }>;
+  selectedMemberIds?: Id<"members">[];
+};
+
+export default function CompactAIAssistantUI({
+  workspaceId,
+  boardId,
+  currentUserId,
+  currentUser,
+  className = "",
+  projectDetails = [],
+  lists = [],
+  selectedMemberIds = [],
+}: Props) {
+  const [selectedId, setSelectedId] = useState<Id<"projectChats"> | null>(null);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [collapsed, setCollapsed] = useState({ pinned: true, recent: true });
+  const [kanbanCollapsed, setKanbanCollapsed] = useState({ todo: true, inProgress: true });
+  const [model, setModel] = useState("gpt-4o");
+  const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
+
+  const { chats, isLoading: loadingChats } = useGetProjectChats(boardId);
+  const { messages, isLoading: loadingMsgs } = useGetProjectChatMessages(
+    selectedId as any,
+  );
+  const { createChat } = useCreateProjectChat();
+  const { appendMessage } = useAppendProjectMessage();
+  const { renameChat } = useRenameProjectChat();
+  const { togglePin } = useTogglePinProjectChat();
+  const { deleteChat } = useDeleteProjectChat();
+  const { deleteFrom } = useDeleteMessagesFrom();
+  const { hooks } = useGetProjectHooks(selectedId as any);
+  const { toggleHook } = useToggleProjectHook();
+  const { setHookSelected } = useSetProjectHookSelected();
+
+  const [isThinking, setIsThinking] = useState(false);
+  const [thinkingConvId, setThinkingConvId] = useState<string | null>(null);
+
+  const composerRef = useRef<ChatPaneHandle | null>(null);
+
+  // Get tasks for kanban elements
+  const todoList = lists.find(list => list.name.toLowerCase().includes('todo') || list.name.toLowerCase().includes('to do'));
+  const inProgressList = lists.find(list => list.name.toLowerCase().includes('progress') || list.name.toLowerCase().includes('doing'));
+
+  const { data: todoTasks } = useGetProjectTasks({
+    listId: todoList?._id!,
+    assignedToIds: selectedMemberIds.length > 0 ? selectedMemberIds : undefined,
+  });
+
+  const { data: inProgressTasks } = useGetProjectTasks({
+    listId: inProgressList?._id!,
+    assignedToIds: selectedMemberIds.length > 0 ? selectedMemberIds : undefined,
+  });
+
+  useEffect(() => {
+    if (!selectedId && chats.length > 0) {
+      setSelectedId(chats[0].id);
+    }
+  }, [chats, selectedId]);
+
+  useEffect(() => {
+    function onTaskDragStart(ev: any) {
+      const detail = ev?.detail;
+      const candidate =
+        detail?.task ??
+        (detail?.type === "project-task" ? detail.task : detail);
+      if (candidate) {
+        (window as any).__lastDraggedTask = candidate;
+      }
+    }
+    window.addEventListener("kanban:task-drag-start", onTaskDragStart);
+    return () =>
+      window.removeEventListener("kanban:task-drag-start", onTaskDragStart);
+  }, []);
+
+  useEffect(() => {
+    function onTaskDropToChat(e: any) {
+      const incoming = (e?.detail?.task ??
+        (e?.detail?.type === "project-task"
+          ? e.detail.task
+          : e.detail)) as TaskAttachment | null;
+
+      if (incoming && composerRef.current) {
+        // TODO: Implement task attachment when ChatPaneHandle supports it
+        // composerRef.current.attachTask(incoming);
+        console.log("Task dropped to chat:", incoming);
+      }
+    }
+    window.addEventListener("kanban:task-drop-to-chat", onTaskDropToChat);
+    return () =>
+      window.removeEventListener("kanban:task-drop-to-chat", onTaskDropToChat);
+  }, []);
+
+  const createNewChat = async () => {
+    try {
+      const newChatId = await createChat({
+        workspaceId,
+        boardId,
+        title: "New chat",
+        createdBy: currentUserId,
+      });
+      setSelectedId(newChatId);
+    } catch (error) {
+      console.error("Failed to create new chat:", error);
+    }
+  };
+
+  const onSend = async (payload: ChatSendPayload) => {
+    const content = payload.text || "";
+
+    if (!selectedId) {
+      const newChatId = await createChat({
+        workspaceId,
+        boardId,
+        title: "New chat",
+        createdBy: currentUserId,
+      });
+      setSelectedId(newChatId);
+
+      setIsThinking(true);
+      setThinkingConvId(newChatId as any);
+
+      await appendMessage({
+        chatId: newChatId,
+        role: "user",
+        content,
+        userId: currentUserId,
+      });
+
+      setIsThinking(false);
+      setThinkingConvId(null);
+    } else {
+      setIsThinking(true);
+      setThinkingConvId(selectedId as any);
+
+      await appendMessage({
+        chatId: selectedId,
+        role: "user",
+        content,
+        userId: currentUserId,
+      });
+
+      setIsThinking(false);
+      setThinkingConvId(null);
+    }
+  };
+
+  const onEditMessage = async (messageId: string, newContent: string) => {
+    // Implementation for editing messages
+    console.log("Edit message:", messageId, newContent);
+  };
+
+  const onDeleteFrom = async (messageId: string) => {
+    if (!selectedId) return;
+    await deleteFrom({
+      chatId: selectedId,
+      fromMessageId: messageId as any,
+    });
+  };
+
+  const onRegenerateMessage = async (message: UIMessage) => {
+    console.log("Regenerate message:", message);
+  };
+
+  const pauseThinking = () => {
+    setIsThinking(false);
+    setThinkingConvId(null);
+  };
+
+  const onRename = async (id: string, title: string) => {
+    await renameChat(id as any, title);
+  };
+
+  const onDelete = async (id: string) => {
+    await deleteChat(id as any);
+    if (selectedId === id) {
+      setSelectedId(chats.length > 1 ? chats[0].id : null);
+    }
+  };
+
+  const sorted = sortChatsByUpdatedAt(chats);
+  const selectedChatId = selectedId as any;
+
+  // Chat management
+  const pinned = chats.filter((c) => c.pinned);
+  const recent = chats.filter((c) => !c.pinned);
+  sortChatsByUpdatedAt(pinned);
+  sortChatsByUpdatedAt(recent);
+
+  const selectedHookMessageIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const h of hooks || []) {
+      if (h.selected && h.messageId) set.add(h.messageId as any);
+    }
+    return set;
+  }, [hooks]);
+
+  const selected: UIConversation | null = selectedChatId
+    ? {
+        id: selectedChatId as any,
+        title: chats.find((c: any) => c.id === selectedChatId)?.title ?? "Chat",
+        updatedAt:
+          chats.find((c: any) => c.id === selectedChatId)?.updatedAt ??
+          new Date().toISOString(),
+        messages: messages as any,
+        preview:
+          ((messages &&
+            (messages as any[])[(messages as any[]).length - 1]
+              ?.content) as string) ?? "Ask anything…",
+        pinned:
+          chats.find((c: any) => c.id === selectedChatId)?.pinned ?? false,
+      }
+    : null;
+
+  const missingIds = !workspaceId || !boardId || !currentUserId;
+
+  return (
+    <div className={"h-full w-full bg-zinc-50 text-zinc-900 " + className}>
+      <div className="flex h-full w-full overflow-hidden">
+        {missingIds ? (
+          <div className="grid flex-1 place-items-center text-sm text-zinc-500">
+            Preparing your board chat…
+          </div>
+        ) : (
+          <main className="relative flex min-w-0 flex-1 flex-col">
+            {/* Consolidated Header with Chat Controls and Kanban Elements */}
+            <div className="border-b border-zinc-200 bg-white px-3 py-2">
+              <div className="flex items-center justify-between gap-3">
+                {/* Left side - Chat Controls */}
+                <div className="flex items-center gap-2">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={createNewChat}
+                          className="h-7 w-7 p-0"
+                        >
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>New chat</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowSearchModal(true)}
+                          className="h-7 w-7 p-0"
+                        >
+                          <Search className="h-3 w-3" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Search chats</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-xs"
+                          onClick={() => setCollapsed(prev => ({ ...prev, recent: !prev.recent }))}
+                        >
+                          <Clock className="h-3 w-3 mr-1" />
+                          Recent
+                          {collapsed.recent ? (
+                            <ChevronRight className="h-3 w-3 ml-1" />
+                          ) : (
+                            <ChevronDown className="h-3 w-3 ml-1" />
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Recent chats</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+
+                {/* Center - GPT Model Dropdown */}
+                <div className="flex items-center">
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
+                      className="flex items-center gap-2 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs hover:bg-zinc-50 focus:outline-none"
+                    >
+                      <BrainCircuit className="h-3 w-3 text-zinc-700" />
+                      <span>{model === "gpt-4o" ? "GPT-4o" : model === "gpt-4o-mini" ? "GPT-4o mini" : "GPT-4.1"}</span>
+                      <ChevronDown className="h-3 w-3 text-zinc-500" />
+                    </button>
+                    {modelDropdownOpen && (
+                      <>
+                        <div className="absolute z-[90] mt-1 w-32 overflow-hidden rounded-lg border border-zinc-200 bg-white p-1 shadow-lg">
+                          {[
+                            { id: "gpt-4o", name: "GPT-4o" },
+                            { id: "gpt-4o-mini", name: "GPT-4o mini" },
+                            { id: "gpt-4.1", name: "GPT-4.1" },
+                          ].map((m) => (
+                            <button
+                              key={m.id}
+                              onClick={() => {
+                                setModel(m.id);
+                                setModelDropdownOpen(false);
+                              }}
+                              className="block w-full rounded-md px-2 py-1 text-left text-xs hover:bg-zinc-100"
+                            >
+                              {m.name}
+                            </button>
+                          ))}
+                        </div>
+                        <button
+                          onClick={() => setModelDropdownOpen(false)}
+                          className="fixed inset-0 z-[80] cursor-default"
+                        />
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right - Kanban Elements */}
+                <div className="flex items-center gap-2">
+                  {/* To Do List */}
+                  {todoList && (
+                    <Collapsible
+                      open={!kanbanCollapsed.todo}
+                      onOpenChange={(open) => setKanbanCollapsed(prev => ({ ...prev, todo: !open }))}
+                    >
+                      <CollapsibleTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
+                          <Archive className="h-3 w-3 mr-1" />
+                          To Do ({todoTasks?.length || 0})
+                          {kanbanCollapsed.todo ? (
+                            <ChevronRight className="h-3 w-3 ml-1" />
+                          ) : (
+                            <ChevronDown className="h-3 w-3 ml-1" />
+                          )}
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="absolute z-[80] mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg p-2">
+                        <div className="max-h-48 overflow-y-auto space-y-1">
+                          {todoTasks?.slice(0, 10).map((task) => (
+                            <div
+                              key={task._id}
+                              className="p-2 text-xs bg-gray-50 rounded border cursor-pointer hover:bg-gray-100"
+                              draggable
+                              onDragStart={(e) => {
+                                const taskData = {
+                                  taskId: task._id,
+                                  title: task.title,
+                                  description: task.description,
+                                  priority: task.priority,
+                                  dueDate: task.dueDate,
+                                };
+                                e.dataTransfer.setData("application/json", JSON.stringify({ type: "project-task", task: taskData }));
+                                (window as any).__lastDraggedTask = taskData;
+                                window.dispatchEvent(new CustomEvent("kanban:task-drag-start", { detail: { type: "project-task", task: taskData } }));
+                              }}
+                            >
+                              <div className="font-medium truncate">{task.title}</div>
+                              <div className="text-gray-500 truncate">{task.taskCode}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
+
+                  {/* In Progress List */}
+                  {inProgressList && (
+                    <Collapsible
+                      open={!kanbanCollapsed.inProgress}
+                      onOpenChange={(open) => setKanbanCollapsed(prev => ({ ...prev, inProgress: !open }))}
+                    >
+                      <CollapsibleTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
+                          <Clock3 className="h-3 w-3 mr-1" />
+                          In Progress ({inProgressTasks?.length || 0})
+                          {kanbanCollapsed.inProgress ? (
+                            <ChevronRight className="h-3 w-3 ml-1" />
+                          ) : (
+                            <ChevronDown className="h-3 w-3 ml-1" />
+                          )}
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="absolute z-[80] mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg p-2">
+                        <div className="max-h-48 overflow-y-auto space-y-1">
+                          {inProgressTasks?.slice(0, 10).map((task) => (
+                            <div
+                              key={task._id}
+                              className="p-2 text-xs bg-blue-50 rounded border cursor-pointer hover:bg-blue-100"
+                              draggable
+                              onDragStart={(e) => {
+                                const taskData = {
+                                  taskId: task._id,
+                                  title: task.title,
+                                  description: task.description,
+                                  priority: task.priority,
+                                  dueDate: task.dueDate,
+                                };
+                                e.dataTransfer.setData("application/json", JSON.stringify({ type: "project-task", task: taskData }));
+                                (window as any).__lastDraggedTask = taskData;
+                                window.dispatchEvent(new CustomEvent("kanban:task-drag-start", { detail: { type: "project-task", task: taskData } }));
+                              }}
+                            >
+                              <div className="font-medium truncate">{task.title}</div>
+                              <div className="text-gray-500 truncate">{task.taskCode}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
+                </div>
+              </div>
+
+              {/* Recent chats list - positioned below */}
+              {!collapsed.recent && (
+                <div className="mt-2">
+                  <div className="max-h-32 overflow-y-auto space-y-1">
+                    {recent.slice(0, 5).map((chat) => (
+                      <Button
+                        key={chat.id}
+                        variant={selectedChatId === chat.id ? "secondary" : "ghost"}
+                        size="sm"
+                        onClick={() => setSelectedId(chat.id as any)}
+                        className="w-full justify-start h-7 px-2 text-xs truncate"
+                      >
+                        {chat.title}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Header removed - functionality moved to consolidated header above */}
+            <ChatPane
+              ref={composerRef}
+              conversation={selected}
+              onSend={(payload: ChatSendPayload) => onSend(payload)}
+              onEditMessage={(messageId: string, newContent: string) =>
+                onEditMessage(messageId, newContent)
+              }
+              isThinking={
+                isThinking && (thinkingConvId as any) === selected?.id
+              }
+              onPauseThinking={pauseThinking}
+              onDeleteFrom={(messageId: string) => onDeleteFrom(messageId)}
+              onRegenerate={(m) => onRegenerateMessage(m)}
+              currentUser={currentUser}
+              selectedHookMessageIds={selectedHookMessageIds}
+              onHook={async (m) => {
+                if (!selectedId) return;
+                await toggleHook({
+                  chatId: selectedId as any,
+                  messageId: m.id as any,
+                  content: m.content,
+                });
+              }}
+            />
+
+            {/* Search Modal */}
+            <SearchModal
+              isOpen={showSearchModal}
+              onClose={() => setShowSearchModal(false)}
+              conversations={chats}
+              selectedId={selectedChatId}
+              onSelect={(id: string) => setSelectedId(id as any)}
+              togglePin={(id: string) => togglePin(id as any)}
+              createNewChat={createNewChat}
+            />
+          </main>
+        )}
+      </div>
+    </div>
+  );
+}

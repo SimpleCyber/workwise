@@ -34,7 +34,7 @@ const RootLayout = ({ children }: Readonly<PropsWithChildren>) => {
                 <div className="flex-1 overflow-auto">{children}</div>
 
                 {/* Persistent Panels */}
-                {/* <FloatingSearchBar /> */}
+                <FloatingSearchBar />
               </div>
             </JotaiProvider>
           </ConvexClientProvider>

@@ -126,7 +126,11 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
   };
 
   const handleDoubleClick = () => {
-    router.push(`/projects/${workspaceId}/board/${id}`);
+    // Open sidebar instead of navigating to new page
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('sidebar', 'true');
+    currentUrl.searchParams.set('boardId', id);
+    router.push(currentUrl.toString());
   };
 
   const handleTouchEnd = () => {
