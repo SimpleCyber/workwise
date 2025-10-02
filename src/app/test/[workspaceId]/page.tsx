@@ -8,7 +8,6 @@ import { useGetTreeData } from "@/features/test/api/use-get-tree-data";
 import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info";
 import { TreeFlow } from "@/features/test/components/tree-flow";
 import { ProjectSidebarKanban } from "@/features/projects/components/project-sidebar-kanban";
-import { AnimatePresence } from "framer-motion";
 
 export default function TreeWorkspacePage({
   params,
@@ -35,8 +34,13 @@ export default function TreeWorkspacePage({
     const shouldShowSidebar = searchParams.get('sidebar') === 'true';
     const boardId = searchParams.get('boardId') as Id<"projectBoards"> | null;
 
-    setSidebarOpen(shouldShowSidebar);
-    setSelectedBoardId(boardId);
+    if (boardId && shouldShowSidebar) {
+      setSelectedBoardId(boardId);
+      setSidebarOpen(true);
+    } else {
+      setSidebarOpen(false);
+      setSelectedBoardId(null);
+    }
   }, [searchParams]);
 
   const handleCloseSidebar = () => {
@@ -72,22 +76,24 @@ export default function TreeWorkspacePage({
       <div className="flex h-[49px] items-center border-b bg-white px-4">
         <h1 className="text-lg font-semibold">All Data - {workspace.name}</h1>
       </div>
-      <div className="flex-1 overflow-auto p-6">
-        <TreeFlow workspaceId={workspaceId} />
+      <div
+        className="flex-1 overflow-auto p-6 transition-all duration-300 ease-in-out"
+        style={{
+          marginRight: sidebarOpen ? `600px` : '0px' // Dynamic margin for sidebar (matches default width)
+        }}
+      >
+        <TreeFlow workspaceId={workspaceId} sidebarOpen={sidebarOpen} />
       </div>
 
       {/* Project Sidebar */}
-      <AnimatePresence mode="wait">
-        {selectedBoardId && sidebarOpen && (
-          <ProjectSidebarKanban
-            key="project-sidebar"
-            workspaceId={workspaceId}
-            boardId={selectedBoardId}
-            isOpen={sidebarOpen}
-            onClose={handleCloseSidebar}
-          />
-        )}
-      </AnimatePresence>
+      {selectedBoardId && (
+        <ProjectSidebarKanban
+          workspaceId={workspaceId}
+          boardId={selectedBoardId}
+          isOpen={sidebarOpen}
+          onClose={handleCloseSidebar}
+        />
+      )}
     </div>
   );
 }

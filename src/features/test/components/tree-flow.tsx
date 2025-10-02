@@ -62,7 +62,7 @@ const getMiniMapNodeColor = (node: Node) => {
   return "#3b82f6";
 };
 
-export function TreeFlow({ workspaceId }: TreeFlowProps) {
+export function TreeFlow({ workspaceId, sidebarOpen }: TreeFlowProps & { sidebarOpen?: boolean }) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [activePopup, setActivePopup] = useState<string | null>(null);
@@ -480,7 +480,12 @@ export function TreeFlow({ workspaceId }: TreeFlowProps) {
             maskColor="rgba(0, 0, 0, 0.2)"
             pannable={true}
             zoomable={true}
-            className="bg-background border border-border rounded-lg"
+            className="bg-background border border-border rounded-lg transition-all duration-300"
+            style={{
+              transform: sidebarOpen ? 'translateX(0px)' : 'translateX(0px)',
+              width: sidebarOpen ? 150 : 200,
+              height: sidebarOpen ? 120 : 150,
+            }}
           />
           <Background
             variant={BackgroundVariant.Dots}
