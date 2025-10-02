@@ -396,6 +396,17 @@ export default function CompactAIAssistantUI({
                       </CollapsibleTrigger>
                       <CollapsibleContent className="absolute z-[80] mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg p-2 right-0">
                         <div className="min-h-20 max-h-64 overflow-y-auto space-y-1">
+                          {/* Add Task Button */}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {/* TODO: Add task functionality */}}
+                            className="w-full justify-start h-8 px-2 text-xs text-gray-600 hover:text-gray-900 border-dashed border"
+                          >
+                            <Plus className="h-3 w-3 mr-2" />
+                            Add task to To Do
+                          </Button>
+
                           {todoTasks?.slice(0, 10).map((task) => (
                             <div
                               key={task._id}
@@ -442,6 +453,17 @@ export default function CompactAIAssistantUI({
                       </CollapsibleTrigger>
                       <CollapsibleContent className="absolute z-[80] mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg p-2 right-0">
                         <div className="min-h-20 max-h-64 overflow-y-auto space-y-1">
+                          {/* Add Task Button */}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {/* TODO: Add task functionality */}}
+                            className="w-full justify-start h-8 px-2 text-xs text-gray-600 hover:text-gray-900 border-dashed border"
+                          >
+                            <Plus className="h-3 w-3 mr-2" />
+                            Add task to In Progress
+                          </Button>
+
                           {inProgressTasks?.slice(0, 10).map((task) => (
                             <div
                               key={task._id}
