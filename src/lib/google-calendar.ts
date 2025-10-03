@@ -1,34 +1,34 @@
 // Google Calendar API integration utilities
 
 export interface GoogleCalendarEvent {
-  id?: string
-  summary: string
-  description?: string
+  id?: string;
+  summary: string;
+  description?: string;
   start: {
-    dateTime: string
-    timeZone?: string
-  }
+    dateTime: string;
+    timeZone?: string;
+  };
   end: {
-    dateTime: string
-    timeZone?: string
-  }
-  location?: string
-  attendees?: Array<{ email: string }>
+    dateTime: string;
+    timeZone?: string;
+  };
+  location?: string;
+  attendees?: Array<{ email: string }>;
   conferenceData?: {
     createRequest?: {
-      requestId: string
+      requestId: string;
       conferenceSolutionKey: {
-        type: string
-      }
-    }
-  }
+        type: string;
+      };
+    };
+  };
 }
 
 export class GoogleCalendarAPI {
-  private accessToken: string
+  private accessToken: string;
 
   constructor(accessToken: string) {
-    this.accessToken = accessToken
+    this.accessToken = accessToken;
   }
 
   async createEvent(event: GoogleCalendarEvent): Promise<any> {
@@ -42,45 +42,60 @@ export class GoogleCalendarAPI {
         },
         body: JSON.stringify(event),
       },
-    )
+    );
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(`Failed to create event: ${error.error?.message || response.statusText}`)
+      const error = await response.json();
+      throw new Error(
+        `Failed to create event: ${error.error?.message || response.statusText}`,
+      );
     }
 
-    return response.json()
+    return response.json();
   }
 
-  async updateEvent(eventId: string, event: Partial<GoogleCalendarEvent>): Promise<any> {
-    const response = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${this.accessToken}`,
-        "Content-Type": "application/json",
+  async updateEvent(
+    eventId: string,
+    event: Partial<GoogleCalendarEvent>,
+  ): Promise<any> {
+    const response = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(event),
       },
-      body: JSON.stringify(event),
-    })
+    );
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(`Failed to update event: ${error.error?.message || response.statusText}`)
+      const error = await response.json();
+      throw new Error(
+        `Failed to update event: ${error.error?.message || response.statusText}`,
+      );
     }
 
-    return response.json()
+    return response.json();
   }
 
   async deleteEvent(eventId: string): Promise<void> {
-    const response = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${this.accessToken}`,
+    const response = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+        },
       },
-    })
+    );
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(`Failed to delete event: ${error.error?.message || response.statusText}`)
+      const error = await response.json();
+      throw new Error(
+        `Failed to delete event: ${error.error?.message || response.statusText}`,
+      );
     }
   }
 
@@ -90,23 +105,28 @@ export class GoogleCalendarAPI {
       timeMax,
       singleEvents: "true",
       orderBy: "startTime",
-    })
+    });
 
-    const response = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?${params}`, {
-      headers: {
-        Authorization: `Bearer ${this.accessToken}`,
+    const response = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/primary/events?${params}`,
+      {
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+        },
       },
-    })
+    );
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(`Failed to list events: ${error.error?.message || response.statusText}`)
+      const error = await response.json();
+      throw new Error(
+        `Failed to list events: ${error.error?.message || response.statusText}`,
+      );
     }
 
-    return response.json()
+    return response.json();
   }
 }
 
 export function generateGoogleMeetLink(): string {
-  return `https://meet.google.com/${Math.random().toString(36).substr(2, 12)}`
+  return `https://meet.google.com/${Math.random().toString(36).substr(2, 12)}`;
 }

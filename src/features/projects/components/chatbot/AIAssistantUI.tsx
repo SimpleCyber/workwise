@@ -294,7 +294,7 @@ export default function AIAssistantUI({
       ragResponseText = data.answer || "";
       console.log("---------------------------------------------------");
       console.log("⭐⭐⭐⭐⭐RAG response here :", ragResponseText);
-      console.log("✅✅✅✅✅RAG Input text here :", detailsText); 
+      console.log("✅✅✅✅✅RAG Input text here :", detailsText);
       console.log("❓❓❓❓❓RAG Input question here :", currentMessage);
       console.log("---------------------------------------------------");
     }

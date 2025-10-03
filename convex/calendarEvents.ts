@@ -1,6 +1,6 @@
-import { getAuthUserId } from "@convex-dev/auth/server"
-import { v } from "convex/values"
-import { mutation, query } from "./_generated/server"
+import { getAuthUserId } from "@convex-dev/auth/server";
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
 
 // Create a new calendar event
 export const createEvent = mutation({
@@ -16,21 +16,23 @@ export const createEvent = mutation({
     googleEventId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx)
+    const userId = await getAuthUserId(ctx);
     if (!userId) {
-      throw new Error("Not authenticated")
+      throw new Error("Not authenticated");
     }
 
     const member = await ctx.db
       .query("members")
-      .withIndex("by_workspace_id_user_id", (q) => q.eq("workspaceId", args.workspaceId).eq("userId", userId))
-      .unique()
+      .withIndex("by_workspace_id_user_id", (q) =>
+        q.eq("workspaceId", args.workspaceId).eq("userId", userId),
+      )
+      .unique();
 
     if (!member) {
-      throw new Error("Not a member of this workspace")
+      throw new Error("Not a member of this workspace");
     }
 
-    const now = Date.now()
+    const now = Date.now();
     const eventId = await ctx.db.insert("calendarEvents", {
       title: args.title,
       description: args.description,
@@ -45,11 +47,11 @@ export const createEvent = mutation({
       isGoogleSynced: !!args.googleEventId,
       createdAt: now,
       updatedAt: now,
-    })
+    });
 
-    return eventId
+    return eventId;
   },
-})
+});
 
 // Get all events for a user in a workspace
 export const getEventsByWorkspace = query({
@@ -57,28 +59,32 @@ export const getEventsByWorkspace = query({
     workspaceId: v.id("workspaces"),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx)
+    const userId = await getAuthUserId(ctx);
     if (!userId) {
-      return []
+      return [];
     }
 
     const member = await ctx.db
       .query("members")
-      .withIndex("by_workspace_id_user_id", (q) => q.eq("workspaceId", args.workspaceId).eq("userId", userId))
-      .unique()
+      .withIndex("by_workspace_id_user_id", (q) =>
+        q.eq("workspaceId", args.workspaceId).eq("userId", userId),
+      )
+      .unique();
 
     if (!member) {
-      return []
+      return [];
     }
 
     const events = await ctx.db
       .query("calendarEvents")
-      .withIndex("by_user_workspace", (q) => q.eq("userId", userId).eq("workspaceId", args.workspaceId))
-      .collect()
+      .withIndex("by_user_workspace", (q) =>
+        q.eq("userId", userId).eq("workspaceId", args.workspaceId),
+      )
+      .collect();
 
-    return events
+    return events;
   },
-})
+});
 
 // Get events for a specific date range
 export const getEventsByDateRange = query({
@@ -88,29 +94,38 @@ export const getEventsByDateRange = query({
     endTime: v.number(),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx)
+    const userId = await getAuthUserId(ctx);
     if (!userId) {
-      return []
+      return [];
     }
 
     const member = await ctx.db
       .query("members")
-      .withIndex("by_workspace_id_user_id", (q) => q.eq("workspaceId", args.workspaceId).eq("userId", userId))
-      .unique()
+      .withIndex("by_workspace_id_user_id", (q) =>
+        q.eq("workspaceId", args.workspaceId).eq("userId", userId),
+      )
+      .unique();
 
     if (!member) {
-      return []
+      return [];
     }
 
     const events = await ctx.db
       .query("calendarEvents")
-      .withIndex("by_user_workspace", (q) => q.eq("userId", userId).eq("workspaceId", args.workspaceId))
-      .filter((q) => q.and(q.gte(q.field("startTime"), args.startTime), q.lte(q.field("startTime"), args.endTime)))
-      .collect()
+      .withIndex("by_user_workspace", (q) =>
+        q.eq("userId", userId).eq("workspaceId", args.workspaceId),
+      )
+      .filter((q) =>
+        q.and(
+          q.gte(q.field("startTime"), args.startTime),
+          q.lte(q.field("startTime"), args.endTime),
+        ),
+      )
+      .collect();
 
-    return events
+    return events;
   },
-})
+});
 
 // Update an existing event
 export const updateEvent = mutation({
@@ -125,36 +140,36 @@ export const updateEvent = mutation({
     attendees: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx)
+    const userId = await getAuthUserId(ctx);
     if (!userId) {
-      throw new Error("Not authenticated")
+      throw new Error("Not authenticated");
     }
 
-    const event = await ctx.db.get(args.eventId)
+    const event = await ctx.db.get(args.eventId);
     if (!event) {
-      throw new Error("Event not found")
+      throw new Error("Event not found");
     }
 
     if (event.userId !== userId) {
-      throw new Error("Unauthorized")
+      throw new Error("Unauthorized");
     }
 
     const updates: any = {
       updatedAt: Date.now(),
-    }
+    };
 
-    if (args.title !== undefined) updates.title = args.title
-    if (args.description !== undefined) updates.description = args.description
-    if (args.startTime !== undefined) updates.startTime = args.startTime
-    if (args.endTime !== undefined) updates.endTime = args.endTime
-    if (args.location !== undefined) updates.location = args.location
-    if (args.meetLink !== undefined) updates.meetLink = args.meetLink
-    if (args.attendees !== undefined) updates.attendees = args.attendees
+    if (args.title !== undefined) updates.title = args.title;
+    if (args.description !== undefined) updates.description = args.description;
+    if (args.startTime !== undefined) updates.startTime = args.startTime;
+    if (args.endTime !== undefined) updates.endTime = args.endTime;
+    if (args.location !== undefined) updates.location = args.location;
+    if (args.meetLink !== undefined) updates.meetLink = args.meetLink;
+    if (args.attendees !== undefined) updates.attendees = args.attendees;
 
-    await ctx.db.patch(args.eventId, updates)
-    return args.eventId
+    await ctx.db.patch(args.eventId, updates);
+    return args.eventId;
   },
-})
+});
 
 // Delete an event
 export const deleteEvent = mutation({
@@ -162,21 +177,21 @@ export const deleteEvent = mutation({
     eventId: v.id("calendarEvents"),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx)
+    const userId = await getAuthUserId(ctx);
     if (!userId) {
-      throw new Error("Not authenticated")
+      throw new Error("Not authenticated");
     }
 
-    const event = await ctx.db.get(args.eventId)
+    const event = await ctx.db.get(args.eventId);
     if (!event) {
-      throw new Error("Event not found")
+      throw new Error("Event not found");
     }
 
     if (event.userId !== userId) {
-      throw new Error("Unauthorized")
+      throw new Error("Unauthorized");
     }
 
-    await ctx.db.delete(args.eventId)
-    return { success: true }
+    await ctx.db.delete(args.eventId);
+    return { success: true };
   },
-})
+});

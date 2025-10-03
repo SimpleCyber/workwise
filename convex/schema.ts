@@ -1,6 +1,6 @@
-import { authTables } from "@convex-dev/auth/server"
-import { defineSchema, defineTable } from "convex/server"
-import { v } from "convex/values"
+import { authTables } from "@convex-dev/auth/server";
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
 
 const schema = defineSchema({
   ...authTables,
@@ -41,7 +41,11 @@ const schema = defineSchema({
     .index("by_channel_id", ["channelId"])
     .index("by_conversation_id", ["conversationId"])
     .index("by_parent_message_id", ["parentMessageId"])
-    .index("by_channel_id_parent_message_id_conversation_id", ["channelId", "parentMessageId", "conversationId"]),
+    .index("by_channel_id_parent_message_id_conversation_id", [
+      "channelId",
+      "parentMessageId",
+      "conversationId",
+    ]),
   reactions: defineTable({
     workspaceId: v.id("workspaces"),
     messageId: v.id("messages"),
@@ -95,7 +99,12 @@ const schema = defineSchema({
     checkInNotes: v.optional(v.string()),
     tasks: v.optional(v.string()),
     taskImage: v.optional(v.id("_storage")),
-    status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected"), v.literal("absent")),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected"),
+      v.literal("absent"),
+    ),
     adminNotes: v.optional(v.string()),
     approvedBy: v.optional(v.id("members")),
     approvedAt: v.optional(v.number()),
@@ -155,8 +164,17 @@ const schema = defineSchema({
     startDate: v.number(),
     endDate: v.number(),
     reason: v.string(),
-    leaveType: v.union(v.literal("sick"), v.literal("vacation"), v.literal("personal"), v.literal("other")),
-    status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
+    leaveType: v.union(
+      v.literal("sick"),
+      v.literal("vacation"),
+      v.literal("personal"),
+      v.literal("other"),
+    ),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected"),
+    ),
     adminNotes: v.optional(v.string()),
     approvedBy: v.optional(v.id("members")),
     approvedAt: v.optional(v.number()),
@@ -303,7 +321,12 @@ const schema = defineSchema({
     assignedById: v.id("members"),
     workspaceId: v.id("workspaces"),
     position: v.number(),
-    priority: v.union(v.literal("low"), v.literal("medium"), v.literal("high"), v.literal("urgent")),
+    priority: v.union(
+      v.literal("low"),
+      v.literal("medium"),
+      v.literal("high"),
+      v.literal("urgent"),
+    ),
     dueDate: v.optional(v.number()),
     isCompleted: v.optional(v.boolean()),
     isArchived: v.optional(v.boolean()),
@@ -345,7 +368,11 @@ const schema = defineSchema({
     parentId: v.optional(v.string()), // Parent node ID for hierarchy
     workspaceId: v.id("workspaces"),
     createdById: v.id("members"),
-    status: v.union(v.literal("in-progress"), v.literal("blocked"), v.literal("done")),
+    status: v.union(
+      v.literal("in-progress"),
+      v.literal("blocked"),
+      v.literal("done"),
+    ),
     position: v.object({
       x: v.number(),
       y: v.number(),
@@ -365,7 +392,11 @@ const schema = defineSchema({
     nodeId: v.string(),
     memberId: v.id("members"),
     workspaceId: v.id("workspaces"),
-    role: v.union(v.literal("creator"), v.literal("admin"), v.literal("member")),
+    role: v.union(
+      v.literal("creator"),
+      v.literal("admin"),
+      v.literal("member"),
+    ),
     addedAt: v.number(),
     addedById: v.id("members"),
   })
@@ -394,7 +425,11 @@ const schema = defineSchema({
     assignedToId: v.optional(v.id("members")),
     assignedById: v.id("members"),
     workspaceId: v.id("workspaces"),
-    status: v.union(v.literal("pending"), v.literal("in-progress"), v.literal("completed")),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("in-progress"),
+      v.literal("completed"),
+    ),
     priority: v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
     dueDate: v.optional(v.number()),
     createdAt: v.number(),
@@ -436,6 +471,6 @@ const schema = defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_user_id", ["userId"]),
-})
+});
 
-export default schema
+export default schema;
