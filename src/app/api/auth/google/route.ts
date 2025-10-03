@@ -1,10 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI = process.env.NEXT_PUBLIC_APP_URL
-  ? `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/google/callback`
-  : "http://localhost:3000/api/auth/google/callback";
+const REDIRECT_URI =`${process.env.NEXT_PUBLIC_APP_URL}/api/auth/google/callback`;
+
+
+  console.log("Using redirect URI:", REDIRECT_URI); // 👈 Add this
+
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
