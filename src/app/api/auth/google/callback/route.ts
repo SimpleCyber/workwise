@@ -2,8 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI =`${process.env.NEXT_PUBLIC_APP_URL}/api/auth/google/callback`;
-
+const REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/google/callback`;
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -45,7 +44,7 @@ export async function GET(request: NextRequest) {
     // Store tokens in a cookie or session
     // For now, redirect with tokens in URL (not secure for production)
     const redirectUrl = new URL(
-      process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+      `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/google/callback`,
     );
     redirectUrl.searchParams.set("google_auth", "success");
     redirectUrl.searchParams.set("access_token", tokens.access_token);
