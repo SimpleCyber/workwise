@@ -440,6 +440,37 @@ const schema = defineSchema({
     .index("by_assigned_by", ["assignedById"])
     .index("by_workspace_id", ["workspaceId"])
     .index("by_status", ["status"]),
+
+  calendarEvents: defineTable({
+    title: v.string(),
+    description: v.optional(v.string()),
+    startTime: v.number(), // Unix timestamp
+    endTime: v.number(), // Unix timestamp
+    location: v.optional(v.string()),
+    meetLink: v.optional(v.string()),
+    attendees: v.optional(v.array(v.string())), // Array of email addresses
+    userId: v.id("users"),
+    workspaceId: v.id("workspaces"),
+    googleEventId: v.optional(v.string()), // Google Calendar event ID for syncing
+    isGoogleSynced: v.optional(v.boolean()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user_id", ["userId"])
+    .index("by_workspace_id", ["workspaceId"])
+    .index("by_start_time", ["startTime"])
+    .index("by_user_workspace", ["userId", "workspaceId"])
+    .index("by_google_event_id", ["googleEventId"]),
+
+  googleTokens: defineTable({
+    userId: v.id("users"),
+    accessToken: v.string(),
+    refreshToken: v.string(),
+    expiresAt: v.number(), // Unix timestamp
+    scope: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_user_id", ["userId"]),
 });
 
 export default schema;

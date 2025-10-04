@@ -37,16 +37,22 @@ import {
   startOfWeek,
   endOfWeek,
 } from "date-fns";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
+import { GoogleCalendarAPI } from "@/lib/google-calendar";
+import { toast } from "sonner";
 
 interface CalendarEvent {
-  id: string;
+  _id: Id<"calendarEvents">;
   title: string;
-  start: Date;
-  end: Date;
+  startTime: number;
+  endTime: number;
   description?: string;
   attendees?: string[];
   meetLink?: string;
   location?: string;
+  googleEventId?: string;
 }
 
 interface Position {
@@ -54,18 +60,31 @@ interface Position {
   y: number;
 }
 
-export const DraggableCalendarPanel = () => {
+export const DraggableCalendarPanel = ({
+  workspaceId,
+}: {
+  workspaceId: Id<"workspaces">;
+}) => {
   const [open] = useAtom(calendarOpenAtom);
   const [view, setView] = useState<"daily" | "monthly" | "all" | "create">(
     "monthly",
   );
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<Position>({ x: 0, y: 0 });
   const cardRef = useRef<HTMLDivElement>(null);
+
+  const events = useQuery(api.calendarEvents.getEventsByWorkspace, {
+    workspaceId,
+  });
+  const hasGoogleAuth = useQuery(api.googleAuth.hasGoogleAuth);
+  const googleTokens = useQuery(api.googleAuth.getGoogleTokens);
+  const createEvent = useMutation(api.calendarEvents.createEvent);
+  const updateEvent = useMutation(api.calendarEvents.updateEvent);
+  const deleteEventMutation = useMutation(api.calendarEvents.deleteEvent);
+  const storeGoogleTokens = useMutation(api.googleAuth.storeGoogleTokens);
+
   const [newEvent, setNewEvent] = useState({
     title: "",
     description: "",
@@ -84,7 +103,6 @@ export const DraggableCalendarPanel = () => {
     if (savedPosition) {
       setPosition(JSON.parse(savedPosition));
     } else {
-      // Default position - center top, offset from notification panel
       setPosition({ x: window.innerWidth / 2 - 600, y: 80 });
     }
   }, []);
@@ -93,6 +111,35 @@ export const DraggableCalendarPanel = () => {
   useEffect(() => {
     localStorage.setItem("calendar-panel-position", JSON.stringify(position));
   }, [position]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const googleAuth = params.get("google_auth");
+    const accessToken = params.get("access_token");
+    const refreshToken = params.get("refresh_token");
+    const expiresAt = params.get("expires_at");
+
+    if (googleAuth === "success" && accessToken && refreshToken && expiresAt) {
+      storeGoogleTokens({
+        accessToken,
+        refreshToken,
+        expiresAt: Number.parseInt(expiresAt),
+        scope: "calendar",
+      })
+        .then(() => {
+          toast("Connected to Google Calendar", {
+            description: "Your calendar is now synced with Google.",
+          });
+          // Clean up URL
+          window.history.replaceState({}, "", window.location.pathname);
+        })
+        .catch((error) => {
+          toast.error("Failed to connect", {
+            description: error.message,
+          });
+        });
+    }
+  }, [storeGoogleTokens, toast]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest(".no-drag")) return;
@@ -110,7 +157,6 @@ export const DraggableCalendarPanel = () => {
     const newX = e.clientX - dragStart.x;
     const newY = e.clientY - dragStart.y;
 
-    // Keep within viewport bounds
     const maxX = window.innerWidth - 400;
     const maxY = window.innerHeight - 100;
 
@@ -135,110 +181,144 @@ export const DraggableCalendarPanel = () => {
     }
   }, [isDragging, dragStart]);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      setIsAuthenticated(true);
-      loadEvents();
-    };
-    checkAuth();
-  }, []);
-
-  const loadEvents = async () => {
-    const mockEvents: CalendarEvent[] = [
-      {
-        id: "1",
-        title: "Team Meeting",
-        start: new Date(2024, 11, 15, 10, 0),
-        end: new Date(2024, 11, 15, 11, 0),
-        description: "Weekly team sync",
-        attendees: ["john@example.com", "jane@example.com"],
-        meetLink: "https://meet.google.com/abc-defg-hij",
-      },
-      {
-        id: "2",
-        title: "Project Review",
-        start: new Date(2024, 11, 16, 14, 0),
-        end: new Date(2024, 11, 16, 15, 30),
-        description: "Q4 project review meeting",
-        attendees: ["manager@example.com"],
-        meetLink: "https://meet.google.com/xyz-uvwx-yz",
-      },
-      {
-        id: "3",
-        title: "Client Call",
-        start: new Date(2024, 11, 18, 9, 0),
-        end: new Date(2024, 11, 18, 10, 0),
-        description: "Monthly client check-in",
-        attendees: ["client@example.com"],
-      },
-    ];
-    setEvents(mockEvents);
+  const authenticateWithGoogle = () => {
+    window.location.href = "/api/auth/google?action=login";
   };
 
-  const authenticateWithGoogle = async () => {
-    console.log("Authenticating with Google...");
-    setIsAuthenticated(true);
-    loadEvents();
+  const handleCreateEvent = async () => {
+    if (!newEvent.title || !newEvent.startDate || !newEvent.startTime) {
+      toast.error("Missing information", {
+        description: "Please fill in the required fields.",
+      });
+      return;
+    }
+
+    try {
+      const startDateTime = new Date(
+        `${newEvent.startDate}T${newEvent.startTime}`,
+      );
+      const endDateTime =
+        newEvent.endDate && newEvent.endTime
+          ? new Date(`${newEvent.endDate}T${newEvent.endTime}`)
+          : new Date(startDateTime.getTime() + 60 * 60 * 1000);
+
+      let googleEventId: string | undefined;
+      let meetLink: string | undefined;
+
+      // Sync with Google Calendar if authenticated
+      if (hasGoogleAuth && googleTokens) {
+        const googleAPI = new GoogleCalendarAPI(googleTokens.accessToken);
+
+        const googleEvent: any = {
+          summary: newEvent.title,
+          description: newEvent.description,
+          start: {
+            dateTime: startDateTime.toISOString(),
+            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          },
+          end: {
+            dateTime: endDateTime.toISOString(),
+            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          },
+          location: newEvent.location,
+          attendees: newEvent.attendees
+            ? newEvent.attendees
+                .split(",")
+                .map((email) => ({ email: email.trim() }))
+            : [],
+        };
+
+        if (newEvent.includeMeet) {
+          googleEvent.conferenceData = {
+            createRequest: {
+              requestId: Math.random().toString(36).substr(2, 9),
+              conferenceSolutionKey: {
+                type: "hangoutsMeet",
+              },
+            },
+          };
+        }
+
+        const createdEvent = await googleAPI.createEvent(googleEvent);
+        googleEventId = createdEvent.id;
+        meetLink =
+          createdEvent.hangoutLink || newEvent.includeMeet
+            ? `https://meet.google.com/${Math.random().toString(36).substr(2, 9)}`
+            : undefined;
+      }
+
+      await createEvent({
+        title: newEvent.title,
+        description: newEvent.description,
+        startTime: startDateTime.getTime(),
+        endTime: endDateTime.getTime(),
+        location: newEvent.location,
+        meetLink,
+        attendees: newEvent.attendees
+          ? newEvent.attendees.split(",").map((email) => email.trim())
+          : [],
+        workspaceId,
+        googleEventId,
+      });
+
+      toast.success("Event created", {
+        description: "Your calendar event has been created successfully.",
+      });
+
+      setNewEvent({
+        title: "",
+        description: "",
+        startDate: "",
+        startTime: "",
+        endDate: "",
+        endTime: "",
+        attendees: "",
+        includeMeet: false,
+        location: "",
+      });
+      setView("monthly");
+    } catch (error: any) {
+      toast.error("Failed to create event", {
+        description: error.message,
+      });
+    }
   };
 
-  const createEvent = async () => {
-    if (!newEvent.title || !newEvent.startDate || !newEvent.startTime) return;
+  const handleDeleteEvent = async (event: CalendarEvent) => {
+    try {
+      if (event.googleEventId && hasGoogleAuth && googleTokens) {
+        const googleAPI = new GoogleCalendarAPI(googleTokens.accessToken);
+        await googleAPI.deleteEvent(event.googleEventId);
+      }
 
-    const startDateTime = new Date(
-      `${newEvent.startDate}T${newEvent.startTime}`,
-    );
-    const endDateTime =
-      newEvent.endDate && newEvent.endTime
-        ? new Date(`${newEvent.endDate}T${newEvent.endTime}`)
-        : new Date(startDateTime.getTime() + 60 * 60 * 1000);
+      await deleteEventMutation({ eventId: event._id });
 
-    const event: CalendarEvent = {
-      id: Date.now().toString(),
-      title: newEvent.title,
-      start: startDateTime,
-      end: endDateTime,
-      description: newEvent.description,
-      attendees: newEvent.attendees
-        ? newEvent.attendees.split(",").map((email) => email.trim())
-        : [],
-      location: newEvent.location,
-      meetLink: newEvent.includeMeet
-        ? `https://meet.google.com/${Math.random().toString(36).substr(2, 9)}`
-        : undefined,
-    };
-
-    setEvents((prev) => [...prev, event]);
-    setNewEvent({
-      title: "",
-      description: "",
-      startDate: "",
-      startTime: "",
-      endDate: "",
-      endTime: "",
-      attendees: "",
-      includeMeet: false,
-      location: "",
-    });
-    setView("monthly");
-    console.log("Creating event:", event);
-  };
-
-  const deleteEvent = async (eventId: string) => {
-    setEvents((prev) => prev.filter((event) => event.id !== eventId));
-    console.log("Deleting event:", eventId);
+      toast.success("Event deleted", {
+        description: "Your calendar event has been deleted.",
+      });
+    } catch (error: any) {
+      toast.error("Failed to delete event", {
+        description: error.message,
+      });
+    }
   };
 
   const getEventsForView = () => {
-    const now = new Date();
+    if (!events) return [];
+
     switch (view) {
       case "daily":
-        return events.filter((event) => isSameDay(event.start, currentDate));
-      case "monthly":
-        return events.filter(
-          (event) =>
-            event.start.getMonth() === currentDate.getMonth() &&
-            event.start.getFullYear() === currentDate.getFullYear(),
+        return events.filter((event) =>
+          isSameDay(new Date(event.startTime), currentDate),
         );
+      case "monthly":
+        return events.filter((event) => {
+          const eventDate = new Date(event.startTime);
+          return (
+            eventDate.getMonth() === currentDate.getMonth() &&
+            eventDate.getFullYear() === currentDate.getFullYear()
+          );
+        });
       case "all":
         return events;
       default:
@@ -267,9 +347,10 @@ export const DraggableCalendarPanel = () => {
         </div>
         <div className="grid grid-cols-7">
           {days.map((day, index) => {
-            const dayEvents = events.filter((event) =>
-              isSameDay(event.start, day),
-            );
+            const dayEvents =
+              events?.filter((event) =>
+                isSameDay(new Date(event.startTime), day),
+              ) || [];
             const isCurrentMonth = isSameMonth(day, currentDate);
             const isToday = isSameDay(day, new Date());
             return (
@@ -289,7 +370,7 @@ export const DraggableCalendarPanel = () => {
                 <div className="space-y-1">
                   {dayEvents.slice(0, 2).map((event) => (
                     <div
-                      key={event.id}
+                      key={event._id}
                       className="text-xs p-1.5 bg-blue-100 text-blue-800 rounded-md truncate cursor-pointer hover:bg-blue-200 transition-colors border border-blue-200"
                       title={event.title}
                     >
@@ -316,7 +397,7 @@ export const DraggableCalendarPanel = () => {
       <div className="space-y-3 max-h-[400px] overflow-y-auto">
         {filteredEvents.map((event, index) => (
           <Card
-            key={event.id}
+            key={event._id}
             className="group border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition-all duration-200 bg-white"
             style={{
               animationDelay: `${index * 50}ms`,
@@ -336,8 +417,8 @@ export const DraggableCalendarPanel = () => {
                       <div className="flex items-center gap-2 text-sm text-slate-600 mb-2">
                         <Clock className="w-4 h-4 text-slate-400" />
                         <span className="font-medium">
-                          {format(event.start, "MMM d, h:mm a")} -{" "}
-                          {format(event.end, "h:mm a")}
+                          {format(new Date(event.startTime), "MMM d, h:mm a")} -{" "}
+                          {format(new Date(event.endTime), "h:mm a")}
                         </span>
                       </div>
                       {event.description && (
@@ -401,7 +482,7 @@ export const DraggableCalendarPanel = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => deleteEvent(event.id)}
+                  onClick={() => handleDeleteEvent(event)}
                   className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-full w-8 h-8 p-0"
                 >
                   <X className="w-4 h-4" />
@@ -616,7 +697,7 @@ export const DraggableCalendarPanel = () => {
               Cancel
             </Button>
             <Button
-              onClick={createEvent}
+              onClick={handleCreateEvent}
               className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
             >
               Create Event
@@ -644,7 +725,6 @@ export const DraggableCalendarPanel = () => {
         cursor: isDragging ? "grabbing" : "default",
       }}
     >
-      {/* Draggable Header */}
       <CardHeader
         className="p-2 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white cursor-grab active:cursor-grabbing"
         onMouseDown={handleMouseDown}
@@ -660,7 +740,7 @@ export const DraggableCalendarPanel = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 no-drag">
-            {!isAuthenticated && view !== "create" && (
+            {!hasGoogleAuth && view !== "create" && (
               <Button
                 onClick={authenticateWithGoogle}
                 size="sm"
@@ -682,7 +762,7 @@ export const DraggableCalendarPanel = () => {
       </CardHeader>
 
       <CardContent className="p-0 flex-1 overflow-hidden">
-        {!isAuthenticated ? (
+        {!hasGoogleAuth ? (
           <div className="text-center py-12 px-6">
             <div className="p-6 rounded-full bg-gradient-to-br from-blue-50 to-purple-50 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
               <Calendar className="w-12 h-12 text-purple-500" />
@@ -706,7 +786,6 @@ export const DraggableCalendarPanel = () => {
           <div className="p-6 no-drag">{renderCreateEventForm()}</div>
         ) : (
           <div className="p-6 no-drag">
-            {/* View Toggle */}
             <div className="bg-slate-100 rounded-xl p-1 mb-6">
               <div className="grid grid-cols-3 gap-1">
                 {(["daily", "monthly", "all"] as const).map((viewType) => (
@@ -727,7 +806,6 @@ export const DraggableCalendarPanel = () => {
               </div>
             </div>
 
-            {/* Month Navigation for Monthly View */}
             {view === "monthly" && (
               <div className="flex items-center justify-between mb-6 bg-slate-50 rounded-xl p-3">
                 <Button
@@ -752,7 +830,6 @@ export const DraggableCalendarPanel = () => {
               </div>
             )}
 
-            {/* Create Event Button */}
             <Button
               onClick={() => setView("create")}
               className="w-full mb-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
@@ -761,7 +838,6 @@ export const DraggableCalendarPanel = () => {
               Create Event
             </Button>
 
-            {/* Calendar Content */}
             <div className="max-h-[400px] overflow-y-auto">
               {view === "monthly" ? renderCalendarGrid() : renderEventsList()}
             </div>
