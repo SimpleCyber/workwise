@@ -179,6 +179,7 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
         childNodes={data.childNodes || []}
         onClose={data.onClosePopup || (() => {})}
         workspaceId={data.workspaceId}
+        boardId={uniqueId}
       />
 
       <Card

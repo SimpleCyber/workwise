@@ -286,7 +286,7 @@ export default function CompactAIAssistantUI({
   const missingIds = !workspaceId || !boardId || !currentUserId;
 
   return (
-    <div className={"h-full w-full bg-gradient-to-b from-zinc-50 to-white text-zinc-900 " + className}>
+    <div className={"h-full w-full bg-gradient-to-br from-slate-50 via-white to-slate-50 text-zinc-900 " + className}>
       <div className="flex h-full w-full overflow-hidden">
         {missingIds ? (
           <div className="grid flex-1 place-items-center text-sm text-zinc-500">
@@ -295,7 +295,7 @@ export default function CompactAIAssistantUI({
         ) : (
           <main className="relative flex min-w-0 flex-1 flex-col">
             {/* Consolidated Header with Chat Controls and Kanban Elements */}
-            <div className="border-b border-zinc-200 bg-white px-3 py-2 shadow-sm">
+            <div className="border-b-2 border-slate-200 bg-gradient-to-r from-white to-slate-50 px-4 py-3 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 {/* Left side - Chat Controls */}
                 <div className="flex items-center gap-2">
@@ -306,9 +306,9 @@ export default function CompactAIAssistantUI({
                           variant="ghost"
                           size="sm"
                           onClick={createNewChat}
-                          className="h-7 w-7 p-0"
+                          className="h-8 w-8 p-0 hover:bg-slate-100 rounded-lg transition-all"
                         >
-                          <Plus className="h-3 w-3" />
+                          <Plus className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>New chat</TooltipContent>
@@ -322,9 +322,9 @@ export default function CompactAIAssistantUI({
                           variant="ghost"
                           size="sm"
                           onClick={() => setShowSearchModal(true)}
-                          className="h-7 w-7 p-0"
+                          className="h-8 w-8 p-0 hover:bg-slate-100 rounded-lg transition-all"
                         >
-                          <Search className="h-3 w-3" />
+                          <Search className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>Search chats</TooltipContent>
@@ -337,15 +337,15 @@ export default function CompactAIAssistantUI({
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 px-2 text-xs"
+                          className="h-8 px-3 text-xs hover:bg-slate-100 rounded-lg transition-all"
                           onClick={() => setCollapsed(prev => ({ ...prev, recent: !prev.recent }))}
                         >
-                          <Clock className="h-3 w-3 mr-1" />
+                          <Clock className="h-3 w-3 mr-1.5" />
                           Recent
                           {collapsed.recent ? (
-                            <ChevronRight className="h-3 w-3 ml-1" />
+                            <ChevronRight className="h-3 w-3 ml-1.5" />
                           ) : (
-                            <ChevronDown className="h-3 w-3 ml-1" />
+                            <ChevronDown className="h-3 w-3 ml-1.5" />
                           )}
                         </Button>
                       </TooltipTrigger>
@@ -360,15 +360,15 @@ export default function CompactAIAssistantUI({
                     <button
                       type="button"
                       onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
-                      className="flex items-center gap-2 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs hover:bg-zinc-50 focus:outline-none"
+                      className="flex items-center gap-2 rounded-lg border-2 border-slate-200 bg-white px-3 py-1.5 text-xs font-medium hover:bg-slate-50 hover:border-slate-300 focus:outline-none transition-all shadow-sm"
                     >
-                      <BrainCircuit className="h-3 w-3 text-zinc-700" />
-                      <span>{model === "gpt-4o" ? "GPT-4o" : model === "gpt-4o-mini" ? "GPT-4o mini" : "GPT-4.1"}</span>
-                      <ChevronDown className="h-3 w-3 text-zinc-500" />
+                      <BrainCircuit className="h-3.5 w-3.5 text-slate-700" />
+                      <span className="text-slate-700">{model === "gpt-4o" ? "GPT-4o" : model === "gpt-4o-mini" ? "GPT-4o mini" : "GPT-4.1"}</span>
+                      <ChevronDown className="h-3 w-3 text-slate-500" />
                     </button>
                     {modelDropdownOpen && (
                       <>
-                        <div className="absolute z-[90] mt-1 w-32 overflow-hidden rounded-lg border border-zinc-200 bg-white p-1 shadow-lg">
+                        <div className="absolute z-[90] mt-2 w-36 overflow-hidden rounded-lg border-2 border-slate-200 bg-white p-1.5 shadow-xl">
                           {[
                             { id: "gpt-4o", name: "GPT-4o" },
                             { id: "gpt-4o-mini", name: "GPT-4o mini" },
@@ -380,7 +380,7 @@ export default function CompactAIAssistantUI({
                                 setModel(m.id);
                                 setModelDropdownOpen(false);
                               }}
-                              className="block w-full rounded-md px-2 py-1 text-left text-xs hover:bg-zinc-100"
+                              className="block w-full rounded-md px-3 py-1.5 text-left text-xs font-medium hover:bg-slate-100 transition-colors"
                             >
                               {m.name}
                             </button>
@@ -404,13 +404,13 @@ export default function CompactAIAssistantUI({
                       onOpenChange={(open) => setKanbanCollapsed(prev => ({ ...prev, todo: !open }))}
                     >
                       <CollapsibleTrigger asChild>
-                        <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
-                          <Archive className="h-3 w-3 mr-1" />
+                        <Button variant="outline" size="sm" className="h-8 px-3 text-xs font-medium border-2 hover:bg-slate-50 rounded-lg transition-all shadow-sm">
+                          <Archive className="h-3.5 w-3.5 mr-1.5" />
                           To Do ({todoTasks?.length || 0})
                           {kanbanCollapsed.todo ? (
-                            <ChevronRight className="h-3 w-3 ml-1" />
+                            <ChevronRight className="h-3 w-3 ml-1.5" />
                           ) : (
-                            <ChevronDown className="h-3 w-3 ml-1" />
+                            <ChevronDown className="h-3 w-3 ml-1.5" />
                           )}
                         </Button>
                       </CollapsibleTrigger>
@@ -503,13 +503,13 @@ export default function CompactAIAssistantUI({
                       onOpenChange={(open) => setKanbanCollapsed(prev => ({ ...prev, inProgress: !open }))}
                     >
                       <CollapsibleTrigger asChild>
-                        <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
-                          <Clock3 className="h-3 w-3 mr-1" />
+                        <Button variant="outline" size="sm" className="h-8 px-3 text-xs font-medium border-2 hover:bg-slate-50 rounded-lg transition-all shadow-sm">
+                          <Clock3 className="h-3.5 w-3.5 mr-1.5" />
                           In Progress ({inProgressTasks?.length || 0})
                           {kanbanCollapsed.inProgress ? (
-                            <ChevronRight className="h-3 w-3 ml-1" />
+                            <ChevronRight className="h-3 w-3 ml-1.5" />
                           ) : (
-                            <ChevronDown className="h-3 w-3 ml-1" />
+                            <ChevronDown className="h-3 w-3 ml-1.5" />
                           )}
                         </Button>
                       </CollapsibleTrigger>
@@ -599,15 +599,15 @@ export default function CompactAIAssistantUI({
 
               {/* Recent chats list - positioned below */}
               {!collapsed.recent && (
-                <div className="mt-2 border-t border-zinc-200 pt-2">
-                  <div className="max-h-32 overflow-y-auto space-y-1">
+                <div className="mt-3 border-t-2 border-slate-200 pt-3 px-1">
+                  <div className="max-h-32 overflow-y-auto space-y-1.5">
                     {recent.slice(0, 5).map((chat) => (
                       <Button
                         key={chat.id}
                         variant={selectedChatId === chat.id ? "secondary" : "ghost"}
                         size="sm"
                         onClick={() => setSelectedId(chat.id as any)}
-                        className="w-full justify-start h-7 px-2 text-xs truncate hover:bg-zinc-100 transition-colors"
+                        className="w-full justify-start h-8 px-3 text-xs truncate hover:bg-slate-100 rounded-lg transition-all"
                       >
                         {chat.title}
                       </Button>

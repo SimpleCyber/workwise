@@ -174,9 +174,9 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-gray-50/50 flex-shrink-0">
+      <div className="flex items-center justify-between p-4 bg-gray-50/50 sticky top-0 z-10">
         <div className="flex items-center gap-2">
           <MessageSquare className="w-4 h-4" />
           <h3 className="font-medium">Activity ({comments?.length || 0})</h3>
@@ -193,7 +193,7 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
       </div>
 
       {/* Comments List */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+      <div className="p-4 space-y-4">
         {isLoading ? (
           <div className="text-center py-8 text-gray-500 text-sm">
             Loading comments...
@@ -330,7 +330,7 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
       </div>
 
       {/* New Comment Form */}
-      <div className="border-t p-4 bg-gray-50/30 flex-shrink-0">
+      <div className="border-t p-4 bg-gray-50/30 sticky bottom-0">
         <div className="max-w-full overflow-hidden">
           <Editor
             key={editorKey}
