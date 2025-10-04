@@ -5,10 +5,18 @@ import { notificationOpenAtom } from "@/lib/panel-atoms";
 import { useGetUnreadCount } from "@/hooks/use-notifications";
 import { Button } from "@/components/ui/button";
 import { Bell } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export const NotificationTrigger = () => {
+  const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useAtom(notificationOpenAtom);
   const unreadCount = useGetUnreadCount();
+
+  useEffect(() => {
+    setMounted(true); // Only render after client mount
+  }, []);
+
+  if (!mounted) return null; // Prevent server/client mismatch
 
   return (
     <div className="relative">
