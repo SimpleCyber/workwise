@@ -100,11 +100,13 @@ export const ProjectTaskDetailModal = ({
         <DialogContent className="max-w-7xl max-h-[90vh] overflow-hidden p-0">
           <div className="flex flex-col h-full">
             <TaskHeader task={task} onClose={() => onOpenChange(false)} />
-            <TaskContent
-              task={task}
-              lists={lists}
-              onImagePreview={setImagePreview}
-            />
+            <div className="flex-1 min-h-0 overflow-auto">
+              <TaskContent
+                task={task}
+                lists={lists}
+                onImagePreview={setImagePreview}
+              />
+            </div>
           </div>
         </DialogContent>
       </Dialog>

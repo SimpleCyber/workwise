@@ -113,9 +113,9 @@ export const TaskDescription = ({
   };
 
   return (
-    <div className="p-4">
+    <div className="p-4 max-h-[400px] overflow-y-auto">
       {/* Collapsible Header */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-3 sticky top-0 bg-white z-10 pb-2">
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900"
@@ -143,7 +143,7 @@ export const TaskDescription = ({
       {!isCollapsed && (
         <div className="space-y-3">
           {isEditing ? (
-            <div>
+            <div className="max-w-full overflow-hidden">
               <Editor
                 key={editorKey}
                 onSubmit={handleUpdate}
@@ -162,7 +162,7 @@ export const TaskDescription = ({
             </div>
           ) : (
             <div
-              className="min-h-[60px] cursor-pointer hover:bg-gray-50 rounded p-3 transition-colors"
+              className="min-h-[60px] max-w-full cursor-pointer hover:bg-gray-50 rounded p-3 transition-colors break-words overflow-auto"
               onClick={() => setIsEditing(true)}
             >
               {task.description ? (
@@ -172,19 +172,19 @@ export const TaskDescription = ({
                   {/* Description Images */}
                   {task.descriptionImages &&
                     task.descriptionImages.length > 0 && (
-                      <div className="space-y-2">
+                      <div className="space-y-2 max-w-full">
                         <div className="flex items-center gap-2 text-xs text-gray-600">
                           <ImageIcon className="w-3 h-3" />
                           <span>
                             {task.descriptionImages.length} attachment(s)
                           </span>
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-2 gap-2 max-w-full">
                           {task.descriptionImages.map(
                             (imageUrl: string, index: number) => (
                               <div
                                 key={index}
-                                className="relative group rounded overflow-hidden border bg-gray-50"
+                                className="relative group rounded overflow-hidden border bg-gray-50 max-w-full"
                               >
                                 <Image
                                   width={200}

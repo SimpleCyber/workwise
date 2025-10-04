@@ -2,7 +2,7 @@
 
 import { Draggable, Droppable, type DropResult } from "@hello-pangea/dnd";
 import { Loader, Plus, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -398,9 +398,31 @@ const ProjectKanbanList = ({
     assignedToIds: selectedMemberIds.length > 0 ? selectedMemberIds : undefined,
   });
 
+  const [hiddenTaskIds, setHiddenTaskIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    function onHide(e: any) {
+      const id = e?.detail?.taskId as string | undefined;
+      if (!id) return;
+      setHiddenTaskIds((prev) => {
+        const next = new Set(prev);
+        next.add(id);
+        return next;
+      });
+      setTimeout(() => {
+        setHiddenTaskIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+      }, 1200);
+    }
+    window.addEventListener("kanban:optimistic-hide", onHide);
+    return () => window.removeEventListener("kanban:optimistic-hide", onHide);
+  }, []);
+
   const sortedTasks = tasks
     ? [...tasks]
-        .filter((task) => !task.isArchived)
+        .filter((task) => !task.isArchived && !hiddenTaskIds.has(task._id as any))
         .sort((a, b) => a.position - b.position)
     : [];
 

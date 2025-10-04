@@ -95,7 +95,7 @@ export const ProjectSidebarKanban = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed right-0 top-0 h-full w-[600px] bg-white border-l border-gray-200 shadow-2xl z-50 flex items-center justify-center"
+            className="fixed right-0 top-0 h-full w-[600px] bg-background border-l border-border shadow-xl ring-1 ring-border z-50 flex items-center justify-center"
           >
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </motion.div>
@@ -119,17 +119,17 @@ export const ProjectSidebarKanban = ({
               damping: 40,
               opacity: { duration: 0.2 }
             }}
-            className="fixed right-0 top-0 h-full bg-white border-l border-gray-200 shadow-2xl z-[60] flex flex-col rounded-l-2xl"
+            className="fixed right-0 top-0 h-full bg-gradient-to-b from-white to-gray-50 border-l-2 border-gray-200 shadow-2xl z-[60] flex flex-col rounded-l-2xl"
             style={{ width: sidebarWidth }}
           >
           {/* Resize Handle */}
           <div
-            className="absolute left-0 top-0 w-2 h-full cursor-ew-resize bg-transparent hover:bg-blue-500 hover:bg-opacity-30 transition-colors z-[70] rounded-l-2xl"
+            className="absolute left-0 top-0 w-2 h-full cursor-ew-resize bg-transparent hover:bg-blue-500 hover:bg-opacity-40 transition-all z-[70] rounded-l-2xl"
             onMouseDown={handleMouseDown}
           />
 
           {/* Single Consolidated Header */}
-          <div className="flex h-[60px] items-center border-b bg-white px-4 flex-shrink-0 rounded-tl-3xl">
+          <div className="flex h-[60px] items-center border-b border-gray-200 bg-white px-4 flex-shrink-0 rounded-tl-3xl shadow-sm">
             {/* Left side - Project info and AI indicator */}
             <div className="flex items-center gap-3 flex-1">
               <div className="flex items-center gap-2">

@@ -62,7 +62,7 @@ const getMiniMapNodeColor = (node: Node) => {
   return "#3b82f6";
 };
 
-export function TreeFlow({ workspaceId, sidebarOpen }: TreeFlowProps & { sidebarOpen?: boolean }) {
+export function TreeFlow({ workspaceId, sidebarOpen, activeNodeId }: TreeFlowProps & { sidebarOpen?: boolean; activeNodeId?: string }) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [activePopup, setActivePopup] = useState<string | null>(null);
@@ -251,6 +251,7 @@ export function TreeFlow({ workspaceId, sidebarOpen }: TreeFlowProps & { sidebar
             status: child.status,
           })),
           workspaceId,
+          isActive: !!activeNodeId && node.nodeId === activeNodeId,
           onUpdateNode: updateNodeHandler,
         },
       };
@@ -285,6 +286,7 @@ export function TreeFlow({ workspaceId, sidebarOpen }: TreeFlowProps & { sidebar
     expandNodeWithAIHandler,
     isNodeVisible,
     toggleNodeCollapse,
+    activeNodeId,
   ]);
 
   const onConnect = useCallback(

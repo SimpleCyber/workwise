@@ -79,6 +79,10 @@ export default function ProjectBoardPage({
       const taskId = draggableId as Id<"projectTasks">;
       if (source.droppableId !== destination.droppableId) {
         const newListId = destination.droppableId as Id<"projectLists">;
+        // Optimistically hide the dragged task from its source list to avoid flicker
+        window.dispatchEvent(
+          new CustomEvent("kanban:optimistic-hide", { detail: { taskId } }),
+        );
         updateTask(
           { taskId, listId: newListId, position: destination.index },
           {

@@ -1,14 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Plus, Search, Clock, ChevronDown, ChevronRight, Archive, Clock3, BrainCircuit } from "lucide-react";
+import { Plus, Search, Clock, ChevronDown, ChevronRight, Archive, Clock3, BrainCircuit, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 // Header functionality moved to consolidated header
 import ChatPane from "./ChatPanel";
 import SearchModal from "./SearchModal";
 import { useGetProjectTasks } from "../../api/use-get-project-tasks";
+import { useCreateProjectTask } from "../../api/use-create-project-task";
+import { ProjectTaskDetailModal } from "../project-task-detail-modal";
 import { useGetProjectChats } from "../../api/use-get-project-chats";
 import { useGetProjectChatMessages } from "../../api/use-get-project-chat-messages";
 import { useCreateProjectChat } from "../../api/use-create-project-chat";
@@ -69,6 +72,23 @@ export default function CompactAIAssistantUI({
   const [kanbanCollapsed, setKanbanCollapsed] = useState({ todo: true, inProgress: true });
   const [model, setModel] = useState("gpt-4o");
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
+
+  const { mutate: createTask, isPending: isCreatingTask } = useCreateProjectTask();
+  const [selectedTask, setSelectedTask] = useState<any | null>(null);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [addingTaskToList, setAddingTaskToList] = useState<Id<"projectLists"> | null>(null);
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+
+  const handleCreateQuickTask = async (listId: Id<"projectLists">) => {
+    if (!newTaskTitle.trim()) return;
+    try {
+      await createTask({ title: newTaskTitle.trim(), listId });
+      setNewTaskTitle("");
+      setAddingTaskToList(null);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const { chats, isLoading: loadingChats } = useGetProjectChats(boardId);
   const { messages, isLoading: loadingMsgs } = useGetProjectChatMessages(
@@ -266,7 +286,7 @@ export default function CompactAIAssistantUI({
   const missingIds = !workspaceId || !boardId || !currentUserId;
 
   return (
-    <div className={"h-full w-full bg-zinc-50 text-zinc-900 " + className}>
+    <div className={"h-full w-full bg-gradient-to-b from-zinc-50 to-white text-zinc-900 " + className}>
       <div className="flex h-full w-full overflow-hidden">
         {missingIds ? (
           <div className="grid flex-1 place-items-center text-sm text-zinc-500">
@@ -275,7 +295,7 @@ export default function CompactAIAssistantUI({
         ) : (
           <main className="relative flex min-w-0 flex-1 flex-col">
             {/* Consolidated Header with Chat Controls and Kanban Elements */}
-            <div className="border-b border-zinc-200 bg-white px-3 py-2">
+            <div className="border-b border-zinc-200 bg-white px-3 py-2 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 {/* Left side - Chat Controls */}
                 <div className="flex items-center gap-2">
@@ -394,23 +414,65 @@ export default function CompactAIAssistantUI({
                           )}
                         </Button>
                       </CollapsibleTrigger>
-                      <CollapsibleContent className="absolute z-[80] mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg p-2 right-0">
+                      <CollapsibleContent className="absolute z-[80] mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-xl p-2 right-0">
                         <div className="min-h-20 max-h-64 overflow-y-auto space-y-1">
-                          {/* Add Task Button */}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {/* TODO: Add task functionality */}}
-                            className="w-full justify-start h-8 px-2 text-xs text-gray-600 hover:text-gray-900 border-dashed border"
-                          >
-                            <Plus className="h-3 w-3 mr-2" />
-                            Add task to To Do
-                          </Button>
+                          {/* Add Task Form */}
+                          {addingTaskToList === todoList._id ? (
+                            <div className="space-y-2 p-2 bg-gray-50 rounded-md border border-gray-300">
+                              <Input
+                                value={newTaskTitle}
+                                onChange={(e) => setNewTaskTitle(e.target.value)}
+                                placeholder="Enter task title..."
+                                className="h-8 text-xs"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    handleCreateQuickTask(todoList!._id);
+                                  } else if (e.key === "Escape") {
+                                    setAddingTaskToList(null);
+                                    setNewTaskTitle("");
+                                  }
+                                }}
+                              />
+                              <div className="flex gap-1">
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleCreateQuickTask(todoList!._id)}
+                                  disabled={isCreatingTask || !newTaskTitle.trim()}
+                                  className="h-6 text-xs flex-1"
+                                >
+                                  Add
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    setAddingTaskToList(null);
+                                    setNewTaskTitle("");
+                                  }}
+                                  className="h-6 text-xs"
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setAddingTaskToList(todoList!._id)}
+                              className="w-full justify-start h-8 px-2 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 border-dashed border border-gray-300 rounded-md transition-colors"
+                            >
+                              <Plus className="h-3 w-3 mr-2" />
+                              Add task to To Do
+                            </Button>
+                          )}
 
                           {todoTasks?.slice(0, 10).map((task) => (
                             <div
                               key={task._id}
-                              className="p-2 text-xs bg-gray-50 rounded border cursor-pointer hover:bg-gray-100"
+                              className="p-2 text-xs bg-gray-50 rounded-md border border-gray-200 cursor-pointer hover:bg-gray-100 hover:border-gray-300 transition-all"
+                              onClick={() => { setSelectedTask(task); setIsTaskModalOpen(true); }}
                               draggable
                               onDragStart={(e) => {
                                 const taskData = {
@@ -451,23 +513,65 @@ export default function CompactAIAssistantUI({
                           )}
                         </Button>
                       </CollapsibleTrigger>
-                      <CollapsibleContent className="absolute z-[80] mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg p-2 right-0">
+                      <CollapsibleContent className="absolute z-[80] mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-xl p-2 right-0">
                         <div className="min-h-20 max-h-64 overflow-y-auto space-y-1">
-                          {/* Add Task Button */}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {/* TODO: Add task functionality */}}
-                            className="w-full justify-start h-8 px-2 text-xs text-gray-600 hover:text-gray-900 border-dashed border"
-                          >
-                            <Plus className="h-3 w-3 mr-2" />
-                            Add task to In Progress
-                          </Button>
+                          {/* Add Task Form */}
+                          {addingTaskToList === inProgressList._id ? (
+                            <div className="space-y-2 p-2 bg-blue-50 rounded-md border border-blue-300">
+                              <Input
+                                value={newTaskTitle}
+                                onChange={(e) => setNewTaskTitle(e.target.value)}
+                                placeholder="Enter task title..."
+                                className="h-8 text-xs"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    handleCreateQuickTask(inProgressList!._id);
+                                  } else if (e.key === "Escape") {
+                                    setAddingTaskToList(null);
+                                    setNewTaskTitle("");
+                                  }
+                                }}
+                              />
+                              <div className="flex gap-1">
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleCreateQuickTask(inProgressList!._id)}
+                                  disabled={isCreatingTask || !newTaskTitle.trim()}
+                                  className="h-6 text-xs flex-1"
+                                >
+                                  Add
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    setAddingTaskToList(null);
+                                    setNewTaskTitle("");
+                                  }}
+                                  className="h-6 text-xs"
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setAddingTaskToList(inProgressList!._id)}
+                              className="w-full justify-start h-8 px-2 text-xs text-gray-600 hover:text-gray-900 hover:bg-blue-50 border-dashed border border-blue-300 rounded-md transition-colors"
+                            >
+                              <Plus className="h-3 w-3 mr-2" />
+                              Add task to In Progress
+                            </Button>
+                          )}
 
                           {inProgressTasks?.slice(0, 10).map((task) => (
                             <div
                               key={task._id}
-                              className="p-2 text-xs bg-blue-50 rounded border cursor-pointer hover:bg-blue-100"
+                              className="p-2 text-xs bg-blue-50 rounded-md border border-blue-200 cursor-pointer hover:bg-blue-100 hover:border-blue-300 transition-all"
+                              onClick={() => { setSelectedTask(task); setIsTaskModalOpen(true); }}
                               draggable
                               onDragStart={(e) => {
                                 const taskData = {
@@ -495,7 +599,7 @@ export default function CompactAIAssistantUI({
 
               {/* Recent chats list - positioned below */}
               {!collapsed.recent && (
-                <div className="mt-2">
+                <div className="mt-2 border-t border-zinc-200 pt-2">
                   <div className="max-h-32 overflow-y-auto space-y-1">
                     {recent.slice(0, 5).map((chat) => (
                       <Button
@@ -503,7 +607,7 @@ export default function CompactAIAssistantUI({
                         variant={selectedChatId === chat.id ? "secondary" : "ghost"}
                         size="sm"
                         onClick={() => setSelectedId(chat.id as any)}
-                        className="w-full justify-start h-7 px-2 text-xs truncate"
+                        className="w-full justify-start h-7 px-2 text-xs truncate hover:bg-zinc-100 transition-colors"
                       >
                         {chat.title}
                       </Button>
@@ -549,6 +653,13 @@ export default function CompactAIAssistantUI({
               togglePin={(id: string) => togglePin(id as any)}
               createNewChat={createNewChat}
             />
+            <ProjectTaskDetailModal
+              task={selectedTask}
+              open={isTaskModalOpen}
+              onOpenChange={setIsTaskModalOpen}
+              lists={lists || []}
+            />
+
           </main>
         )}
       </div>

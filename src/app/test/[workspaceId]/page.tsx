@@ -82,7 +82,7 @@ export default function TreeWorkspacePage({
           marginRight: sidebarOpen ? `600px` : '0px' // Dynamic margin for sidebar (matches default width)
         }}
       >
-        <TreeFlow workspaceId={workspaceId} sidebarOpen={sidebarOpen} />
+        <TreeFlow workspaceId={workspaceId} sidebarOpen={sidebarOpen} activeNodeId={selectedBoardId || undefined} />
       </div>
 
       {/* Project Sidebar */}
