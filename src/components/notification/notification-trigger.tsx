@@ -16,8 +16,26 @@ export const NotificationTrigger = () => {
         <div className="relative">
           <Bell className="w-6 h-6 text-gray-700" />
 
-          {/* WhatsApp-style bubble */}
-          <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white rounded-full h-5 min-w-[1.25rem] px-1 flex items-center justify-center text-[10px] font-semibold shadow">
+          {/* Red bubble */}
+          <span
+            className="
+              absolute
+              -top-1
+              -right-1
+              bg-red-600
+              text-white
+              rounded-full
+              h-5
+              min-w-[1.25rem]
+              px-1
+              flex
+              items-center
+              justify-center
+              text-[10px]
+              font-semibold
+              shadow
+            "
+          >
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         </div>
