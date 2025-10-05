@@ -14,7 +14,6 @@ import {
   type Connection,
   BackgroundVariant,
 } from "reactflow";
-import "reactflow/dist/style.css";
 import { TreeNode } from "./tree-node";
 import { TreeLayoutManager } from "../lib/tree-layout-manager";
 import type { TreeFlowProps } from "../api/tree-flow-props";
@@ -31,9 +30,6 @@ import { Loader2, Plus, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AITreeDialog } from "./ai-tree-dialog";
 import { aiTreeService } from "@/lib/ai-service";
-
-import { useGetWorkspaceProjects } from "../api/all-data-hook";
-import type { Id } from "../../../../convex/_generated/dataModel";
 
 const nodeTypes = {
   treeNode: TreeNode,
