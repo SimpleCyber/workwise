@@ -47,7 +47,7 @@ export const useGetDataRoomFiles = ({
   };
 };
 
-// Upload data room file
+// Upload data room file need updates
 type UploadFileRequest = {
   workspaceId: Id<"workspaces">;
   storageId: Id<"_storage">;
