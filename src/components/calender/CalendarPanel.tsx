@@ -182,7 +182,7 @@ export const DraggableCalendarPanel = ({
   }, [isDragging, dragStart]);
 
   const authenticateWithGoogle = () => {
-    window.location.href = "/api/auth/google?action=login";
+    window.location.href = "/api/calendar/google?action=login";
   };
 
   const handleCreateEvent = async () => {
