@@ -13,15 +13,6 @@ interface ChildNode {
   status: string;
 }
 
-interface Comment {
-  id: string;
-  author: string;
-  authorInitials: string;
-  authorColor: string;
-  content: string;
-  timestamp: string;
-}
-
 interface NodePopupProps {
   show: boolean;
   nodeId: string;
@@ -33,6 +24,7 @@ interface NodePopupProps {
   childNodes: ChildNode[];
   onClose: () => void;
   workspaceId: string;
+  boardId?: any;
 }
 
 export function NodePopup({
@@ -45,9 +37,9 @@ export function NodePopup({
   childNodes = [],
   workspaceId,
   onClose,
+  boardId,
 }: NodePopupProps) {
   const [activeTab, setActiveTab] = useState("Details");
-  const [comments, setComments] = useState<Comment[]>([]);
   const popupRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -117,9 +109,9 @@ export function NodePopup({
           {activeTab === "Nodes" && childNodes.length > 0 && (
             <NodesTab childNodes={childNodes} />
           )}
-          {activeTab === "Tasks" && <TasksTab />}
+          {activeTab === "Tasks" && <TasksTab boardId={boardId} workspaceId={workspaceId} />}
           {activeTab === "Comments" && (
-            <CommentsTab comments={comments} setComments={setComments} />
+            <CommentsTab nodeId={uniqueId} workspaceId={workspaceId} />
           )}
         </CardContent>
       </Card>

@@ -47,6 +47,8 @@ interface TreeNodeData {
     updates: Partial<{ title: string; description: string; status: string }>,
   ) => void;
   isStarred?: boolean; // Add this prop
+  isActive?: boolean;
+
 }
 
 export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
@@ -126,7 +128,11 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
   };
 
   const handleDoubleClick = () => {
-    router.push(`/projects/${workspaceId}/board/${id}`);
+    // Open sidebar instead of navigating to new page
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('sidebar', 'true');
+    currentUrl.searchParams.set('boardId', id);
+    router.push(currentUrl.toString());
   };
 
   const handleTouchEnd = () => {
@@ -173,10 +179,15 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
         childNodes={data.childNodes || []}
         onClose={data.onClosePopup || (() => {})}
         workspaceId={data.workspaceId}
+        boardId={uniqueId}
       />
 
       <Card
-        className="min-w-[300px] max-w-[300px] shadow-lg border-2 hover:shadow-xl transition-all duration-200 cursor-pointer relative"
+        className={`min-w-[300px] max-w-[300px] shadow-lg border-2 hover:shadow-xl transition-all duration-300 cursor-pointer relative ${
+          data?.isActive
+            ? "ring-4 ring-blue-500/50 shadow-2xl shadow-blue-500/30 border-blue-400 scale-105"
+            : ""
+        }`}
         onDoubleClick={handleDoubleClick}
         onTouchEnd={handleTouchEnd}
         onClick={handleCardClick}

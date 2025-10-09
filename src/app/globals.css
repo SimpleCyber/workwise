@@ -2,6 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Quill Editor Overflow Fixes */
+.ql-container-wrapper .ql-editor {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.ql-container-wrapper .ql-editor img {
+  max-width: 100%;
+  height: auto;
+}
+
+.ql-container-wrapper .ql-editor p,
+.ql-container-wrapper .ql-editor div {
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

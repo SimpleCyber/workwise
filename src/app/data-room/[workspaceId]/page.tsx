@@ -252,9 +252,9 @@ const DataRoomWorkspacePage = () => {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="flex h-full flex-col p-6 overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-6 flex-shrink-0">
         <div>
           <h1 className="text-2xl font-bold">Data Room</h1>
           <p className="text-muted-foreground">
@@ -438,7 +438,7 @@ const DataRoomWorkspacePage = () => {
       </div>
 
       {/* Search and Filters */}
-      <Card>
+      <Card className="flex-shrink-0">
         <CardHeader>
           <CardTitle className="text-lg">Search & Filter</CardTitle>
         </CardHeader>
@@ -526,7 +526,7 @@ const DataRoomWorkspacePage = () => {
       </Card>
 
       {/* Files Grid */}
-      <div className="space-y-4">
+      <div className="flex-1 min-h-0 overflow-auto space-y-4 pr-1">
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {Array.from({ length: 8 }).map((_, i) => (

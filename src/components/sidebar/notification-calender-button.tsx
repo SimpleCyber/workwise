@@ -7,8 +7,10 @@ import { calendarOpenAtom, notificationOpenAtom } from "@/lib/panel-atoms";
 import { SidebarButton } from "./sidebar-button";
 import { DraggableNotificationPanel } from "../notification/NotificationPanel";
 import { DraggableCalendarPanel } from "../calender/CalendarPanel";
+import { useGetUnreadCount } from "@/hooks/use-notifications";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info";
+
 
 interface PanelButtonProps {
   className?: string;
@@ -19,6 +21,7 @@ export const PanelButtons: React.FC<PanelButtonProps> = ({
 }) => {
   const [calendarOpen, setCalendarOpen] = useAtom(calendarOpenAtom);
   const [notificationOpen, setNotificationOpen] = useAtom(notificationOpenAtom);
+  const unreadCount = useGetUnreadCount();
 
   const workspaceId = useWorkspaceId();
   const { data: workspace, isLoading: workspaceLoading } = useGetWorkspaceInfo({
@@ -32,6 +35,7 @@ export const PanelButtons: React.FC<PanelButtonProps> = ({
           icon={Bell}
           label="Notifications"
           isActive={notificationOpen}
+          
           onClick={() => {
             setNotificationOpen((prev) => {
               const next = !prev;
@@ -39,6 +43,7 @@ export const PanelButtons: React.FC<PanelButtonProps> = ({
               return next;
             });
           }}
+          badgeCount={unreadCount > 0 ? unreadCount : undefined}
         />
         <SidebarButton
           icon={CalendarClock}

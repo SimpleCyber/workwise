@@ -2,7 +2,7 @@
 
 import { Draggable, Droppable, type DropResult } from "@hello-pangea/dnd";
 import { Loader, Plus, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -45,12 +45,14 @@ interface ProjectKanbanBoardProps {
     updatedAt: number;
   }>;
   selectedMemberIds: Id<"members">[]; // Change to array
+  compact?: boolean; // New prop for sidebar mode
 }
 
 export const ProjectKanbanBoard = ({
   boardId,
   lists,
   selectedMemberIds,
+  compact = false,
 }: ProjectKanbanBoardProps) => {
   const [isAddingList, setIsAddingList] = useState(false);
   const [newListName, setNewListName] = useState("");
@@ -278,7 +280,7 @@ export const ProjectKanbanBoard = ({
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className="flex h-full gap-4 p-4 overflow-x-auto"
+            className={`flex h-full overflow-x-auto ${compact ? 'gap-2 p-2' : 'gap-4 p-4'}`}
           >
             {sortedLists.map((list, index) => (
               <ProjectKanbanList
@@ -310,6 +312,7 @@ export const ProjectKanbanBoard = ({
                 setEditingListId={setEditingListId}
                 setEditingListName={setEditingListName}
                 selectedMemberIds={selectedMemberIds}
+                compact={compact}
               />
             ))}
             {provided.placeholder}
@@ -360,6 +363,7 @@ interface ProjectKanbanListProps {
   setEditingListId: (id: Id<"projectLists"> | null) => void;
   setEditingListName: (name: string) => void;
   selectedMemberIds: Id<"members">[]; // Change to array
+  compact?: boolean; // New prop for sidebar mode
 }
 
 const ProjectKanbanList = ({
@@ -386,6 +390,7 @@ const ProjectKanbanList = ({
   setEditingListId,
   setEditingListName,
   selectedMemberIds, // Change to array
+  compact = false,
 }: ProjectKanbanListProps) => {
   // Pass selectedMemberIds array to the query
   const { data: tasks, isLoading } = useGetProjectTasks({
@@ -393,9 +398,31 @@ const ProjectKanbanList = ({
     assignedToIds: selectedMemberIds.length > 0 ? selectedMemberIds : undefined,
   });
 
+  const [hiddenTaskIds, setHiddenTaskIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    function onHide(e: any) {
+      const id = e?.detail?.taskId as string | undefined;
+      if (!id) return;
+      setHiddenTaskIds((prev) => {
+        const next = new Set(prev);
+        next.add(id);
+        return next;
+      });
+      setTimeout(() => {
+        setHiddenTaskIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+      }, 1200);
+    }
+    window.addEventListener("kanban:optimistic-hide", onHide);
+    return () => window.removeEventListener("kanban:optimistic-hide", onHide);
+  }, []);
+
   const sortedTasks = tasks
     ? [...tasks]
-        .filter((task) => !task.isArchived)
+        .filter((task) => !task.isArchived && !hiddenTaskIds.has(task._id as any))
         .sort((a, b) => a.position - b.position)
     : [];
 
@@ -405,7 +432,7 @@ const ProjectKanbanList = ({
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          className={`flex-shrink-0 w-72 ${snapshot.isDragging ? "rotate-2" : ""}`}
+          className={`flex-shrink-0 ${compact ? 'w-56' : 'w-72'} ${snapshot.isDragging ? "rotate-2" : ""}`}
         >
           <Card className="bg-gray-50">
             <CardHeader className="pb-2">

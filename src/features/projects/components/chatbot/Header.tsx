@@ -67,6 +67,7 @@ type HeaderProps = {
   setSidebarOpen: (open: boolean) => void;
   hooks?: { id: string; content: string; selected: boolean }[];
   onToggleHookSelected?: (hookId: string, selected: boolean) => void;
+  compact?: boolean;
 };
 
 export default function Header({
@@ -75,12 +76,13 @@ export default function Header({
   setSidebarOpen,
   hooks = [],
   onToggleHookSelected,
+  compact = false,
 }: HeaderProps) {
   const [model, setModel] = useState("gpt-4o");
   const [moreOpen, setMoreOpen] = useState(false);
 
   return (
-    <div className="sticky top-0 z-30 flex items-center gap-2 border-b border-zinc-200 bg-white/80 px-4 py-3 backdrop-blur">
+    <div className={`sticky top-0 z-30 flex items-center gap-2 border-b border-zinc-200 bg-white/80 backdrop-blur ${compact ? 'px-2 py-2' : 'px-4 py-3'}`}>
       {sidebarCollapsed && (
         <button
           onClick={() => setSidebarOpen(true)}

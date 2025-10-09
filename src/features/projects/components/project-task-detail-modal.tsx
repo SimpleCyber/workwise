@@ -97,9 +97,9 @@ export const ProjectTaskDetailModal = ({
   return (
     <TooltipProvider>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-7xl max-h-[90vh] overflow-hidden p-0">
-          <div className="flex flex-col h-full">
-            <TaskHeader task={task} onClose={() => onOpenChange(false)} />
+        <DialogContent className="max-w-7xl h-[90vh] p-0 flex flex-col overflow-hidden">
+          <TaskHeader task={task} onClose={() => onOpenChange(false)} />
+          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
             <TaskContent
               task={task}
               lists={lists}

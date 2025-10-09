@@ -1,10 +1,13 @@
 "use client";
 
 import { Loader2, TriangleAlert } from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { useGetTreeData } from "@/features/test/api/use-get-tree-data";
 import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info";
 import { TreeFlow } from "@/features/test/components/tree-flow";
+import { ProjectSidebarKanban } from "@/features/projects/components/project-sidebar-kanban";
 
 export default function TreeWorkspacePage({
   params,
@@ -12,6 +15,11 @@ export default function TreeWorkspacePage({
   params: { workspaceId: Id<"workspaces"> };
 }) {
   const { workspaceId } = params;
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedBoardId, setSelectedBoardId] = useState<Id<"projectBoards"> | null>(null);
 
   const { data: workspace, isLoading: workspaceLoading } = useGetWorkspaceInfo({
     id: workspaceId,
@@ -20,6 +28,31 @@ export default function TreeWorkspacePage({
   const { data: treeData, isLoading: treeLoading } = useGetTreeData({
     workspaceId,
   });
+
+  // Handle sidebar state from URL params
+  useEffect(() => {
+    const shouldShowSidebar = searchParams.get('sidebar') === 'true';
+    const boardId = searchParams.get('boardId') as Id<"projectBoards"> | null;
+
+    if (boardId && shouldShowSidebar) {
+      setSelectedBoardId(boardId);
+      setSidebarOpen(true);
+    } else {
+      setSidebarOpen(false);
+      setSelectedBoardId(null);
+    }
+  }, [searchParams]);
+
+  const handleCloseSidebar = () => {
+    setSidebarOpen(false);
+    setSelectedBoardId(null);
+
+    // Remove sidebar params from URL
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.delete('sidebar');
+    currentUrl.searchParams.delete('boardId');
+    router.push(currentUrl.toString());
+  };
 
   if (workspaceLoading || treeLoading) {
     return (
@@ -39,13 +72,28 @@ export default function TreeWorkspacePage({
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col relative">
       <div className="flex h-[49px] items-center border-b bg-white px-4">
         <h1 className="text-lg font-semibold">All Data - {workspace.name}</h1>
       </div>
-      <div className="flex-1 overflow-auto p-6">
-        <TreeFlow workspaceId={workspaceId} />
+      <div
+        className="flex-1 overflow-auto p-6 transition-all duration-300 ease-in-out"
+        style={{
+          marginRight: sidebarOpen ? `600px` : '0px' // Dynamic margin for sidebar (matches default width)
+        }}
+      >
+        <TreeFlow workspaceId={workspaceId} sidebarOpen={sidebarOpen} activeNodeId={selectedBoardId || undefined} />
       </div>
+
+      {/* Project Sidebar */}
+      {selectedBoardId && (
+        <ProjectSidebarKanban
+          workspaceId={workspaceId}
+          boardId={selectedBoardId}
+          isOpen={sidebarOpen}
+          onClose={handleCloseSidebar}
+        />
+      )}
     </div>
   );
 }

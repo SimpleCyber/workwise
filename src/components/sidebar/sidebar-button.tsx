@@ -9,6 +9,7 @@ interface SidebarButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon: LucideIcon | IconType;
   label: string;
   isActive?: boolean;
+  badgeCount?: number;
 }
 
 export const SidebarButton = ({
@@ -16,6 +17,7 @@ export const SidebarButton = ({
   label,
   isActive = false,
   onClick,
+  badgeCount,
   ...props
 }: SidebarButtonProps) => {
   return (
@@ -55,14 +57,23 @@ export const SidebarButton = ({
           <div className="absolute inset-0 bg-gradient-to-br from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
           {/* Icon with enhanced animations */}
-          <Icon
-            className={cn(
-              "size-5 text-white transition-all duration-300 ease-out relative z-10",
-              "group-hover:scale-110 group-hover:rotate-2 group-hover:text-accent",
-              "group-active:scale-95",
-              isActive && "text-accent scale-105",
+          <div className="relative">
+            <Icon
+              className={cn(
+                "size-5 text-white transition-all duration-300 ease-out relative z-10",
+                "group-hover:scale-110 group-hover:rotate-2 group-hover:text-accent",
+                "group-active:scale-95",
+                isActive && "text-accent scale-105",
+              )}
+            />
+
+            {badgeCount && badgeCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 h-4 min-w-[16px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center z-20">
+                {badgeCount > 99 ? "99+" : badgeCount}
+              </span>
             )}
-          />
+          </div>
+
 
           {/* Subtle inner glow on active */}
           {isActive && (

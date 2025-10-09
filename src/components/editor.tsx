@@ -164,7 +164,7 @@ const Editor = ({
   const isEmpty = !image && text.replace(/<(.|\n)*?>/g, "").trim().length === 0;
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col w-full ">
       <input
         type="file"
         accept="image/*"
@@ -179,7 +179,7 @@ const Editor = ({
           disabled && "opacity-50",
         )}
       >
-        <div ref={containerRef} className="h-full" />
+        <div ref={containerRef} className="h-full ql-container-wrapper" />
 
         {!!image && (
           <div className="p-2">
