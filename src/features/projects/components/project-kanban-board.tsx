@@ -280,7 +280,7 @@ export const ProjectKanbanBoard = ({
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`flex h-full overflow-x-auto ${compact ? 'gap-2 p-2' : 'gap-4 p-4'}`}
+            className={`flex h-full overflow-x-auto ${compact ? "gap-2 p-2" : "gap-4 p-4"}`}
           >
             {sortedLists.map((list, index) => (
               <ProjectKanbanList
@@ -422,7 +422,9 @@ const ProjectKanbanList = ({
 
   const sortedTasks = tasks
     ? [...tasks]
-        .filter((task) => !task.isArchived && !hiddenTaskIds.has(task._id as any))
+        .filter(
+          (task) => !task.isArchived && !hiddenTaskIds.has(task._id as any),
+        )
         .sort((a, b) => a.position - b.position)
     : [];
 
@@ -432,7 +434,7 @@ const ProjectKanbanList = ({
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          className={`flex-shrink-0 ${compact ? 'w-56' : 'w-72'} ${snapshot.isDragging ? "rotate-2" : ""}`}
+          className={`flex-shrink-0 ${compact ? "w-56" : "w-72"} ${snapshot.isDragging ? "rotate-2" : ""}`}
         >
           <Card className="bg-gray-50">
             <CardHeader className="pb-2">

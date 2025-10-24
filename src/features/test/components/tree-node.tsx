@@ -48,7 +48,6 @@ interface TreeNodeData {
   ) => void;
   isStarred?: boolean; // Add this prop
   isActive?: boolean;
-
 }
 
 export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
@@ -126,13 +125,38 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
       data.onToggleCollapse();
     }
   };
+  const clickTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  const handleDoubleClick = () => {
-    // Open sidebar instead of navigating to new page
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set('sidebar', 'true');
-    currentUrl.searchParams.set('boardId', id);
-    router.push(currentUrl.toString());
+  const handleSingleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    // Delay single click so we can check if a double click happens
+    if (clickTimeout.current) clearTimeout(clickTimeout.current);
+
+    clickTimeout.current = setTimeout(() => {
+      if (data.onTogglePopup) {
+        data.onTogglePopup();
+      }
+
+      // Open sidebar (single click)
+      const currentUrl = new URL(window.location.href);
+      currentUrl.searchParams.set("sidebar", "true");
+      currentUrl.searchParams.set("boardId", id);
+      router.push(currentUrl.toString());
+    }, 250); // wait to confirm it's not a double click
+  };
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    // Cancel single-click action
+    if (clickTimeout.current) {
+      clearTimeout(clickTimeout.current);
+      clickTimeout.current = null;
+    }
+
+    // Navigate to full board page (double click)
+    router.push(`/projects/${workspaceId}/board/${id}`);
   };
 
   const handleTouchEnd = () => {
@@ -190,7 +214,7 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
         }`}
         onDoubleClick={handleDoubleClick}
         onTouchEnd={handleTouchEnd}
-        onClick={handleCardClick}
+        onClick={handleSingleClick}
       >
         {/* Star/Pin Button */}
         <div

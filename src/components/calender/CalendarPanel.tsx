@@ -24,6 +24,7 @@ import {
   CalendarDays,
   ArrowLeft,
   GripVertical,
+  TriangleAlert,
 } from "lucide-react";
 import {
   format,
@@ -42,6 +43,7 @@ import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { GoogleCalendarAPI } from "@/lib/google-calendar";
 import { toast } from "sonner";
+import { useAuthActions } from "@convex-dev/auth/react";
 
 interface CalendarEvent {
   _id: Id<"calendarEvents">;
@@ -60,6 +62,8 @@ interface Position {
   y: number;
 }
 
+type AuthView = "signIn" | "signUp" | "calendar";
+
 export const DraggableCalendarPanel = ({
   workspaceId,
 }: {
@@ -69,11 +73,20 @@ export const DraggableCalendarPanel = ({
   const [view, setView] = useState<"daily" | "monthly" | "all" | "create">(
     "monthly",
   );
+  const [authView, setAuthView] = useState<AuthView>("calendar");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<Position>({ x: 0, y: 0 });
   const cardRef = useRef<HTMLDivElement>(null);
+
+  // Authentication state
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [authPending, setAuthPending] = useState(false);
+
+  const { signIn } = useAuthActions();
 
   const events = useQuery(api.calendarEvents.getEventsByWorkspace, {
     workspaceId,
@@ -81,7 +94,6 @@ export const DraggableCalendarPanel = ({
   const hasGoogleAuth = useQuery(api.googleAuth.hasGoogleAuth);
   const googleTokens = useQuery(api.googleAuth.getGoogleTokens);
   const createEvent = useMutation(api.calendarEvents.createEvent);
-  const updateEvent = useMutation(api.calendarEvents.updateEvent);
   const deleteEventMutation = useMutation(api.calendarEvents.deleteEvent);
   const storeGoogleTokens = useMutation(api.googleAuth.storeGoogleTokens);
 
@@ -103,7 +115,7 @@ export const DraggableCalendarPanel = ({
     if (savedPosition) {
       setPosition(JSON.parse(savedPosition));
     } else {
-      setPosition({ x: window.innerWidth / 2 - 600, y: 80 });
+      setPosition({ x: window.innerWidth / 2 - 200, y: 80 });
     }
   }, []);
 
@@ -111,35 +123,6 @@ export const DraggableCalendarPanel = ({
   useEffect(() => {
     localStorage.setItem("calendar-panel-position", JSON.stringify(position));
   }, [position]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const googleAuth = params.get("google_auth");
-    const accessToken = params.get("access_token");
-    const refreshToken = params.get("refresh_token");
-    const expiresAt = params.get("expires_at");
-
-    if (googleAuth === "success" && accessToken && refreshToken && expiresAt) {
-      storeGoogleTokens({
-        accessToken,
-        refreshToken,
-        expiresAt: Number.parseInt(expiresAt),
-        scope: "calendar",
-      })
-        .then(() => {
-          toast("Connected to Google Calendar", {
-            description: "Your calendar is now synced with Google.",
-          });
-          // Clean up URL
-          window.history.replaceState({}, "", window.location.pathname);
-        })
-        .catch((error) => {
-          toast.error("Failed to connect", {
-            description: error.message,
-          });
-        });
-    }
-  }, [storeGoogleTokens, toast]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest(".no-drag")) return;
@@ -181,8 +164,60 @@ export const DraggableCalendarPanel = ({
     }
   }, [isDragging, dragStart]);
 
+  // Simple Google OAuth handler
   const authenticateWithGoogle = () => {
-    window.location.href = "/api/calendar/google?action=login";
+    toast.info("Redirecting to Google authentication...");
+    // This will use your existing Convex Google OAuth setup
+    signIn("google");
+  };
+
+  // Authentication handlers
+  const handleOAuthSignIn = (provider: "github" | "google") => {
+    setAuthPending(true);
+    signIn(provider)
+      .then(() => {
+        setAuthView("calendar");
+        toast.success(`Signed in with ${provider}`);
+      })
+      .catch((error) => {
+        setAuthError(`Failed to sign in with ${provider}`);
+        console.error("OAuth error:", error);
+      })
+      .finally(() => setAuthPending(false));
+  };
+
+  const handleSignIn = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setAuthPending(true);
+    setAuthError("");
+
+    signIn("password", { email, password, flow: "signIn" })
+      .then(() => {
+        setAuthView("calendar");
+        toast.success("Successfully signed in!");
+      })
+      .catch((error) => {
+        setAuthError("Invalid email or password!");
+        console.error("Sign in error:", error);
+      })
+      .finally(() => setAuthPending(false));
+  };
+
+  const handleSignUp = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setAuthPending(true);
+    setAuthError("");
+
+    signIn("password", { email, password, flow: "signUp" })
+      .then(() => {
+        setAuthView("calendar");
+        toast.success("Account created successfully!");
+      })
+      .catch((error) => {
+        setAuthError("Failed to create account. Please try again.");
+        console.error("Sign up error:", error);
+      })
+      .finally(() => setAuthPending(false));
   };
 
   const handleCreateEvent = async () => {
@@ -202,50 +237,8 @@ export const DraggableCalendarPanel = ({
           ? new Date(`${newEvent.endDate}T${newEvent.endTime}`)
           : new Date(startDateTime.getTime() + 60 * 60 * 1000);
 
-      let googleEventId: string | undefined;
-      let meetLink: string | undefined;
-
-      // Sync with Google Calendar if authenticated
-      if (hasGoogleAuth && googleTokens) {
-        const googleAPI = new GoogleCalendarAPI(googleTokens.accessToken);
-
-        const googleEvent: any = {
-          summary: newEvent.title,
-          description: newEvent.description,
-          start: {
-            dateTime: startDateTime.toISOString(),
-            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          },
-          end: {
-            dateTime: endDateTime.toISOString(),
-            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          },
-          location: newEvent.location,
-          attendees: newEvent.attendees
-            ? newEvent.attendees
-                .split(",")
-                .map((email) => ({ email: email.trim() }))
-            : [],
-        };
-
-        if (newEvent.includeMeet) {
-          googleEvent.conferenceData = {
-            createRequest: {
-              requestId: Math.random().toString(36).substr(2, 9),
-              conferenceSolutionKey: {
-                type: "hangoutsMeet",
-              },
-            },
-          };
-        }
-
-        const createdEvent = await googleAPI.createEvent(googleEvent);
-        googleEventId = createdEvent.id;
-        meetLink =
-          createdEvent.hangoutLink || newEvent.includeMeet
-            ? `https://meet.google.com/${Math.random().toString(36).substr(2, 9)}`
-            : undefined;
-      }
+      // For demo purposes, we'll create the event locally
+      // You can add Google Calendar sync back later
 
       await createEvent({
         title: newEvent.title,
@@ -253,12 +246,13 @@ export const DraggableCalendarPanel = ({
         startTime: startDateTime.getTime(),
         endTime: endDateTime.getTime(),
         location: newEvent.location,
-        meetLink,
+        meetLink: newEvent.includeMeet
+          ? `https://meet.google.com/${Math.random().toString(36).substr(2, 9)}`
+          : undefined,
         attendees: newEvent.attendees
           ? newEvent.attendees.split(",").map((email) => email.trim())
           : [],
         workspaceId,
-        googleEventId,
       });
 
       toast.success("Event created", {
@@ -286,13 +280,7 @@ export const DraggableCalendarPanel = ({
 
   const handleDeleteEvent = async (event: CalendarEvent) => {
     try {
-      if (event.googleEventId && hasGoogleAuth && googleTokens) {
-        const googleAPI = new GoogleCalendarAPI(googleTokens.accessToken);
-        await googleAPI.deleteEvent(event.googleEventId);
-      }
-
       await deleteEventMutation({ eventId: event._id });
-
       toast.success("Event deleted", {
         description: "Your calendar event has been deleted.",
       });
@@ -434,24 +422,6 @@ export const DraggableCalendarPanel = ({
                               {event.attendees.length} attendee
                               {event.attendees.length > 1 ? "s" : ""}
                             </span>
-                            <div className="flex -space-x-1">
-                              {event.attendees
-                                .slice(0, 3)
-                                .map((attendee, i) => (
-                                  <div
-                                    key={i}
-                                    className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 border-2 border-white flex items-center justify-center text-xs font-semibold text-white"
-                                    title={attendee}
-                                  >
-                                    {attendee.charAt(0).toUpperCase()}
-                                  </div>
-                                ))}
-                              {event.attendees.length > 3 && (
-                                <div className="w-6 h-6 rounded-full bg-slate-300 border-2 border-white flex items-center justify-center text-xs font-semibold text-slate-600">
-                                  +{event.attendees.length - 3}
-                                </div>
-                              )}
-                            </div>
                           </div>
                         )}
                         {event.location && (
@@ -708,6 +678,126 @@ export const DraggableCalendarPanel = ({
     );
   };
 
+  const renderSignInView = () => {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="text-center">
+          <div className="p-4 rounded-full bg-gradient-to-br from-blue-50 to-purple-50 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+            <Calendar className="w-8 h-8 text-purple-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-slate-900 mb-2">
+            {authView === "signIn"
+              ? "Login to continue"
+              : "Create your account"}
+          </h3>
+          <p className="text-slate-600 text-sm">
+            {authView === "signIn"
+              ? "Use your email or another service to continue."
+              : "Sign up to start using the calendar."}
+          </p>
+        </div>
+
+        {!!authError && (
+          <div className="flex items-center gap-x-2 rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+            <TriangleAlert className="size-4" />
+            <p>{authError}</p>
+          </div>
+        )}
+
+        <form
+          onSubmit={authView === "signIn" ? handleSignIn : handleSignUp}
+          className="space-y-3"
+        >
+          <Input
+            disabled={authPending}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            type="email"
+            required
+          />
+
+          <Input
+            disabled={authPending}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            type="password"
+            required
+          />
+
+          <Button
+            type="submit"
+            className="w-full"
+            size="lg"
+            disabled={authPending}
+          >
+            {authView === "signIn" ? "Continue" : "Sign Up"}
+          </Button>
+        </form>
+
+        <div className="flex gap-3">
+          <Button
+            disabled={authPending}
+            onClick={() => handleOAuthSignIn("google")}
+            variant="outline"
+            className="flex-1"
+          >
+            <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
+              <path
+                fill="#4285F4"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+              />
+            </svg>
+            Google
+          </Button>
+          <Button
+            disabled={authPending}
+            onClick={() => handleOAuthSignIn("github")}
+            variant="outline"
+            className="flex-1"
+          >
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+            </svg>
+            GitHub
+          </Button>
+        </div>
+
+        <p className="text-center text-xs text-muted-foreground">
+          {authView === "signIn"
+            ? "Don't have an account? "
+            : "Already have an account? "}
+          <button
+            disabled={authPending}
+            onClick={() =>
+              setAuthView(authView === "signIn" ? "signUp" : "signIn")
+            }
+            className="cursor-pointer font-medium text-sky-700 hover:underline disabled:pointer-events-none disabled:opacity-50"
+          >
+            {authView === "signIn" ? "Sign up" : "Sign in"}
+          </button>
+        </p>
+      </div>
+    );
+  };
+
   const [isOpen, setIsOpen] = useAtom(calendarOpenAtom);
   const handleClose = () => {
     setIsOpen(false);
@@ -740,15 +830,6 @@ export const DraggableCalendarPanel = ({
             </div>
           </div>
           <div className="flex items-center gap-2 no-drag">
-            {!hasGoogleAuth && view !== "create" && (
-              <Button
-                onClick={authenticateWithGoogle}
-                size="sm"
-                className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
-              >
-                Connect
-              </Button>
-            )}
             <Button
               variant="ghost"
               size="sm"
@@ -762,28 +843,8 @@ export const DraggableCalendarPanel = ({
       </CardHeader>
 
       <CardContent className="p-0 flex-1 overflow-hidden">
-        {!hasGoogleAuth ? (
-          <div className="text-center py-12 px-6">
-            <div className="p-6 rounded-full bg-gradient-to-br from-blue-50 to-purple-50 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-              <Calendar className="w-12 h-12 text-purple-500" />
-            </div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">
-              Connect your calendar
-            </h3>
-            <p className="text-slate-600 mb-6 leading-relaxed">
-              Sync with Google Calendar to view and manage your events
-              seamlessly
-            </p>
-            <Button
-              onClick={authenticateWithGoogle}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              Connect Google Calendar
-            </Button>
-          </div>
-        ) : view === "create" ? (
-          <div className="p-6 no-drag">{renderCreateEventForm()}</div>
+        {authView !== "calendar" ? (
+          renderSignInView()
         ) : (
           <div className="p-6 no-drag">
             <div className="bg-slate-100 rounded-xl p-1 mb-6">

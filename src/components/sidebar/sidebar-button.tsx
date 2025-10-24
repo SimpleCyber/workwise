@@ -74,7 +74,6 @@ export const SidebarButton = ({
             )}
           </div>
 
-
           {/* Subtle inner glow on active */}
           {isActive && (
             <div className="absolute inset-0 bg-gradient-to-br from-accent/20 via-transparent to-accent/10 rounded-lg" />

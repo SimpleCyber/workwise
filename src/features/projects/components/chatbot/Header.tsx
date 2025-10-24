@@ -82,7 +82,9 @@ export default function Header({
   const [moreOpen, setMoreOpen] = useState(false);
 
   return (
-    <div className={`sticky top-0 z-30 flex items-center gap-2 border-b border-zinc-200 bg-white/80 backdrop-blur ${compact ? 'px-2 py-2' : 'px-4 py-3'}`}>
+    <div
+      className={`sticky top-0 z-30 flex items-center gap-2 border-b border-zinc-200 bg-white/80 backdrop-blur ${compact ? "px-2 py-2" : "px-4 py-3"}`}
+    >
       {sidebarCollapsed && (
         <button
           onClick={() => setSidebarOpen(true)}

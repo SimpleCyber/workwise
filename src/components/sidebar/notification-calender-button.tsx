@@ -11,7 +11,6 @@ import { useGetUnreadCount } from "@/hooks/use-notifications";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info";
 
-
 interface PanelButtonProps {
   className?: string;
 }
@@ -35,7 +34,6 @@ export const PanelButtons: React.FC<PanelButtonProps> = ({
           icon={Bell}
           label="Notifications"
           isActive={notificationOpen}
-          
           onClick={() => {
             setNotificationOpen((prev) => {
               const next = !prev;

@@ -1,11 +1,30 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Plus, Search, Clock, ChevronDown, ChevronRight, Archive, Clock3, BrainCircuit, X } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Clock,
+  ChevronDown,
+  ChevronRight,
+  Archive,
+  Clock3,
+  BrainCircuit,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 // Header functionality moved to consolidated header
 import ChatPane from "./ChatPanel";
 import SearchModal from "./SearchModal";
@@ -69,14 +88,19 @@ export default function CompactAIAssistantUI({
   const [selectedId, setSelectedId] = useState<Id<"projectChats"> | null>(null);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [collapsed, setCollapsed] = useState({ pinned: true, recent: true });
-  const [kanbanCollapsed, setKanbanCollapsed] = useState({ todo: true, inProgress: true });
+  const [kanbanCollapsed, setKanbanCollapsed] = useState({
+    todo: true,
+    inProgress: true,
+  });
   const [model, setModel] = useState("gpt-4o");
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
 
-  const { mutate: createTask, isPending: isCreatingTask } = useCreateProjectTask();
+  const { mutate: createTask, isPending: isCreatingTask } =
+    useCreateProjectTask();
   const [selectedTask, setSelectedTask] = useState<any | null>(null);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [addingTaskToList, setAddingTaskToList] = useState<Id<"projectLists"> | null>(null);
+  const [addingTaskToList, setAddingTaskToList] =
+    useState<Id<"projectLists"> | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState("");
 
   const handleCreateQuickTask = async (listId: Id<"projectLists">) => {
@@ -110,8 +134,16 @@ export default function CompactAIAssistantUI({
   const composerRef = useRef<ChatPaneHandle | null>(null);
 
   // Get tasks for kanban elements
-  const todoList = lists.find(list => list.name.toLowerCase().includes('todo') || list.name.toLowerCase().includes('to do'));
-  const inProgressList = lists.find(list => list.name.toLowerCase().includes('progress') || list.name.toLowerCase().includes('doing'));
+  const todoList = lists.find(
+    (list) =>
+      list.name.toLowerCase().includes("todo") ||
+      list.name.toLowerCase().includes("to do"),
+  );
+  const inProgressList = lists.find(
+    (list) =>
+      list.name.toLowerCase().includes("progress") ||
+      list.name.toLowerCase().includes("doing"),
+  );
 
   const { data: todoTasks } = useGetProjectTasks({
     listId: todoList?._id!,
@@ -286,7 +318,12 @@ export default function CompactAIAssistantUI({
   const missingIds = !workspaceId || !boardId || !currentUserId;
 
   return (
-    <div className={"h-full w-full bg-gradient-to-br from-slate-50 via-white to-slate-50 text-zinc-900 " + className}>
+    <div
+      className={
+        "h-full w-full bg-gradient-to-br from-slate-50 via-white to-slate-50 text-zinc-900 " +
+        className
+      }
+    >
       <div className="flex h-full w-full overflow-hidden">
         {missingIds ? (
           <div className="grid flex-1 place-items-center text-sm text-zinc-500">
@@ -338,7 +375,12 @@ export default function CompactAIAssistantUI({
                           variant="ghost"
                           size="sm"
                           className="h-8 px-3 text-xs hover:bg-slate-100 rounded-lg transition-all"
-                          onClick={() => setCollapsed(prev => ({ ...prev, recent: !prev.recent }))}
+                          onClick={() =>
+                            setCollapsed((prev) => ({
+                              ...prev,
+                              recent: !prev.recent,
+                            }))
+                          }
                         >
                           <Clock className="h-3 w-3 mr-1.5" />
                           Recent
@@ -363,7 +405,13 @@ export default function CompactAIAssistantUI({
                       className="flex items-center gap-2 rounded-lg border-2 border-slate-200 bg-white px-3 py-1.5 text-xs font-medium hover:bg-slate-50 hover:border-slate-300 focus:outline-none transition-all shadow-sm"
                     >
                       <BrainCircuit className="h-3.5 w-3.5 text-slate-700" />
-                      <span className="text-slate-700">{model === "gpt-4o" ? "GPT-4o" : model === "gpt-4o-mini" ? "GPT-4o mini" : "GPT-4.1"}</span>
+                      <span className="text-slate-700">
+                        {model === "gpt-4o"
+                          ? "GPT-4o"
+                          : model === "gpt-4o-mini"
+                            ? "GPT-4o mini"
+                            : "GPT-4.1"}
+                      </span>
                       <ChevronDown className="h-3 w-3 text-slate-500" />
                     </button>
                     {modelDropdownOpen && (
@@ -401,10 +449,16 @@ export default function CompactAIAssistantUI({
                   {todoList && (
                     <Collapsible
                       open={!kanbanCollapsed.todo}
-                      onOpenChange={(open) => setKanbanCollapsed(prev => ({ ...prev, todo: !open }))}
+                      onOpenChange={(open) =>
+                        setKanbanCollapsed((prev) => ({ ...prev, todo: !open }))
+                      }
                     >
                       <CollapsibleTrigger asChild>
-                        <Button variant="outline" size="sm" className="h-8 px-3 text-xs font-medium border-2 hover:bg-slate-50 rounded-lg transition-all shadow-sm">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-3 text-xs font-medium border-2 hover:bg-slate-50 rounded-lg transition-all shadow-sm"
+                        >
                           <Archive className="h-3.5 w-3.5 mr-1.5" />
                           To Do ({todoTasks?.length || 0})
                           {kanbanCollapsed.todo ? (
@@ -421,7 +475,9 @@ export default function CompactAIAssistantUI({
                             <div className="space-y-2 p-2 bg-gray-50 rounded-md border border-gray-300">
                               <Input
                                 value={newTaskTitle}
-                                onChange={(e) => setNewTaskTitle(e.target.value)}
+                                onChange={(e) =>
+                                  setNewTaskTitle(e.target.value)
+                                }
                                 placeholder="Enter task title..."
                                 className="h-8 text-xs"
                                 autoFocus
@@ -437,8 +493,12 @@ export default function CompactAIAssistantUI({
                               <div className="flex gap-1">
                                 <Button
                                   size="sm"
-                                  onClick={() => handleCreateQuickTask(todoList!._id)}
-                                  disabled={isCreatingTask || !newTaskTitle.trim()}
+                                  onClick={() =>
+                                    handleCreateQuickTask(todoList!._id)
+                                  }
+                                  disabled={
+                                    isCreatingTask || !newTaskTitle.trim()
+                                  }
                                   className="h-6 text-xs flex-1"
                                 >
                                   Add
@@ -472,7 +532,10 @@ export default function CompactAIAssistantUI({
                             <div
                               key={task._id}
                               className="p-2 text-xs bg-gray-50 rounded-md border border-gray-200 cursor-pointer hover:bg-gray-100 hover:border-gray-300 transition-all"
-                              onClick={() => { setSelectedTask(task); setIsTaskModalOpen(true); }}
+                              onClick={() => {
+                                setSelectedTask(task);
+                                setIsTaskModalOpen(true);
+                              }}
                               draggable
                               onDragStart={(e) => {
                                 const taskData = {
@@ -482,13 +545,30 @@ export default function CompactAIAssistantUI({
                                   priority: task.priority,
                                   dueDate: task.dueDate,
                                 };
-                                e.dataTransfer.setData("application/json", JSON.stringify({ type: "project-task", task: taskData }));
+                                e.dataTransfer.setData(
+                                  "application/json",
+                                  JSON.stringify({
+                                    type: "project-task",
+                                    task: taskData,
+                                  }),
+                                );
                                 (window as any).__lastDraggedTask = taskData;
-                                window.dispatchEvent(new CustomEvent("kanban:task-drag-start", { detail: { type: "project-task", task: taskData } }));
+                                window.dispatchEvent(
+                                  new CustomEvent("kanban:task-drag-start", {
+                                    detail: {
+                                      type: "project-task",
+                                      task: taskData,
+                                    },
+                                  }),
+                                );
                               }}
                             >
-                              <div className="font-medium truncate">{task.title}</div>
-                              <div className="text-gray-500 truncate">{task.taskCode}</div>
+                              <div className="font-medium truncate">
+                                {task.title}
+                              </div>
+                              <div className="text-gray-500 truncate">
+                                {task.taskCode}
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -500,10 +580,19 @@ export default function CompactAIAssistantUI({
                   {inProgressList && (
                     <Collapsible
                       open={!kanbanCollapsed.inProgress}
-                      onOpenChange={(open) => setKanbanCollapsed(prev => ({ ...prev, inProgress: !open }))}
+                      onOpenChange={(open) =>
+                        setKanbanCollapsed((prev) => ({
+                          ...prev,
+                          inProgress: !open,
+                        }))
+                      }
                     >
                       <CollapsibleTrigger asChild>
-                        <Button variant="outline" size="sm" className="h-8 px-3 text-xs font-medium border-2 hover:bg-slate-50 rounded-lg transition-all shadow-sm">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-3 text-xs font-medium border-2 hover:bg-slate-50 rounded-lg transition-all shadow-sm"
+                        >
                           <Clock3 className="h-3.5 w-3.5 mr-1.5" />
                           In Progress ({inProgressTasks?.length || 0})
                           {kanbanCollapsed.inProgress ? (
@@ -520,7 +609,9 @@ export default function CompactAIAssistantUI({
                             <div className="space-y-2 p-2 bg-blue-50 rounded-md border border-blue-300">
                               <Input
                                 value={newTaskTitle}
-                                onChange={(e) => setNewTaskTitle(e.target.value)}
+                                onChange={(e) =>
+                                  setNewTaskTitle(e.target.value)
+                                }
                                 placeholder="Enter task title..."
                                 className="h-8 text-xs"
                                 autoFocus
@@ -536,8 +627,12 @@ export default function CompactAIAssistantUI({
                               <div className="flex gap-1">
                                 <Button
                                   size="sm"
-                                  onClick={() => handleCreateQuickTask(inProgressList!._id)}
-                                  disabled={isCreatingTask || !newTaskTitle.trim()}
+                                  onClick={() =>
+                                    handleCreateQuickTask(inProgressList!._id)
+                                  }
+                                  disabled={
+                                    isCreatingTask || !newTaskTitle.trim()
+                                  }
                                   className="h-6 text-xs flex-1"
                                 >
                                   Add
@@ -559,7 +654,9 @@ export default function CompactAIAssistantUI({
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => setAddingTaskToList(inProgressList!._id)}
+                              onClick={() =>
+                                setAddingTaskToList(inProgressList!._id)
+                              }
                               className="w-full justify-start h-8 px-2 text-xs text-gray-600 hover:text-gray-900 hover:bg-blue-50 border-dashed border border-blue-300 rounded-md transition-colors"
                             >
                               <Plus className="h-3 w-3 mr-2" />
@@ -571,7 +668,10 @@ export default function CompactAIAssistantUI({
                             <div
                               key={task._id}
                               className="p-2 text-xs bg-blue-50 rounded-md border border-blue-200 cursor-pointer hover:bg-blue-100 hover:border-blue-300 transition-all"
-                              onClick={() => { setSelectedTask(task); setIsTaskModalOpen(true); }}
+                              onClick={() => {
+                                setSelectedTask(task);
+                                setIsTaskModalOpen(true);
+                              }}
                               draggable
                               onDragStart={(e) => {
                                 const taskData = {
@@ -581,13 +681,30 @@ export default function CompactAIAssistantUI({
                                   priority: task.priority,
                                   dueDate: task.dueDate,
                                 };
-                                e.dataTransfer.setData("application/json", JSON.stringify({ type: "project-task", task: taskData }));
+                                e.dataTransfer.setData(
+                                  "application/json",
+                                  JSON.stringify({
+                                    type: "project-task",
+                                    task: taskData,
+                                  }),
+                                );
                                 (window as any).__lastDraggedTask = taskData;
-                                window.dispatchEvent(new CustomEvent("kanban:task-drag-start", { detail: { type: "project-task", task: taskData } }));
+                                window.dispatchEvent(
+                                  new CustomEvent("kanban:task-drag-start", {
+                                    detail: {
+                                      type: "project-task",
+                                      task: taskData,
+                                    },
+                                  }),
+                                );
                               }}
                             >
-                              <div className="font-medium truncate">{task.title}</div>
-                              <div className="text-gray-500 truncate">{task.taskCode}</div>
+                              <div className="font-medium truncate">
+                                {task.title}
+                              </div>
+                              <div className="text-gray-500 truncate">
+                                {task.taskCode}
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -604,7 +721,9 @@ export default function CompactAIAssistantUI({
                     {recent.slice(0, 5).map((chat) => (
                       <Button
                         key={chat.id}
-                        variant={selectedChatId === chat.id ? "secondary" : "ghost"}
+                        variant={
+                          selectedChatId === chat.id ? "secondary" : "ghost"
+                        }
                         size="sm"
                         onClick={() => setSelectedId(chat.id as any)}
                         className="w-full justify-start h-8 px-3 text-xs truncate hover:bg-slate-100 rounded-lg transition-all"
@@ -659,7 +778,6 @@ export default function CompactAIAssistantUI({
               onOpenChange={setIsTaskModalOpen}
               lists={lists || []}
             />
-
           </main>
         )}
       </div>

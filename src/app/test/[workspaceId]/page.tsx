@@ -19,7 +19,8 @@ export default function TreeWorkspacePage({
   const router = useRouter();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedBoardId, setSelectedBoardId] = useState<Id<"projectBoards"> | null>(null);
+  const [selectedBoardId, setSelectedBoardId] =
+    useState<Id<"projectBoards"> | null>(null);
 
   const { data: workspace, isLoading: workspaceLoading } = useGetWorkspaceInfo({
     id: workspaceId,
@@ -31,8 +32,8 @@ export default function TreeWorkspacePage({
 
   // Handle sidebar state from URL params
   useEffect(() => {
-    const shouldShowSidebar = searchParams.get('sidebar') === 'true';
-    const boardId = searchParams.get('boardId') as Id<"projectBoards"> | null;
+    const shouldShowSidebar = searchParams.get("sidebar") === "true";
+    const boardId = searchParams.get("boardId") as Id<"projectBoards"> | null;
 
     if (boardId && shouldShowSidebar) {
       setSelectedBoardId(boardId);
@@ -49,8 +50,8 @@ export default function TreeWorkspacePage({
 
     // Remove sidebar params from URL
     const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.delete('sidebar');
-    currentUrl.searchParams.delete('boardId');
+    currentUrl.searchParams.delete("sidebar");
+    currentUrl.searchParams.delete("boardId");
     router.push(currentUrl.toString());
   };
 
@@ -79,10 +80,14 @@ export default function TreeWorkspacePage({
       <div
         className="flex-1 overflow-auto p-6 transition-all duration-300 ease-in-out"
         style={{
-          marginRight: sidebarOpen ? `600px` : '0px' // Dynamic margin for sidebar (matches default width)
+          marginRight: sidebarOpen ? `600px` : "0px", // Dynamic margin for sidebar (matches default width)
         }}
       >
-        <TreeFlow workspaceId={workspaceId} sidebarOpen={sidebarOpen} activeNodeId={selectedBoardId || undefined} />
+        <TreeFlow
+          workspaceId={workspaceId}
+          sidebarOpen={sidebarOpen}
+          activeNodeId={selectedBoardId || undefined}
+        />
       </div>
 
       {/* Project Sidebar */}

@@ -109,7 +109,9 @@ export function NodePopup({
           {activeTab === "Nodes" && childNodes.length > 0 && (
             <NodesTab childNodes={childNodes} />
           )}
-          {activeTab === "Tasks" && <TasksTab boardId={boardId} workspaceId={workspaceId} />}
+          {activeTab === "Tasks" && (
+            <TasksTab boardId={boardId} workspaceId={workspaceId} />
+          )}
           {activeTab === "Comments" && (
             <CommentsTab nodeId={uniqueId} workspaceId={workspaceId} />
           )}

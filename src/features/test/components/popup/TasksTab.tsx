@@ -12,7 +12,7 @@ export function TasksTab({ boardId, workspaceId }: TasksTabProps) {
   // Get the "To Do" list for this board
   const lists = useQuery(
     api.projects.getProjectLists,
-    boardId ? { boardId } : "skip"
+    boardId ? { boardId } : "skip",
   );
 
   const todoList = lists?.find((list) => list.name === "To Do");
@@ -20,7 +20,7 @@ export function TasksTab({ boardId, workspaceId }: TasksTabProps) {
   // Get tasks for the To Do list
   const tasks = useQuery(
     api.projects.getProjectTasks,
-    todoList ? { listId: todoList._id } : "skip"
+    todoList ? { listId: todoList._id } : "skip",
   );
 
   const completedCount = tasks?.filter((t) => t.isCompleted).length || 0;

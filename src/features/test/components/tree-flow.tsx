@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useMemo } from "react";
 import {
   ReactFlow,
   MiniMap,
@@ -13,6 +13,7 @@ import {
   type Edge,
   type Connection,
   BackgroundVariant,
+  useReactFlow 
 } from "reactflow";
 import { TreeNode } from "./tree-node";
 import { TreeLayoutManager } from "../lib/tree-layout-manager";
@@ -77,7 +78,8 @@ export function TreeFlow({ workspaceId, sidebarOpen, activeNodeId }: TreeFlowPro
   const expandWithAI = useExpandNodeWithAI();
   const toggleStar = useToggleStar();
 
-  const layoutManager = new TreeLayoutManager();
+  // const { fitView } = useReactFlow();
+  const layoutManager = useMemo(() => new TreeLayoutManager(), []);
 
   // Function to check if a node should be visible (not hidden by collapsed parent)
   const isNodeVisible = useCallback(
@@ -271,8 +273,18 @@ export function TreeFlow({ workspaceId, sidebarOpen, activeNodeId }: TreeFlowPro
       reactFlowEdges,
     );
 
+    // Wrap the layout calculation in setTimeout
+  const timer = setTimeout(() => {
+    const positionedNodes = layoutManager.recalculateTreeLayout(
+      reactFlowNodes,
+      reactFlowEdges,
+    );
+
     setNodes(positionedNodes);
     setEdges(reactFlowEdges);
+  }, 0);
+
+  return () => clearTimeout(timer);
   }, [
     treeNodes,
     workspaceId,
@@ -283,6 +295,8 @@ export function TreeFlow({ workspaceId, sidebarOpen, activeNodeId }: TreeFlowPro
     isNodeVisible,
     toggleNodeCollapse,
     activeNodeId,
+    layoutManager,
+
   ]);
 
   const onConnect = useCallback(
@@ -460,6 +474,7 @@ export function TreeFlow({ workspaceId, sidebarOpen, activeNodeId }: TreeFlowPro
     <>
       <div className="w-full h-full" onClick={closePopup}>
         <ReactFlow
+        key={`flow-${workspaceId}-${nodes.length}`}
           nodes={nodesWithCallbacks}
           edges={styledEdges}
           onNodesChange={onNodesChange}
@@ -480,7 +495,6 @@ export function TreeFlow({ workspaceId, sidebarOpen, activeNodeId }: TreeFlowPro
             zoomable={true}
             className="bg-background border border-border rounded-lg transition-all duration-300"
             style={{
-              transform: sidebarOpen ? 'translateX(0px)' : 'translateX(0px)',
               width: sidebarOpen ? 150 : 200,
               height: sidebarOpen ? 120 : 150,
             }}
