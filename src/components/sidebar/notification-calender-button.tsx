@@ -41,7 +41,7 @@ export const PanelButtons: React.FC<PanelButtonProps> = ({
               return next;
             });
           }}
-          badgeCount={unreadCount > 0 ? unreadCount : undefined}
+          badgeCount={unreadCount! > 0 ? unreadCount : undefined}
         />
         <SidebarButton
           icon={CalendarClock}
