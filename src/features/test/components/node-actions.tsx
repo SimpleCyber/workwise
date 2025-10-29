@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Sparkles } from "lucide-react";
+import { Plus, Trash2, Sparkles, Loader2 } from "lucide-react";
 import { AIExpandInput } from "./ai-expand-input";
 import { useState } from "react";
 
@@ -9,7 +9,7 @@ interface NodeActionsProps {
   isVisible: boolean;
   onAddChild: () => void;
   onDelete: () => void;
-  onExpandWithAI?: (prompt: string) => void; // Updated to accept prompt parameter
+  onExpandWithAI?: (prompt: string) => void;
   canDelete: boolean;
 }
 
@@ -28,14 +28,17 @@ export function NodeActions({
   };
 
   const handleAIGenerate = async (prompt: string) => {
-    if (onExpandWithAI) {
-      setIsGenerating(true);
-      try {
-        await onExpandWithAI(prompt);
-      } finally {
-        setIsGenerating(false);
-        setShowAIInput(false);
-      }
+    if (!onExpandWithAI) return;
+
+    setIsGenerating(true);
+    try {
+      await onExpandWithAI(prompt);
+      setShowAIInput(false);
+    } catch (error) {
+      // Handle error (you might want to show a toast here)
+      console.error("AI generation failed:", error);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -45,8 +48,10 @@ export function NodeActions({
 
   return (
     <div
-      className={`absolute left-full ml-3 flex flex-col gap-1 transition-all duration-200 ${
-        isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-2"
+      className={`absolute left-full ml-2 flex flex-col gap-1 transition-all duration-200 ${
+        isVisible
+          ? "opacity-100 translate-x-0"
+          : "opacity-0 translate-x-2 pointer-events-none"
       }`}
     >
       <Button
@@ -54,7 +59,7 @@ export function NodeActions({
         variant="outline"
         onClick={onAddChild}
         className="h-8 w-8 p-0 bg-white hover:bg-blue-50 border-blue-200"
-        title="Add Child"
+        aria-label="Add child node"
       >
         <Plus className="w-4 h-4 text-blue-600" />
       </Button>
@@ -65,18 +70,25 @@ export function NodeActions({
             size="sm"
             variant="outline"
             onClick={handleAIExpand}
-            className="h-8 w-8 p-0 bg-white hover:bg-purple-50 border-purple-200"
-            title="Expand with AI"
+            disabled={isGenerating}
+            className="h-8 w-8 p-0 bg-white hover:bg-purple-50 border-purple-200 disabled:opacity-50"
+            aria-label="Expand with AI"
           >
-            <Sparkles className="w-4 h-4 text-purple-600" />
+            {isGenerating ? (
+              <Loader2 className="w-4 h-4 text-purple-600 animate-spin" />
+            ) : (
+              <Sparkles className="w-4 h-4 text-purple-600" />
+            )}
           </Button>
 
           {showAIInput && (
-            <AIExpandInput
-              onGenerate={handleAIGenerate}
-              onCancel={handleAICancel}
-              isGenerating={isGenerating}
-            />
+            <div className="absolute top-0 left-full ml-2 z-10">
+              <AIExpandInput
+                onGenerate={handleAIGenerate}
+                onCancel={handleAICancel}
+                isGenerating={isGenerating}
+              />
+            </div>
           )}
         </div>
       )}
@@ -87,7 +99,7 @@ export function NodeActions({
           variant="outline"
           onClick={onDelete}
           className="h-8 w-8 p-0 bg-white hover:bg-red-50 border-red-200"
-          title="Delete Node"
+          aria-label="Delete node"
         >
           <Trash2 className="w-4 h-4 text-red-600" />
         </Button>

@@ -8,12 +8,13 @@ import {
   Background,
   useNodesState,
   useEdgesState,
+  ReactFlowProvider,
   addEdge,
   type Node,
   type Edge,
   type Connection,
   BackgroundVariant,
-  useReactFlow 
+  useReactFlow,
 } from "reactflow";
 import { TreeNode } from "./tree-node";
 import { TreeLayoutManager } from "../lib/tree-layout-manager";
@@ -59,7 +60,11 @@ const getMiniMapNodeColor = (node: Node) => {
   return "#3b82f6";
 };
 
-export function TreeFlow({ workspaceId, sidebarOpen, activeNodeId }: TreeFlowProps & { sidebarOpen?: boolean; activeNodeId?: string }) {
+export function TreeFlow({
+  workspaceId,
+  sidebarOpen,
+  activeNodeId,
+}: TreeFlowProps & { sidebarOpen?: boolean; activeNodeId?: string }) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [activePopup, setActivePopup] = useState<string | null>(null);
@@ -78,7 +83,6 @@ export function TreeFlow({ workspaceId, sidebarOpen, activeNodeId }: TreeFlowPro
   const expandWithAI = useExpandNodeWithAI();
   const toggleStar = useToggleStar();
 
-  // const { fitView } = useReactFlow();
   const layoutManager = useMemo(() => new TreeLayoutManager(), []);
 
   // Function to check if a node should be visible (not hidden by collapsed parent)
@@ -274,17 +278,17 @@ export function TreeFlow({ workspaceId, sidebarOpen, activeNodeId }: TreeFlowPro
     );
 
     // Wrap the layout calculation in setTimeout
-  const timer = setTimeout(() => {
-    const positionedNodes = layoutManager.recalculateTreeLayout(
-      reactFlowNodes,
-      reactFlowEdges,
-    );
+    const timer = setTimeout(() => {
+      const positionedNodes = layoutManager.recalculateTreeLayout(
+        reactFlowNodes,
+        reactFlowEdges,
+      );
 
-    setNodes(positionedNodes);
-    setEdges(reactFlowEdges);
-  }, 0);
+      setNodes(positionedNodes);
+      setEdges(reactFlowEdges);
+    }, 0);
 
-  return () => clearTimeout(timer);
+    return () => clearTimeout(timer);
   }, [
     treeNodes,
     workspaceId,
@@ -296,7 +300,6 @@ export function TreeFlow({ workspaceId, sidebarOpen, activeNodeId }: TreeFlowPro
     toggleNodeCollapse,
     activeNodeId,
     layoutManager,
-
   ]);
 
   const onConnect = useCallback(
@@ -471,48 +474,39 @@ export function TreeFlow({ workspaceId, sidebarOpen, activeNodeId }: TreeFlowPro
   }));
 
   return (
-    <>
-      <div className="w-full h-full" onClick={closePopup}>
-        <ReactFlow
+    <div className="w-full h-full" onClick={closePopup}>
+      <ReactFlow
         key={`flow-${workspaceId}-${nodes.length}`}
-          nodes={nodesWithCallbacks}
-          edges={styledEdges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          nodeTypes={nodeTypes}
-          fitView
-          className="bg-background"
-          panOnDrag={true}
-          zoomOnScroll={true}
-          zoomOnPinch={true}
-        >
-          <Controls />
-          <MiniMap
-            nodeColor={getMiniMapNodeColor}
-            maskColor="rgba(0, 0, 0, 0.2)"
-            pannable={true}
-            zoomable={true}
-            className="bg-background border border-border rounded-lg transition-all duration-300"
-            style={{
-              width: sidebarOpen ? 150 : 200,
-              height: sidebarOpen ? 120 : 150,
-            }}
-          />
-          <Background
-            variant={BackgroundVariant.Dots}
-            gap={20}
-            size={1}
-            className="opacity-30"
-          />
-        </ReactFlow>
-      </div>
-
-      <AITreeDialog
-        isOpen={isAIDialogOpen}
-        onClose={() => setIsAIDialogOpen(false)}
-        workspaceId={workspaceId}
-      />
-    </>
+        nodes={nodesWithCallbacks}
+        edges={styledEdges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        nodeTypes={nodeTypes}
+        className="bg-background"
+        panOnDrag={true}
+        zoomOnScroll={true}
+        zoomOnPinch={true}
+      >
+        <Controls />
+        <MiniMap
+          nodeColor={getMiniMapNodeColor}
+          maskColor="rgba(0, 0, 0, 0.2)"
+          pannable={true}
+          zoomable={true}
+          className="bg-background border border-border rounded-lg transition-all duration-300"
+          style={{
+            width: sidebarOpen ? 150 : 200,
+            height: sidebarOpen ? 120 : 150,
+          }}
+        />
+        <Background
+          variant={BackgroundVariant.Dots}
+          gap={20}
+          size={1}
+          className="opacity-30"
+        />
+      </ReactFlow>
+    </div>
   );
 }

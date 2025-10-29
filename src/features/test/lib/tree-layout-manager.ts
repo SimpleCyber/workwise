@@ -1,30 +1,23 @@
 import type { Node, Edge } from "reactflow";
 
 export class TreeLayoutManager {
-  private readonly HORIZONTAL_SPACING = 400; // Increased from 300 to 400 for more space between siblings
-  private readonly VERTICAL_SPACING = 300; // Increased from 200 to 300 for more space between parent and child
+  private readonly HORIZONTAL_SPACING = 400;
+  private readonly VERTICAL_SPACING = 300;
   private readonly ROOT_POSITION = { x: 600, y: 100 };
-  private readonly MIN_NODE_WIDTH = 280; // Increased from 250 to match node width
-
-  /**
-   * Recalculates the entire tree layout for perfect symmetry
-   */
+  private readonly MIN_NODE_WIDTH = 280;
   recalculateTreeLayout(nodes: Node[], edges: Edge[]): Node[] {
     const nodeMap = new Map(nodes.map((node) => [node.id, node]));
     const rootNode = nodes.find((node) => node.data.isRoot);
 
     if (!rootNode) return nodes;
 
-    // Build tree structure
     const treeStructure = this.buildTreeStructure(nodes, edges);
 
-    // Calculate subtree widths to prevent overlapping
     const subtreeWidths = this.calculateSubtreeWidths(
       treeStructure,
       rootNode.id,
     );
 
-    // Calculate positions starting from root
     const positionedNodes = this.calculateNodePositions(
       treeStructure,
       rootNode.id,
@@ -37,21 +30,16 @@ export class TreeLayoutManager {
     return positionedNodes;
   }
 
-  /**
-   * Builds a tree structure from nodes and edges
-   */
   private buildTreeStructure(
     nodes: Node[],
     edges: Edge[],
   ): Map<string, string[]> {
     const tree = new Map<string, string[]>();
 
-    // Initialize all nodes
     nodes.forEach((node) => {
       tree.set(node.id, []);
     });
 
-    // Build parent-child relationships
     edges.forEach((edge) => {
       const children = tree.get(edge.source) || [];
       children.push(edge.target);
@@ -61,9 +49,6 @@ export class TreeLayoutManager {
     return tree;
   }
 
-  /**
-   * Calculates the width required for each subtree
-   */
   private calculateSubtreeWidths(
     treeStructure: Map<string, string[]>,
     nodeId: string,
@@ -74,18 +59,15 @@ export class TreeLayoutManager {
       const children = treeStructure.get(id) || [];
 
       if (children.length === 0) {
-        // Leaf node
         widths.set(id, this.MIN_NODE_WIDTH);
         return this.MIN_NODE_WIDTH;
       }
 
-      // Calculate total width needed for all children
       let totalChildWidth = 0;
       children.forEach((childId) => {
         totalChildWidth += calculateWidth(childId);
       });
 
-      // Add spacing between children
       const spacingWidth = (children.length - 1) * this.HORIZONTAL_SPACING;
       const subtreeWidth = Math.max(
         this.MIN_NODE_WIDTH,
@@ -100,9 +82,6 @@ export class TreeLayoutManager {
     return widths;
   }
 
-  /**
-   * Calculates positions for all nodes recursively with proper spacing
-   */
   private calculateNodePositions(
     treeStructure: Map<string, string[]>,
     nodeId: string,
@@ -117,7 +96,6 @@ export class TreeLayoutManager {
     const children = treeStructure.get(nodeId) || [];
     const result: Node[] = [];
 
-    // Position current node
     const y = this.ROOT_POSITION.y + level * this.VERTICAL_SPACING;
     result.push({
       ...node,
@@ -125,7 +103,6 @@ export class TreeLayoutManager {
     });
 
     if (children.length > 0) {
-      // Calculate positions for children based on their subtree widths
       const childPositions = this.calculateChildrenPositionsWithWidths(
         centerX,
         children,
@@ -135,7 +112,6 @@ export class TreeLayoutManager {
       children.forEach((childId, index) => {
         const childCenterX = childPositions[index];
 
-        // Recursively position children and their subtrees
         const childNodes = this.calculateNodePositions(
           treeStructure,
           childId,
@@ -152,9 +128,6 @@ export class TreeLayoutManager {
     return result;
   }
 
-  /**
-   * Calculates positions for children based on their subtree widths
-   */
   private calculateChildrenPositionsWithWidths(
     parentCenterX: number,
     children: string[],
@@ -164,7 +137,6 @@ export class TreeLayoutManager {
       return [parentCenterX];
     }
 
-    // Calculate total width needed
     let totalWidth = 0;
     children.forEach((childId) => {
       totalWidth += subtreeWidths.get(childId) || this.MIN_NODE_WIDTH;
