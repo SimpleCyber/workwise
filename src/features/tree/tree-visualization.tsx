@@ -8,7 +8,7 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
 } from "reactflow";
-import "reactflow/dist/style.css";
+// import "reactflow/dist/style.css";
 import { UserNode } from "./components/nodes/user-node";
 import { WorkspaceNode } from "./components/nodes/workspace-node";
 import { ProjectNode } from "./components/nodes/project-node";

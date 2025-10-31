@@ -299,12 +299,12 @@ const ProjectsWorkspacePage = () => {
 
       <div className="flex-1 flex flex-col md:flex-row p-4 gap-4 bg-gray-200">
         {/* Tree sidebar - hidden on mobile, 30% width on md and up */}
-        <div className="hidden md:block md:w-[30%] lg:w-[150%] bg-white rounded-lg shadow-sm border border-slate-200 p-4 overflow-auto">
+        <div className="hidden md:block md:w-[30%] lg:w-[150%] bg-white rounded-lg shadow-sm border border-slate-200 overflow-auto">
           <WorkspaceOnlyTree />
         </div>
 
         {/* Main content - 100% width on mobile, 70% on md and up */}
-        <div className="w-full md:w-[70%]">
+        {/* <div className="w-full md:w-[70%]">
           {!boards || boards.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div className="text-center max-w-md">
@@ -426,7 +426,7 @@ const ProjectsWorkspacePage = () => {
               ))}
             </div>
           )}
-        </div>
+        </div> */}
       </div>
     </div>
   );
