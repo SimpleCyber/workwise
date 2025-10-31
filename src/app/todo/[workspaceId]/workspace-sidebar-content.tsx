@@ -68,17 +68,17 @@ export const WorkspaceSidebarContent = () => {
 
   return (
     <>
-      {/* <div className="mt-3 flex flex-col px-2">
+      <div className="mt-3 flex flex-col px-2">
         <Link href={`/todo/${workspaceId}`}>
           <Button
             variant="transparent"
             className="h-7 justify-start px-[18px] text-sm text-[#f9EDFFCC] w-full"
           >
             <CheckSquare className="mr-1 size-3.5 shrink-0" />
-            <span className="truncate text-sm">All Boards</span>
+            <span className="truncate text-sm">All Todo Boards</span>
           </Button>
         </Link>
-      </div> */}
+      </div>
 
       {/* Active Boards */}
       <WorkspaceSection
