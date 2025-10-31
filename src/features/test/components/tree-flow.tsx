@@ -479,6 +479,7 @@ export function TreeFlow({
         key={`flow-${workspaceId}-${nodes.length}`}
         nodes={nodesWithCallbacks}
         edges={styledEdges}
+        fitView
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
