@@ -9,15 +9,18 @@ import {
   Network,
   PanelLeftOpen,
   PanelLeftClose,
-  TestTubeDiagonalIcon,
+  PinIcon,
+  // TestTubeDiagonalIcon,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { UserButton } from "@/features/auth/components/user-button";
 import { SidebarButton } from "./sidebar-button";
 import { WorkspaceSwitcher } from "../workspace-sidebar/workspace-sidebar-switcher";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
+import { usePinnedBoard } from "@/hooks/use-pinned-board";
 
 import { PanelButtons } from "./notification-calender-button";
+import type { Id } from "../../../convex/_generated/dataModel";
 
 interface SidebarProps {
   isWorkspacePanelCollapsed?: boolean;
@@ -31,6 +34,10 @@ export const Sidebar = ({
   const pathname = usePathname();
   const router = useRouter();
   const workspaceId = useWorkspaceId();
+
+  // Cast workspaceId to the proper type
+  const typedWorkspaceId = workspaceId as Id<"workspaces"> | null;
+  const pinnedBoard = usePinnedBoard(typedWorkspaceId);
 
   const navigationItems = [
     {
@@ -61,9 +68,14 @@ export const Sidebar = ({
     {
       icon: Kanban,
       label: "ToDo",
-      path: `/todo/${workspaceId}`,
+      path:
+        pinnedBoard && pinnedBoard.length > 0
+          ? `/todo/${workspaceId}/board/${pinnedBoard[0]._id}`
+          : `/todo/${workspaceId}`,
       delay: "delay-[100ms]",
+      isPinned: pinnedBoard && pinnedBoard.length > 0,
     },
+
     {
       icon: Files,
       label: "Documents",

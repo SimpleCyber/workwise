@@ -54,41 +54,6 @@ export const createBoard = mutation({
   },
 });
 
-export const getBoards = query({
-  args: {
-    workspaceId: v.id("workspaces"),
-    includeArchived: v.optional(v.boolean()),
-  },
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      return [];
-    }
-
-    const member = await ctx.db
-      .query("members")
-      .withIndex("by_workspace_id_user_id", (q) =>
-        q.eq("workspaceId", args.workspaceId).eq("userId", userId),
-      )
-      .unique();
-    if (!member) {
-      return [];
-    }
-
-    const query = ctx.db
-      .query("todoBoards")
-      .withIndex("by_member_workspace", (q) =>
-        q.eq("memberId", member._id).eq("workspaceId", args.workspaceId),
-      );
-
-    const boards = await query.collect();
-
-    return boards
-      .filter((board) => (args.includeArchived ? true : !board.isArchived))
-      .sort((a, b) => b.createdAt - a.createdAt);
-  },
-});
-
 export const getBoard = query({
   args: { boardId: v.id("todoBoards") },
   handler: async (ctx, args) => {
@@ -827,5 +792,184 @@ export const getComments = query({
     );
 
     return commentsWithUser;
+  },
+});
+
+// Star/Unstar board functions
+export const starBoard = mutation({
+  args: { boardId: v.id("todoBoards") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Unauthorized");
+    }
+
+    const board = await ctx.db.get(args.boardId);
+    if (!board) {
+      throw new Error("Board not found");
+    }
+
+    const member = await ctx.db.get(board.memberId);
+    if (!member || member.userId !== userId) {
+      throw new Error("Unauthorized");
+    }
+
+    await ctx.db.patch(args.boardId, {
+      isStarred: true,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+export const unstarBoard = mutation({
+  args: { boardId: v.id("todoBoards") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Unauthorized");
+    }
+
+    const board = await ctx.db.get(args.boardId);
+    if (!board) {
+      throw new Error("Board not found");
+    }
+
+    const member = await ctx.db.get(board.memberId);
+    if (!member || member.userId !== userId) {
+      throw new Error("Unauthorized");
+    }
+
+    await ctx.db.patch(args.boardId, {
+      isStarred: false,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+// Add this to your todos.ts Convex file
+export const toggleStarBoard = mutation({
+  args: { boardId: v.id("todoBoards") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Unauthorized");
+    }
+
+    const board = await ctx.db.get(args.boardId);
+    if (!board) {
+      throw new Error("Board not found");
+    }
+
+    const member = await ctx.db.get(board.memberId);
+    if (!member || member.userId !== userId) {
+      throw new Error("Unauthorized");
+    }
+
+    // If we're trying to star this board, first unstar all other boards in the workspace
+    if (!board.isStarred) {
+      const allBoards = await ctx.db
+        .query("todoBoards")
+        .withIndex("by_workspace_id", (q) =>
+          q.eq("workspaceId", board.workspaceId),
+        )
+        .collect();
+
+      // Unstar all other boards
+      for (const otherBoard of allBoards) {
+        if (otherBoard._id !== args.boardId && otherBoard.isStarred) {
+          await ctx.db.patch(otherBoard._id, {
+            isStarred: false,
+            updatedAt: Date.now(),
+          });
+        }
+      }
+    }
+
+    // Toggle the current board's star status
+    await ctx.db.patch(args.boardId, {
+      isStarred: !board.isStarred,
+      updatedAt: Date.now(),
+    });
+
+    return !board.isStarred;
+  },
+});
+
+// Get starred boards
+
+// In your todos.ts Convex file, update the getStarredBoards query
+export const getStarredBoards = query({
+  args: { workspaceId: v.id("workspaces") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return [];
+    }
+
+    const member = await ctx.db
+      .query("members")
+      .withIndex("by_workspace_id_user_id", (q) =>
+        q.eq("workspaceId", args.workspaceId).eq("userId", userId),
+      )
+      .unique();
+    if (!member) {
+      return [];
+    }
+
+    const boards = await ctx.db
+      .query("todoBoards")
+      .withIndex("by_member_workspace", (q) =>
+        q.eq("memberId", member._id).eq("workspaceId", args.workspaceId),
+      )
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("isStarred"), true),
+          q.eq(q.field("isArchived"), false),
+        ),
+      )
+      .collect();
+
+    return boards;
+  },
+});
+
+// Update your existing getBoards query to sort starred boards first
+export const getBoards = query({
+  args: {
+    workspaceId: v.id("workspaces"),
+    includeArchived: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return [];
+    }
+
+    const member = await ctx.db
+      .query("members")
+      .withIndex("by_workspace_id_user_id", (q) =>
+        q.eq("workspaceId", args.workspaceId).eq("userId", userId),
+      )
+      .unique();
+    if (!member) {
+      return [];
+    }
+
+    const query = ctx.db
+      .query("todoBoards")
+      .withIndex("by_member_workspace", (q) =>
+        q.eq("memberId", member._id).eq("workspaceId", args.workspaceId),
+      );
+
+    const boards = await query.collect();
+
+    return boards
+      .filter((board) => (args.includeArchived ? true : !board.isArchived))
+      .sort((a, b) => {
+        // Sort by starred first, then by creation date
+        if (a.isStarred && !b.isStarred) return -1;
+        if (!a.isStarred && b.isStarred) return 1;
+        return b.createdAt - a.createdAt;
+      });
   },
 });

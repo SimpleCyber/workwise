@@ -10,6 +10,8 @@ import {
   Edit,
   Pencil,
   Calendar,
+  Pin,
+  PinOff,
 } from "lucide-react";
 import Link from "next/link";
 import type React from "react";
@@ -45,6 +47,7 @@ import { useGetBoards } from "@/features/todos/api/use-get-boards";
 import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info";
 import { useDeleteBoard } from "@/features/todos/api/use-delete-board";
 import { useUpdateBoard } from "@/features/todos/api/use-update-board";
+import { useToggleStarBoard } from "@/features/todos/api/use-toggle-star-board";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import type { Id } from "../../../../convex/_generated/dataModel";
 
@@ -62,6 +65,8 @@ const TodoWorkspacePage = () => {
   const { mutate: createBoard, isPending: isCreatingBoard } = useCreateBoard();
   const { mutate: deleteBoard, isPending: isDeletingBoard } = useDeleteBoard();
   const { mutate: updateBoard, isPending: isUpdatingBoard } = useUpdateBoard();
+  const { mutate: toggleStarBoard, isPending: isTogglingStar } =
+    useToggleStarBoard();
 
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -151,6 +156,34 @@ const TodoWorkspacePage = () => {
       );
     }
   };
+
+  const handleToggleStar = (
+    boardId: Id<"todoBoards">,
+    currentlyStarred: boolean,
+  ) => {
+    toggleStarBoard(
+      { boardId },
+      {
+        onSuccess: (isNowStarred) => {
+          if (isNowStarred) {
+            toast.success("Board pinned successfully!");
+          } else {
+            toast.success("Board unpinned successfully!");
+          }
+        },
+        onError: (error) => {
+          toast.error(error.message || "Failed to update pin status");
+        },
+      },
+    );
+  };
+
+  // Sort boards: pinned first, then by creation date
+  const sortedBoards = boards?.sort((a, b) => {
+    if (a.isStarred && !b.isStarred) return -1;
+    if (!a.isStarred && b.isStarred) return 1;
+    return b.createdAt - a.createdAt;
+  });
 
   if (workspaceLoading || boardsLoading) {
     return (
@@ -293,10 +326,14 @@ const TodoWorkspacePage = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {boards.map((board) => (
+              {sortedBoards?.map((board) => (
                 <Card
                   key={board._id}
-                  className="hover:shadow-md transition-shadow"
+                  className={`hover:shadow-md transition-shadow ${
+                    board.isStarred
+                      ? "border-yellow-300 bg-yellow-50 shadow-sm"
+                      : ""
+                  }`}
                 >
                   <CardHeader className="relative">
                     <div className="flex items-center justify-between">
@@ -304,7 +341,10 @@ const TodoWorkspacePage = () => {
                         href={`/todo/${workspaceId}/board/${board._id}`}
                         className="flex-1"
                       >
-                        <CardTitle className="text-base">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          {board.isStarred && (
+                            <Pin className="size-4 text-yellow-500 fill-yellow-500" />
+                          )}
                           {board.name}
                         </CardTitle>
                       </Link>
@@ -326,6 +366,21 @@ const TodoWorkspacePage = () => {
                               <Edit className="size-4 mr-2" /> Open Board
                             </Link>
                           </DropdownMenuItem>
+                          {board.isStarred ? (
+                            <DropdownMenuItem
+                              onClick={() => handleToggleStar(board._id, true)}
+                              disabled={isTogglingStar}
+                            >
+                              <PinOff className="size-4 mr-2" /> Unpin Board
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem
+                              onClick={() => handleToggleStar(board._id, false)}
+                              disabled={isTogglingStar}
+                            >
+                              <Pin className="size-4 mr-2" /> Pin Board
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem
                             onClick={() => {
                               setEditingBoardId(board._id);
