@@ -45,7 +45,7 @@ const Editor = ({
 }: EditorProps) => {
   const [text, setText] = useState("");
   const [image, setImage] = useState<File | null>(null);
-  const [isToolbarVisible, setIsToolbarVisible] = useState(false);
+  const [isToolbarVisible, setIsToolbarVisible] = useState(true);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const imageElementRef = useRef<HTMLInputElement>(null);
@@ -209,7 +209,7 @@ const Editor = ({
         )}
 
         <div className="z-[5] flex px-2 pb-2">
-          {/* <Hint
+          <Hint
             label={isToolbarVisible ? "Hide formatting" : "Show formatting"}
           >
             <Button
@@ -220,7 +220,7 @@ const Editor = ({
             >
               <PiTextAa className="size-4" />
             </Button>
-          </Hint> */}
+          </Hint>
 
           {variant === "create" && (
             <Hint label="Image">

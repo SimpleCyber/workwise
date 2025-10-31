@@ -8,7 +8,7 @@ import ReactFlow, {
   useEdgesState,
   MiniMap,
 } from "reactflow";
-// import "reactflow/dist/style.css";
+import "reactflow/dist/style.css";
 import { WorkspaceNode } from "./components/nodes/workspace-node";
 import { ProjectNode } from "./components/nodes/project-node";
 import { ListNode } from "./components/nodes/list-node";
@@ -94,7 +94,7 @@ export const WorkspaceOnlyVisualization = ({
           onEdgesChange={onEdgesChange}
           nodeTypes={nodeTypes}
           fitView
-          fitViewOptions={{ padding: 50 }}
+          // fitViewOptions={{ padding: 10 }}
           defaultEdgeOptions={{
             type: "default",
             animated: true,
@@ -104,11 +104,11 @@ export const WorkspaceOnlyVisualization = ({
             },
           }}
         >
-          <Background className="bg-gray-200 dark:bg-gray-800" />
+          {/* <Background className="bg-gray-200 dark:bg-gray-800" /> */}
           <Controls />
 
           {/* Enhanced MiniMap */}
-          {/* <MiniMap
+          <MiniMap
             nodeColor={getMinimapNodeColor}
             nodeStrokeWidth={2}
             nodeStrokeColor={(node) =>
@@ -131,7 +131,7 @@ export const WorkspaceOnlyVisualization = ({
             pannable
             zoomable
             ariaLabel="Interactive tree structure minimap - click and drag to navigate"
-          /> */}
+          />
         </ReactFlow>
       </div>
     </div>

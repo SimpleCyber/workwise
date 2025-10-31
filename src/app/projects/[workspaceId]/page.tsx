@@ -297,9 +297,9 @@ const ProjectsWorkspacePage = () => {
         </Dialog>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row p-4 gap-4 bg-gray-200">
+      <div className="flex-1 flex flex-col md:flex-row p-4 gap-4">
         {/* Tree sidebar - hidden on mobile, 30% width on md and up */}
-        <div className="hidden md:block md:w-[30%] lg:w-[150%] bg-white rounded-lg shadow-sm border border-slate-200 overflow-auto">
+        <div className="hidden md:block md:w-[30%] lg:w-[150%] bg-white rounded-lg shadow-sm   overflow-auto">
           <WorkspaceOnlyTree />
         </div>
 

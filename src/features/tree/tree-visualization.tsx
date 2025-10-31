@@ -110,7 +110,7 @@ export const TreeVisualization = ({
             },
           }}
         >
-          <Background className="bg-gray-200 dark:bg-gray-800" />
+          {/* <Background className="bg-gray-200 dark:bg-gray-800" /> */}
           <Controls />
 
           {/* Enhanced MiniMap with better styling */}
