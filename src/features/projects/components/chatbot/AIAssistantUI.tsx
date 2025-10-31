@@ -227,8 +227,6 @@ export default function AIAssistantUI({
     } catch {}
   }
 
-  const ragActive = true; // your logic to check if RAG is active
-
   async function onSend(payload: ChatSendPayload) {
     const content = payload.text;
     const attachments = payload.attachments || [];
@@ -265,40 +263,6 @@ export default function AIAssistantUI({
       // ignore rename errors
     }
 
-    // call rag
-    let ragResponseText = "";
-    if (ragActive) {
-      const previousMsgs = (messages || []).map((m: any) => m.content);
-      const selectedHooksContent = (hooks || [])
-        .filter((h: any) => h.selected)
-        .map((h: any) => h.content);
-
-      let detailsText = projectDetails.concat(previousMsgs);
-
-      let currentMessage =
-        content +
-        "\n\nAttachments:\n" +
-        attachments.map((a) => JSON.stringify(a)).join("\n") +
-        "\n\nHooks:\n" +
-        selectedHooksContent.join("\n");
-
-      const res = await fetch("/api/rag-query", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          detailsText: detailsText,
-          currentMessage: currentMessage,
-        }),
-      });
-      const data = await res.json();
-      ragResponseText = data.answer || "";
-      console.log("---------------------------------------------------");
-      console.log("⭐⭐⭐⭐⭐RAG response here :", ragResponseText);
-      console.log("✅✅✅✅✅RAG Input text here :", detailsText);
-      console.log("❓❓❓❓❓RAG Input question here :", currentMessage);
-      console.log("---------------------------------------------------");
-    }
-
     // 2) call AI
     setIsThinking(true);
     setThinkingConvId(chatId as any);
@@ -321,7 +285,6 @@ export default function AIAssistantUI({
           messages: apiMessages.concat([{ role: "user", content }]),
           hooks: selectedHooks,
           attachments,
-          ragResponseText,
         }),
       });
       const data = await res.json().catch(() => ({}) as any);

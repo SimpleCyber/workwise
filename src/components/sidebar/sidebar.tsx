@@ -34,17 +34,17 @@ export const Sidebar = ({
 
   const navigationItems = [
     {
-      icon: TestTubeDiagonalIcon,
-      label: "Testing",
+      icon: Network,
+      label: "Planning",
       path: `/test/${workspaceId}`,
       delay: "delay-[50ms]",
     },
-    {
-      icon: Network,
-      label: "All Data",
-      path: `/tree/${workspaceId}`,
-      delay: "delay-[50ms]",
-    },
+    // {
+    //   icon: Network,
+    //   label: "All Data",
+    //   path: `/tree/${workspaceId}`,
+    //   delay: "delay-[50ms]",
+    // },
     {
       icon: Kanban,
       label: "ToDo",
@@ -65,13 +65,13 @@ export const Sidebar = ({
     },
     {
       icon: Files,
-      label: "Files",
+      label: "Documents",
       path: `/data-room/${workspaceId}`,
       delay: "delay-[250ms]",
     },
     {
       icon: Calendar,
-      label: "Attend",
+      label: "Attendance",
       path: `/attendance/${workspaceId}`,
       delay: "delay-[300ms]",
     },

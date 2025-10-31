@@ -13,9 +13,7 @@ function stripDescription(raw?: unknown) {
         .replace(/\s+/g, " ")
         .trim();
     }
-  } catch {
-    // fall back to plain string
-  }
+  } catch {}
   return s;
 }
 
@@ -95,7 +93,6 @@ export async function POST(req: NextRequest) {
     const _boardId = body?.boardId;
     const hooks = (body?.hooks ?? []) as string[];
     const attachments = (body?.attachments ?? []) as any[];
-    const ragResponseText = (body?.ragResponseText ?? []) as any[];
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json(
@@ -123,10 +120,6 @@ export async function POST(req: NextRequest) {
 
     const attachmentsSystem = buildAttachmentsSystemMessage(attachments);
 
-    const ragSystem: ChatMessageInput[] = ragResponseText
-      ? [{ role: "system", content: `RAG Response: ${ragResponseText}` }]
-      : [];
-
     const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
@@ -143,7 +136,6 @@ export async function POST(req: NextRequest) {
       ...attachmentsSystem,
       ...hooksSystem,
       ...safeMessages,
-      ...ragSystem,
     ]);
     return NextResponse.json({ text });
   } catch (err: any) {
