@@ -45,12 +45,7 @@ export const Sidebar = ({
     //   path: `/tree/${workspaceId}`,
     //   delay: "delay-[50ms]",
     // },
-    {
-      icon: Kanban,
-      label: "ToDo",
-      path: `/todo/${workspaceId}`,
-      delay: "delay-[100ms]",
-    },
+
     {
       icon: ListTodo,
       label: "Project",
@@ -62,6 +57,12 @@ export const Sidebar = ({
       label: "Chat",
       path: `/workspace/${workspaceId}`,
       delay: "delay-[200ms]",
+    },
+    {
+      icon: Kanban,
+      label: "ToDo",
+      path: `/todo/${workspaceId}`,
+      delay: "delay-[100ms]",
     },
     {
       icon: Files,

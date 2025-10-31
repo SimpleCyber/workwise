@@ -18,7 +18,7 @@ const HomePage = () => {
     if (isLoading) return;
 
     if (workspaceId) {
-      router.replace(`/tree/${workspaceId}`);
+      router.replace(`/test/${workspaceId}`);
     } else if (!open) {
       setOpen(true);
     }
