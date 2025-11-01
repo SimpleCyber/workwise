@@ -16,6 +16,7 @@ import {
   BackgroundVariant,
   useReactFlow,
 } from "reactflow";
+import "reactflow/dist/style.css";
 import { TreeNode } from "./tree-node";
 import { TreeLayoutManager } from "../lib/tree-layout-manager";
 import type { TreeFlowProps } from "../api/tree-flow-props";
