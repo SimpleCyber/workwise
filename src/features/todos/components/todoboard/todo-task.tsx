@@ -35,6 +35,27 @@ export const TodoTask = ({ card }: TodoTaskProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
+  const linkifyText = (text: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+    return text.split(urlRegex).map((part, index) => {
+      if (urlRegex.test(part)) {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 underline break-all font-bold"
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+  };
+
   const showCheckCircle = card.isCompleted || isHovered;
 
   return (
@@ -53,18 +74,18 @@ export const TodoTask = ({ card }: TodoTaskProps) => {
             {/* Title */}
             <h4
               className={`
-                text-sm 
-                font-medium 
-                leading-5 
-                text-gray-800 
-                flex-1 
-                transition-all 
-                duration-300 
-                ease-in-out
-                ${showCheckCircle ? "ml-0" : "-ml-7"}
-              `}
+        text-sm 
+        font-medium 
+        leading-5 
+        text-gray-800 
+        flex-1 
+        transition-all 
+        duration-300 
+        ease-in-out
+        ${showCheckCircle ? "ml-0" : "-ml-7"}
+      `}
             >
-              {card.title}
+              {linkifyText(card.title)}
             </h4>
           </div>
 
@@ -72,30 +93,30 @@ export const TodoTask = ({ card }: TodoTaskProps) => {
           {card.description && (
             <div
               className={`
-                transition-all 
-                duration-300 
-                ease-in-out
-                ${showCheckCircle ? "ml-7" : "ml-0"}
-              `}
+        transition-all 
+        duration-300 
+        ease-in-out
+        ${showCheckCircle ? "ml-7" : "ml-0"}
+      `}
             >
               <p className="text-xs text-gray-600 leading-4 line-clamp-3 mb-3">
-                {card.description}
+                {linkifyText(card.description)}
               </p>
             </div>
           )}
 
-          {/* Bottom Row: Label, Date + Delete */}
+          {/* Bottom Row */}
           <div
             className={`
-              flex 
-              items-center 
-              justify-between 
-              mt-3 
-              transition-all 
-              duration-300 
-              ease-in-out
-              ${showCheckCircle ? "ml-7" : "ml-0"}
-            `}
+      flex 
+      items-center 
+      justify-between 
+      mt-3 
+      transition-all 
+      duration-300 
+      ease-in-out
+      ${showCheckCircle ? "ml-7" : "ml-0"}
+    `}
           >
             <TodoTaskLabels labels={card.labels} />
 
