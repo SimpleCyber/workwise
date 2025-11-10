@@ -1,6 +1,8 @@
+// app/layout.tsx
+
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
-import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import type { Metadata } from "next";
 import { PropsWithChildren } from "react";
 
 import { ConvexClientProvider } from "@/components/convex-client-provider";
@@ -11,30 +13,24 @@ import { siteConfig } from "@/config";
 import { Analytics } from "@vercel/analytics/next";
 
 import "./globals.css";
-import { FloatingSearchBar } from "@/components/toolbar/floating-search-bar";
 
-const inter = Inter({
-  subsets: ["latin"],
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = siteConfig;
 
-const RootLayout = ({ children }: Readonly<PropsWithChildren>) => {
+export default function RootLayout({ children }: Readonly<PropsWithChildren>) {
   return (
     <ConvexAuthNextjsServerProvider>
-      <Analytics />
       <html lang="en">
         <body className={`${inter.className} antialiased`}>
           <ConvexClientProvider>
+            <Analytics />
             <JotaiProvider>
               <Toaster theme="light" richColors closeButton />
               <ModalProvider />
 
               <div className="flex h-screen">
                 <div className="flex-1 overflow-auto">{children}</div>
-
-                {/* Persistent Panels */}
-                {/* <FloatingSearchBar /> */}
               </div>
             </JotaiProvider>
           </ConvexClientProvider>
@@ -42,6 +38,4 @@ const RootLayout = ({ children }: Readonly<PropsWithChildren>) => {
       </html>
     </ConvexAuthNextjsServerProvider>
   );
-};
-
-export default RootLayout;
+}
