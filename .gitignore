@@ -35,3 +35,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 README.md
+
+
+
+.env
+.env.local
+.env.example
