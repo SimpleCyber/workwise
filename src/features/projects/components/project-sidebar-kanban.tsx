@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, X, MessageSquare, Users, MoreHorizontal } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useGetWorkspaceMembers } from "@/features/projects/api/use-get-workspace-members";
-import CompactAIAssistantUI from "./chatbot/CompactAIAssistantUI";
+// import CompactAIAssistantUI from "./chatbot/CompactAIAssistantUI";
 import { useGetWorkspaceProjects } from "@/features/test/api/all-data-hook";
 import { useCurrentUser } from "../../auth/api/use-current-user";
 import { motion, AnimatePresence } from "framer-motion";
@@ -247,7 +247,7 @@ export const ProjectSidebarKanban = ({
             </div>
 
             {/* Content Area */}
-            <div className="flex-1 overflow-hidden">
+            {/* <div className="flex-1 overflow-hidden">
               <div className="h-full">
                 {currentUser ? (
                   <CompactAIAssistantUI
@@ -269,7 +269,7 @@ export const ProjectSidebarKanban = ({
                   </div>
                 )}
               </div>
-            </div>
+            </div> */}
           </motion.div>
         </>
       )}

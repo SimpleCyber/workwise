@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Loader,
@@ -25,7 +25,20 @@ export default function Home() {
   const { data: workspaces, isLoading } = useGetWorkspaces();
   const { signOut } = useAuthActions();
 
-  if (isLoading) {
+  const workspaceId = useMemo(() => workspaces?.[0]?._id, [workspaces]);
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    if (workspaceId) {
+      router.replace(`/test/${workspaceId}`);
+    } else if (!open) {
+      // If no workspaces and modal not open, open it
+      setOpen(true);
+    }
+  }, [workspaceId, isLoading, open, setOpen, router]);
+
+  if (isLoading || workspaceId) {
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-black text-white">
         <Loader className="size-10 animate-spin text-purple-500" />
