@@ -28,71 +28,10 @@ function fmtDate(ts?: unknown) {
   return `${y}-${m}-${day}`;
 }
 
-function buildAttachmentsSystemMessage(attachments: any[]): ChatMessageInput[] {
-  if (!Array.isArray(attachments) || attachments.length === 0) return [];
-
-  const sections = attachments.map((a, idx) => {
-    const header = `Task ${a?.taskCode || a?.taskId || `#${idx + 1}`}${a?.title ? ` — ${a.title}` : ""}`;
-    const internalId = a?.taskId ? `InternalId: ${a.taskId}` : "";
-    const desc = a?.description
-      ? `Description: ${stripDescription(a.description)}`
-      : "";
-    const meta: string[] = [];
-    if (a?.priority) meta.push(`Priority: ${a.priority}`);
-    const due = fmtDate(a?.dueDate);
-    if (due) meta.push(`Due: ${due}`);
-    if (Array.isArray(a?.labels) && a.labels.length)
-      meta.push(`Labels: ${a.labels.join(", ")}`);
-    const metaLine = meta.length ? meta.join("; ") : "";
-
-    const people: string[] = [];
-    if (a?.assignedTo?.name || a?.assignedTo?.email)
-      people.push(
-        `Assignee: ${a?.assignedTo?.name || "(unknown)"}${a?.assignedTo?.email ? ` <${a.assignedTo.email}>` : ""}`,
-      );
-    if (a?.assignedBy?.name || a?.assignedBy?.email)
-      people.push(
-        `Assigned by: ${a?.assignedBy?.name || "(unknown)"}${a?.assignedBy?.email ? ` <${a.assignedBy.email}>` : ""}`,
-      );
-    if (a?.createdBy?.name || a?.createdBy?.email)
-      people.push(
-        `Created by: ${a?.createdBy?.name || "(unknown)"}${a?.createdBy?.email ? ` <${a.createdBy.email}>` : ""}`,
-      );
-    const peopleLine = people.length ? people.join("; ") : "";
-
-    let commentsBlock = "";
-    if (Array.isArray(a?.comments) && a.comments.length) {
-      const lines = a.comments.map((c: any) => {
-        const ts = c?.createdAt
-          ? new Date(Number(c.createdAt)).toISOString()
-          : "";
-        const who =
-          c?.authorName || c?.authorEmail
-            ? `${c?.authorName || ""}${c?.authorEmail ? ` <${c.authorEmail}>` : ""}`
-            : "Unknown";
-        return `- ${who}${ts ? ` @ ${ts}` : ""}: ${String(c?.content || "").trim()}`;
-      });
-      commentsBlock = `Comments:\n${lines.join("\n")}`;
-    }
-
-    return [header, internalId, desc, metaLine, peopleLine, commentsBlock]
-      .filter(Boolean)
-      .join("\n")
-      .trim();
-  });
-
-  const content = `Use the following task context when answering.\n\n${sections.join("\n\n---\n\n")}`;
-  return [{ role: "system" as any, content }];
-}
-
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const messages = (body?.messages ?? []) as ChatMessageInput[];
-    const _workspaceId = body?.workspaceId;
-    const _boardId = body?.boardId;
-    const hooks = (body?.hooks ?? []) as string[];
-    const attachments = (body?.attachments ?? []) as any[];
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json(
@@ -106,21 +45,7 @@ export async function POST(req: NextRequest) {
       content: m.content,
     }));
 
-    const hooksSystem: ChatMessageInput[] =
-      Array.isArray(hooks) && hooks.length > 0
-        ? [
-            {
-              role: "system" as any,
-              content:
-                "Use the following saved hooks as context when answering:\n" +
-                hooks.map((h, i) => `- ${h}`).join("\n"),
-            },
-          ]
-        : [];
-
-    const attachmentsSystem = buildAttachmentsSystemMessage(attachments);
-
-    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
         {
@@ -132,11 +57,7 @@ export async function POST(req: NextRequest) {
     }
 
     const service = new ChatService(apiKey);
-    const text = await service.generateReply([
-      ...attachmentsSystem,
-      ...hooksSystem,
-      ...safeMessages,
-    ]);
+    const text = await service.generateReply(safeMessages);
     return NextResponse.json({ text });
   } catch (err: any) {
     console.error("[/api/ai] error:", err?.message || err);
@@ -146,3 +67,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

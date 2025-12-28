@@ -11,27 +11,21 @@ import { useAppendProjectMessage } from "../../api/use-append-project-message";
 import { useRenameProjectChat } from "../../api/use-rename-project-chat";
 import { useTogglePinProjectChat } from "../../api/use-toggle-pin-project-chat";
 import { useDeleteProjectChat } from "../../api/use-delete-project-chat";
-import { useDeleteMessagesFrom } from "../../api/use-delete-project-messages-from"; // new hook
-import { useGetProjectHooks } from "../../api/use-get-project-hooks"; // new hook
-import {
-  useToggleProjectHook,
-  useSetProjectHookSelected,
-} from "../../api/use-toggle-project-hook"; // new hook
+import { useDeleteMessagesFrom } from "../../api/use-delete-project-messages-from";
 import type { Id } from "../../../../../convex/_generated/dataModel";
 import { sortChatsByUpdatedAt } from "./utils";
 import type {
   ChatPaneHandle,
   UIConversation,
   UIMessage,
-  TaskAttachment,
   ChatSendPayload,
-} from "./types"; // import shared types
+} from "./types";
 
 type Props = {
   workspaceId: Id<"workspaces">;
   boardId: Id<"projectBoards">;
   currentUserId: Id<"users">;
-  currentUser?: { name?: string; email?: string; image?: string }; //
+  currentUser?: { name?: string; email?: string; image?: string };
   className?: string;
   projectDetails?: any[];
 };
@@ -44,7 +38,6 @@ export default function AIAssistantUI({
   className = "",
   projectDetails = [],
 }: Props) {
-  // console.log("projectDetails ", projectDetails);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState({ pinned: true, recent: false });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -59,83 +52,19 @@ export default function AIAssistantUI({
   const { renameChat } = useRenameProjectChat();
   const { togglePin } = useTogglePinProjectChat();
   const { deleteChat } = useDeleteProjectChat();
-  const { deleteFrom } = useDeleteMessagesFrom(); //
-  const { hooks } = useGetProjectHooks(selectedId as any);
-  const { toggleHook } = useToggleProjectHook();
-  const { setHookSelected } = useSetProjectHookSelected();
+  const { deleteFrom } = useDeleteMessagesFrom();
 
   const [isThinking, setIsThinking] = useState(false);
   const [thinkingConvId, setThinkingConvId] = useState<string | null>(null);
 
   const [query, setQuery] = useState("");
-  const composerRef = useRef<ChatPaneHandle | null>(null); // type the ref handle
+  const composerRef = useRef<ChatPaneHandle | null>(null);
 
   useEffect(() => {
     if (!selectedId && chats.length > 0) {
       setSelectedId(chats[0].id);
     }
   }, [chats, selectedId]);
-
-  useEffect(() => {
-    function onTaskDragStart(ev: any) {
-      const detail = ev?.detail;
-      // accept either { task } or full payload with type === "project-task"
-      const candidate =
-        detail?.task ??
-        (detail?.type === "project-task" ? detail.task : detail);
-      if (candidate) {
-        (window as any).__lastDraggedTask = candidate;
-      }
-    }
-    window.addEventListener("kanban:task-drag-start", onTaskDragStart);
-    return () =>
-      window.removeEventListener("kanban:task-drag-start", onTaskDragStart);
-  }, []);
-
-  useEffect(() => {
-    function onTaskDropToChat(e: any) {
-      // accept both shapes: { detail: { task } } and { detail: { type: 'project-task', task } }
-      const incoming = (e?.detail?.task ??
-        (e?.detail?.type === "project-task"
-          ? e.detail.task
-          : e?.detail)) as TaskAttachment | null;
-
-      let enriched: TaskAttachment | null = incoming;
-      try {
-        const cached = (window as any).__lastDraggedTask as
-          | TaskAttachment
-          | undefined;
-
-        if (cached) {
-          const sameId =
-            (incoming &&
-              cached &&
-              incoming.taskId &&
-              cached.taskId &&
-              String(incoming.taskId) === String(cached.taskId)) ||
-            (incoming &&
-              cached &&
-              (incoming as any).taskCode &&
-              (cached as any).taskCode &&
-              (incoming as any).taskCode === (cached as any).taskCode);
-
-          if (!incoming && cached) {
-            enriched = cached;
-          } else if (incoming && cached && sameId) {
-            enriched = { ...cached, ...incoming };
-          }
-        }
-      } catch {}
-
-      if (enriched) {
-        composerRef.current?.addAttachmentFromTask(enriched);
-      }
-    }
-
-    window.addEventListener("kanban:task-drop-to-chat", onTaskDropToChat);
-    return () =>
-      window.removeEventListener("kanban:task-drop-to-chat", onTaskDropToChat);
-  }, []);
 
   const filtered = useMemo(() => {
     const base = chats.map((c) => ({ ...c }));
@@ -159,44 +88,7 @@ export default function AIAssistantUI({
     const cleaned = (text || "").replace(/\s+/g, " ").trim();
     if (!cleaned) return "New chat";
     const stop = new Set([
-      "the",
-      "a",
-      "an",
-      "and",
-      "or",
-      "but",
-      "to",
-      "of",
-      "in",
-      "for",
-      "with",
-      "on",
-      "at",
-      "from",
-      "by",
-      "about",
-      "as",
-      "is",
-      "are",
-      "be",
-      "can",
-      "could",
-      "should",
-      "would",
-      "how",
-      "what",
-      "why",
-      "when",
-      "which",
-      "this",
-      "that",
-      "these",
-      "those",
-      "please",
-      "make",
-      "create",
-      "help",
-      "need",
+      "the", "a", "an", "and", "or", "but", "to", "of", "in", "for", "with", "on", "at", "from", "by", "about", "as", "is", "are", "be", "can", "could", "should", "would", "how", "what", "why", "when", "which", "this", "that", "these", "those", "please", "make", "create", "help", "need"
     ]);
     const tokens = cleaned
       .toLowerCase()
@@ -205,7 +97,6 @@ export default function AIAssistantUI({
       .filter((t) => t && !stop.has(t));
     const words = tokens.slice(0, 3);
     if (words.length === 0) {
-      // fallback to first two words from the original sentence
       const fallback = cleaned.split(/\s+/).slice(0, 3).join(" ");
       return fallback.replace(/\b\w/g, (m) => m.toUpperCase());
     }
@@ -229,24 +120,18 @@ export default function AIAssistantUI({
 
   async function onSend(payload: ChatSendPayload) {
     const content = payload.text;
-    const attachments = payload.attachments || [];
+    if (!content.trim()) return;
 
-    // ensure a chat exists
     const willCreateNew = !selectedChatId;
-    const existingMsgCount = Array.isArray(messages)
-      ? (messages as any[]).length
-      : 0;
+    const existingMsgCount = Array.isArray(messages) ? (messages as any[]).length : 0;
 
-    const chatId =
-      (selectedChatId as Id<"projectChats">) ??
-      ((await createChat({
-        workspaceId,
-        boardId,
-        title: "New chat",
-        createdBy: currentUserId,
-      })) as Id<"projectChats">);
+    const chatId = (selectedChatId as Id<"projectChats">) ?? (await createChat({
+      workspaceId,
+      boardId,
+      title: "New chat",
+      createdBy: currentUserId,
+    })) as Id<"projectChats">;
 
-    // 1) append user message
     await appendMessage({
       chatId,
       role: "user",
@@ -259,11 +144,8 @@ export default function AIAssistantUI({
         const newTitle = deriveChatTitle(content);
         await renameChat(chatId, newTitle);
       }
-    } catch (e) {
-      // ignore rename errors
-    }
+    } catch (e) {}
 
-    // 2) call AI
     setIsThinking(true);
     setThinkingConvId(chatId as any);
     try {
@@ -272,19 +154,11 @@ export default function AIAssistantUI({
         content: m.content as string,
       }));
 
-      const selectedHooks = (hooks || [])
-        .filter((h: any) => h.selected)
-        .map((h: any) => h.content as string);
-
       const res = await fetch("/api/ai", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          workspaceId,
-          boardId,
           messages: apiMessages.concat([{ role: "user", content }]),
-          hooks: selectedHooks,
-          attachments,
         }),
       });
       const data = await res.json().catch(() => ({}) as any);
@@ -292,7 +166,6 @@ export default function AIAssistantUI({
         ? data?.text || "Sorry, I couldn’t generate a reply."
         : `Error: ${data?.error || "AI request failed"}`;
 
-      // 3) append assistant message
       await appendMessage({
         chatId,
         role: "assistant",
@@ -306,7 +179,6 @@ export default function AIAssistantUI({
 
   async function onEditMessage(messageId: string, newContent: string) {
     if (!selectedChatId) return;
-    // delete from the edited message and resend the new content
     try {
       await deleteFrom({
         chatId: selectedChatId as any,
@@ -340,7 +212,6 @@ export default function AIAssistantUI({
 
   async function onRegenerateMessage(m: UIMessage) {
     if (!selectedChatId || !Array.isArray(messages)) return;
-    // find the previous user message before this assistant message
     const idx = (messages as any[]).findIndex((x) => x.id === (m as any).id);
     if (idx === -1) return;
     let prevUser: any = null;
@@ -351,37 +222,21 @@ export default function AIAssistantUI({
       }
     }
     if (!prevUser) return;
-    // delete from the assistant message
     await deleteFrom({
       chatId: selectedChatId as any,
       fromMessageId: (m as any).id,
     });
-    // resend the previous user prompt
     await onSend({ text: prevUser.content as string });
   }
-
-  const selectedHookMessageIds = useMemo(() => {
-    const set = new Set<string>();
-    for (const h of hooks || []) {
-      if (h.selected && h.messageId) set.add(h.messageId as any);
-    }
-    return set;
-  }, [hooks]);
 
   const selected: UIConversation | null = selectedChatId
     ? {
         id: selectedChatId as any,
         title: chats.find((c: any) => c.id === selectedChatId)?.title ?? "Chat",
-        updatedAt:
-          chats.find((c: any) => c.id === selectedChatId)?.updatedAt ??
-          new Date().toISOString(),
+        updatedAt: chats.find((c: any) => c.id === selectedChatId)?.updatedAt ?? new Date().toISOString(),
         messages: messages as any,
-        preview:
-          ((messages &&
-            (messages as any[])[(messages as any[]).length - 1]
-              ?.content) as string) ?? "Ask anything…",
-        pinned:
-          chats.find((c: any) => c.id === selectedChatId)?.pinned ?? false,
+        preview: ((messages && (messages as any[])[(messages as any[]).length - 1]?.content) as string) ?? "Ask anything…",
+        pinned: chats.find((c: any) => c.id === selectedChatId)?.pinned ?? false,
       }
     : null;
 
@@ -419,7 +274,7 @@ export default function AIAssistantUI({
                 name: currentUser?.name || "User",
                 email: currentUser?.email,
                 image: currentUser?.image,
-              }} //
+              }}
             />
 
             <main className="relative flex min-w-0 flex-1 flex-col">
@@ -427,38 +282,19 @@ export default function AIAssistantUI({
                 createNewChat={createNewChat}
                 sidebarCollapsed={sidebarCollapsed}
                 setSidebarOpen={setSidebarOpen}
-                hooks={(hooks || []).map((h: any) => ({
-                  id: h.id,
-                  content: h.content,
-                  selected: !!h.selected,
-                }))}
-                onToggleHookSelected={async (hookId, selected) => {
-                  await setHookSelected(hookId as any, selected);
-                }}
               />
               <ChatPane
                 ref={composerRef}
                 conversation={selected}
-                onSend={(payload: ChatSendPayload) => onSend(payload)} //
+                onSend={(payload: ChatSendPayload) => onSend(payload)}
                 onEditMessage={(messageId: string, newContent: string) =>
                   onEditMessage(messageId, newContent)
                 }
-                isThinking={
-                  isThinking && (thinkingConvId as any) === selected?.id
-                }
+                isThinking={isThinking && (thinkingConvId as any) === selected?.id}
                 onPauseThinking={pauseThinking}
                 onDeleteFrom={(messageId: string) => onDeleteFrom(messageId)}
-                onRegenerate={(m) => onRegenerateMessage(m)} //
-                currentUser={currentUser} //
-                selectedHookMessageIds={selectedHookMessageIds}
-                onHook={async (m) => {
-                  if (!selectedId) return;
-                  await toggleHook({
-                    chatId: selectedId as any,
-                    messageId: m.id as any,
-                    content: m.content,
-                  });
-                }}
+                onRegenerate={(m) => onRegenerateMessage(m)}
+                currentUser={currentUser}
               />
             </main>
           </>

@@ -14,7 +14,6 @@ import {
   Copy,
   RefreshCcw,
   Volume2,
-  Webhook,
   Brain,
   Trash2,
 } from "lucide-react";
@@ -25,7 +24,7 @@ import type {
   ChatPaneHandle,
   UIConversation,
   UIMessage,
-  TaskAttachment,
+  // TaskAttachment,
   ChatSendPayload,
 } from "./types"; //
 
@@ -48,16 +47,14 @@ type ChatPaneProps = {
   onPauseThinking?: () => void;
   onRegenerate?: (m: UIMessage) => void;
   onSpeak?: (m: UIMessage) => void;
-  onHook?: (m: UIMessage) => void;
   onDeleteFrom?: (messageId: string) => void;
   currentUser?: { name?: string; email?: string; image?: string }; // new
-  selectedHookMessageIds?: Set<string> | string[]; // new
 };
 
 type ComposerHandle = {
   insertTemplate: (templateContent: string) => void;
   focus: () => void;
-  addAttachmentFromTask: (task: TaskAttachment) => void; // new
+  // addAttachmentFromTask: (task: TaskAttachment) => void; // new
 };
 
 const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
@@ -69,10 +66,8 @@ const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
     onPauseThinking,
     onRegenerate,
     onSpeak,
-    onHook,
     onDeleteFrom,
     currentUser,
-    selectedHookMessageIds,
   },
   ref,
 ) {
@@ -88,10 +83,6 @@ const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
     () => ({
       insertTemplate: (templateContent: string) => {
         composerRef.current?.insertTemplate(templateContent);
-      },
-      // new
-      addAttachmentFromTask: (task: TaskAttachment) => {
-        composerRef.current?.addAttachmentFromTask(task);
       },
     }),
     [],
@@ -326,28 +317,6 @@ const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
                       </span>
                     </div>
 
-                    <div className="relative group">
-                      <button
-                        className={cls(
-                          "inline-flex items-center rounded-md p-1 hover:bg-zinc-100",
-                          (Array.isArray(selectedHookMessageIds)
-                            ? (selectedHookMessageIds as string[]).includes(
-                                m.id,
-                              )
-                            : (selectedHookMessageIds as Set<string>)?.has?.(
-                                m.id,
-                              )) && "text-green-600",
-                        )}
-                        aria-label="Hook"
-                        title="Hook"
-                        onClick={() => onHook?.(m)}
-                      >
-                        <Webhook className="h-3.5 w-3.5" />
-                      </button>
-                      <span className="pointer-events-none absolute top-full mt-1 -translate-x-1/2 left-1/2 rounded-md bg-zinc-900 px-1.5 py-0.5 text-[10px] text-white opacity-0 group-hover:opacity-100">
-                        Hook
-                      </span>
-                    </div>
                   </div>
                 )}
               </>

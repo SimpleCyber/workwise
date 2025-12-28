@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
-import { MoreHorizontal, Menu, BrainCircuit, ChevronDown } from "lucide-react";
-import GhostIconButton from "./GhostIconButton";
+import { Menu, BrainCircuit, ChevronDown } from "lucide-react";
 
 type ModelDropdownProps = {
   value: string;
@@ -11,9 +10,8 @@ type ModelDropdownProps = {
 function ModelDropdown({ value, onChange }: ModelDropdownProps) {
   const [open, setOpen] = useState(false);
   const models = [
-    { id: "gpt-4o", name: "GPT-4o" },
-    { id: "gpt-4o-mini", name: "GPT-4o mini" },
-    { id: "gpt-4.1", name: "GPT-4.1" },
+    { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash" },
+    { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro" },
   ];
   const active = models.find((m) => m.id === value) ?? models[0];
   return (
@@ -65,21 +63,15 @@ type HeaderProps = {
   createNewChat: () => void;
   sidebarCollapsed: boolean;
   setSidebarOpen: (open: boolean) => void;
-  hooks?: { id: string; content: string; selected: boolean }[];
-  onToggleHookSelected?: (hookId: string, selected: boolean) => void;
   compact?: boolean;
 };
 
 export default function Header({
-  createNewChat,
   sidebarCollapsed,
   setSidebarOpen,
-  hooks = [],
-  onToggleHookSelected,
   compact = false,
 }: HeaderProps) {
-  const [model, setModel] = useState("gpt-4o");
-  const [moreOpen, setMoreOpen] = useState(false);
+  const [model, setModel] = useState("gemini-1.5-flash");
 
   return (
     <div
@@ -96,65 +88,6 @@ export default function Header({
       )}
 
       <ModelDropdown value={model} onChange={setModel} />
-
-      <div className="ml-auto relative flex items-center gap-1">
-        <GhostIconButton label="More">
-          <button
-            type="button"
-            onClick={() => setMoreOpen((v) => !v)}
-            className="inline-flex items-center justify-center rounded-md hover:bg-zinc-100"
-            aria-haspopup="menu"
-            aria-expanded={moreOpen}
-          >
-            <MoreHorizontal className="h-4 w-4" />
-          </button>
-        </GhostIconButton>
-
-        {moreOpen && (
-          <div
-            role="menu"
-            className="absolute right-0 top-full z-50 mt-2 w-72 rounded-lg border border-zinc-200 bg-white p-2 shadow-lg"
-          >
-            <div className="px-2 pb-2 text-xs font-medium text-zinc-500">
-              Saved hooks for this chat
-            </div>
-            <div className="max-h-64 overflow-auto">
-              {hooks.length === 0 ? (
-                <div className="px-2 py-3 text-sm text-zinc-500">
-                  No hooks saved yet. Click the hook icon on a reply.
-                </div>
-              ) : (
-                hooks.map((h) => (
-                  <label
-                    key={h.id}
-                    className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 hover:bg-zinc-50"
-                  >
-                    <input
-                      type="checkbox"
-                      className="mt-0.5"
-                      checked={!!h.selected}
-                      onChange={(e) =>
-                        onToggleHookSelected?.(h.id, e.target.checked)
-                      }
-                    />
-                    <span className="text-sm text-zinc-800 line-clamp-3">
-                      {h.content}
-                    </span>
-                  </label>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-        {moreOpen && (
-          <button
-            aria-hidden
-            tabIndex={-1}
-            className="fixed inset-0 z-40 cursor-default"
-            onClick={() => setMoreOpen(false)}
-          />
-        )}
-      </div>
     </div>
   );
 }
