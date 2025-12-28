@@ -105,7 +105,7 @@
     "framer-motion": "^12.23.12",
     "jotai": "^2.9.3",
     "lucide-react": "^0.439.0",
-    "next": "^14.2.31",
+    "next": "14.2.35",
     "next-themes": "^0.3.0",
     "nuqs": "^1.19.1",
     "popover": "^2.4.1",
