@@ -4,9 +4,17 @@ import { GeminiTreeService } from "../../../../lib/ai-service";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { action, projectDescription, nodeTitle, nodeDescription, projectContext, customPrompt } = body;
+    const {
+      action,
+      projectDescription,
+      nodeTitle,
+      nodeDescription,
+      projectContext,
+      customPrompt,
+    } = body;
 
-    const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    const apiKey =
+      process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
         { error: "Missing Gemini API key." },
@@ -21,9 +29,18 @@ export async function POST(req: NextRequest) {
       result = await service.generateProjectTree(projectDescription);
     } else if (action === "expand") {
       if (customPrompt) {
-        result = await service.expandNodeWithPrompt(nodeTitle, nodeDescription, customPrompt, projectContext);
+        result = await service.expandNodeWithPrompt(
+          nodeTitle,
+          nodeDescription,
+          customPrompt,
+          projectContext,
+        );
       } else {
-        result = await service.expandNode(nodeTitle, nodeDescription, projectContext);
+        result = await service.expandNode(
+          nodeTitle,
+          nodeDescription,
+          projectContext,
+        );
       }
     } else {
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });

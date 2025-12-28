@@ -65,4 +65,3 @@ export interface ChatPaneHandle {
 export type ChatSendPayload = {
   text: string;
 };
-

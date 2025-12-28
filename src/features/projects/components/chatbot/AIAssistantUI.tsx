@@ -88,7 +88,44 @@ export default function AIAssistantUI({
     const cleaned = (text || "").replace(/\s+/g, " ").trim();
     if (!cleaned) return "New chat";
     const stop = new Set([
-      "the", "a", "an", "and", "or", "but", "to", "of", "in", "for", "with", "on", "at", "from", "by", "about", "as", "is", "are", "be", "can", "could", "should", "would", "how", "what", "why", "when", "which", "this", "that", "these", "those", "please", "make", "create", "help", "need"
+      "the",
+      "a",
+      "an",
+      "and",
+      "or",
+      "but",
+      "to",
+      "of",
+      "in",
+      "for",
+      "with",
+      "on",
+      "at",
+      "from",
+      "by",
+      "about",
+      "as",
+      "is",
+      "are",
+      "be",
+      "can",
+      "could",
+      "should",
+      "would",
+      "how",
+      "what",
+      "why",
+      "when",
+      "which",
+      "this",
+      "that",
+      "these",
+      "those",
+      "please",
+      "make",
+      "create",
+      "help",
+      "need",
     ]);
     const tokens = cleaned
       .toLowerCase()
@@ -123,14 +160,18 @@ export default function AIAssistantUI({
     if (!content.trim()) return;
 
     const willCreateNew = !selectedChatId;
-    const existingMsgCount = Array.isArray(messages) ? (messages as any[]).length : 0;
+    const existingMsgCount = Array.isArray(messages)
+      ? (messages as any[]).length
+      : 0;
 
-    const chatId = (selectedChatId as Id<"projectChats">) ?? (await createChat({
-      workspaceId,
-      boardId,
-      title: "New chat",
-      createdBy: currentUserId,
-    })) as Id<"projectChats">;
+    const chatId =
+      (selectedChatId as Id<"projectChats">) ??
+      ((await createChat({
+        workspaceId,
+        boardId,
+        title: "New chat",
+        createdBy: currentUserId,
+      })) as Id<"projectChats">);
 
     await appendMessage({
       chatId,
@@ -233,10 +274,16 @@ export default function AIAssistantUI({
     ? {
         id: selectedChatId as any,
         title: chats.find((c: any) => c.id === selectedChatId)?.title ?? "Chat",
-        updatedAt: chats.find((c: any) => c.id === selectedChatId)?.updatedAt ?? new Date().toISOString(),
+        updatedAt:
+          chats.find((c: any) => c.id === selectedChatId)?.updatedAt ??
+          new Date().toISOString(),
         messages: messages as any,
-        preview: ((messages && (messages as any[])[(messages as any[]).length - 1]?.content) as string) ?? "Ask anything…",
-        pinned: chats.find((c: any) => c.id === selectedChatId)?.pinned ?? false,
+        preview:
+          ((messages &&
+            (messages as any[])[(messages as any[]).length - 1]
+              ?.content) as string) ?? "Ask anything…",
+        pinned:
+          chats.find((c: any) => c.id === selectedChatId)?.pinned ?? false,
       }
     : null;
 
@@ -290,7 +337,9 @@ export default function AIAssistantUI({
                 onEditMessage={(messageId: string, newContent: string) =>
                   onEditMessage(messageId, newContent)
                 }
-                isThinking={isThinking && (thinkingConvId as any) === selected?.id}
+                isThinking={
+                  isThinking && (thinkingConvId as any) === selected?.id
+                }
                 onPauseThinking={pauseThinking}
                 onDeleteFrom={(messageId: string) => onDeleteFrom(messageId)}
                 onRegenerate={(m) => onRegenerateMessage(m)}

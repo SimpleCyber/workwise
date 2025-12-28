@@ -316,7 +316,6 @@ const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
                         Speak
                       </span>
                     </div>
-
                   </div>
                 )}
               </>

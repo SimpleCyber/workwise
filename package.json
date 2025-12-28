@@ -71,8 +71,8 @@
     }
   ],
   "dependencies": {
-    "@auth/core": "^0.34.2",
-    "@convex-dev/auth": "^0.0.65",
+    "@auth/core": "^0.41.1",
+    "@convex-dev/auth": "^0.0.90",
     "@fullcalendar/daygrid": "^6.1.18",
     "@fullcalendar/interaction": "^6.1.18",
     "@fullcalendar/react": "^6.1.18",

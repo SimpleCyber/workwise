@@ -21,7 +21,9 @@ export class GeminiTreeService {
     this.apiKey = apiKey;
   }
 
-  async generateProjectTree(projectDescription: string): Promise<TreeNodeData[]> {
+  async generateProjectTree(
+    projectDescription: string,
+  ): Promise<TreeNodeData[]> {
     const prompt = `
 You are a project management expert. Break down the following project into a hierarchical tree structure.
 
@@ -54,7 +56,11 @@ Return ONLY a valid JSON object in this exact format:
     return parsed.nodes;
   }
 
-  async expandNode(nodeTitle: string, nodeDescription: string, projectContext: string): Promise<TreeNodeData[]> {
+  async expandNode(
+    nodeTitle: string,
+    nodeDescription: string,
+    projectContext: string,
+  ): Promise<TreeNodeData[]> {
     const prompt = `Expand node "${nodeTitle}" (${nodeDescription}) in project "${projectContext}". Return JSON array of child nodes.`;
     const res = await this.callGemini(prompt);
     const jsonMatch = res.match(/\[[\s\S]*\]/);
@@ -62,7 +68,12 @@ Return ONLY a valid JSON object in this exact format:
     return JSON.parse(jsonMatch[0]);
   }
 
-  async expandNodeWithPrompt(nodeTitle: string, nodeDescription: string, customPrompt: string, projectContext: string): Promise<TreeNodeData[]> {
+  async expandNodeWithPrompt(
+    nodeTitle: string,
+    nodeDescription: string,
+    customPrompt: string,
+    projectContext: string,
+  ): Promise<TreeNodeData[]> {
     const prompt = `Expand node "${nodeTitle}" based on "${customPrompt}" in project "${projectContext}". Return JSON array of child nodes.`;
     const res = await this.callGemini(prompt);
     const jsonMatch = res.match(/\[[\s\S]*\]/);
@@ -91,16 +102,36 @@ Return ONLY a valid JSON object in this exact format:
  * Client-side proxy service that calls our own /api/ai/tree endpoint.
  */
 export class AITreeService {
-  async generateProjectTree(projectDescription: string): Promise<TreeNodeData[]> {
+  async generateProjectTree(
+    projectDescription: string,
+  ): Promise<TreeNodeData[]> {
     return this.callProxy("generate", { projectDescription });
   }
 
-  async expandNode(nodeTitle: string, nodeDescription: string, projectContext: string): Promise<TreeNodeData[]> {
-    return this.callProxy("expand", { nodeTitle, nodeDescription, projectContext });
+  async expandNode(
+    nodeTitle: string,
+    nodeDescription: string,
+    projectContext: string,
+  ): Promise<TreeNodeData[]> {
+    return this.callProxy("expand", {
+      nodeTitle,
+      nodeDescription,
+      projectContext,
+    });
   }
 
-  async expandNodeWithPrompt(nodeTitle: string, nodeDescription: string, customPrompt: string, projectContext: string): Promise<TreeNodeData[]> {
-    return this.callProxy("expand", { nodeTitle, nodeDescription, customPrompt, projectContext });
+  async expandNodeWithPrompt(
+    nodeTitle: string,
+    nodeDescription: string,
+    customPrompt: string,
+    projectContext: string,
+  ): Promise<TreeNodeData[]> {
+    return this.callProxy("expand", {
+      nodeTitle,
+      nodeDescription,
+      customPrompt,
+      projectContext,
+    });
   }
 
   private async callProxy(action: string, payload: any): Promise<any> {

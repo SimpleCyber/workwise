@@ -45,7 +45,8 @@ export async function POST(req: NextRequest) {
       content: m.content,
     }));
 
-    const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    const apiKey =
+      process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
         {
@@ -67,4 +68,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

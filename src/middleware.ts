@@ -12,19 +12,26 @@ const isPublicPage = createRouteMatcher([
   "/api/calendar/google(.*)",
 ]);
 
-export default convexAuthNextjsMiddleware((req) => {
-  if (!isPublicPage(req) && !isAuthenticatedNextjs()) {
-    return nextjsMiddlewareRedirect(req, "/home");
-  }
+export default convexAuthNextjsMiddleware(
+  async (req) => {
+    if (!isPublicPage(req) && !(await isAuthenticatedNextjs())) {
+      return nextjsMiddlewareRedirect(req, "/home");
+    }
 
-  if (
-    isPublicPage(req) &&
-    isAuthenticatedNextjs() &&
-    req.nextUrl.pathname === "/auth"
-  ) {
-    return nextjsMiddlewareRedirect(req, "/");
-  }
-});
+    if (
+      isPublicPage(req) &&
+      (await isAuthenticatedNextjs()) &&
+      req.nextUrl.pathname === "/auth"
+    ) {
+      return nextjsMiddlewareRedirect(req, "/");
+    }
+  },
+  {
+    cookieConfig: {
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+    },
+  },
+);
 
 export const config = {
   // The following matcher runs middleware on all routes
