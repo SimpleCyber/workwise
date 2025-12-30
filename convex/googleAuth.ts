@@ -50,6 +50,49 @@ export const storeGoogleTokens = internalMutation({
   },
 });
 
+export const storeGoogleTokensInternal = internalMutation({
+  args: {
+    accessToken: v.string(),
+    refreshToken: v.string(),
+    expiresAt: v.number(),
+    scope: v.string(),
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    // Check if tokens already exist
+    const existingTokens = await ctx.db
+      .query("googleTokens")
+      .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+      .unique();
+
+    const now = Date.now();
+
+    if (existingTokens) {
+      // Update existing tokens
+      await ctx.db.patch(existingTokens._id, {
+        accessToken: args.accessToken,
+        refreshToken: args.refreshToken,
+        expiresAt: args.expiresAt,
+        scope: args.scope,
+        updatedAt: now,
+      });
+      return existingTokens._id;
+    } else {
+      // Create new tokens
+      const tokenId = await ctx.db.insert("googleTokens", {
+        userId: args.userId,
+        accessToken: args.accessToken,
+        refreshToken: args.refreshToken,
+        expiresAt: args.expiresAt,
+        scope: args.scope,
+        createdAt: now,
+        updatedAt: now,
+      });
+      return tokenId;
+    }
+  },
+});
+
 // Get Google OAuth tokens for current user
 export const getGoogleTokens = query({
   handler: async (ctx) => {
@@ -111,5 +154,42 @@ export const deleteGoogleTokens = mutation({
     }
 
     return { success: true };
+  },
+});
+
+// Store OAuth state for secure callback
+export const storeOAuthState = internalMutation({
+  args: {
+    state: v.string(),
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.insert("authStates", {
+      state: args.state,
+      userId: args.userId,
+      createdAt: Date.now(),
+    });
+  },
+});
+
+// Get user by OAuth state (for callback)
+export const getUserByState = internalMutation({
+  args: {
+    state: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const authState = await ctx.db
+      .query("authStates")
+      .withIndex("by_state", (q) => q.eq("state", args.state))
+      .unique();
+
+    if (!authState) {
+      return null;
+    }
+
+    // Optional: Delete state after use (one-time use)
+    await ctx.db.delete(authState._id);
+
+    return { userId: authState.userId };
   },
 });

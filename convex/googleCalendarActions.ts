@@ -4,6 +4,14 @@ import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
+// Helper for state
+function generateState() {
+  return (
+    Math.random().toString(36).substring(2) +
+    Math.random().toString(36).substring(2)
+  );
+}
+
 // Google OAuth configuration
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -17,8 +25,8 @@ export const generateAuthUrl = action({
       throw new Error("Not authenticated");
     }
 
-    const clientId = process.env.GOOGLE_CLIENT_ID;
-    const redirectUri = process.env.GOOGLE_REDIRECT_URI;
+    const clientId = process.env.GOOGLE_CALENDAR_CLIENT_ID;
+    const redirectUri = process.env.GOOGLE_CALENDAR_REDIRECT_URI;
 
     console.log("Debug Env Vars:", {
       clientId,
@@ -29,6 +37,8 @@ export const generateAuthUrl = action({
       throw new Error("Missing Google Client ID or Redirect URI");
     }
 
+    const state = generateState();
+
     const params = new URLSearchParams({
       client_id: clientId,
       redirect_uri: redirectUri,
@@ -37,31 +47,45 @@ export const generateAuthUrl = action({
         "https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events",
       access_type: "offline",
       prompt: "consent",
-      state: userId, // Pass userId as state for security/verification
+      state: state, // Secure random state
     });
 
-    return `${GOOGLE_AUTH_URL}?${params.toString()}`;
+    // Store state in DB
+    await ctx.runMutation(internal.googleAuth.storeOAuthState, {
+      state,
+      userId,
+    });
+
+    const url = `${GOOGLE_AUTH_URL}?${params.toString()}`;
+    console.log("Generated Google OAuth URL:", url);
+    return url;
   },
 });
 
 export const exchangeCode = action({
   args: {
     code: v.string(),
+    state: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
+    // 1. Look up the state to recover user ID
+    const authRecord: any = await ctx.runMutation(
+      internal.googleAuth.getUserByState,
+      { state: args.state },
+    );
+
+    if (!authRecord) {
+      throw new Error("Invalid or expired OAuth state");
     }
 
-    const clientId = process.env.GOOGLE_CLIENT_ID;
-    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-    const redirectUri =
-      process.env.GOOGLE_REDIRECT_URI ||
-      "http://localhost:3000/calendar-callback";
+    const userId = authRecord.userId;
 
-    if (!clientId || !clientSecret) {
-      throw new Error("Missing Google Client credentials");
+    const clientId = process.env.GOOGLE_CALENDAR_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CALENDAR_CLIENT_SECRET;
+    const redirectUri = process.env.GOOGLE_CALENDAR_REDIRECT_URI;
+
+    if (!clientId || !clientSecret || !redirectUri) {
+      throw new Error("Missing Google Client credentials or Redirect URI");
     }
 
     const response = await fetch(GOOGLE_TOKEN_URL, {
@@ -86,11 +110,13 @@ export const exchangeCode = action({
     const tokens = await response.json();
     const now = Date.now();
 
-    await ctx.runMutation(internal.googleAuth.storeGoogleTokens, {
+    // Use secure internal mutation that accepts userId
+    await ctx.runMutation(internal.googleAuth.storeGoogleTokensInternal, {
       accessToken: tokens.access_token,
-      refreshToken: tokens.refresh_token || "", // Might not be returned if prompt is not consent
+      refreshToken: tokens.refresh_token || "",
       expiresAt: now + tokens.expires_in * 1000,
       scope: tokens.scope,
+      userId: userId,
     });
 
     return { success: true };
@@ -129,8 +155,8 @@ export const createMeeting = action({
         );
       }
 
-      const clientId = process.env.GOOGLE_CLIENT_ID;
-      const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+      const clientId = process.env.GOOGLE_CALENDAR_CLIENT_ID;
+      const clientSecret = process.env.GOOGLE_CALENDAR_CLIENT_SECRET;
 
       const refreshResponse = await fetch(GOOGLE_TOKEN_URL, {
         method: "POST",

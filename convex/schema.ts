@@ -471,6 +471,11 @@ const schema = defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_user_id", ["userId"]),
+  authStates: defineTable({
+    state: v.string(),
+    userId: v.id("users"),
+    createdAt: v.number(),
+  }).index("by_state", ["state"]),
 });
 
 export default schema;

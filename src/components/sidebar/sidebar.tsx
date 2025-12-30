@@ -44,26 +44,22 @@ export const Sidebar = ({
       icon: Network,
       label: "Planning",
       path: `/test/${workspaceId}`,
-      delay: "delay-[50ms]",
     },
     // {
     //   icon: Network,
     //   label: "All Data",
     //   path: `/tree/${workspaceId}`,
-    //   delay: "delay-[50ms]",
     // },
 
     {
       icon: ListTodo,
       label: "Project",
       path: `/projects/${workspaceId}`,
-      delay: "delay-[150ms]",
     },
     {
       icon: MessagesSquare,
       label: "Chat",
       path: `/workspace/${workspaceId}`,
-      delay: "delay-[200ms]",
     },
     {
       icon: Kanban,
@@ -72,7 +68,6 @@ export const Sidebar = ({
         pinnedBoard && pinnedBoard.length > 0
           ? `/todo/${workspaceId}/board/${pinnedBoard[0]._id}`
           : `/todo/${workspaceId}`,
-      delay: "delay-[100ms]",
       isPinned: pinnedBoard && pinnedBoard.length > 0,
     },
 
@@ -80,13 +75,11 @@ export const Sidebar = ({
       icon: Files,
       label: "Documents",
       path: `/data-room/${workspaceId}`,
-      delay: "delay-[250ms]",
     },
     {
       icon: Calendar,
       label: "Attendance",
       path: `/attendance/${workspaceId}`,
-      delay: "delay-[300ms]",
     },
   ];
 

@@ -15,7 +15,11 @@ export default function CalendarCallbackPage() {
 
   useEffect(() => {
     const code = searchParams.get("code");
+    const state = searchParams.get("state");
     const error = searchParams.get("error");
+    const scope = searchParams.get("scope");
+
+    console.log("OAuth Callback Params:", { code, state, error, scope });
 
     if (error) {
       toast.error("Google Calendar connection failed", {
@@ -25,7 +29,7 @@ export default function CalendarCallbackPage() {
       return;
     }
 
-    if (!code) {
+    if (!code || !state) {
       router.push("/");
       return;
     }
@@ -33,10 +37,10 @@ export default function CalendarCallbackPage() {
     const handleExchange = async () => {
       try {
         setStatus("Exchanging code for tokens...");
-        await exchangeCode({ code });
+        await exchangeCode({ code, state });
         setStatus("Connected!");
         toast.success("Google Calendar connected successfully!");
-        // setTimeout(() => router.push("/"), 2000);
+        setTimeout(() => router.push("/"), 1500);
       } catch (err: any) {
         console.error("Exchange error:", err);
         setStatus(`Error: ${err.message}`);

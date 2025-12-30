@@ -38,8 +38,8 @@ export default convexAuthNextjsMiddleware(
   {
     cookieConfig: {
       maxAge: 60 * 60 * 24 * 30, // 30 days
-      sameSite: "None",
-      secure: true,
+      sameSite: "lax",
+      secure: false, // Force false for localhost
     } as any,
   },
 );

@@ -167,13 +167,15 @@ export const DraggableCalendarPanel = ({
     }
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
-  const generateAuthUrl = useAction(api.googleCalendarActions.generateAuthUrl);
+  const generateCalendarAuthUrl = useAction(
+    api.googleCalendarActions.generateAuthUrl,
+  );
   const createMeeting = useAction(api.googleCalendarActions.createMeeting);
 
-  const authenticateWithGoogle = async () => {
+  const handleConnectGoogleCalendar = async () => {
     try {
-      const url = await generateAuthUrl();
-      window.location.href = url;
+      const authUrl = await generateCalendarAuthUrl();
+      window.location.href = authUrl;
     } catch (error: any) {
       toast.error("Failed to start Google Calendar connection", {
         description: error.message,
@@ -925,7 +927,7 @@ export const DraggableCalendarPanel = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={authenticateWithGoogle}
+                  onClick={handleConnectGoogleCalendar}
                   className="h-7 text-xs bg-white hover:bg-slate-50 border-blue-200 text-blue-700"
                 >
                   Connect
