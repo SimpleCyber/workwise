@@ -32,18 +32,17 @@ export default function CalendarCallbackPage() {
 
     const handleExchange = async () => {
       try {
+        setStatus("Exchanging code for tokens...");
         await exchangeCode({ code });
+        setStatus("Connected!");
         toast.success("Google Calendar connected successfully!");
-        // Redirect back to the calendar view (assuming it's on the dashboard or similar)
-        // You might want to store the "return URL" in localStorage before redirecting to Google
-        router.push("/");
+        // setTimeout(() => router.push("/"), 2000);
       } catch (err: any) {
         console.error("Exchange error:", err);
+        setStatus(`Error: ${err.message}`);
         toast.error("Failed to connect Google Calendar", {
           description: err.message || "Something went wrong",
         });
-        setStatus("Failed to connect.");
-        // router.push("/"); // Optional: stay on page to show error or redirect
       }
     };
 

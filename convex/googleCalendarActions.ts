@@ -20,6 +20,11 @@ export const generateAuthUrl = action({
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const redirectUri = process.env.GOOGLE_REDIRECT_URI;
 
+    console.log("Debug Env Vars:", {
+      clientId,
+      redirectUri,
+    });
+
     if (!clientId || !redirectUri) {
       throw new Error("Missing Google Client ID or Redirect URI");
     }
@@ -195,7 +200,7 @@ export const createMeeting = action({
     const googleEvent: any = await calendarResponse.json();
 
     // Save to Convex DB
-    await ctx.runMutation(api.calendarEvents.createEvent, {
+    await ctx.runMutation((api.calendarEvents as any).createEvent, {
       title: args.title,
       description: args.description,
       startTime: args.startTime,
