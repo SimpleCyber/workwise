@@ -28,7 +28,8 @@ export const generateAuthUrl = action({
       client_id: clientId,
       redirect_uri: redirectUri,
       response_type: "code",
-      scope: "https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events",
+      scope:
+        "https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events",
       access_type: "offline",
       prompt: "consent",
       state: userId, // Pass userId as state for security/verification
@@ -50,7 +51,9 @@ export const exchangeCode = action({
 
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-    const redirectUri = process.env.GOOGLE_REDIRECT_URI || "http://localhost:3000/calendar-callback";
+    const redirectUri =
+      process.env.GOOGLE_REDIRECT_URI ||
+      "http://localhost:3000/calendar-callback";
 
     if (!clientId || !clientSecret) {
       throw new Error("Missing Google Client credentials");
@@ -113,11 +116,14 @@ export const createMeeting = action({
     let accessToken: string = tokens.accessToken;
 
     // Refresh token if expired
-    if (tokens.expiresAt < Date.now() + 60000) { // Buffer of 1 minute
-        if (!tokens.refreshToken) {
-            throw new Error("Token expired and no refresh token available. Please reconnect Google Calendar.");
-        }
-        
+    if (tokens.expiresAt < Date.now() + 60000) {
+      // Buffer of 1 minute
+      if (!tokens.refreshToken) {
+        throw new Error(
+          "Token expired and no refresh token available. Please reconnect Google Calendar.",
+        );
+      }
+
       const clientId = process.env.GOOGLE_CLIENT_ID;
       const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
@@ -138,13 +144,13 @@ export const createMeeting = action({
 
       const newTokens: any = await refreshResponse.json();
       accessToken = newTokens.access_token;
-      
+
       // Update tokens in DB
       await ctx.runMutation(internal.googleAuth.storeGoogleTokens, {
-          accessToken: newTokens.access_token,
-          refreshToken: newTokens.refresh_token || tokens.refreshToken, // Keep old refresh token if not rotated
-          expiresAt: Date.now() + newTokens.expires_in * 1000,
-          scope: newTokens.scope || tokens.scope,
+        accessToken: newTokens.access_token,
+        refreshToken: newTokens.refresh_token || tokens.refreshToken, // Keep old refresh token if not rotated
+        expiresAt: Date.now() + newTokens.expires_in * 1000,
+        scope: newTokens.scope || tokens.scope,
       });
     }
 
@@ -178,12 +184,12 @@ export const createMeeting = action({
           "Content-Type": "application/json",
         },
         body: JSON.stringify(event),
-      }
+      },
     );
 
     if (!calendarResponse.ok) {
-        const errorText = await calendarResponse.text();
-        throw new Error(`Failed to create Google Calendar event: ${errorText}`);
+      const errorText = await calendarResponse.text();
+      throw new Error(`Failed to create Google Calendar event: ${errorText}`);
     }
 
     const googleEvent: any = await calendarResponse.json();

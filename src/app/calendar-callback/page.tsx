@@ -36,7 +36,7 @@ export default function CalendarCallbackPage() {
         toast.success("Google Calendar connected successfully!");
         // Redirect back to the calendar view (assuming it's on the dashboard or similar)
         // You might want to store the "return URL" in localStorage before redirecting to Google
-        router.push("/"); 
+        router.push("/");
       } catch (err: any) {
         console.error("Exchange error:", err);
         toast.error("Failed to connect Google Calendar", {

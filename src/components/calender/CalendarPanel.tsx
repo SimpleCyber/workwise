@@ -909,24 +909,28 @@ export const DraggableCalendarPanel = ({
                 </Button>
               </div>
             )}
-            
+
             <div className="mb-4 flex items-center justify-between bg-blue-50/50 p-2 rounded-lg border border-blue-100">
-               <div className="flex items-center gap-2">
-                 <div className={`w-2 h-2 rounded-full ${hasGoogleAuth ? "bg-emerald-500" : "bg-slate-300"}`} />
-                 <span className="text-xs font-medium text-slate-600">
-                   {hasGoogleAuth ? "Google Calendar Connected" : "Not connected to Google"}
-                 </span>
-               </div>
-               {!hasGoogleAuth && (
-                 <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={authenticateWithGoogle}
-                    className="h-7 text-xs bg-white hover:bg-slate-50 border-blue-200 text-blue-700"
-                 >
-                   Connect
-                 </Button>
-               )}
+              <div className="flex items-center gap-2">
+                <div
+                  className={`w-2 h-2 rounded-full ${hasGoogleAuth ? "bg-emerald-500" : "bg-slate-300"}`}
+                />
+                <span className="text-xs font-medium text-slate-600">
+                  {hasGoogleAuth
+                    ? "Google Calendar Connected"
+                    : "Not connected to Google"}
+                </span>
+              </div>
+              {!hasGoogleAuth && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={authenticateWithGoogle}
+                  className="h-7 text-xs bg-white hover:bg-slate-50 border-blue-200 text-blue-700"
+                >
+                  Connect
+                </Button>
+              )}
             </div>
 
             <Button
