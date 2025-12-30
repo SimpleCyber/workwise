@@ -4,7 +4,7 @@ import type React from "react";
 
 import { useAtom } from "jotai";
 import { calendarOpenAtom } from "@/lib/panel-atoms";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -134,24 +134,27 @@ export const DraggableCalendarPanel = ({
     });
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging) return;
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!isDragging) return;
 
-    const newX = e.clientX - dragStart.x;
-    const newY = e.clientY - dragStart.y;
+      const newX = e.clientX - dragStart.x;
+      const newY = e.clientY - dragStart.y;
 
-    const maxX = window.innerWidth - 400;
-    const maxY = window.innerHeight - 100;
+      const maxX = window.innerWidth - 400;
+      const maxY = window.innerHeight - 100;
 
-    setPosition({
-      x: Math.max(0, Math.min(newX, maxX)),
-      y: Math.max(0, Math.min(newY, maxY)),
-    });
-  };
+      setPosition({
+        x: Math.max(0, Math.min(newX, maxX)),
+        y: Math.max(0, Math.min(newY, maxY)),
+      });
+    },
+    [isDragging, dragStart],
+  );
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     setIsDragging(false);
-  };
+  }, []);
 
   useEffect(() => {
     if (isDragging) {
@@ -162,7 +165,7 @@ export const DraggableCalendarPanel = ({
         document.removeEventListener("mouseup", handleMouseUp);
       };
     }
-  }, [isDragging, dragStart]);
+  }, [isDragging, handleMouseMove, handleMouseUp]);
 
   // Simple Google OAuth handler
   const authenticateWithGoogle = () => {
