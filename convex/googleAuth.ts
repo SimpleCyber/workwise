@@ -1,9 +1,9 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
 
 // Store Google OAuth tokens
-export const storeGoogleTokens = mutation({
+export const storeGoogleTokens = internalMutation({
   args: {
     accessToken: v.string(),
     refreshToken: v.string(),
@@ -81,6 +81,15 @@ export const hasGoogleAuth = query({
       .unique();
 
     return !!tokens && tokens.expiresAt > Date.now();
+  },
+});
+
+export const createEvent = internalMutation({
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
   },
 });
 

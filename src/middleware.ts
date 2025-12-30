@@ -10,6 +10,7 @@ const isPublicPage = createRouteMatcher([
   "/home",
   "/api/calendar/google",
   "/api/calendar/google(.*)",
+  "/calendar-callback",
 ]);
 
 export default convexAuthNextjsMiddleware(

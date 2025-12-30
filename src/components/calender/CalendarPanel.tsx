@@ -38,10 +38,10 @@ import {
   startOfWeek,
   endOfWeek,
 } from "date-fns";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
-import { GoogleCalendarAPI } from "@/lib/google-calendar";
+
 import { toast } from "sonner";
 import { useAuthActions } from "@convex-dev/auth/react";
 
@@ -93,9 +93,9 @@ export const DraggableCalendarPanel = ({
   });
   const hasGoogleAuth = useQuery(api.googleAuth.hasGoogleAuth);
   const googleTokens = useQuery(api.googleAuth.getGoogleTokens);
+  /* googleTokens already declared above */
   const createEvent = useMutation(api.calendarEvents.createEvent);
   const deleteEventMutation = useMutation(api.calendarEvents.deleteEvent);
-  const storeGoogleTokens = useMutation(api.googleAuth.storeGoogleTokens);
 
   const [newEvent, setNewEvent] = useState({
     title: "",
@@ -167,11 +167,18 @@ export const DraggableCalendarPanel = ({
     }
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
-  // Simple Google OAuth handler
-  const authenticateWithGoogle = () => {
-    toast.info("Redirecting to Google authentication...");
-    // This will use your existing Convex Google OAuth setup
-    signIn("google");
+  const generateAuthUrl = useAction(api.googleCalendarActions.generateAuthUrl);
+  const createMeeting = useAction(api.googleCalendarActions.createMeeting);
+
+  const authenticateWithGoogle = async () => {
+    try {
+      const url = await generateAuthUrl();
+      window.location.href = url;
+    } catch (error: any) {
+      toast.error("Failed to start Google Calendar connection", {
+        description: error.message,
+      });
+    }
   };
 
   // Authentication handlers
@@ -240,23 +247,32 @@ export const DraggableCalendarPanel = ({
           ? new Date(`${newEvent.endDate}T${newEvent.endTime}`)
           : new Date(startDateTime.getTime() + 60 * 60 * 1000);
 
-      // For demo purposes, we'll create the event locally
-      // You can add Google Calendar sync back later
+      const attendeesList = newEvent.attendees
+        ? newEvent.attendees.split(",").map((email) => email.trim())
+        : undefined;
 
-      await createEvent({
-        title: newEvent.title,
-        description: newEvent.description,
-        startTime: startDateTime.getTime(),
-        endTime: endDateTime.getTime(),
-        location: newEvent.location,
-        meetLink: newEvent.includeMeet
-          ? `https://meet.google.com/${Math.random().toString(36).substr(2, 9)}`
-          : undefined,
-        attendees: newEvent.attendees
-          ? newEvent.attendees.split(",").map((email) => email.trim())
-          : [],
-        workspaceId,
-      });
+      if (newEvent.includeMeet) {
+        // Use the secure action that talks to Google API
+        await createMeeting({
+          title: newEvent.title,
+          description: newEvent.description,
+          startTime: startDateTime.getTime(),
+          endTime: endDateTime.getTime(),
+          workspaceId,
+          attendees: attendeesList,
+        });
+      } else {
+        // Use local mutation
+        await createEvent({
+          title: newEvent.title,
+          description: newEvent.description,
+          startTime: startDateTime.getTime(),
+          endTime: endDateTime.getTime(),
+          location: newEvent.location,
+          attendees: attendeesList,
+          workspaceId,
+        });
+      }
 
       toast.success("Event created", {
         description: "Your calendar event has been created successfully.",
@@ -893,6 +909,25 @@ export const DraggableCalendarPanel = ({
                 </Button>
               </div>
             )}
+            
+            <div className="mb-4 flex items-center justify-between bg-blue-50/50 p-2 rounded-lg border border-blue-100">
+               <div className="flex items-center gap-2">
+                 <div className={`w-2 h-2 rounded-full ${hasGoogleAuth ? "bg-emerald-500" : "bg-slate-300"}`} />
+                 <span className="text-xs font-medium text-slate-600">
+                   {hasGoogleAuth ? "Google Calendar Connected" : "Not connected to Google"}
+                 </span>
+               </div>
+               {!hasGoogleAuth && (
+                 <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={authenticateWithGoogle}
+                    className="h-7 text-xs bg-white hover:bg-slate-50 border-blue-200 text-blue-700"
+                 >
+                   Connect
+                 </Button>
+               )}
+            </div>
 
             <Button
               onClick={() => setView("create")}
@@ -903,7 +938,11 @@ export const DraggableCalendarPanel = ({
             </Button>
 
             <div className="max-h-[400px] overflow-y-auto">
-              {view === "monthly" ? renderCalendarGrid() : renderEventsList()}
+              {view === "monthly"
+                ? renderCalendarGrid()
+                : view === "create"
+                  ? renderCreateEventForm()
+                  : renderEventsList()}
             </div>
           </div>
         )}
