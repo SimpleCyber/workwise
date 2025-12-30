@@ -64,20 +64,24 @@ export const SignInCard = ({ setState }: SignInCardProps) => {
       <CardContent className="space-y-5 px-0 pb-0">
         <form onSubmit={handleSignIn} className="space-y-2.5">
           <Input
+            name="email"
             disabled={pending}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email"
             type="email"
+            autoComplete="email"
             required
           />
 
           <Input
+            name="password"
             disabled={pending}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
             type="password"
+            autoComplete="current-password"
             required
           />
 

@@ -86,38 +86,46 @@ export const SignUpCard = ({ setState }: SignUpCardProps) => {
       <CardContent className="space-y-5 px-0 pb-0">
         <form onSubmit={handleSignUp} className="space-y-2.5">
           <Input
+            name="name"
             disabled={pending}
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Full Name"
             minLength={3}
             maxLength={50}
+            autoComplete="name"
             required
           />
 
           <Input
+            name="email"
             disabled={pending}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email"
             type="email"
+            autoComplete="email"
             required
           />
           <Input
+            name="password"
             disabled={pending}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
             type="password"
+            autoComplete="new-password"
             required
           />
 
           <Input
+            name="confirmPassword"
             disabled={pending}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Confirm Password"
             type="password"
+            autoComplete="new-password"
             required
           />
 
