@@ -70,7 +70,7 @@ export const SignInCard = ({ setState }: SignInCardProps) => {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email"
             type="email"
-            autoComplete="email"
+            autoComplete="username"
             required
           />
 
