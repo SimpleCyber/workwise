@@ -159,7 +159,7 @@ export default function Sidebar(props: SidebarProps) {
         initial={{ width: 320 }}
         animate={{ width: 64 }}
         transition={{ type: "spring", stiffness: 220, damping: 26 }}
-        className="z-50 flex h-full shrink-0 flex-col border-r border-border bg-background"
+        className="flex h-full shrink-0 flex-col border-r border-border bg-background"
       >
         <div className="flex items-center justify-center px-3 py-3">
           <div className="relative">
@@ -237,7 +237,7 @@ export default function Sidebar(props: SidebarProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.5 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-black/60 md:hidden"
+            className="fixed inset-0 bg-black/60 md:hidden"
             onClick={onClose}
           />
         )}
@@ -253,7 +253,7 @@ export default function Sidebar(props: SidebarProps) {
             exit={{ x: isDesktop ? 0 : -340 }}
             transition={{ type: "spring", stiffness: 220, damping: 26 }}
             className={cls(
-              "z-50 flex h-full w-80 shrink-0 flex-col border-r border-border bg-background",
+              "flex h-full w-80 shrink-0 flex-col border-r border-border bg-background",
               "fixed inset-y-0 left-0 md:static md:translate-x-0",
             )}
           >
@@ -566,52 +566,6 @@ export default function Sidebar(props: SidebarProps) {
                 </ul>
               )}
             </nav>
-
-            <div className="border-t border-border px-3 py-3">
-              <div className="flex items-center gap-2">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div>
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage
-                            src={user?.image || undefined}
-                            alt={user?.name || user?.email || "User"}
-                          />
-                          <AvatarFallback>
-                            {
-                              (user?.name?.[0]?.toUpperCase() ||
-                                user?.email?.[0]?.toUpperCase() ||
-                                "U") as string
-                            }
-                          </AvatarFallback>
-                        </Avatar>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <div className="text-xs">
-                        <div className="font-medium">
-                          {user?.name || "User"}
-                        </div>
-                        {user?.email && (
-                          <div className="text-muted-foreground">
-                            {user.email}
-                          </div>
-                        )}
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <div className="min-w-0">
-                  <div className="truncate text-sm font-medium">
-                    {user?.name || (user?.email ?? "User")}
-                  </div>
-                  <div className="truncate text-xs text-muted-foreground">
-                    {user?.email || ""}
-                  </div>
-                </div>
-              </div>
-            </div>
 
             <SearchModal
               isOpen={showSearchModal}

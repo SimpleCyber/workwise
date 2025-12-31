@@ -37,7 +37,7 @@ export default function Message({ role, children, currentUser }: MessageProps) {
                 <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 p-[1.5px]">
                   <div className="h-full w-full rounded-full bg-background" />
                 </div>
-                <div className="relative z-10 grid h-8 w-8 place-items-center text-foreground">
+                <div className="relative grid h-8 w-8 place-items-center text-foreground">
                   <Sparkles className="h-4 w-4" />
                 </div>
               </div>

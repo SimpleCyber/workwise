@@ -75,7 +75,7 @@ export default function Header({
 
   return (
     <div
-      className={`sticky top-0 z-30 flex items-center gap-2 border-b border-border bg-background/80 backdrop-blur ${compact ? "px-2 py-2" : "px-4 py-3"}`}
+      className={`sticky top-0 flex items-center gap-2 border-b border-border bg-background/80 backdrop-blur ${compact ? "px-2 py-2" : "px-4 py-3"}`}
     >
       {sidebarCollapsed && (
         <button
