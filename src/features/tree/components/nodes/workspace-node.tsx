@@ -61,7 +61,7 @@ const CreateProjectForm = ({
 
   return (
     <div className="absolute top-full left-0 mt-2 z-50">
-      <Card className="w-80 shadow-lg border-2 border-primary/20 bg-popover">
+      <Card className="w-80 shadow-lg border-2 border-violet-500/20 bg-popover">
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-4">
             <h4 className="font-semibold text-sm">Create New Project</h4>
@@ -162,8 +162,8 @@ export const WorkspaceNode = ({ data }: NodeProps) => {
     <div className="relative" {...hoverProps}>
       <Card
         onDoubleClick={handleGoToProjects}
-        className={`min-w-[200px] shadow-md border-primary/20 cursor-pointer hover:shadow-lg transition-shadow ${
-          data.isActive ? "ring-2 ring-primary" : ""
+        className={`min-w-[200px] shadow-md border-violet-500/50  cursor-pointer hover:shadow-lg transition-shadow ${
+          data.isActive ? "ring-2 ring-violet-500" : ""
         }`}
       >
         <CardContent className="p-3">
@@ -174,10 +174,10 @@ export const WorkspaceNode = ({ data }: NodeProps) => {
             >
               <div
                 className={`flex items-center justify-center w-8 h-8 rounded ${
-                  data.isActive ? "bg-primary/20" : "bg-primary/10"
+                  data.isActive ? "bg-violet-500/20" : "bg-violet-500/10"
                 }`}
               >
-                <Building2 className="w-5 h-5 text-primary" />
+                <Building2 className="w-5 h-5 text-violet-600" />
               </div>
               <div>
                 <h4 className="font-medium">{data.name}</h4>
