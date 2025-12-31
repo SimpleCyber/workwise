@@ -343,12 +343,12 @@ export const DraggableCalendarPanel = ({
     const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
     return (
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-        <div className="grid grid-cols-7 bg-slate-50 border-b border-slate-200">
+      <div className="bg-background rounded-xl border border-border overflow-hidden shadow-sm">
+        <div className="grid grid-cols-7 bg-muted border-b border-border">
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
             <div
               key={day}
-              className="p-3 text-center font-semibold text-sm text-slate-700"
+              className="p-3 text-center font-semibold text-sm text-muted-foreground"
             >
               {day}
             </div>
@@ -365,14 +365,16 @@ export const DraggableCalendarPanel = ({
             return (
               <div
                 key={day.toISOString()}
-                className={`p-2 min-h-[90px] border-r border-b border-slate-100 transition-colors hover:bg-slate-50 ${
-                  isCurrentMonth ? "bg-white" : "bg-slate-50/50"
-                } ${isToday ? "bg-blue-50 border-blue-200" : ""} ${index % 7 === 6 ? "border-r-0" : ""}`}
+                className={`p-2 min-h-[90px] border-r border-b border-border transition-colors hover:bg-muted/50 ${
+                  isCurrentMonth ? "bg-background" : "bg-muted/30"
+                } ${isToday ? "bg-blue-500/10 border-blue-500/30" : ""} ${index % 7 === 6 ? "border-r-0" : ""}`}
               >
                 <div
                   className={`text-sm font-medium mb-1 ${
-                    isCurrentMonth ? "text-slate-900" : "text-slate-400"
-                  } ${isToday ? "text-blue-600 font-semibold" : ""}`}
+                    isCurrentMonth
+                      ? "text-foreground"
+                      : "text-muted-foreground/50"
+                  } ${isToday ? "text-blue-500 font-semibold" : ""}`}
                 >
                   {format(day, "d")}
                 </div>
@@ -380,14 +382,14 @@ export const DraggableCalendarPanel = ({
                   {dayEvents.slice(0, 2).map((event) => (
                     <div
                       key={event._id}
-                      className="text-xs p-1.5 bg-blue-100 text-blue-800 rounded-md truncate cursor-pointer hover:bg-blue-200 transition-colors border border-blue-200"
+                      className="text-xs p-1.5 bg-blue-500/10 text-blue-500 dark:text-blue-400 rounded-md truncate cursor-pointer hover:bg-blue-500/20 transition-colors border border-blue-500/30"
                       title={event.title}
                     >
                       {event.title}
                     </div>
                   ))}
                   {dayEvents.length > 2 && (
-                    <div className="text-xs text-slate-500 font-medium">
+                    <div className="text-xs text-muted-foreground font-medium">
                       +{dayEvents.length - 2} more
                     </div>
                   )}
@@ -407,7 +409,7 @@ export const DraggableCalendarPanel = ({
         {filteredEvents.map((event, index) => (
           <Card
             key={event._id}
-            className="group border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition-all duration-200 bg-white"
+            className="group border border-border shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-200 bg-card"
             style={{
               animationDelay: `${index * 50}ms`,
             }}
@@ -416,30 +418,30 @@ export const DraggableCalendarPanel = ({
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-blue-50 border border-blue-100 mt-0.5">
-                      <CalendarDays className="w-4 h-4 text-blue-600" />
+                    <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20 mt-0.5">
+                      <CalendarDays className="w-4 h-4 text-blue-500" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-slate-900 mb-1">
+                      <h4 className="font-semibold text-foreground mb-1">
                         {event.title}
                       </h4>
-                      <div className="flex items-center gap-2 text-sm text-slate-600 mb-2">
-                        <Clock className="w-4 h-4 text-slate-400" />
-                        <span className="font-medium">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                        <Clock className="w-4 h-4 text-muted-foreground/60" />
+                        <span className="font-medium text-foreground/80">
                           {format(new Date(event.startTime), "MMM d, h:mm a")} -{" "}
                           {format(new Date(event.endTime), "h:mm a")}
                         </span>
                       </div>
                       {event.description && (
-                        <p className="text-sm text-slate-600 mb-3 bg-slate-50 p-2 rounded-lg">
+                        <p className="text-sm text-muted-foreground mb-3 bg-muted/50 p-2 rounded-lg">
                           {event.description}
                         </p>
                       )}
                       <div className="flex flex-col gap-2">
                         {event.attendees && event.attendees.length > 0 && (
                           <div className="flex items-center gap-2">
-                            <Users className="w-4 h-4 text-slate-400" />
-                            <span className="text-sm text-slate-600">
+                            <Users className="w-4 h-4 text-muted-foreground/60" />
+                            <span className="text-sm text-muted-foreground">
                               {event.attendees.length} attendee
                               {event.attendees.length > 1 ? "s" : ""}
                             </span>
@@ -447,8 +449,8 @@ export const DraggableCalendarPanel = ({
                         )}
                         {event.location && (
                           <div className="flex items-center gap-2">
-                            <MapPin className="w-4 h-4 text-slate-400" />
-                            <span className="text-sm text-slate-600">
+                            <MapPin className="w-4 h-4 text-muted-foreground/60" />
+                            <span className="text-sm text-muted-foreground">
                               {event.location}
                             </span>
                           </div>
@@ -474,7 +476,7 @@ export const DraggableCalendarPanel = ({
                   variant="ghost"
                   size="sm"
                   onClick={() => handleDeleteEvent(event)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-full w-8 h-8 p-0"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-full w-8 h-8 p-0"
                 >
                   <X className="w-4 h-4" />
                 </Button>
@@ -483,14 +485,14 @@ export const DraggableCalendarPanel = ({
           </Card>
         ))}
         {filteredEvents.length === 0 && (
-          <div className="text-center text-slate-500 py-12">
-            <div className="p-4 rounded-full bg-slate-100 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <Calendar className="w-8 h-8 text-slate-400" />
+          <div className="text-center text-muted-foreground py-12">
+            <div className="p-4 rounded-full bg-muted w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              <Calendar className="w-8 h-8 text-muted-foreground/40" />
             </div>
-            <p className="text-lg font-medium text-slate-700 mb-1">
+            <p className="text-lg font-medium text-foreground mb-1">
               No events found
             </p>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-muted-foreground">
               Your calendar is clear for this period
             </p>
           </div>
@@ -501,24 +503,24 @@ export const DraggableCalendarPanel = ({
 
   const renderCreateEventForm = () => {
     return (
-      <div className="space-y-6 max-h-[500px] overflow-y-auto">
-        <div className="flex items-center gap-3 pb-4 border-b border-slate-200">
+      <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+        <div className="flex items-center gap-3 pb-4 border-b border-border">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setView("monthly")}
-            className="rounded-lg hover:bg-slate-100"
+            className="rounded-lg hover:bg-muted"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <h3 className="text-lg font-semibold text-slate-900">
+          <h3 className="text-lg font-semibold text-foreground">
             Create New Event
           </h3>
         </div>
         <div className="space-y-4">
           <div>
-            <Label htmlFor="title" className="text-slate-700 font-medium">
+            <Label htmlFor="title" className="text-foreground/80 font-medium">
               Event Title
             </Label>
             <Input
@@ -535,7 +537,10 @@ export const DraggableCalendarPanel = ({
             />
           </div>
           <div>
-            <Label htmlFor="description" className="text-slate-700 font-medium">
+            <Label
+              htmlFor="description"
+              className="text-foreground/80 font-medium"
+            >
               Description
             </Label>
             <Textarea
@@ -554,7 +559,10 @@ export const DraggableCalendarPanel = ({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="startDate" className="text-slate-700 font-medium">
+              <Label
+                htmlFor="startDate"
+                className="text-foreground/80 font-medium"
+              >
                 Start Date
               </Label>
               <Input
@@ -571,7 +579,10 @@ export const DraggableCalendarPanel = ({
               />
             </div>
             <div>
-              <Label htmlFor="startTime" className="text-slate-700 font-medium">
+              <Label
+                htmlFor="startTime"
+                className="text-foreground/80 font-medium"
+              >
                 Start Time
               </Label>
               <Input
@@ -590,7 +601,10 @@ export const DraggableCalendarPanel = ({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="endDate" className="text-slate-700 font-medium">
+              <Label
+                htmlFor="endDate"
+                className="text-foreground/80 font-medium"
+              >
                 End Date
               </Label>
               <Input
@@ -607,7 +621,10 @@ export const DraggableCalendarPanel = ({
               />
             </div>
             <div>
-              <Label htmlFor="endTime" className="text-slate-700 font-medium">
+              <Label
+                htmlFor="endTime"
+                className="text-foreground/80 font-medium"
+              >
                 End Time
               </Label>
               <Input
@@ -625,7 +642,10 @@ export const DraggableCalendarPanel = ({
             </div>
           </div>
           <div>
-            <Label htmlFor="attendees" className="text-slate-700 font-medium">
+            <Label
+              htmlFor="attendees"
+              className="text-foreground/80 font-medium"
+            >
               Attendees
             </Label>
             <Input
@@ -642,7 +662,10 @@ export const DraggableCalendarPanel = ({
             />
           </div>
           <div>
-            <Label htmlFor="location" className="text-slate-700 font-medium">
+            <Label
+              htmlFor="location"
+              className="text-foreground/80 font-medium"
+            >
               Location
             </Label>
             <Input
@@ -658,7 +681,7 @@ export const DraggableCalendarPanel = ({
               className="mt-1"
             />
           </div>
-          <div className="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg">
+          <div className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg border border-border">
             <input
               type="checkbox"
               id="includeMeet"
@@ -669,11 +692,11 @@ export const DraggableCalendarPanel = ({
                   includeMeet: e.target.checked,
                 }))
               }
-              className="w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500"
+              className="w-4 h-4 text-emerald-600 bg-muted border-border rounded focus:ring-emerald-500"
             />
             <Label
               htmlFor="includeMeet"
-              className="flex items-center gap-2 text-slate-700 font-medium cursor-pointer"
+              className="flex items-center gap-2 text-foreground font-medium cursor-pointer"
             >
               <Video className="w-4 h-4 text-emerald-600" />
               Add Google Meet link
@@ -703,15 +726,15 @@ export const DraggableCalendarPanel = ({
     return (
       <div className="p-6 space-y-6">
         <div className="text-center">
-          <div className="p-4 rounded-full bg-gradient-to-br from-blue-50 to-purple-50 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-            <Calendar className="w-8 h-8 text-purple-600" />
+          <div className="p-4 rounded-full bg-gradient-to-br from-blue-500/10 to-purple-500/10 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+            <Calendar className="w-8 h-8 text-purple-600 dark:text-purple-400" />
           </div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">
+          <h3 className="text-lg font-semibold text-foreground mb-2">
             {authView === "signIn"
               ? "Login to continue"
               : "Create your account"}
           </h3>
-          <p className="text-slate-600 text-sm">
+          <p className="text-muted-foreground text-sm">
             {authView === "signIn"
               ? "Use your email or another service to continue."
               : "Sign up to start using the calendar."}
@@ -829,7 +852,7 @@ export const DraggableCalendarPanel = ({
   return (
     <Card
       ref={cardRef}
-      className="fixed z-50 w-96 bg-white shadow-2xl border border-slate-200 max-h-[80vh] flex flex-col"
+      className="fixed z-50 w-96 bg-background shadow-2xl border border-border max-h-[80vh] flex flex-col"
       style={{
         left: position.x,
         top: position.y,
@@ -837,17 +860,19 @@ export const DraggableCalendarPanel = ({
       }}
     >
       <CardHeader
-        className="p-2 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white cursor-grab active:cursor-grabbing"
+        className="p-2 border-b border-border bg-gradient-to-r from-muted/50 to-background cursor-grab active:cursor-grabbing"
         onMouseDown={handleMouseDown}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <GripVertical className="w-4 h-4 text-gray-400" />
-            <div className="p-2 rounded-xl bg-purple-50 border border-purple-100">
-              <Calendar className="w-5 h-5 text-purple-600" />
+            <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
+              <Calendar className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">Calendar</h2>
+              <h2 className="text-lg font-semibold text-foreground">
+                Calendar
+              </h2>
             </div>
           </div>
           <div className="flex items-center gap-2 no-drag">
@@ -855,7 +880,7 @@ export const DraggableCalendarPanel = ({
               variant="ghost"
               size="sm"
               onClick={handleClose}
-              className="rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 w-8 h-8 p-0"
+              className="rounded-full hover:bg-muted text-muted-foreground hover:text-foreground w-8 h-8 p-0"
             >
               <X className="w-4 h-4" />
             </Button>
@@ -868,7 +893,7 @@ export const DraggableCalendarPanel = ({
           renderSignInView()
         ) : (
           <div className="p-6 no-drag">
-            <div className="bg-slate-100 rounded-xl p-1 mb-6">
+            <div className="bg-muted rounded-xl p-1 mb-6">
               <div className="grid grid-cols-3 gap-1">
                 {(["daily", "monthly", "all"] as const).map((viewType) => (
                   <Button
@@ -878,8 +903,8 @@ export const DraggableCalendarPanel = ({
                     onClick={() => setView(viewType)}
                     className={`capitalize rounded-lg transition-all ${
                       view === viewType
-                        ? "bg-white shadow-sm text-slate-900 font-medium"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                        ? "bg-background shadow-sm text-foreground font-medium"
+                        : "text-muted-foreground hover:text-foreground hover:bg-background/50"
                     }`}
                   >
                     {viewType}
@@ -889,35 +914,35 @@ export const DraggableCalendarPanel = ({
             </div>
 
             {view === "monthly" && (
-              <div className="flex items-center justify-between mb-6 bg-slate-50 rounded-xl p-3">
+              <div className="flex items-center justify-between mb-6 bg-muted/30 rounded-xl p-3">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setCurrentDate(subMonths(currentDate, 1))}
-                  className="rounded-lg hover:bg-white"
+                  className="rounded-lg hover:bg-background"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
-                <h3 className="font-semibold text-slate-900">
+                <h3 className="font-semibold text-foreground">
                   {format(currentDate, "MMMM yyyy")}
                 </h3>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setCurrentDate(addMonths(currentDate, 1))}
-                  className="rounded-lg hover:bg-white"
+                  className="rounded-lg hover:bg-background"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
             )}
 
-            <div className="mb-4 flex items-center justify-between bg-blue-50/50 p-2 rounded-lg border border-blue-100">
+            <div className="mb-4 flex items-center justify-between bg-blue-500/10 p-2 rounded-lg border border-blue-500/20">
               <div className="flex items-center gap-2">
                 <div
-                  className={`w-2 h-2 rounded-full ${hasGoogleAuth ? "bg-emerald-500" : "bg-slate-300"}`}
+                  className={`w-2 h-2 rounded-full ${hasGoogleAuth ? "bg-emerald-500" : "bg-muted-foreground/30"}`}
                 />
-                <span className="text-xs font-medium text-slate-600">
+                <span className="text-xs font-medium text-muted-foreground">
                   {hasGoogleAuth
                     ? "Google Calendar Connected"
                     : "Not connected to Google"}
@@ -928,7 +953,7 @@ export const DraggableCalendarPanel = ({
                   variant="outline"
                   size="sm"
                   onClick={handleConnectGoogleCalendar}
-                  className="h-7 text-xs bg-white hover:bg-slate-50 border-blue-200 text-blue-700"
+                  className="h-7 text-xs bg-background hover:bg-muted border-blue-500/30 text-blue-500 dark:text-blue-400"
                 >
                   Connect
                 </Button>
