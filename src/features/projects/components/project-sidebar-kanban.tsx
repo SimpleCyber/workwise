@@ -128,7 +128,7 @@ export const ProjectSidebarKanban = ({
               damping: 40,
               opacity: { duration: 0.2 },
             }}
-            className="fixed right-0 top-0 h-full bg-gradient-to-b from-white to-gray-50 border-l-2 border-gray-200 shadow-2xl z-[60] flex flex-col rounded-l-2xl"
+            className="fixed right-0 top-0 h-full bg-background border-l-2 border-border shadow-2xl z-[60] flex flex-col rounded-l-2xl"
             style={{ width: sidebarWidth }}
           >
             {/* Resize Handle */}
@@ -138,7 +138,7 @@ export const ProjectSidebarKanban = ({
             />
 
             {/* Single Consolidated Header */}
-            <div className="flex h-[60px] items-center border-b border-gray-200 bg-white px-4 flex-shrink-0 rounded-tl-3xl shadow-sm">
+            <div className="flex h-[60px] items-center border-b border-border bg-card px-4 flex-shrink-0 rounded-tl-3xl shadow-sm">
               {/* Left side - Project info and AI indicator */}
               <div className="flex items-center gap-3 flex-1">
                 <div className="flex items-center gap-2">
@@ -150,11 +150,11 @@ export const ProjectSidebarKanban = ({
                   </span>
                 </div>
 
-                <div className="h-4 w-px bg-gray-300" />
+                <div className="h-4 w-px bg-border" />
 
                 <div className="flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium text-gray-700"></span>
+                  <MessageSquare className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium text-foreground"></span>
                 </div>
               </div>
 
@@ -233,7 +233,7 @@ export const ProjectSidebarKanban = ({
                   </TooltipProvider>
                 )}
 
-                <div className="h-4 w-px bg-gray-300 mx-1" />
+                <div className="h-4 w-px bg-border mx-1" />
 
                 <Button
                   variant="ghost"

@@ -31,14 +31,14 @@ export const ActionOverlay = ({
 
   return (
     <div
-      className={`absolute ${positionClasses[position]} flex gap-1 bg-white rounded-lg shadow-lg p-1 z-[9999]`}
+      className={`absolute ${positionClasses[position]} flex gap-1 bg-popover border border-border rounded-lg shadow-lg p-1 z-[9999]`}
       style={{ zIndex: 9999 }}
       onMouseEnter={(e) => e.stopPropagation()}
       onMouseLeave={(e) => e.stopPropagation()}
     >
       {onAdd && (
         <button
-          className="w-8 h-8 flex items-center justify-center hover:bg-green-100 rounded text-gray-400 hover:text-green-600 transition-colors"
+          className="w-8 h-8 flex items-center justify-center hover:bg-green-500/10 rounded text-muted-foreground hover:text-green-500 transition-colors"
           onClick={(e) => {
             e.stopPropagation();
             onAdd();
@@ -51,7 +51,7 @@ export const ActionOverlay = ({
 
       {onLink && (
         <button
-          className="w-8 h-8 flex items-center justify-center hover:bg-purple-100 rounded text-gray-400 hover:text-purple-600 transition-colors"
+          className="w-8 h-8 flex items-center justify-center hover:bg-purple-500/10 rounded text-muted-foreground hover:text-purple-500 transition-colors"
           onClick={(e) => {
             e.stopPropagation();
             onLink();
@@ -64,7 +64,7 @@ export const ActionOverlay = ({
 
       {onEdit && (
         <button
-          className="w-8 h-8 flex items-center justify-center hover:bg-blue-100 rounded text-gray-400 hover:text-blue-600 transition-colors"
+          className="w-8 h-8 flex items-center justify-center hover:bg-blue-500/10 rounded text-muted-foreground hover:text-blue-500 transition-colors"
           onClick={(e) => {
             e.stopPropagation();
             onEdit();
@@ -77,7 +77,7 @@ export const ActionOverlay = ({
 
       {onDelete && (
         <button
-          className="w-8 h-8 flex items-center justify-center hover:bg-red-100 rounded text-gray-400 hover:text-red-600 transition-colors"
+          className="w-8 h-8 flex items-center justify-center hover:bg-rose-500/10 rounded text-muted-foreground hover:text-rose-500 transition-colors"
           onClick={(e) => {
             e.stopPropagation();
             onDelete();

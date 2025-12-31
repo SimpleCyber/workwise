@@ -38,7 +38,7 @@ export const WorkspaceSidebar = ({ children }: WorkspaceSidebarProps) => {
   }
 
   return (
-    <div className="flex h-full flex-col gap-y-2 bg-gradient-to-bl from-gray-800 to-gray-950">
+    <div className="flex h-full flex-col gap-y-2 bg-sidebar border-r border-sidebar-border">
       {/* rounded-tl */}
       <WorkspaceHeader
         workspace={workspace}

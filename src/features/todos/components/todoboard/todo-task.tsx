@@ -61,7 +61,7 @@ export const TodoTask = ({ card }: TodoTaskProps) => {
   return (
     <>
       <Card
-        className="cursor-pointer hover:bg-slate-50 transition-all duration-200 ease-in-out bg-white border-0 shadow-sm hover:shadow-md rounded-lg mb-2"
+        className="cursor-pointer hover:bg-accent transition-all duration-200 ease-in-out bg-card border-0 shadow-sm hover:shadow-md rounded-lg mb-2"
         onClick={() => setIsModalOpen(true)}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -77,7 +77,7 @@ export const TodoTask = ({ card }: TodoTaskProps) => {
         text-sm 
         font-medium 
         leading-5 
-        text-gray-800 
+        text-foreground 
         flex-1 
         transition-all 
         duration-300 
@@ -99,7 +99,7 @@ export const TodoTask = ({ card }: TodoTaskProps) => {
         ${showCheckCircle ? "ml-7" : "ml-0"}
       `}
             >
-              <p className="text-xs text-gray-600 leading-4 line-clamp-3 mb-3">
+              <p className="text-xs text-muted-foreground leading-4 line-clamp-3 mb-3">
                 {linkifyText(card.description)}
               </p>
             </div>

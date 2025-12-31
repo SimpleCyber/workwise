@@ -60,7 +60,7 @@ export const AttendanceCard = ({
       return (
         <Badge
           variant="outline"
-          className="text-xs border-yellow-500 text-yellow-700"
+          className="text-xs border-yellow-500/50 text-yellow-500 bg-yellow-500/10"
         >
           Pending
         </Badge>
@@ -69,7 +69,7 @@ export const AttendanceCard = ({
       return (
         <Badge
           variant="outline"
-          className="text-xs border-green-500 text-green-700"
+          className="text-xs border-green-500/50 text-green-500 bg-green-500/10"
         >
           Approved
         </Badge>
@@ -78,7 +78,7 @@ export const AttendanceCard = ({
       return (
         <Badge
           variant="outline"
-          className="text-xs border-red-500 text-red-700"
+          className="text-xs border-red-500/50 text-red-500 bg-red-500/10"
         >
           Rejected
         </Badge>
@@ -132,8 +132,8 @@ export const AttendanceCard = ({
           {isAbsent ? (
             <div className="flex items-center justify-center py-4 text-center">
               <div>
-                <UserX className="w-6 h-6 mx-auto mb-1 text-gray-400" />
-                <p className="text-sm text-gray-500">Absent</p>
+                <UserX className="w-6 h-6 mx-auto mb-1 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">Absent</p>
               </div>
             </div>
           ) : (
@@ -162,7 +162,7 @@ export const AttendanceCard = ({
               <div className="flex items-center justify-between py-2 px-3 bg-muted/30 rounded-lg">
                 <div className="flex items-center gap-2">
                   <div
-                    className={`w-2 h-2 rounded-full ${record.checkOutTime ? getStatusColor().replace("text-", "bg-") : "bg-gray-300"}`}
+                    className={`w-2 h-2 rounded-full ${record.checkOutTime ? getStatusColor().replace("text-", "bg-") : "bg-muted"}`}
                   />
                   <span className="text-sm">
                     Out:{" "}
@@ -181,7 +181,7 @@ export const AttendanceCard = ({
               <Button
                 size="sm"
                 variant="outline"
-                className="flex-1 h-8 text-xs bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+                className="flex-1 h-8 text-xs bg-green-500/10 border-green-500/20 text-green-500 hover:bg-green-500/20"
                 onClick={(e) => {
                   e.stopPropagation();
                   onQuickAction(record._id, "approve");
@@ -193,7 +193,7 @@ export const AttendanceCard = ({
               <Button
                 size="sm"
                 variant="outline"
-                className="flex-1 h-8 text-xs bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
+                className="flex-1 h-8 text-xs bg-red-500/10 border-red-500/20 text-red-500 hover:bg-red-500/20"
                 onClick={(e) => {
                   e.stopPropagation();
                   onQuickAction(record._id, "reject");

@@ -186,7 +186,7 @@ export const TodoListHeader = ({
               <TooltipTrigger asChild>
                 <div className="flex flex-col items-center gap-1 flex-1 min-h-0">
                   <div
-                    className="writing-mode-vertical text-sm font-medium text-gray-800 cursor-pointer hover:text-gray-600 transition-colors text-center break-all"
+                    className="writing-mode-vertical text-sm font-medium text-foreground cursor-pointer hover:text-muted-foreground transition-colors text-center break-all"
                     onClick={onToggleCollapse}
                     style={{
                       writingMode: "vertical-rl",
@@ -211,7 +211,7 @@ export const TodoListHeader = ({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="text-xs text-gray-500 font-medium bg-gray-300 px-1.5  rounded-sm cursor-default">
+                  <div className="text-xs text-muted-foreground font-medium bg-muted px-1.5  rounded-sm cursor-default">
                     {taskCounts.completed}/{taskCounts.total}
                   </div>
                 </TooltipTrigger>
@@ -257,7 +257,7 @@ export const TodoListHeader = ({
             />
           ) : (
             <h3
-              className="font-medium text-sm cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded transition-colors flex-1"
+              className="font-medium text-sm cursor-pointer hover:bg-muted px-1 py-0.5 rounded transition-colors flex-1"
               onClick={handleStartEdit}
               title="Click to edit"
             >

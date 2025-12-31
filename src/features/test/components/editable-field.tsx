@@ -88,10 +88,10 @@ export function EditableField({
 
   return (
     <div
-      className={`cursor-pointer hover:bg-gray-50 p-1 rounded ${
+      className={`cursor-pointer hover:bg-accent/50 p-1 rounded ${
         type === "title"
-          ? "font-semibold text-sm leading-tight"
-          : "text-xs text-gray-600 leading-relaxed"
+          ? "font-semibold text-sm leading-tight text-foreground"
+          : "text-xs text-muted-foreground leading-relaxed"
       }`}
       onClick={() => setIsEditing(true)}
       title={`Click to edit ${type}`}

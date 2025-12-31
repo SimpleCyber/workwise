@@ -50,6 +50,15 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    /* Custom Sidebar Variables */
+    --sidebar-background: 222.2 47.4% 11.2%; /* dark blue-ish for sidebar in light mode if we want, or keeping it dark always? User said "everything looks like it is in the same color tone only". Let's make sidebar distinct. */
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 40% 98%;
+    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 217.2 32.6% 17.5%;
   }
   .dark {
     --background: 222.2 84% 4.9%;
@@ -76,6 +85,16 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+
+    /* Sidebar variables for dark mode */
+    --sidebar-background: 222.2 84% 4.9%; /* Match background or slightly lighter/darker? Usually sidebar is slightly different */
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 40% 98%;
+    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 212.7 26.8% 83.9%;
   }
 }
 
@@ -97,7 +116,7 @@
 
 .ql-toolbar {
   border: none !important;
-  background-color: #f8f8f8 !important;
+  @apply bg-muted !important;
 }
 
 .ql-toolbar .ql-formats:not(:last-child) {
@@ -114,14 +133,14 @@
 .ql-editor {
   line-height: 22px !important;
   padding: 8px 12px !important;
-  color: #1d1c1d !important;
+  color: hsl(var(--foreground)) !important;
   font-weight: 400 !important;
   font-family: "Lato", sans-serif !important;
   font-size: 14px !important;
 }
 
 .ql-editor a {
-  color: #1264a3 !important;
+  color: hsl(var(--primary)) !important;
 }
 
 .ql-editor a:hover {
@@ -131,7 +150,7 @@
 .ql-editor:before {
   left: 12px !important;
   font-family: "Lato", sans-serif !important;
-  color: #8d8d8d !important;
+  color: hsl(var(--muted-foreground)) !important;
   font-style: normal !important;
   font-size: 14px !important;
   font-weight: 400 !important;
@@ -146,7 +165,7 @@
 @layer utilities {
   .messages-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: #dcdcdc #f8f8f8;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
   }
 }
 

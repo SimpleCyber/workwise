@@ -115,10 +115,10 @@ export const TaskDescription = ({
   return (
     <div className="p-4 max-h-[400px] overflow-y-auto">
       {/* Collapsible Header */}
-      <div className="flex items-center justify-between mb-3 sticky top-0 bg-white z-10 pb-2">
+      <div className="flex items-center justify-between mb-3 sticky top-0 bg-background z-10 pb-2">
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+          className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
         >
           {isCollapsed ? (
             <ChevronRight className="w-4 h-4" />
@@ -162,7 +162,7 @@ export const TaskDescription = ({
             </div>
           ) : (
             <div
-              className="min-h-[60px] max-w-full cursor-pointer hover:bg-gray-50 rounded p-3 transition-colors break-words overflow-auto"
+              className="min-h-[60px] max-w-full cursor-pointer hover:bg-accent rounded p-3 transition-colors break-words overflow-auto"
               onClick={() => setIsEditing(true)}
             >
               {task.description ? (
@@ -173,7 +173,7 @@ export const TaskDescription = ({
                   {task.descriptionImages &&
                     task.descriptionImages.length > 0 && (
                       <div className="space-y-2 max-w-full">
-                        <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <ImageIcon className="w-3 h-3" />
                           <span>
                             {task.descriptionImages.length} attachment(s)
@@ -184,7 +184,7 @@ export const TaskDescription = ({
                             (imageUrl: string, index: number) => (
                               <div
                                 key={index}
-                                className="relative group rounded overflow-hidden border bg-gray-50 max-w-full"
+                                className="relative group rounded overflow-hidden border bg-muted max-w-full"
                               >
                                 <Image
                                   width={200}
@@ -244,7 +244,7 @@ export const TaskDescription = ({
                     )}
                 </div>
               ) : (
-                <div className="text-center py-6 text-gray-500">
+                <div className="text-center py-6 text-muted-foreground">
                   <p className="text-sm">Add a description...</p>
                 </div>
               )}

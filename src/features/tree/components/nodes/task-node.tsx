@@ -203,7 +203,7 @@ const EditTaskForm = ({
 
   return (
     <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-50">
-      <Card className="w-80 shadow-lg border-2 border-gray-200 bg-white">
+      <Card className="w-80 shadow-lg border-2 border-border bg-popover">
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-4">
             <h4 className="font-semibold text-sm">Edit Task</h4>

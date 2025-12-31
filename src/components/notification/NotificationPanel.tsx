@@ -168,7 +168,7 @@ export const DraggableNotificationPanel = () => {
   };
 
   const getNotificationIcon = (type: string) => {
-    const iconClass = "w-4 h-4 text-gray-600";
+    const iconClass = "w-4 h-4 text-muted-foreground";
     switch (type) {
       case "attendance_submitted":
       case "attendance_checkout":
@@ -219,13 +219,13 @@ export const DraggableNotificationPanel = () => {
     }
     if (notification.hasBeenProcessed) {
       return (
-        <Badge className="text-xs bg-green-100 text-green-800 border-0">
+        <Badge className="text-xs bg-green-500/10 text-green-500 border-0">
           Marked
         </Badge>
       );
     }
     return (
-      <Badge className="text-xs bg-yellow-100 text-yellow-800 border-0">
+      <Badge className="text-xs bg-yellow-500/10 text-yellow-500 border-0">
         Pending
       </Badge>
     );
@@ -234,7 +234,7 @@ export const DraggableNotificationPanel = () => {
   return (
     <Card
       ref={cardRef}
-      className="fixed z-50 w-96 bg-white shadow-2xl border border-gray-200 max-h-[80vh] flex flex-col"
+      className="fixed z-50 w-96 bg-card shadow-2xl border border-border max-h-[80vh] flex flex-col"
       style={{
         left: position.x,
         top: position.y,
@@ -243,14 +243,14 @@ export const DraggableNotificationPanel = () => {
     >
       {/* Draggable Header */}
       <CardHeader
-        className="flex flex-row items-center justify-between p-4 border-b border-gray-100 cursor-grab active:cursor-grabbing bg-gradient-to-r from-gray-50 to-white"
+        className="flex flex-row items-center justify-between p-4 border-b border-border cursor-grab active:cursor-grabbing bg-gradient-to-r from-muted/50 to-card"
         onMouseDown={handleMouseDown}
       >
         <div className="flex items-center gap-3">
-          <GripVertical className="w-4 h-4 text-gray-400" />
-          <Bell className="w-5 h-5 text-gray-600" />
+          <GripVertical className="w-4 h-4 text-muted-foreground" />
+          <Bell className="w-5 h-5 text-foreground/80" />
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-foreground">
               Notifications
             </h2>
             {unreadCount! > 0 && (
@@ -266,7 +266,7 @@ export const DraggableNotificationPanel = () => {
               variant="ghost"
               size="sm"
               onClick={handleMarkAllAsRead}
-              className="text-xs text-gray-600 hover:text-gray-900"
+              className="text-xs text-muted-foreground hover:text-foreground"
             >
               <CheckCheck className="w-4 h-4 mr-1" />
               Mark all read
@@ -276,7 +276,7 @@ export const DraggableNotificationPanel = () => {
             variant="ghost"
             size="sm"
             onClick={() => setOpen(false)}
-            className="w-8 h-8 p-0 rounded-full hover:bg-gray-100"
+            className="w-8 h-8 p-0 rounded-full hover:bg-muted"
           >
             <X className="w-4 h-4" />
           </Button>
@@ -289,7 +289,7 @@ export const DraggableNotificationPanel = () => {
           onValueChange={(value) => setActiveCategory(value as any)}
           className="w-full h-full flex flex-col"
         >
-          <div className="p-4 border-b border-gray-100 no-drag">
+          <div className="p-4 border-b border-border no-drag">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger
                 value="all"
@@ -333,21 +333,21 @@ export const DraggableNotificationPanel = () => {
                 </div>
               ) : notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center p-12 text-center">
-                  <Bell className="w-12 h-12 text-gray-300 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  <Bell className="w-12 h-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">
                     No notifications
                   </h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     You are all caught up!
                   </p>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-border">
                   {notifications.map((notification) => (
                     <div
                       key={notification._id}
-                      className={`p-4 hover:bg-gray-50 transition-colors ${
-                        !notification.isRead ? "bg-blue-50/30" : ""
+                      className={`p-4 hover:bg-muted/50 transition-colors ${
+                        !notification.isRead ? "bg-blue-500/10" : ""
                       }`}
                     >
                       <div className="flex gap-3">
@@ -358,15 +358,15 @@ export const DraggableNotificationPanel = () => {
                           <div className="flex items-start justify-between gap-2 mb-2">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
-                                <h4 className="text-sm font-medium text-gray-900">
+                                <h4 className="text-sm font-medium text-foreground">
                                   {notification.title}
                                 </h4>
                                 {getAttendanceStatusBadge(notification)}
                               </div>
-                              <p className="text-sm text-gray-600 mb-2">
+                              <p className="text-sm text-muted-foreground mb-2">
                                 {notification.message}
                               </p>
-                              <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
+                              <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
                                 <div className="flex items-center gap-1">
                                   <Building className="w-3 h-3" />
                                   <span>
@@ -438,7 +438,7 @@ export const DraggableNotificationPanel = () => {
                               {notification.type === "attendance_submitted" &&
                                 notification.relatedId &&
                                 notification.hasBeenProcessed && (
-                                  <div className="text-xs text-gray-500 mb-3 italic">
+                                  <div className="text-xs text-muted-foreground mb-3 italic">
                                     This attendance has already been marked by
                                     an admin.
                                   </div>
@@ -464,7 +464,7 @@ export const DraggableNotificationPanel = () => {
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-7 text-xs text-gray-600"
+                                    className="h-7 text-xs text-muted-foreground"
                                     onClick={() =>
                                       handleMarkAsRead(notification._id)
                                     }
@@ -479,7 +479,7 @@ export const DraggableNotificationPanel = () => {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-6 w-6 p-0 text-gray-400 hover:text-red-600"
+                                className="h-6 w-6 p-0 text-muted-foreground hover:text-red-500"
                                 onClick={() =>
                                   handleDeleteNotification(notification._id)
                                 }

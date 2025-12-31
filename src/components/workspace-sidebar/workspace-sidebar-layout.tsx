@@ -64,7 +64,7 @@ const WorkspaceLayout = ({
             defaultSize={defaultPanelSize}
             minSize={minPanelSize}
             maxSize={maxPanelSize}
-            className="bg-gray-900"
+            className="bg-sidebar"
             onResize={handlePanelResize}
           >
             <WorkspaceSidebar>{sidebarContent}</WorkspaceSidebar>

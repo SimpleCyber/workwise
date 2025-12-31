@@ -56,7 +56,7 @@ export default function ConversationRow({
         onClick={onSelect}
         className={cls(
           "flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left",
-          active ? "bg-zinc-100" : "hover:bg-zinc-100",
+          active ? "bg-accent" : "hover:bg-accent",
         )}
         title={data.title}
       >
@@ -70,7 +70,7 @@ export default function ConversationRow({
               if (e.key === "Enter") commitRename();
               else if (e.key === "Escape") setEditing(false);
             }}
-            className="w-full rounded-md border border-zinc-300 px-2 py-1 text-sm outline-none"
+            className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm outline-none"
           />
         ) : (
           <span className="truncate text-sm">{data.title}</span>
@@ -82,7 +82,7 @@ export default function ConversationRow({
             setOpen((s) => !s);
           }}
           title="Options"
-          className="ml-auto rounded-md p-1 text-zinc-500 opacity-0 transition group-hover:opacity-100 hover:bg-zinc-200/50"
+          className="ml-auto rounded-md p-1 text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:bg-accent"
           aria-label="Conversation options"
         >
           <MoreHorizontal className="h-4 w-4" />
@@ -90,10 +90,10 @@ export default function ConversationRow({
       </button>
 
       {open && !editing && (
-        <div className="absolute right-1 top-8 z-50 w-44 rounded-lg border border-zinc-200 bg-white p-1 shadow-lg">
+        <div className="absolute right-1 top-8 z-50 w-44 rounded-lg border border-border bg-popover p-1 shadow-lg">
           <div className="relative group">
             <button
-              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-zinc-100"
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent"
               onClick={(e) => {
                 e.stopPropagation();
                 setOpen(false);
@@ -103,7 +103,7 @@ export default function ConversationRow({
             >
               <Pencil className="h-4 w-4" /> Rename
             </button>
-            <span className="pointer-events-none absolute left-2 top-full mt-1 rounded-md bg-zinc-900 px-1.5 py-0.5 text-[10px] text-white opacity-0 group-hover:opacity-100">
+            <span className="pointer-events-none absolute left-2 top-full mt-1 rounded-md bg-popover border shadow-sm px-1.5 py-0.5 text-[10px] text-popover-foreground opacity-0 group-hover:opacity-100">
               Rename
             </span>
           </div>
@@ -120,7 +120,7 @@ export default function ConversationRow({
               <Star
                 className={cls(
                   "h-4 w-4",
-                  data.pinned ? "fill-zinc-800 text-zinc-800" : "",
+                  data.pinned ? "fill-primary text-primary" : "",
                 )}
               />
               {data.pinned ? "Unstar" : "Star"}
@@ -132,7 +132,7 @@ export default function ConversationRow({
 
           <div className="relative group">
             <button
-              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-red-600 hover:bg-red-50"
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-rose-500 hover:bg-rose-500/10"
               onClick={(e) => {
                 e.stopPropagation();
                 setOpen(false);

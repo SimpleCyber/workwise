@@ -48,11 +48,11 @@ export const WorkspaceHeader = ({
           <DropdownMenuTrigger asChild>
             <Button
               variant="transparent"
-              className="w-auto overflow-hidden p-1.5 text-lg font-semibold"
+              className="w-auto overflow-hidden p-1.5 text-lg font-semibold text-foreground hover:bg-accent/50"
               size="sm"
             >
               <span className="truncate">{workspace.name}</span>
-              <ChevronDown className="ml-1 size-4 shrink-0" />
+              <ChevronDown className="ml-1 size-4 shrink-0 opacity-80" />
             </Button>
           </DropdownMenuTrigger>
 
@@ -96,13 +96,21 @@ export const WorkspaceHeader = ({
 
         <div className="flex items-center gap-0.5">
           <Hint label="Filter conversations" side="bottom">
-            <Button variant="transparent" size="iconSm">
+            <Button
+              variant="transparent"
+              size="iconSm"
+              className="text-foreground/80 hover:bg-accent/50"
+            >
               <ListFilter className="size-4" />
             </Button>
           </Hint>
 
           <Hint label="New message" side="bottom">
-            <Button variant="transparent" size="iconSm">
+            <Button
+              variant="transparent"
+              size="iconSm"
+              className="text-foreground/80 hover:bg-accent/50"
+            >
               <SquarePen className="size-4" />
             </Button>
           </Hint>

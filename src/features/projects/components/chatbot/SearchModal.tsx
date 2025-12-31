@@ -103,33 +103,33 @@ export default function SearchModal({
             initial={{ opacity: 0, scale: 0.95, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
-            className="fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-zinc-200 bg-white shadow-2xl"
+            className="fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-popover shadow-2xl"
           >
-            <div className="flex items-center gap-3 border-b border-zinc-200 p-4">
-              <SearchIcon className="h-5 w-5 text-zinc-400" />
+            <div className="flex items-center gap-3 border-b border-border p-4">
+              <SearchIcon className="h-5 w-5 text-muted-foreground" />
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search chats..."
-                className="flex-1 bg-transparent text-lg outline-none placeholder:text-zinc-400"
+                className="flex-1 bg-transparent text-lg outline-none placeholder:text-muted-foreground text-foreground"
                 autoFocus
               />
               <button
                 onClick={handleClose}
-                className="rounded-lg p-1.5 hover:bg-zinc-100"
+                className="rounded-lg p-1.5 hover:bg-accent"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <div className="max-h-[60vh] overflow-y-auto">
-              <div className="border-b border-zinc-200 p-2">
+              <div className="border-b border-border p-2">
                 <button
                   onClick={createNewChat}
-                  className="flex w-full items-center gap-3 rounded-lg p-3 text-left hover:bg-zinc-100"
+                  className="flex w-full items-center gap-3 rounded-lg p-3 text-left hover:bg-accent"
                 >
-                  <Plus className="h-5 w-5 text-zinc-500" />
+                  <Plus className="h-5 w-5 text-muted-foreground" />
                   <span className="font-medium">New chat</span>
                 </button>
               </div>
@@ -140,9 +140,9 @@ export default function SearchModal({
                   return (
                     <div
                       key={groupName}
-                      className="border-b border-zinc-200 p-2 last:border-b-0"
+                      className="border-b border-border p-2 last:border-b-0"
                     >
-                      <div className="px-3 py-2 text-xs font-medium text-zinc-500">
+                      <div className="px-3 py-2 text-xs font-medium text-muted-foreground">
                         {groupName}
                       </div>
                       <div className="space-y-1">
@@ -153,9 +153,9 @@ export default function SearchModal({
                               onSelect(conv.id);
                               handleClose();
                             }}
-                            className="flex w-full items-center gap-3 rounded-lg p-3 text-left hover:bg-zinc-100"
+                            className="flex w-full items-center gap-3 rounded-lg p-3 text-left hover:bg-accent"
                           >
-                            <Clock className="h-4 w-4 text-zinc-400 shrink-0" />
+                            <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
                             <div className="min-w-0 flex-1">
                               <div className="truncate font-medium">
                                 {conv.title}
@@ -171,11 +171,11 @@ export default function SearchModal({
 
               {filteredConversations.length === 0 && query.trim() && (
                 <div className="p-8 text-center">
-                  <SearchIcon className="mx-auto h-12 w-12 text-zinc-300" />
-                  <div className="mt-4 text-lg font-medium text-zinc-900">
+                  <SearchIcon className="mx-auto h-12 w-12 text-muted" />
+                  <div className="mt-4 text-lg font-medium text-foreground">
                     No chats found
                   </div>
-                  <div className="mt-2 text-sm text-zinc-500">
+                  <div className="mt-2 text-sm text-muted-foreground">
                     Try searching with different keywords
                   </div>
                 </div>

@@ -58,10 +58,10 @@ export function NodeActions({
         size="sm"
         variant="outline"
         onClick={onAddChild}
-        className="h-8 w-8 p-0 bg-white hover:bg-blue-50 border-blue-200"
+        className="h-8 w-8 p-0 bg-background hover:bg-blue-50 border-blue-200 dark:border-blue-800 dark:hover:bg-blue-900/50"
         aria-label="Add child node"
       >
-        <Plus className="w-4 h-4 text-blue-600" />
+        <Plus className="w-4 h-4 text-blue-600 dark:text-blue-400" />
       </Button>
 
       {onExpandWithAI && (
@@ -71,13 +71,13 @@ export function NodeActions({
             variant="outline"
             onClick={handleAIExpand}
             disabled={isGenerating}
-            className="h-8 w-8 p-0 bg-white hover:bg-purple-50 border-purple-200 disabled:opacity-50"
+            className="h-8 w-8 p-0 bg-background hover:bg-purple-50 border-purple-200 dark:border-purple-800 dark:hover:bg-purple-900/50 disabled:opacity-50"
             aria-label="Expand with AI"
           >
             {isGenerating ? (
-              <Loader2 className="w-4 h-4 text-purple-600 animate-spin" />
+              <Loader2 className="w-4 h-4 text-purple-600 dark:text-purple-400 animate-spin" />
             ) : (
-              <Sparkles className="w-4 h-4 text-purple-600" />
+              <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
             )}
           </Button>
 
@@ -98,10 +98,10 @@ export function NodeActions({
           size="sm"
           variant="outline"
           onClick={onDelete}
-          className="h-8 w-8 p-0 bg-white hover:bg-red-50 border-red-200"
+          className="h-8 w-8 p-0 bg-background hover:bg-red-50 border-red-200 dark:border-red-800 dark:hover:bg-red-900/50"
           aria-label="Delete node"
         >
-          <Trash2 className="w-4 h-4 text-red-600" />
+          <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
         </Button>
       )}
     </div>

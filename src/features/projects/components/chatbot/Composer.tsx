@@ -90,8 +90,8 @@ const Composer = forwardRef<ComposerHandle, ComposerProps>(function Composer(
     <div className="p-4">
       <div
         className={cls(
-          "mx-auto flex flex-col rounded-2xl border bg-white shadow-sm transition-all duration-200",
-          "max-w-3xl p-3 border-zinc-300",
+          "mx-auto flex flex-col rounded-2xl border bg-card shadow-sm transition-all duration-200",
+          "max-w-3xl p-3 border-border",
         )}
       >
         <div className="flex-1 relative">
@@ -102,8 +102,8 @@ const Composer = forwardRef<ComposerHandle, ComposerProps>(function Composer(
             placeholder="Ask anything"
             rows={1}
             className={cls(
-              "w-full resize-none bg-transparent text-sm outline-none placeholder:text-zinc-400 transition-all duration-200",
-              "px-0 py-2 min-h-[40px] text-left",
+              "w-full resize-none bg-transparent text-sm outline-none placeholder:text-muted-foreground transition-all duration-200",
+              "px-0 py-2 min-h-[40px] text-left text-foreground",
             )}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
@@ -117,7 +117,7 @@ const Composer = forwardRef<ComposerHandle, ComposerProps>(function Composer(
         <div className="mt-2 flex items-center justify-between">
           <ComposerActionsPopover>
             <button
-              className="inline-flex shrink-0 items-center justify-center rounded-full p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700"
+              className="inline-flex shrink-0 items-center justify-center rounded-full p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
               title="Add attachment"
             >
               <Plus className="h-4 w-4" />
@@ -126,7 +126,7 @@ const Composer = forwardRef<ComposerHandle, ComposerProps>(function Composer(
 
           <div className="flex shrink-0 items-center gap-1">
             <button
-              className="inline-flex items-center justify-center rounded-full p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700"
+              className="inline-flex items-center justify-center rounded-full p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
               title="Voice input"
             >
               <Mic className="h-4 w-4" />
@@ -135,7 +135,7 @@ const Composer = forwardRef<ComposerHandle, ComposerProps>(function Composer(
               onClick={handleSend}
               disabled={sending || !!busy || !value.trim()}
               className={cls(
-                "inline-flex shrink-0 items-center gap-2 rounded-full bg-zinc-900 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
+                "inline-flex shrink-0 items-center gap-2 rounded-full bg-rose-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500",
                 (sending || busy || !value.trim()) &&
                   "opacity-50 cursor-not-allowed",
               )}

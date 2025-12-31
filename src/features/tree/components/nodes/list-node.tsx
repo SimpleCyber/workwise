@@ -79,7 +79,7 @@ const CreateTaskForm = ({
 
   return (
     <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-50">
-      <Card className="w-80 shadow-lg border-2 border-blue-200 bg-white">
+      <Card className="w-80 shadow-lg border-2 border-primary/20 bg-popover">
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-4">
             <h4 className="font-semibold text-sm">Create New Task</h4>
@@ -182,17 +182,17 @@ export const ListNode = ({ data }: NodeProps) => {
   const getIconComponent = (iconName: string) => {
     switch (iconName) {
       case "list":
-        return <ClipboardList className="w-8 h-8 text-blue-600" />;
+        return <ClipboardList className="w-8 h-8 text-blue-500" />;
       case "clock":
-        return <Clock className="w-8 h-8 text-yellow-600" />;
+        return <Clock className="w-8 h-8 text-yellow-500" />;
       case "alert-circle":
-        return <ClipboardX className="w-8 h-8 text-red-600" />;
+        return <ClipboardX className="w-8 h-8 text-rose-500" />;
       case "eye":
-        return <Eye className="w-8 h-8 text-purple-600" />;
+        return <Eye className="w-8 h-8 text-purple-500" />;
       case "check-square":
-        return <ClipboardCheck className="w-8 h-8 text-green-600" />;
+        return <ClipboardCheck className="w-8 h-8 text-green-500" />;
       default:
-        return <ClipboardList className="w-8 h-8 text-gray-600" />;
+        return <ClipboardList className="w-8 h-8 text-muted-foreground" />;
     }
   };
 
@@ -227,7 +227,7 @@ export const ListNode = ({ data }: NodeProps) => {
         <Card
           className={`shadow-md cursor-pointer hover:shadow-lg transition-all duration-300 ${listColor} ${
             data.isTasksExpanded ? "w-20 h-20" : "w-16 h-16"
-          } ${data.isActive ? `ring-2 ring-${baseColor}-500` : ""} relative`}
+          } ${data.isActive ? `ring-2 ring-primary` : ""} relative`}
           onClick={handleNodeClick}
         >
           <CardContent className="flex items-center justify-center h-full p-2">
@@ -271,8 +271,8 @@ export const ListNode = ({ data }: NodeProps) => {
           </CardContent>
         </Card>
         <div className="mt-2 text-center">
-          <p className="text-xs font-semibold text-gray-700">{data.name}</p>
-          <div className="text-xs mt-1 text-gray-500">
+          <p className="text-xs font-semibold text-foreground">{data.name}</p>
+          <div className="text-xs mt-1 text-muted-foreground">
             {data.taskCount} tasks
           </div>
         </div>

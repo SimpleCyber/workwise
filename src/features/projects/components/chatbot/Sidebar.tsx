@@ -159,17 +159,17 @@ export default function Sidebar(props: SidebarProps) {
         initial={{ width: 320 }}
         animate={{ width: 64 }}
         transition={{ type: "spring", stiffness: 220, damping: 26 }}
-        className="z-50 flex h-full shrink-0 flex-col border-r border-zinc-200/60 bg-white"
+        className="z-50 flex h-full shrink-0 flex-col border-r border-border bg-sidebar"
       >
         <div className="flex items-center justify-center px-3 py-3">
           <div className="relative">
             <button
               onClick={() => setSidebarCollapsed(false)}
-              className="group relative rounded-xl p-2 hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              className="group relative rounded-xl p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               aria-label="Open sidebar"
               title="Open sidebar"
             >
-              <Sparkles className="h-5 w-5 text-zinc-700 transition-colors group-hover:text-blue-600" />
+              <Sparkles className="h-5 w-5 text-sidebar-foreground transition-colors group-hover:text-primary" />
             </button>
           </div>
         </div>
@@ -178,12 +178,12 @@ export default function Sidebar(props: SidebarProps) {
           <div className="relative group">
             <button
               onClick={() => setShowSearchModal(true)}
-              className="rounded-lg p-2 hover:bg-zinc-100 transition-colors"
+              className="rounded-lg p-2 hover:bg-accent transition-colors"
               aria-label="Search"
             >
               <SearchIcon className="h-4 w-4" />
             </button>
-            <span className="pointer-events-none absolute left-full top-1/2 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md bg-zinc-900 px-2 py-1 text-[10px] text-white opacity-0 group-hover:opacity-100">
+            <span className="pointer-events-none absolute left-full top-1/2 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md bg-popover px-2 py-1 text-[10px] text-popover-foreground opacity-0 group-hover:opacity-100 border shadow-sm">
               Search
             </span>
           </div>
@@ -191,12 +191,12 @@ export default function Sidebar(props: SidebarProps) {
           <div className="relative group">
             <button
               onClick={handleNewChat}
-              className="rounded-lg p-2 hover:bg-zinc-100 transition-colors"
+              className="rounded-lg p-2 hover:bg-accent transition-colors"
               aria-label="New chat"
             >
               <Plus className="h-4 w-4" />
             </button>
-            <span className="pointer-events-none absolute left-full top-1/2 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md bg-zinc-900 px-2 py-1 text-[10px] text-white opacity-0 group-hover:opacity-100">
+            <span className="pointer-events-none absolute left-full top-1/2 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md bg-popover px-2 py-1 text-[10px] text-popover-foreground opacity-0 group-hover:opacity-100 border shadow-sm">
               New chat
             </span>
           </div>
@@ -204,12 +204,12 @@ export default function Sidebar(props: SidebarProps) {
           <div className="relative group">
             <button
               onClick={() => setShowSearchModal(true)}
-              className="rounded-lg p-2 hover:bg-zinc-100 transition-colors"
+              className="rounded-lg p-2 hover:bg-accent transition-colors"
               aria-label="Starred"
             >
               <Pin className="h-4 w-4" />
             </button>
-            <span className="pointer-events-none absolute left-full top-1/2 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md bg-zinc-900 px-2 py-1 text-[10px] text-white opacity-0 group-hover:opacity-100">
+            <span className="pointer-events-none absolute left-full top-1/2 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md bg-popover px-2 py-1 text-[10px] text-popover-foreground opacity-0 group-hover:opacity-100 border shadow-sm">
               Starred
             </span>
           </div>
@@ -253,19 +253,19 @@ export default function Sidebar(props: SidebarProps) {
             exit={{ x: isDesktop ? 0 : -340 }}
             transition={{ type: "spring", stiffness: 220, damping: 26 }}
             className={cls(
-              "z-50 flex h-full w-80 shrink-0 flex-col border-r border-zinc-200/60 bg-white",
+              "z-50 flex h-full w-80 shrink-0 flex-col border-r border-border bg-sidebar",
               "fixed inset-y-0 left-0 md:static md:translate-x-0",
             )}
           >
             <div className="flex items-center gap-2 px-3 py-3">
               <div className="relative group">
                 <span className="pointer-events-none absolute inset-0 rounded-full opacity-0 transition-opacity group-hover:opacity-40" />
-                <Sparkles className="relative h-5 w-5 text-zinc-700 group-hover:text-blue-600" />
+                <Sparkles className="relative h-5 w-5 text-sidebar-foreground group-hover:text-primary" />
               </div>
               <div className="ml-auto">
                 <button
                   onClick={() => setSidebarCollapsed(true)}
-                  className="hidden md:block rounded-xl p-2 hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  className="hidden md:block rounded-xl p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                   aria-label="Collapse sidebar"
                   title="Collapse sidebar"
                 >
@@ -273,7 +273,7 @@ export default function Sidebar(props: SidebarProps) {
                 </button>
                 <button
                   onClick={onClose}
-                  className="md:hidden rounded-xl p-2 hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  className="md:hidden rounded-xl p-2 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                   aria-label="Close sidebar"
                 >
                   <PanelLeftClose className="h-5 w-5" />
@@ -284,16 +284,16 @@ export default function Sidebar(props: SidebarProps) {
             <div className="px-2 pt-1">
               <button
                 onClick={handleNewChat}
-                className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-zinc-100"
+                className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-accent"
               >
-                <Plus className="h-4 w-4 text-zinc-600" />
+                <Plus className="h-4 w-4 text-sidebar-foreground/80" />
                 <span className="text-sm">New chat</span>
               </button>
               <button
                 onClick={() => setShowSearchModal(true)}
-                className="mt-1 flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-zinc-100"
+                className="mt-1 flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-accent"
               >
-                <SearchIcon className="h-4 w-4 text-zinc-600" />
+                <SearchIcon className="h-4 w-4 text-sidebar-foreground/80" />
                 <span className="text-sm">Search chats</span>
               </button>
 
@@ -302,7 +302,7 @@ export default function Sidebar(props: SidebarProps) {
                   onClick={() =>
                     setCollapsed((s) => ({ ...s, pinned: !s.pinned }))
                   }
-                  className="mt-3 flex w-full items-center gap-2 rounded-md px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-zinc-100"
+                  className="mt-3 flex w-full items-center gap-2 rounded-md px-2 py-1 text-xs font-medium text-sidebar-foreground/60 hover:bg-accent"
                   aria-expanded={!collapsed.pinned}
                 >
                   {collapsed.pinned ? (
@@ -333,8 +333,8 @@ export default function Sidebar(props: SidebarProps) {
                               className={cls(
                                 "flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors",
                                 c.id === selectedId
-                                  ? "bg-zinc-100"
-                                  : "hover:bg-zinc-100",
+                                  ? "bg-accent"
+                                  : "hover:bg-accent",
                               )}
                               title={c.title}
                             >
@@ -356,7 +356,7 @@ export default function Sidebar(props: SidebarProps) {
                                       setDraftTitle("");
                                     }
                                   }}
-                                  className="w-full rounded-md border border-zinc-300 px-2 py-1 text-sm outline-none"
+                                  className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm outline-none"
                                 />
                               ) : (
                                 <span
@@ -378,7 +378,7 @@ export default function Sidebar(props: SidebarProps) {
                                     id === c.id ? null : c.id,
                                   );
                                 }}
-                                className="ml-auto rounded-md p-1 text-zinc-500 opacity-0 transition group-hover:opacity-100 hover:bg-zinc-200/50"
+                                className="ml-auto rounded-md p-1 text-sidebar-foreground/60 opacity-0 transition group-hover:opacity-100 hover:bg-accent"
                                 aria-label="Conversation options"
                               >
                                 <MoreHorizontal className="h-4 w-4" />
@@ -388,10 +388,10 @@ export default function Sidebar(props: SidebarProps) {
                             {openMenuForId === c.id && (
                               <div
                                 data-conv-menu
-                                className="absolute right-1 top-8 z-50 w-44 rounded-lg border border-zinc-200 bg-white p-1 shadow-lg"
+                                className="absolute right-1 top-8 z-50 w-44 rounded-lg border border-border bg-popover p-1 shadow-lg"
                               >
                                 <button
-                                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-zinc-100"
+                                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setOpenMenuForId(null);
@@ -402,7 +402,7 @@ export default function Sidebar(props: SidebarProps) {
                                   <Pencil className="h-4 w-4" /> Rename
                                 </button>
                                 <button
-                                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-zinc-100"
+                                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setOpenMenuForId(null);
@@ -413,14 +413,14 @@ export default function Sidebar(props: SidebarProps) {
                                     className={cls(
                                       "h-4 w-4",
                                       c.pinned
-                                        ? "fill-zinc-800 text-zinc-800"
+                                        ? "fill-sidebar-foreground text-sidebar-foreground"
                                         : "",
                                     )}
                                   />
                                   {c.pinned ? "Unstar" : "Star"}
                                 </button>
                                 <button
-                                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-red-600 hover:bg-red-50"
+                                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-red-500 hover:bg-red-500/10"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setOpenMenuForId(null);
@@ -441,7 +441,7 @@ export default function Sidebar(props: SidebarProps) {
                 onClick={() =>
                   setCollapsed((s) => ({ ...s, recent: !s.recent }))
                 }
-                className="mt-2 mb-1 flex w-full items-center gap-2 rounded-md px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-zinc-100"
+                className="mt-2 mb-1 flex w-full items-center gap-2 rounded-md px-2 py-1 text-xs font-medium text-sidebar-foreground/60 hover:bg-accent"
                 aria-expanded={!collapsed.recent}
               >
                 {collapsed.recent ? (
@@ -464,8 +464,8 @@ export default function Sidebar(props: SidebarProps) {
                             className={cls(
                               "flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors",
                               c.id === selectedId
-                                ? "bg-zinc-100"
-                                : "hover:bg-zinc-100",
+                                ? "bg-accent"
+                                : "hover:bg-accent",
                             )}
                             title={c.title}
                           >
@@ -485,7 +485,7 @@ export default function Sidebar(props: SidebarProps) {
                                     setDraftTitle("");
                                   }
                                 }}
-                                className="w-full rounded-md border border-zinc-300 px-2 py-1 text-sm outline-none"
+                                className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm outline-none"
                               />
                             ) : (
                               <span
@@ -507,7 +507,7 @@ export default function Sidebar(props: SidebarProps) {
                                   id === c.id ? null : c.id,
                                 );
                               }}
-                              className="ml-auto rounded-md p-1 text-zinc-500 opacity-0 transition group-hover:opacity-100 hover:bg-zinc-200/50"
+                              className="ml-auto rounded-md p-1 text-sidebar-foreground/60 opacity-0 transition group-hover:opacity-100 hover:bg-accent"
                               aria-label="Conversation options"
                             >
                               <MoreHorizontal className="h-4 w-4" />
@@ -517,10 +517,10 @@ export default function Sidebar(props: SidebarProps) {
                           {openMenuForId === c.id && (
                             <div
                               data-conv-menu
-                              className="absolute right-1 top-8 z-50 w-44 rounded-lg border border-zinc-200 bg-white p-1 shadow-lg"
+                              className="absolute right-1 top-8 z-50 w-44 rounded-lg border border-border bg-popover p-1 shadow-lg"
                             >
                               <button
-                                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-zinc-100"
+                                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setOpenMenuForId(null);
@@ -531,7 +531,7 @@ export default function Sidebar(props: SidebarProps) {
                                 <Pencil className="h-4 w-4" /> Rename
                               </button>
                               <button
-                                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-zinc-100"
+                                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setOpenMenuForId(null);
@@ -542,14 +542,14 @@ export default function Sidebar(props: SidebarProps) {
                                   className={cls(
                                     "h-4 w-4",
                                     c.pinned
-                                      ? "fill-zinc-800 text-zinc-800"
+                                      ? "fill-sidebar-foreground text-sidebar-foreground"
                                       : "",
                                   )}
                                 />
                                 {c.pinned ? "Unstar" : "Star"}
                               </button>
                               <button
-                                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-red-600 hover:bg-red-50"
+                                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-red-500 hover:bg-red-500/10"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setOpenMenuForId(null);
@@ -567,7 +567,7 @@ export default function Sidebar(props: SidebarProps) {
               )}
             </nav>
 
-            <div className="border-t border-zinc-200 px-3 py-3">
+            <div className="border-t border-border px-3 py-3">
               <div className="flex items-center gap-2">
                 <TooltipProvider>
                   <Tooltip>
@@ -594,7 +594,9 @@ export default function Sidebar(props: SidebarProps) {
                           {user?.name || "User"}
                         </div>
                         {user?.email && (
-                          <div className="text-zinc-400">{user.email}</div>
+                          <div className="text-muted-foreground">
+                            {user.email}
+                          </div>
                         )}
                       </div>
                     </TooltipContent>
@@ -604,7 +606,7 @@ export default function Sidebar(props: SidebarProps) {
                   <div className="truncate text-sm font-medium">
                     {user?.name || (user?.email ?? "User")}
                   </div>
-                  <div className="truncate text-xs text-zinc-500">
+                  <div className="truncate text-xs text-muted-foreground">
                     {user?.email || ""}
                   </div>
                 </div>

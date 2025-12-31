@@ -1,7 +1,8 @@
 "use client";
 
+import { useTheme } from "next-themes";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { Loader, LogOut, Crown } from "lucide-react";
+import { Loader, LogOut, Crown, Moon, Sun } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,6 +10,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
@@ -16,6 +18,7 @@ import { useCurrentUser } from "../api/use-current-user";
 
 export const UserButton = () => {
   const router = useRouter();
+  const { setTheme, theme } = useTheme();
   const { signOut } = useAuthActions();
   const { data, isLoading } = useCurrentUser();
 
@@ -31,6 +34,10 @@ export const UserButton = () => {
   const isPremium = true;
   const avatarFallback = name?.charAt(0).toUpperCase();
 
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
+
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger className="relative outline-none">
@@ -45,7 +52,7 @@ export const UserButton = () => {
       <DropdownMenuContent
         align="end"
         side="bottom"
-        className="w-64 p-4 space-y-3 ml-12 bg-gray-200"
+        className="w-64 p-4 space-y-3 ml-12 bg-popover text-popover-foreground border-border shadow-xl"
       >
         <div className="flex items-center space-x-3">
           <Avatar className="size-12">
@@ -79,11 +86,30 @@ export const UserButton = () => {
         )}
 
         <DropdownMenuItem
+          className="h-10 cursor-pointer flex items-center justify-start gap-2"
+          onClick={toggleTheme}
+        >
+          {theme === "dark" ? (
+            <div className="flex items-center gap-2">
+              <Sun className="size-4" />
+              <span>Light Mode</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Moon className="size-4" />
+              <span>Dark Mode</span>
+            </div>
+          )}
+        </DropdownMenuItem>
+
+        <DropdownMenuSeparator className="bg-border" />
+
+        <DropdownMenuItem
           onClick={async () => {
             await signOut();
             router.replace("/");
           }}
-          className="h-10 cursor-pointer"
+          className="h-10 cursor-pointer text-rose-500 focus:text-rose-500 focus:bg-rose-500/10 transition-colors"
         >
           <LogOut className="mr-2 size-4" />
           Log out

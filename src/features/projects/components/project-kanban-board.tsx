@@ -436,7 +436,7 @@ const ProjectKanbanList = ({
           {...provided.draggableProps}
           className={`flex-shrink-0 ${compact ? "w-56" : "w-72"} ${snapshot.isDragging ? "rotate-2" : ""}`}
         >
-          <Card className="bg-gray-50">
+          <Card className="bg-muted/50 border-border">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 flex-1">
@@ -467,7 +467,7 @@ const ProjectKanbanList = ({
                     <h3 className="font-medium text-sm flex justify-center">
                       {list.name}
                       {sortedTasks.length > 0 && (
-                        <div className="text-xs text-muted-foreground ml-2 border-2 rounded-sm px-1 bg-gray-200">
+                        <div className="text-xs text-muted-foreground ml-2 border-2 border-border rounded-sm px-1 bg-muted">
                           {sortedTasks.length}/{sortedTasks.length}
                         </div>
                       )}

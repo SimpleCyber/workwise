@@ -73,7 +73,7 @@ const EditProjectForm = ({
 
   return (
     <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-50">
-      <Card className="w-80 shadow-lg border-2 border-green-200 bg-white">
+      <Card className="w-80 shadow-lg border-2 border-green-500/20 bg-popover">
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-4">
             <h4 className="font-semibold text-sm">Edit Project</h4>
@@ -186,17 +186,17 @@ export const ProjectNode = ({ data }: NodeProps) => {
   // Define color schemes based on hold tasks
   const colorScheme = hasHoldTasks
     ? {
-        border: "border-red-400",
-        ring: "ring-red-500",
-        iconBg: data.isActive ? "bg-red-200" : "bg-red-100",
-        iconColor: "text-red-600",
+        border: "border-rose-500/50",
+        ring: "ring-rose-500",
+        iconBg: data.isActive ? "bg-rose-500/20" : "bg-rose-500/10",
+        iconColor: "text-rose-500",
         // pulseIconBg: "bg-red-100 animate-flicker-bg-red",
       }
     : {
-        border: "border-green-400",
+        border: "border-green-500/50",
         ring: "ring-green-500",
-        iconBg: data.isActive ? "bg-green-200" : "bg-green-100",
-        iconColor: "text-green-600",
+        iconBg: data.isActive ? "bg-green-500/20" : "bg-green-500/10",
+        iconColor: "text-green-500",
         // pulseIconBg: "bg-green-100 animate-flicker-bg",
       };
 
@@ -226,9 +226,9 @@ export const ProjectNode = ({ data }: NodeProps) => {
       <div className="flex flex-col items-center">
         <Card
           onDoubleClick={handleGoToProject}
-          className={`shadow-md cursor-pointer hover:shadow-lg transition-all duration-300 ${hasHoldTasks ? "border-red-400" : "border-green-400"} ${
+          className={`shadow-md cursor-pointer hover:shadow-lg transition-all duration-300 ${hasHoldTasks ? "border-rose-500/50" : "border-green-500/50"} ${
             data.isListsExpanded ? "w-20 h-20 animate-pulse" : "w-16 h-16"
-          } ${data.isActive ? `ring-2 ${hasHoldTasks ? "ring-red-500" : "ring-green-500"}` : ""} relative`}
+          } ${data.isActive ? `ring-2 ${hasHoldTasks ? "ring-rose-500" : "ring-green-500"}` : ""} relative`}
           onClick={() => data.onToggleLists?.(data.projectId)}
         >
           <CardContent className="flex items-center justify-center h-full p-2">
@@ -238,15 +238,15 @@ export const ProjectNode = ({ data }: NodeProps) => {
                   className={`flex items-center justify-center w-8 h-8 rounded ${
                     hasHoldTasks
                       ? data.isActive
-                        ? "bg-red-200"
-                        : "bg-red-100"
+                        ? "bg-rose-500/20"
+                        : "bg-rose-500/10"
                       : data.isActive
-                        ? "bg-green-200"
-                        : "bg-green-100"
+                        ? "bg-green-500/20"
+                        : "bg-green-500/10"
                   }`}
                 >
                   <Goal
-                    className={`w-5 h-5 ${hasHoldTasks ? "text-red-600" : "text-green-600"}`}
+                    className={`w-5 h-5 ${hasHoldTasks ? "text-rose-500" : "text-green-500"}`}
                   />
                 </div>
               </div>
@@ -257,7 +257,7 @@ export const ProjectNode = ({ data }: NodeProps) => {
                   // className={`flex items-center justify-center w-8 h-8 rounded ${hasHoldTasks ? "bg-red-100" : "bg-green-100"} animate-flicker-bg`}
                   >
                     <Goal
-                      className={`w-5 h-5 ${hasHoldTasks ? "text-red-600" : "text-green-600"}`}
+                      className={`w-5 h-5 ${hasHoldTasks ? "text-rose-500" : "text-green-500"}`}
                     />
                   </div>
                 </div>
@@ -292,7 +292,7 @@ export const ProjectNode = ({ data }: NodeProps) => {
           </CardContent>
         </Card>
         <div className="mt-2 text-center">
-          <p className="text-xs font-medium text-gray-700">{data.name}</p>
+          <p className="text-xs font-medium text-foreground">{data.name}</p>
           <div className="flex flex-col items-center gap-1 mt-1">
             <Badge variant="outline" className="text-xs font-mono">
               {data.boardCode}

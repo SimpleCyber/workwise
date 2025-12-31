@@ -97,7 +97,7 @@ export const TodoList = ({ list, dragHandleProps }: TodoListProps) => {
       }}
     >
       <Card
-        className={`bg-gray-50 transition-all duration-300 ease-in-out ${isCollapsed ? "" : ""}`}
+        className={`bg-muted/50 transition-all duration-300 ease-in-out ${isCollapsed ? "" : ""}`}
       >
         <TodoListHeader
           list={list}

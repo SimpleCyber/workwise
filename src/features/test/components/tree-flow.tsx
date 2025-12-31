@@ -403,7 +403,7 @@ export function TreeFlow({
       <div className="w-full h-full flex items-center justify-center">
         <div className="flex flex-col items-center gap-2">
           <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-          <p className="text-sm text-gray-500">Loading tree data...</p>
+          <p className="text-sm text-muted-foreground">Loading tree data...</p>
         </div>
       </div>
     );
@@ -413,12 +413,12 @@ export function TreeFlow({
     return (
       <>
         <div className="w-full h-full flex items-center justify-center">
-          <div className="flex flex-col items-center gap-4 p-8 border-2 border-dashed border-gray-300 rounded-lg">
+          <div className="flex flex-col items-center gap-4 p-8 border-2 border-dashed border-border rounded-lg">
             <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">
+              <h3 className="text-lg font-semibold text-foreground mb-2">
                 Start Your Workspace Tree
               </h3>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-sm text-muted-foreground mb-4">
                 Create your first workspace node manually or let AI generate a
                 complete project breakdown
               </p>

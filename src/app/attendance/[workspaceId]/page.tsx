@@ -40,7 +40,7 @@ const AttendanceWorkspacePage = () => {
   if (member.role === "admin") {
     return (
       <div className="flex h-full flex-col">
-        <div className="flex h-[49px] items-center border-b bg-white px-4">
+        <div className="flex h-[49px] items-center border-b bg-background px-4">
           <h1 className="text-lg font-semibold">
             Admin Dashboard - {workspace.name}
           </h1>
@@ -55,7 +55,7 @@ const AttendanceWorkspacePage = () => {
   // Show check-in/out for regular users
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-[49px] items-center border-b bg-white px-4">
+      <div className="flex h-[49px] items-center border-b bg-background px-4">
         <h1 className="text-lg font-semibold">Attendance - {workspace.name}</h1>
       </div>
       <div className="flex-1 p-6 overflow-auto">

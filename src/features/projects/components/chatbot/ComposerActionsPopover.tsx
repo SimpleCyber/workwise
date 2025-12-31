@@ -129,12 +129,12 @@ export default function ComposerActionsPopover({
                   <button
                     key={index}
                     onClick={() => handleAction(action.action)}
-                    className="flex items-center gap-3 w-full p-2 text-sm text-left hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg"
+                    className="flex items-center gap-3 w-full p-2 text-sm text-left hover:bg-accent rounded-lg transition-colors"
                   >
                     <IconComponent className="h-4 w-4" />
                     <span>{action.label}</span>
                     {action.badge && (
-                      <span className="ml-auto px-2 py-0.5 text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 rounded-full">
+                      <span className="ml-auto px-2 py-0.5 text-[10px] bg-primary/10 text-primary border border-primary/20 rounded-full">
                         {action.badge}
                       </span>
                     )}
@@ -143,7 +143,7 @@ export default function ComposerActionsPopover({
               })}
               <button
                 onClick={handleMoreClick}
-                className="flex items-center gap-3 w-full p-2 text-sm text-left hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700"
+                className="flex items-center gap-3 w-full p-2 text-sm text-left hover:bg-accent rounded-lg border border-border transition-colors"
               >
                 <MoreHorizontal className="h-4 w-4" />
                 <span>More</span>
@@ -153,7 +153,7 @@ export default function ComposerActionsPopover({
           </div>
         ) : (
           <div className="flex">
-            <div className="flex-1 p-3 border-r border-zinc-200 dark:border-zinc-800">
+            <div className="flex-1 p-3 border-r border-border">
               <div className="space-y-1">
                 {mainActions.map((action, index) => {
                   const IconComponent = action.icon;
@@ -161,7 +161,7 @@ export default function ComposerActionsPopover({
                     <button
                       key={index}
                       onClick={() => handleAction(action.action)}
-                      className="flex items-center gap-3 w-full p-2 text-sm text-left hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg"
+                      className="flex items-center gap-3 w-full p-2 text-sm text-left hover:bg-accent rounded-lg transition-colors"
                     >
                       <IconComponent className="h-4 w-4" />
                       <span>{action.label}</span>
@@ -175,7 +175,7 @@ export default function ComposerActionsPopover({
                 })}
                 <button
                   onClick={handleMoreClick}
-                  className="flex items-center gap-3 w-full p-2 text-sm text-left hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700"
+                  className="flex items-center gap-3 w-full p-2 text-sm text-left hover:bg-accent rounded-lg border border-border transition-colors"
                 >
                   <MoreHorizontal className="h-4 w-4" />
                   <span>More</span>
@@ -191,7 +191,7 @@ export default function ComposerActionsPopover({
                     <button
                       key={index}
                       onClick={() => handleAction(action.action)}
-                      className="flex items-center gap-3 w-full p-2 text-sm text-left hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg"
+                      className="flex items-center gap-3 w-full p-2 text-sm text-left hover:bg-accent rounded-lg transition-colors"
                     >
                       <IconComponent className="h-4 w-4" />
                       <span>{action.label}</span>

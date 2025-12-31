@@ -119,14 +119,14 @@ const AttendanceMembersPage = () => {
     switch (role) {
       case "admin":
         return (
-          <Badge className="bg-red-100 text-red-800">
+          <Badge className="bg-rose-500/10 text-rose-500 border-rose-500/20">
             <Shield className="w-3 h-3 mr-1" />
             Admin
           </Badge>
         );
       case "lead":
         return (
-          <Badge className="bg-blue-100 text-blue-800">
+          <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">
             <Crown className="w-3 h-3 mr-1" />
             Lead
           </Badge>
@@ -147,7 +147,7 @@ const AttendanceMembersPage = () => {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-[49px] items-center justify-between border-b bg-white px-4">
+      <div className="flex h-[49px] items-center justify-between border-b bg-background px-4">
         <h1 className="text-lg font-semibold">Members - {workspace.name}</h1>
         {canManageMembers && (
           <Button size="sm" onClick={() => setInviteOpen(true)}>
@@ -174,8 +174,8 @@ const AttendanceMembersPage = () => {
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-50 rounded-lg">
-                      <Shield className="w-5 h-5 text-blue-600" />
+                    <div className="p-2 bg-blue-500/10 rounded-lg">
+                      <Shield className="w-5 h-5 text-blue-500" />
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{stats.total}</p>
@@ -189,8 +189,8 @@ const AttendanceMembersPage = () => {
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-red-50 rounded-lg">
-                      <Shield className="w-5 h-5 text-red-600" />
+                    <div className="p-2 bg-rose-500/10 rounded-lg">
+                      <Shield className="w-5 h-5 text-rose-500" />
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{stats.admins}</p>
@@ -202,8 +202,8 @@ const AttendanceMembersPage = () => {
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-50 rounded-lg">
-                      <Crown className="w-5 h-5 text-blue-600" />
+                    <div className="p-2 bg-blue-500/10 rounded-lg">
+                      <Crown className="w-5 h-5 text-blue-500" />
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{stats.leads}</p>
@@ -217,8 +217,8 @@ const AttendanceMembersPage = () => {
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-50 rounded-lg">
-                      <UserPlus className="w-5 h-5 text-green-600" />
+                    <div className="p-2 bg-green-500/10 rounded-lg">
+                      <UserPlus className="w-5 h-5 text-green-500" />
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{stats.members}</p>

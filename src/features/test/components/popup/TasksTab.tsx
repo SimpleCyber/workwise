@@ -56,26 +56,26 @@ export function TasksTab({ boardId, workspaceId }: TasksTabProps) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 text-xs font-medium text-gray-700">
+      <div className="flex items-center gap-2 text-xs font-medium text-foreground">
         <CheckSquare className="w-3 h-3" />
         To Do Tasks ({completedCount}/{totalCount})
       </div>
       <div className="space-y-2 max-h-64 overflow-y-auto">
         {tasks.length === 0 ? (
-          <div className="text-xs text-gray-500 text-center py-4">
+          <div className="text-xs text-muted-foreground text-center py-4">
             No tasks in To Do list
           </div>
         ) : (
           tasks.map((task) => (
             <div
               key={task._id}
-              className="flex items-center gap-2 p-2 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors"
+              className="flex items-center gap-2 p-2 bg-muted/50 rounded-md hover:bg-muted transition-colors"
             >
               <div
                 className={`w-3 h-3 rounded border-2 flex items-center justify-center ${
                   task.isCompleted
                     ? "bg-green-500 border-green-500"
-                    : "border-gray-300"
+                    : "border-muted-foreground/30"
                 }`}
               >
                 {task.isCompleted && (
@@ -85,13 +85,13 @@ export function TasksTab({ boardId, workspaceId }: TasksTabProps) {
               <div className="flex-1 min-w-0">
                 <div
                   className={`text-xs font-medium truncate ${
-                    task.isCompleted ? "line-through text-gray-500" : ""
+                    task.isCompleted ? "line-through text-muted-foreground" : ""
                   }`}
                 >
                   {task.title}
                 </div>
                 {task.assignedTo?.user?.name && (
-                  <div className="text-xs text-gray-500 truncate">
+                  <div className="text-xs text-muted-foreground truncate">
                     Assigned to: {task.assignedTo.user.name}
                   </div>
                 )}

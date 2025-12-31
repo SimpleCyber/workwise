@@ -173,8 +173,8 @@ const ProjectsWorkspacePage = () => {
     );
   }
   return (
-    <div className="flex h-full flex-col bg-slate-50/30">
-      <div className="flex h-[49px] items-center justify-between border-b bg-white px-4">
+    <div className="flex h-full flex-col bg-background/30">
+      <div className="flex h-[49px] items-center justify-between border-b bg-background px-4">
         <h1 className="text-lg font-semibold">
           Project Boards - {workspace.name}
         </h1>
@@ -200,7 +200,7 @@ const ProjectsWorkspacePage = () => {
               <div className="space-y-3">
                 <Label
                   htmlFor="name"
-                  className="text-sm font-medium text-slate-700"
+                  className="text-sm font-medium text-foreground"
                 >
                   Project Name
                 </Label>
@@ -220,9 +220,9 @@ const ProjectsWorkspacePage = () => {
                   }}
                   placeholder="Enter project name..."
                   disabled={isCreatingBoard || isUpdatingBoard}
-                  className="h-11 border-slate-200 focus:border-gray-500 focus:ring-gray-500/20"
+                  className="h-11 border-border focus:border-gray-500 focus:ring-gray-500/20"
                 />
-                <p className="text-xs text-slate-500 flex items-center gap-1">
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
                   <FileText className="size-3" />
                   {name.trim().split(/\s+/).filter(Boolean).length} /{" "}
                   {MAX_NAME_WORDS} words
@@ -231,7 +231,7 @@ const ProjectsWorkspacePage = () => {
               <div className="space-y-3">
                 <Label
                   htmlFor="description"
-                  className="text-sm font-medium text-slate-700"
+                  className="text-sm font-medium text-foreground"
                 >
                   Description (Optional)
                 </Label>
@@ -251,9 +251,9 @@ const ProjectsWorkspacePage = () => {
                   }}
                   placeholder="Enter project description..."
                   disabled={isCreatingBoard || isUpdatingBoard}
-                  className="min-h-[100px] border-slate-200 focus:border-gray-500 focus:ring-gray-500/20 resize-none"
+                  className="min-h-[100px] border-border focus:border-gray-500 focus:ring-gray-500/20 resize-none"
                 />
-                <p className="text-xs text-slate-500 flex items-center gap-1">
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
                   <FileText className="size-3" />
                   {
                     description.trim().split(/\s+/).filter(Boolean).length
@@ -299,7 +299,7 @@ const ProjectsWorkspacePage = () => {
 
       <div className="flex-1 flex flex-col md:flex-row p-4 gap-4">
         {/* Tree sidebar - hidden on mobile, 30% width on md and up */}
-        <div className="hidden md:block md:w-[30%] lg:w-[150%] bg-white rounded-lg shadow-sm   overflow-auto">
+        <div className="hidden md:block md:w-[30%] lg:w-[150%] bg-card rounded-lg shadow-sm   overflow-auto">
           <WorkspaceOnlyTree />
         </div>
 

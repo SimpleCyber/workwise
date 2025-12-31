@@ -33,7 +33,7 @@ const CheckInPage = () => {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-[49px] items-center border-b bg-white px-4">
+      <div className="flex h-[49px] items-center border-b bg-background px-4">
         <h1 className="text-lg font-semibold">
           Check In/Out - {workspace.name}
         </h1>

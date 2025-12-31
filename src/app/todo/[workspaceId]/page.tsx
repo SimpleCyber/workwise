@@ -205,7 +205,7 @@ const TodoWorkspacePage = () => {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-[49px] items-center justify-between border-b bg-white px-4">
+      <div className="flex h-[49px] items-center justify-between border-b bg-background px-4">
         <h1 className="text-lg font-semibold">
           Todo Boards - {workspace.name}
         </h1>
@@ -331,7 +331,7 @@ const TodoWorkspacePage = () => {
                   key={board._id}
                   className={`hover:shadow-md transition-shadow ${
                     board.isStarred
-                      ? "border-yellow-300 bg-yellow-50 shadow-sm"
+                      ? "border-yellow-500/50 bg-yellow-500/10 shadow-sm"
                       : ""
                   }`}
                 >
@@ -409,7 +409,7 @@ const TodoWorkspacePage = () => {
                     )}
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Calendar className="size-3" />
                       <span>
                         Created{" "}

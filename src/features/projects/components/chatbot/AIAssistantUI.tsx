@@ -290,10 +290,10 @@ export default function AIAssistantUI({
   const missingIds = !workspaceId || !boardId || !currentUserId;
 
   return (
-    <div className={"h-full w-full bg-zinc-50 text-zinc-900 " + className}>
+    <div className={"h-full w-full bg-background text-foreground " + className}>
       <div className="flex h-full w-full overflow-hidden">
         {missingIds ? (
-          <div className="grid flex-1 place-items-center text-sm text-zinc-500">
+          <div className="grid flex-1 place-items-center text-sm text-muted-foreground">
             Preparing your board chat…
           </div>
         ) : (

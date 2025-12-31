@@ -41,8 +41,8 @@ export const WorkspaceSidebarContent = () => {
               variant="transparent"
               className={`h-7 justify-start px-[18px] text-sm ${
                 isActive("")
-                  ? "bg-white/10 text-white"
-                  : "text-[#f9EDFFCC] hover:bg-white/5"
+                  ? "bg-accent/50 text-foreground"
+                  : "text-sidebar-foreground/80 hover:bg-accent/30"
               }`}
               onClick={() => navigateTo("")}
             >
@@ -53,8 +53,8 @@ export const WorkspaceSidebarContent = () => {
               variant="transparent"
               className={`h-7 justify-start px-[18px] text-sm ${
                 isActive("/checkin")
-                  ? "bg-white/10 text-white"
-                  : "text-[#f9EDFFCC] hover:bg-white/5"
+                  ? "bg-accent/50 text-foreground"
+                  : "text-sidebar-foreground/80 hover:bg-accent/30"
               }`}
               onClick={() => navigateTo("/checkin")}
             >
@@ -65,8 +65,8 @@ export const WorkspaceSidebarContent = () => {
               variant="transparent"
               className={`h-7 justify-start px-[18px] text-sm ${
                 isActive("/members")
-                  ? "bg-white/10 text-white"
-                  : "text-[#f9EDFFCC] hover:bg-white/5"
+                  ? "bg-accent/50 text-foreground"
+                  : "text-sidebar-foreground/80 hover:bg-accent/30"
               }`}
               onClick={() => navigateTo("/members")}
             >
@@ -77,8 +77,8 @@ export const WorkspaceSidebarContent = () => {
               variant="transparent"
               className={`h-7 justify-start px-[18px] text-sm ${
                 isActive("/calendar")
-                  ? "bg-white/10 text-white"
-                  : "text-[#f9EDFFCC] hover:bg-white/5"
+                  ? "bg-accent/50 text-foreground"
+                  : "text-sidebar-foreground/80 hover:bg-accent/30"
               }`}
               onClick={() => navigateTo("/calendar")}
             >
@@ -92,8 +92,8 @@ export const WorkspaceSidebarContent = () => {
               variant="transparent"
               className={`h-7 justify-start px-[18px] text-sm ${
                 isActive("")
-                  ? "bg-white/10 text-white"
-                  : "text-[#f9EDFFCC] hover:bg-white/5"
+                  ? "bg-accent/50 text-foreground"
+                  : "text-sidebar-foreground/80 hover:bg-accent/30"
               }`}
               onClick={() => navigateTo("")}
             >
@@ -104,8 +104,8 @@ export const WorkspaceSidebarContent = () => {
               variant="transparent"
               className={`h-7 justify-start px-[18px] text-sm ${
                 isActive("/calendar")
-                  ? "bg-white/10 text-white"
-                  : "text-[#f9EDFFCC] hover:bg-white/5"
+                  ? "bg-accent/50 text-foreground"
+                  : "text-sidebar-foreground/80 hover:bg-accent/30"
               }`}
               onClick={() => navigateTo("/calendar")}
             >

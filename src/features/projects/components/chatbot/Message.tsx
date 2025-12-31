@@ -35,9 +35,9 @@ export default function Message({ role, children, currentUser }: MessageProps) {
             <TooltipTrigger asChild>
               <div className="relative mt-0.5 grid h-8 w-8 place-items-center rounded-full">
                 <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 p-[1.5px]">
-                  <div className="h-full w-full rounded-full bg-white" />
+                  <div className="h-full w-full rounded-full bg-background" />
                 </div>
-                <div className="relative z-10 grid h-8 w-8 place-items-center text-zinc-700">
+                <div className="relative z-10 grid h-8 w-8 place-items-center text-foreground">
                   <Sparkles className="h-4 w-4" />
                 </div>
               </div>
@@ -49,8 +49,8 @@ export default function Message({ role, children, currentUser }: MessageProps) {
           className={cls(
             "max-w-[80%] rounded-2xl px-3 py-2 text-sm",
             isUser
-              ? "bg-zinc-100 text-zinc-900"
-              : "bg-white text-zinc-900 border border-zinc-200",
+              ? "bg-muted text-foreground"
+              : "bg-card text-foreground border border-border",
           )}
         >
           {children}
@@ -72,7 +72,9 @@ export default function Message({ role, children, currentUser }: MessageProps) {
               <div className="text-xs">
                 <div className="font-medium">{currentUser?.name || "User"}</div>
                 {currentUser?.email && (
-                  <div className="text-zinc-400">{currentUser.email}</div>
+                  <div className="text-muted-foreground">
+                    {currentUser.email}
+                  </div>
                 )}
               </div>
             </TooltipContent>

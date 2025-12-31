@@ -165,21 +165,21 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
     switch (status) {
       case "approved":
         return (
-          <Badge className="bg-green-100 text-green-800 border-green-200">
+          <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
             <CheckCircle className="w-3 h-3 mr-1" />
             Approved
           </Badge>
         );
       case "rejected":
         return (
-          <Badge className="bg-red-100 text-red-800 border-red-200">
+          <Badge className="bg-rose-500/10 text-rose-500 border-rose-500/20">
             <XCircle className="w-3 h-3 mr-1" />
             Rejected
           </Badge>
         );
       case "pending":
         return (
-          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+          <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
             <Clock className="w-3 h-3 mr-1" />
             Pending
           </Badge>
@@ -246,7 +246,7 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
                             })}
                           </p>
                         </div>
-                        <div className="text-green-600">
+                        <div className="text-green-500">
                           <CheckCircle className="w-5 h-5" />
                         </div>
                       </div>
@@ -273,8 +273,8 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
                       onClick={() => setWorkLocation("office")}
                       className={`p-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
                         workLocation === "office"
-                          ? "border-blue-500 bg-blue-50 text-blue-700"
-                          : "border-gray-200 hover:border-gray-300"
+                          ? "border-blue-500 bg-blue-500/10 text-blue-500"
+                          : "border-border hover:border-gray-500/30"
                       }`}
                     >
                       <Building className="w-4 h-4" />
@@ -285,8 +285,8 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
                       onClick={() => setWorkLocation("home")}
                       className={`p-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
                         workLocation === "home"
-                          ? "border-blue-500 bg-blue-50 text-blue-700"
-                          : "border-gray-200 hover:border-gray-300"
+                          ? "border-blue-500 bg-blue-500/10 text-blue-500"
+                          : "border-border hover:border-gray-500/30"
                       }`}
                     >
                       <Home className="w-4 h-4" />
@@ -370,7 +370,7 @@ export const CheckInOut = ({ workspaceId }: CheckInOutProps) => {
           {todayAttendance && todayAttendance.checkOutTime && (
             <Card>
               <CardContent className="pt-6 text-center">
-                <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-4" />
+                <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">Work Day Complete</h3>
                 <p className="text-muted-foreground">
                   Checked out at {" "}

@@ -29,10 +29,10 @@ export function AIExpandInput({
   };
 
   return (
-    <Card className="absolute top-full left-0 mt-2 p-4 w-80 shadow-lg border z-50 bg-white">
+    <Card className="absolute top-full left-0 mt-2 p-4 w-80 shadow-lg border z-50 bg-popover">
       <div className="flex items-center gap-2 mb-3">
-        <Sparkles className="h-4 w-4 text-purple-600" />
-        <span className="text-sm font-medium text-gray-700">
+        <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+        <span className="text-sm font-medium text-popover-foreground">
           Expand with AI
         </span>
         <Button
@@ -69,7 +69,7 @@ export function AIExpandInput({
             type="submit"
             size="sm"
             disabled={!prompt.trim() || isGenerating}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-600"
           >
             {isGenerating ? (
               <>
@@ -86,7 +86,7 @@ export function AIExpandInput({
         </div>
       </form>
 
-      <p className="text-xs text-gray-500 mt-2">
+      <p className="text-xs text-muted-foreground mt-2">
         Example: {'"Create marketing tasks for social media campaign"'} or{" "}
         {'"Breakdown frontend development phases"'}
       </p>

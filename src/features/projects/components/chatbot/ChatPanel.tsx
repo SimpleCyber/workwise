@@ -32,8 +32,8 @@ function ThinkingMessage() {
   return (
     <Message role="assistant">
       <div className="flex items-center gap-3">
-        <Brain className="h-4 w-4 text-zinc-700" />
-        <span className="text-sm text-zinc-500">Thinking…</span>
+        <Brain className="h-4 w-4 text-primary" />
+        <span className="text-sm text-muted-foreground">Thinking…</span>
       </div>
     </Message>
   );
@@ -147,7 +147,7 @@ const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
       <div className="flex h-full min-h-0 flex-1 flex-col">
         <div className="grid flex-1 place-items-center px-4">
           <div className="w-full max-w-3xl">
-            <h1 className="mb-6 text-center text-3xl font-semibold text-zinc-800">
+            <h1 className="mb-6 text-center text-3xl font-semibold text-foreground">
               What are you working on?
             </h1>
             <Composer
@@ -176,7 +176,7 @@ const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
         {messages.map((m) => (
           <div key={m.id} className="space-y-2 group/message">
             {editingId === m.id ? (
-              <div className={cls("rounded-2xl border p-2", "border-zinc-200")}>
+              <div className={cls("rounded-2xl border p-2", "border-border")}>
                 <textarea
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
@@ -186,7 +186,7 @@ const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
                 <div className="mt-2 flex items-center gap-2">
                   <button
                     onClick={saveEdit}
-                    className="inline-flex items-center gap-1 rounded-full bg-zinc-900 px-3 py-1.5 text-xs text-white"
+                    className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs text-primary-foreground"
                   >
                     <Check className="h-3.5 w-3.5" /> Save
                   </button>
@@ -207,20 +207,20 @@ const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
                 {m.role === "user" ? (
                   <div
                     className={cls(
-                      "mt-1 flex gap-2 text-[11px] text-zinc-500 opacity-0 transition-opacity group-hover/message:opacity-100",
+                      "mt-1 flex gap-2 text-[11px] text-muted-foreground opacity-0 transition-opacity group-hover/message:opacity-100",
                       "justify-end mr-10", // align with bubble, not avatar
                     )}
                   >
                     <div className="relative group">
                       <button
-                        className="inline-flex items-center rounded-md p-1 hover:bg-zinc-100"
+                        className="inline-flex items-center rounded-md p-1 hover:bg-accent"
                         aria-label="Edit"
                         title="Edit"
                         onClick={() => startEdit(m)}
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
-                      <span className="pointer-events-none absolute top-full mt-1 -translate-x-1/2 left-1/2 rounded-md bg-zinc-900 px-1.5 py-0.5 text-[10px] text-white opacity-0 group-hover:opacity-100">
+                      <span className="pointer-events-none absolute top-full mt-1 -translate-x-1/2 left-1/2 rounded-md bg-popover border shadow-sm px-1.5 py-0.5 text-[10px] text-popover-foreground opacity-0 group-hover:opacity-100">
                         Edit
                       </span>
                     </div>
@@ -228,7 +228,7 @@ const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
                     <div className="relative group">
                       <button
                         className={cls(
-                          "inline-flex items-center rounded-md p-1 hover:bg-zinc-100",
+                          "inline-flex items-center rounded-md p-1 hover:bg-accent",
                           copiedId === m.id ? "animate-pulse" : "",
                         )}
                         aria-label="Copy"
@@ -237,21 +237,21 @@ const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
                       >
                         <Copy className="h-3.5 w-3.5" />
                       </button>
-                      <span className="pointer-events-none absolute top-full mt-1 -translate-x-1/2 left-1/2 rounded-md bg-zinc-900 px-1.5 py-0.5 text-[10px] text-white opacity-0 group-hover:opacity-100">
+                      <span className="pointer-events-none absolute top-full mt-1 -translate-x-1/2 left-1/2 rounded-md bg-popover border shadow-sm px-1.5 py-0.5 text-[10px] text-popover-foreground opacity-0 group-hover:opacity-100">
                         {copiedId === m.id ? "Copied" : "Copy"}
                       </span>
                     </div>
 
                     <div className="relative group">
                       <button
-                        className="inline-flex items-center rounded-md p-1 hover:bg-zinc-100 text-red-600"
+                        className="inline-flex items-center rounded-md p-1 hover:bg-accent text-rose-500"
                         aria-label="Delete from here"
                         title="Delete from here"
                         onClick={() => onDeleteFrom?.(m.id)}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
-                      <span className="pointer-events-none absolute top-full mt-1 -translate-x-1/2 left-1/2 rounded-md bg-zinc-900 px-1.5 py-0.5 text-[10px] text-white opacity-0 group-hover:opacity-100">
+                      <span className="pointer-events-none absolute top-full mt-1 -translate-x-1/2 left-1/2 rounded-md bg-popover border shadow-sm px-1.5 py-0.5 text-[10px] text-popover-foreground opacity-0 group-hover:opacity-100">
                         Delete from here
                       </span>
                     </div>
@@ -259,13 +259,13 @@ const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
                 ) : (
                   <div
                     className={cls(
-                      "mt-1 flex gap-2 text-[11px] text-zinc-500 justify-start ml-10",
+                      "mt-1 flex gap-2 text-[11px] text-muted-foreground justify-start ml-10",
                     )}
                   >
                     <div className="relative group">
                       <button
                         className={cls(
-                          "inline-flex items-center rounded-md p-1 hover:bg-zinc-100",
+                          "inline-flex items-center rounded-md p-1 hover:bg-accent",
                           copiedId === m.id ? "animate-pulse" : "",
                         )}
                         aria-label="Copy"
@@ -274,7 +274,7 @@ const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
                       >
                         <Copy className="h-3.5 w-3.5" />
                       </button>
-                      <span className="pointer-events-none absolute top-full mt-1 -translate-x-1/2 left-1/2 rounded-md bg-zinc-900 px-1.5 py-0.5 text-[10px] text-white opacity-0 group-hover:opacity-100">
+                      <span className="pointer-events-none absolute top-full mt-1 -translate-x-1/2 left-1/2 rounded-md bg-popover border shadow-sm px-1.5 py-0.5 text-[10px] text-popover-foreground opacity-0 group-hover:opacity-100">
                         {copiedId === m.id ? "Copied" : "Copy"}
                       </span>
                     </div>
@@ -312,7 +312,7 @@ const ChatPane = forwardRef<ChatPaneHandle, ChatPaneProps>(function ChatPane(
                       >
                         <Volume2 className="h-3.5 w-3.5" />
                       </button>
-                      <span className="pointer-events-none absolute top-full mt-1 -translate-x-1/2 left-1/2 rounded-md bg-zinc-900 px-1.5 py-0.5 text-[10px] text-white opacity-0 group-hover:opacity-100">
+                      <span className="pointer-events-none absolute top-full mt-1 -translate-x-1/2 left-1/2 rounded-md bg-popover border shadow-sm px-1.5 py-0.5 text-[10px] text-popover-foreground opacity-0 group-hover:opacity-100">
                         Speak
                       </span>
                     </div>

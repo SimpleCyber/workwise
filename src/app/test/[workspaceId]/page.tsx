@@ -74,7 +74,7 @@ export default function TreeWorkspacePage({
 
   return (
     <div className="flex h-full flex-col relative">
-      <div className="flex h-[49px] items-center border-b bg-white px-4">
+      <div className="flex h-[49px] items-center border-b bg-background px-4">
         <h1 className="text-lg font-semibold">All Data - {workspace.name}</h1>
       </div>
       <div

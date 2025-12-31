@@ -209,7 +209,7 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
       <Card
         className={`min-w-[300px] max-w-[300px] shadow-lg border-2 hover:shadow-xl transition-all duration-300 cursor-pointer relative ${
           data?.isActive
-            ? "ring-4 ring-blue-500/50 shadow-2xl shadow-blue-500/30 border-blue-400 scale-105"
+            ? "ring-4 ring-primary/50 shadow-2xl shadow-primary/30 border-primary scale-105"
             : ""
         }`}
         onDoubleClick={handleDoubleClick}
@@ -226,8 +226,8 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
           <Pin
             className={`w-4 h-4 ${
               isStarred
-                ? "fill-red-400 text-red-400"
-                : "text-gray-400 hover:text-red-400"
+                ? "fill-rose-500 text-rose-500"
+                : "text-muted-foreground hover:text-rose-500"
             } cursor-pointer transition-colors`}
           />
         </div>
@@ -235,20 +235,20 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
         {/* Expand/Collapse Button */}
         {showCollapseButton && (
           <div
-            className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 z-10 p-1.5 rounded-full bg-background border-2 border-blue-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group"
+            className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 z-10 p-1.5 rounded-full bg-background border-2 border-primary/50 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group"
             onClick={handleToggleCollapse}
             title={isCollapsed ? "Expand children" : "Collapse children"}
           >
             {isCollapsed ? (
-              <ChevronRight className="w-4 h-4 text-blue-600 group-hover:text-blue-700" />
+              <ChevronRight className="w-4 h-4 text-primary group-hover:text-primary/80" />
             ) : (
-              <ChevronDown className="w-4 h-4 text-blue-600 group-hover:text-blue-700" />
+              <ChevronDown className="w-4 h-4 text-primary group-hover:text-primary/80" />
             )}
 
             {/* Tooltip */}
-            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-20">
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-20 border shadow-sm">
               {isCollapsed ? "Expand children" : "Collapse children"}
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-800"></div>
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-popover"></div>
             </div>
           </div>
         )}
@@ -266,7 +266,7 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
             <div className="flex gap-1">
               {isRootNode && (
                 <div className="rounded-full mt-1">
-                  <Crown className="w-4 h-4 fill-yellow-100 text-yellow-600" />
+                  <Crown className="w-4 h-4 fill-yellow-500/20 text-yellow-500" />
                 </div>
               )}
 
@@ -290,12 +290,12 @@ export function TreeNode({ data, id }: NodeProps<TreeNodeData>) {
 
             <div className="flex items-center justify-between pt-1">
               <div className="flex gap-3">
-                <div className="flex items-center text-xs text-gray-500 space-x-1">
-                  <Network className="w-3 h-3 text-blue-500" />
+                <div className="flex items-center text-xs text-muted-foreground space-x-1">
+                  <Network className="w-3 h-3 text-primary" />
                   <span className="font-medium">LV-{level}</span>
                 </div>
-                <p className="flex items-center text-xs text-gray-500 space-x-1">
-                  <Lightbulb className="w-3 h-3 font-bold text-yellow-600" />
+                <p className="flex items-center text-xs text-muted-foreground space-x-1">
+                  <Lightbulb className="w-3 h-3 font-bold text-yellow-500" />
                   <span>{uniqueId?.slice(-5)}</span>
                 </p>
               </div>

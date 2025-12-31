@@ -67,11 +67,11 @@ export function NodePopup({
 
   return (
     <div ref={popupRef} className="fixed  top-0 right-full mr-4 z-[9999] w-80">
-      <Card className="shadow-xl border-2 bg-white">
+      <Card className="shadow-xl border-2 bg-popover">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-gray-500" />
+              <MapPin className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm font-semibold">{label}</span>
             </div>
             <Badge variant="secondary" className="text-xs">
@@ -87,8 +87,8 @@ export function NodePopup({
                 onClick={() => setActiveTab(tab)}
                 className={`px-3 py-2 text-xs font-medium transition-colors ${
                   activeTab === tab
-                    ? "border-b-2 border-blue-500 text-blue-600"
-                    : "text-gray-500 hover:text-gray-700"
+                    ? "border-b-2 border-primary text-primary"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {tab}

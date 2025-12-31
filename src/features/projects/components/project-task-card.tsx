@@ -263,7 +263,7 @@ export const ProjectTaskCard = ({
   return (
     <TooltipProvider>
       <Card
-        className="cursor-pointer hover:bg-gray-50 transition-colors bg-white shadow-none border border-gray-200 rounded-lg relative w-[100%] mx-auto overflow-hidden"
+        className="cursor-pointer hover:bg-accent transition-colors bg-card shadow-none border border-border rounded-lg relative w-[100%] mx-auto overflow-hidden"
         onClick={() => onEdit?.()}
         draggable
         onPointerDown={(e) => {
@@ -298,7 +298,7 @@ export const ProjectTaskCard = ({
         <CardContent className="p-3 space-y-1">
           {/* Header with Title and Actions */}
           <div className="flex items-start justify-between">
-            <h4 className="text-sm font-medium leading-tight text-gray-900 flex-1 pr-2">
+            <h4 className="text-sm font-medium leading-tight text-foreground flex-1 pr-2">
               {renderWithLinks(task.title)}
             </h4>
 
@@ -341,7 +341,7 @@ export const ProjectTaskCard = ({
 
           {/* Description preview */}
           {task.description && (
-            <p className="text-xs text-gray-600 leading-relaxed">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               {renderWithLinks(
                 trimDescription(extractTextFromRichContent(task.description)),
               )}
@@ -352,7 +352,7 @@ export const ProjectTaskCard = ({
           <div className="flex items-center justify-between pt-2">
             {/* Task Code and Priority */}
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 font-mono">
+              <span className="text-xs text-muted-foreground font-mono">
                 {task.taskCode}
               </span>
               <span
@@ -370,8 +370,8 @@ export const ProjectTaskCard = ({
                     isOverdue
                       ? "text-red-600 font-medium"
                       : isDueSoon
-                        ? "text-yellow-600 font-medium"
-                        : "text-gray-500"
+                        ? "text-yellow-500 font-medium"
+                        : "text-muted-foreground"
                   }`}
                 >
                   {format(task.dueDate, "MMM d")}

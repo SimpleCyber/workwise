@@ -37,19 +37,22 @@ export default function ModelSelector({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm hover:border-gray-300"
+        className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-sm hover:bg-accent transition-colors"
         aria-haspopup="menu"
         aria-expanded={open}
       >
-        <BrainCircuit className="h-4 w-4 text-gray-600" aria-hidden="true" />
-        <span className="text-gray-800">{active.name}</span>
-        <ChevronDown className="h-4 w-4 text-gray-500" aria-hidden="true" />
+        <BrainCircuit className="h-4 w-4 text-primary" aria-hidden="true" />
+        <span className="text-foreground">{active.name}</span>
+        <ChevronDown
+          className="h-4 w-4 text-muted-foreground"
+          aria-hidden="true"
+        />
       </button>
 
       {open && (
         <div
           role="menu"
-          className="absolute z-50 mt-2 w-48 overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg"
+          className="absolute z-50 mt-2 w-48 overflow-hidden rounded-md border border-border bg-popover shadow-lg"
         >
           {MODELS.map((m) => (
             <button
@@ -59,7 +62,7 @@ export default function ModelSelector({
                 onChange?.(m.id);
                 setOpen(false);
               }}
-              className="block w-full cursor-pointer px-3 py-2 text-left text-sm hover:bg-gray-50"
+              className="block w-full cursor-pointer px-3 py-2 text-left text-sm hover:bg-accent transition-colors"
             >
               {m.name}
             </button>

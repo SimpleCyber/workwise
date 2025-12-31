@@ -24,9 +24,9 @@ export const SidebarButton = ({
     <div className="group relative flex cursor-pointer flex-col items-center justify-center gap-y-0.5">
       {/* Tooltip on hover */}
       <div className="absolute left-full ml-2 hidden group-hover:block z-50">
-        <div className="whitespace-nowrap rounded-md bg-gray-300 px-2 py-1 text-xs text-black shadow-lg border border-gray-700 animate-in fade-in-0 zoom-in-95 duration-200">
+        <div className="whitespace-nowrap rounded-md bg-popover px-2 py-1 text-xs text-popover-foreground shadow-lg border border-border animate-in fade-in-0 zoom-in-95 duration-200">
           {label}
-          <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 border-4 border-transparent border-r-gray-300 -ml-1" />
+          <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 border-4 border-transparent border-r-popover -ml-1" />
         </div>
       </div>
 
@@ -44,9 +44,9 @@ export const SidebarButton = ({
           variant="transparent"
           className={cn(
             "size-9 p-2 relative overflow-hidden transition-all duration-300 ease-out",
-            "hover:bg-accent/20 hover:scale-105 hover:shadow-lg",
+            "hover:bg-sidebar-accent hover:scale-105 hover:shadow-lg",
             "active:scale-95 active:transition-all active:duration-100",
-            isActive && "bg-accent/20 shadow-md",
+            isActive && "bg-sidebar-accent shadow-md",
             // Subtle glow effect on hover
             "hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]",
           )}
@@ -60,10 +60,10 @@ export const SidebarButton = ({
           <div className="relative">
             <Icon
               className={cn(
-                "size-5 text-white transition-all duration-300 ease-out relative z-10",
-                "group-hover:scale-110 group-hover:rotate-2 group-hover:text-accent",
+                "size-5 text-sidebar-foreground transition-all duration-300 ease-out relative z-10",
+                "group-hover:scale-110 group-hover:rotate-2 group-hover:text-sidebar-primary",
                 "group-active:scale-95",
-                isActive && "text-accent scale-105",
+                isActive && "text-sidebar-primary scale-105",
               )}
             />
 
@@ -76,7 +76,7 @@ export const SidebarButton = ({
 
           {/* Subtle inner glow on active */}
           {isActive && (
-            <div className="absolute inset-0 bg-gradient-to-br from-accent/20 via-transparent to-accent/10 rounded-lg" />
+            <div className="absolute inset-0 bg-gradient-to-br from-sidebar-accent/20 via-transparent to-sidebar-accent/10 rounded-lg" />
           )}
         </Button>
       </div>
@@ -85,9 +85,11 @@ export const SidebarButton = ({
       <span
         className={cn(
           "text-[11px] transition-all duration-300 ease-out",
-          "group-hover:text-accent group-hover:scale-105 group-hover:font-medium",
+          "group-hover:text-sidebar-primary group-hover:scale-105 group-hover:font-medium",
           "group-active:scale-95",
-          isActive ? "text-accent font-medium" : "text-white/80",
+          isActive
+            ? "text-sidebar-primary font-medium"
+            : "text-sidebar-foreground/80",
         )}
       >
         {/* {label} */}

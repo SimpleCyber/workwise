@@ -60,7 +60,7 @@ export function DetailsTab({
     <>
       {/* Creator */}
       <div className="space-y-2">
-        <div className="flex items-center gap-2 text-xs font-medium text-gray-700">
+        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
           <User className="w-3 h-3" />
           Creator
         </div>
@@ -69,14 +69,16 @@ export function DetailsTab({
             {creatorName ? getInitials(creatorName) : "JS"}
           </div>
           <div>
-            <div className="text-xs font-medium">{creatorName}</div>
-            <div className="text-xs text-gray-500">{creatorRole}</div>
+            <div className="text-xs font-medium text-foreground">
+              {creatorName}
+            </div>
+            <div className="text-xs text-muted-foreground">{creatorRole}</div>
           </div>
         </div>
       </div>
 
       <div className="space-y-2">
-        <div className="flex items-center gap-2 text-xs font-medium text-gray-700">
+        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
           <Shield className="w-3 h-3" />
           Members ({memberCount})
         </div>
@@ -91,23 +93,28 @@ export function DetailsTab({
                   {getInitials(member.name)}
                 </div>
                 <div>
-                  <div className="text-xs font-medium">{member.name}</div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs font-medium text-foreground">
+                    {member.name}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
                     {formatDate(new Date(member.addedAt).toISOString())}
                   </div>
                 </div>
               </div>
             ))
           ) : (
-            <div className="text-xs text-gray-500">No members assigned</div>
+            <div className="text-xs text-muted-foreground">
+              No members assigned
+            </div>
           )}
         </div>
       </div>
 
-      {/* Description */}
       <div className="space-y-2">
-        <div className="text-xs font-medium text-gray-700">Description</div>
-        <div className="text-xs text-gray-600 leading-relaxed ml-2">
+        <div className="text-xs font-medium text-muted-foreground">
+          Description
+        </div>
+        <div className="text-xs text-foreground/80 leading-relaxed ml-2">
           {description}
         </div>
       </div>
@@ -140,17 +147,21 @@ export function DetailsTab({
 
       {/* ID */}
       <div className="space-y-1">
-        <div className="text-xs font-medium text-gray-700">Node ID</div>
-        <div className="text-xs font-mono text-gray-600 ml-2">{uniqueId}</div>
+        <div className="text-xs font-medium text-muted-foreground">Node ID</div>
+        <div className="text-xs font-mono text-muted-foreground ml-2">
+          {uniqueId}
+        </div>
       </div>
 
       {/* Created At */}
       <div className="space-y-1">
-        <div className="flex items-center gap-2 text-xs font-medium text-gray-700">
+        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
           <Calendar className="w-3 h-3" />
           Created At
         </div>
-        <div className="text-xs text-gray-600 ml-5">1/15/2024, 10:30 AM</div>
+        <div className="text-xs text-muted-foreground ml-5">
+          1/15/2024, 10:30 AM
+        </div>
       </div>
     </>
   );
