@@ -125,7 +125,7 @@ export default function ConversationRow({
               />
               {data.pinned ? "Unstar" : "Star"}
             </button>
-            <span className="pointer-events-none absolute left-2 top-full mt-1 rounded-md bg-zinc-900 px-1.5 py-0.5 text-[10px] text-white opacity-0 group-hover:opacity-100">
+            <span className="pointer-events-none absolute left-2 top-full mt-1 rounded-md bg-popover border shadow-sm px-1.5 py-0.5 text-[10px] text-popover-foreground opacity-0 group-hover:opacity-100">
               {data.pinned ? "Unstar" : "Star"}
             </span>
           </div>
@@ -141,7 +141,7 @@ export default function ConversationRow({
             >
               <Trash2 className="h-4 w-4" /> Delete
             </button>
-            <span className="pointer-events-none absolute left-2 top-full mt-1 rounded-md bg-zinc-900 px-1.5 py-0.5 text-[10px] text-white opacity-0 group-hover:opacity-100">
+            <span className="pointer-events-none absolute left-2 top-full mt-1 rounded-md bg-popover border shadow-sm px-1.5 py-0.5 text-[10px] text-popover-foreground opacity-0 group-hover:opacity-100">
               Delete
             </span>
           </div>

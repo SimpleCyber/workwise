@@ -29,8 +29,8 @@ export const WorkspaceSidebarContent = () => {
           variant="transparent"
           className={`h-7 justify-start px-[18px] text-sm ${
             isActive("")
-              ? "bg-white/10 text-white"
-              : "text-[#f9EDFFCC] hover:bg-white/5"
+              ? "bg-sidebar-accent text-sidebar-foreground"
+              : "text-sidebar-foreground/60 hover:bg-sidebar-accent/50"
           }`}
           onClick={() => navigateTo("")}
         >

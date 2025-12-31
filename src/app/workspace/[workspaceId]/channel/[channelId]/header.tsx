@@ -188,7 +188,7 @@ export const Header = ({ channelName }: HeaderProps) => {
               <button
                 onClick={handleDelete}
                 disabled={isRemovingChannel}
-                className="flex cursor-pointer items-center gap-x-2 rounded-lg border bg-white px-5 py-4 text-rose-600 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-50"
+                className="flex cursor-pointer items-center gap-x-2 rounded-lg border bg-card px-5 py-4 text-rose-600 hover:bg-rose-500/10 disabled:pointer-events-none disabled:opacity-50"
               >
                 <Trash className="size-4" />
                 <p className="text-sm font-semibold">Delete channel</p>

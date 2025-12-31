@@ -36,7 +36,7 @@ export const WorkspaceSidebarContent = () => {
   if (channelsLoading || membersLoading) {
     return (
       <div className="flex items-center justify-center p-4">
-        <Loader className="size-4 animate-spin text-white" />
+        <Loader className="size-4 animate-spin text-sidebar-foreground" />
       </div>
     );
   }

@@ -77,7 +77,7 @@ export default function ComposerActionsPopover({
     {
       icon: () => (
         <div className="h-4 w-4 rounded bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
-          <div className="h-2 w-2 bg-white rounded-full" />
+          <div className="h-2 w-2 bg-primary rounded-full" />
         </div>
       ),
       label: "Connect Google Drive",
@@ -86,7 +86,7 @@ export default function ComposerActionsPopover({
     {
       icon: () => (
         <div className="h-4 w-4 rounded bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center">
-          <div className="h-2 w-2 bg-white rounded-full" />
+          <div className="h-2 w-2 bg-primary rounded-full" />
         </div>
       ),
       label: "Connect OneDrive",
@@ -95,7 +95,7 @@ export default function ComposerActionsPopover({
     {
       icon: () => (
         <div className="h-4 w-4 rounded bg-gradient-to-br from-teal-500 to-teal-400 flex items-center justify-center">
-          <div className="h-2 w-2 bg-white rounded-full" />
+          <div className="h-2 w-2 bg-primary rounded-full" />
         </div>
       ),
       label: "Connect Sharepoint",

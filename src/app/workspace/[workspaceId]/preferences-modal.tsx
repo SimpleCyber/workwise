@@ -105,7 +105,7 @@ export const PreferencesModal = ({
         onOpenChange={setOpen}
       >
         <DialogContent className="overflow-hidden bg-gray-50 p-0">
-          <DialogHeader className="border-b bg-white p-4">
+          <DialogHeader className="border-b bg-card p-4">
             <DialogTitle>{value}</DialogTitle>
           </DialogHeader>
 
@@ -121,7 +121,7 @@ export const PreferencesModal = ({
               <DialogTrigger asChild>
                 <button
                   disabled={isUpdatingWorkspace || isRemovingWorkspace}
-                  className="flex w-full cursor-pointer flex-col rounded-lg border bg-white px-5 py-4 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-50"
+                  className="flex w-full cursor-pointer flex-col rounded-lg border bg-card px-5 py-4 hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
                 >
                   <div className="flex w-full items-center justify-between">
                     <p className="text-sm font-semibold">Workspace name</p>
@@ -174,7 +174,7 @@ export const PreferencesModal = ({
             <button
               disabled={isRemovingWorkspace}
               onClick={handleRemove}
-              className="flex cursor-pointer items-center gap-x-2 rounded-lg border bg-white px-5 py-4 text-rose-600 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-50"
+              className="flex cursor-pointer items-center gap-x-2 rounded-lg border bg-card px-5 py-4 text-rose-600 hover:bg-rose-500/10 disabled:pointer-events-none disabled:opacity-50"
             >
               <Trash className="size-4" />
               <p className="text-sm font-semibold">Delete workspace</p>

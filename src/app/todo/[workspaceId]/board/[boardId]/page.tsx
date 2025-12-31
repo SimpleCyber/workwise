@@ -39,7 +39,7 @@ const BoardPage = ({ params }: BoardPageProps) => {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-[49px] items-center border-b bg-white px-4">
+      <div className="flex h-[49px] items-center border-b bg-background px-4">
         <h1 className="text-lg font-semibold">{board.name}</h1>
         {board.description && (
           <span className="ml-4 text-sm text-muted-foreground">

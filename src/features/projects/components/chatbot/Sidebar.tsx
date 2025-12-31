@@ -159,7 +159,7 @@ export default function Sidebar(props: SidebarProps) {
         initial={{ width: 320 }}
         animate={{ width: 64 }}
         transition={{ type: "spring", stiffness: 220, damping: 26 }}
-        className="z-50 flex h-full shrink-0 flex-col border-r border-border bg-sidebar"
+        className="z-50 flex h-full shrink-0 flex-col border-r border-border bg-background"
       >
         <div className="flex items-center justify-center px-3 py-3">
           <div className="relative">
@@ -169,7 +169,7 @@ export default function Sidebar(props: SidebarProps) {
               aria-label="Open sidebar"
               title="Open sidebar"
             >
-              <Sparkles className="h-5 w-5 text-sidebar-foreground transition-colors group-hover:text-primary" />
+              <Sparkles className="h-5 w-5 text-foreground transition-colors group-hover:text-primary" />
             </button>
           </div>
         </div>
@@ -253,14 +253,14 @@ export default function Sidebar(props: SidebarProps) {
             exit={{ x: isDesktop ? 0 : -340 }}
             transition={{ type: "spring", stiffness: 220, damping: 26 }}
             className={cls(
-              "z-50 flex h-full w-80 shrink-0 flex-col border-r border-border bg-sidebar",
+              "z-50 flex h-full w-80 shrink-0 flex-col border-r border-border bg-background",
               "fixed inset-y-0 left-0 md:static md:translate-x-0",
             )}
           >
             <div className="flex items-center gap-2 px-3 py-3">
               <div className="relative group">
                 <span className="pointer-events-none absolute inset-0 rounded-full opacity-0 transition-opacity group-hover:opacity-40" />
-                <Sparkles className="relative h-5 w-5 text-sidebar-foreground group-hover:text-primary" />
+                <Sparkles className="relative h-5 w-5 text-foreground group-hover:text-primary" />
               </div>
               <div className="ml-auto">
                 <button
@@ -286,14 +286,14 @@ export default function Sidebar(props: SidebarProps) {
                 onClick={handleNewChat}
                 className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-accent"
               >
-                <Plus className="h-4 w-4 text-sidebar-foreground/80" />
+                <Plus className="h-4 w-4 text-foreground/80" />
                 <span className="text-sm">New chat</span>
               </button>
               <button
                 onClick={() => setShowSearchModal(true)}
                 className="mt-1 flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-accent"
               >
-                <SearchIcon className="h-4 w-4 text-sidebar-foreground/80" />
+                <SearchIcon className="h-4 w-4 text-foreground/80" />
                 <span className="text-sm">Search chats</span>
               </button>
 
@@ -302,7 +302,7 @@ export default function Sidebar(props: SidebarProps) {
                   onClick={() =>
                     setCollapsed((s) => ({ ...s, pinned: !s.pinned }))
                   }
-                  className="mt-3 flex w-full items-center gap-2 rounded-md px-2 py-1 text-xs font-medium text-sidebar-foreground/60 hover:bg-accent"
+                  className="mt-3 flex w-full items-center gap-2 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground/60 hover:bg-accent"
                   aria-expanded={!collapsed.pinned}
                 >
                   {collapsed.pinned ? (

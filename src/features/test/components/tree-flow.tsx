@@ -485,7 +485,7 @@ export function TreeFlow({
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         nodeTypes={nodeTypes}
-        className="bg-background"
+        className="bg-background/50 dark:bg-muted/30"
         panOnDrag={true}
         zoomOnScroll={true}
         zoomOnPinch={true}

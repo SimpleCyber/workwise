@@ -336,7 +336,7 @@ const ProjectsWorkspacePage = () => {
                     href={`/projects/${workspaceId}/board/${board._id}`}
                     className="block"
                   >
-                    <Card className="h-full transition-all duration-200 hover:shadow-lg hover:shadow-gray-100/50 hover:-translate-y-1 border-slate-200 bg-white">
+                    <Card className="h-full transition-all duration-200 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 border-border bg-card">
                       <CardHeader className="relative pb-3 -mt-3">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex justify-center">

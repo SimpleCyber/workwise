@@ -50,8 +50,8 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-    /* Custom Sidebar Variables */
-    --sidebar-background: 222.2 47.4% 11.2%; /* dark blue-ish for sidebar in light mode if we want, or keeping it dark always? User said "everything looks like it is in the same color tone only". Let's make sidebar distinct. */
+    /* Fixed Dark Sidebar for all themes */
+    --sidebar-background: 222.2 47.4% 11.2%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 210 40% 98%;
     --sidebar-primary-foreground: 222.2 47.4% 11.2%;

@@ -121,7 +121,7 @@ export default function ProjectBoardPage({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-[49px] items-center border-b bg-white px-4">
+      <div className="flex h-[49px] items-center border-b bg-background px-4">
         <div className="flex items-center gap-3">
           <h1 className="text-lg font-semibold">{board.name}</h1>
           <span className="text-sm text-muted-foreground font-mono bg-muted px-2 py-1 rounded">

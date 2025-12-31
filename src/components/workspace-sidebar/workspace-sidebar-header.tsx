@@ -48,7 +48,7 @@ export const WorkspaceHeader = ({
           <DropdownMenuTrigger asChild>
             <Button
               variant="transparent"
-              className="w-auto overflow-hidden p-1.5 text-lg font-semibold text-foreground hover:bg-accent/50"
+              className="w-auto overflow-hidden p-1.5 text-lg font-semibold text-sidebar-foreground hover:bg-sidebar-accent"
               size="sm"
             >
               <span className="truncate">{workspace.name}</span>
@@ -58,7 +58,7 @@ export const WorkspaceHeader = ({
 
           <DropdownMenuContent side="bottom" align="start" className="w-64">
             <DropdownMenuItem className="cursor-pointer capitalize">
-              <div className="relative mr-2 flex size-9 items-center justify-center overflow-hidden rounded-md bg-[#616061] text-xl font-semibold text-white">
+              <div className="relative mr-2 flex size-9 items-center justify-center overflow-hidden rounded-md bg-primary text-xl font-semibold text-primary-foreground">
                 {workspace.name.charAt(0).toUpperCase()}
               </div>
 
@@ -99,7 +99,7 @@ export const WorkspaceHeader = ({
             <Button
               variant="transparent"
               size="iconSm"
-              className="text-foreground/80 hover:bg-accent/50"
+              className="text-sidebar-foreground hover:bg-sidebar-accent"
             >
               <ListFilter className="size-4" />
             </Button>
@@ -109,7 +109,7 @@ export const WorkspaceHeader = ({
             <Button
               variant="transparent"
               size="iconSm"
-              className="text-foreground/80 hover:bg-accent/50"
+              className="text-sidebar-foreground hover:bg-sidebar-accent"
             >
               <SquarePen className="size-4" />
             </Button>
