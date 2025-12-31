@@ -83,8 +83,21 @@ export const Sidebar = ({
     },
   ];
 
-  const handleNavigation = (path: string) => {
+  const handleNavigation = (path: string, label?: string) => {
     if (workspaceId) {
+      if (label === "Chat" && pathname.includes(`/test/${workspaceId}`)) {
+        const currentUrl = new URL(window.location.href);
+        const isSidebarOpen = currentUrl.searchParams.get("sidebar") === "true";
+
+        if (isSidebarOpen) {
+          currentUrl.searchParams.set("sidebar", "true");
+          currentUrl.searchParams.set("tab", "chat");
+          if (currentUrl.searchParams.has("boardId")) {
+            router.push(currentUrl.toString());
+            return;
+          }
+        }
+      }
       router.push(path);
     }
   };
@@ -142,7 +155,7 @@ export const Sidebar = ({
                 icon={item.icon}
                 label={item.label}
                 isActive={pathname.includes(item.path)}
-                onClick={() => handleNavigation(item.path)}
+                onClick={() => handleNavigation(item.path, item.label)}
               />
             </div>
           ))}

@@ -21,6 +21,7 @@ export default function TreeWorkspacePage({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedBoardId, setSelectedBoardId] =
     useState<Id<"projectBoards"> | null>(null);
+  const [activeTab, setActiveTab] = useState<"tasks" | "chat">("tasks");
 
   const { data: workspace, isLoading: workspaceLoading } = useGetWorkspaceInfo({
     id: workspaceId,
@@ -34,10 +35,12 @@ export default function TreeWorkspacePage({
   useEffect(() => {
     const shouldShowSidebar = searchParams.get("sidebar") === "true";
     const boardId = searchParams.get("boardId") as Id<"projectBoards"> | null;
+    const tab = searchParams.get("tab") as "tasks" | "chat" | null;
 
     if (boardId && shouldShowSidebar) {
       setSelectedBoardId(boardId);
       setSidebarOpen(true);
+      if (tab) setActiveTab(tab);
     } else {
       setSidebarOpen(false);
       setSelectedBoardId(null);
@@ -96,6 +99,7 @@ export default function TreeWorkspacePage({
           workspaceId={workspaceId}
           boardId={selectedBoardId}
           isOpen={sidebarOpen}
+          initialTab={activeTab}
           onClose={handleCloseSidebar}
         />
       )}

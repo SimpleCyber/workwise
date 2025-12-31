@@ -8,10 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Loader2, X, MessageSquare, Users, MoreHorizontal } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useGetWorkspaceMembers } from "@/features/projects/api/use-get-workspace-members";
-// import CompactAIAssistantUI from "./chatbot/CompactAIAssistantUI";
+import { motion, AnimatePresence } from "framer-motion";
 import { useGetWorkspaceProjects } from "@/features/test/api/all-data-hook";
 import { useCurrentUser } from "../../auth/api/use-current-user";
-import { motion, AnimatePresence } from "framer-motion";
+import { ProjectKanbanBoard } from "./project-kanban-board";
+import CompactAIAssistantUI from "./chatbot/CompactAIAssistantUI";
+import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
+import { toast } from "sonner";
+import { useUpdateProjectTask } from "@/features/projects/api/use-update-project-task";
 import {
   Tooltip,
   TooltipContent,
@@ -23,6 +27,7 @@ interface ProjectSidebarKanbanProps {
   workspaceId: Id<"workspaces">;
   boardId: Id<"projectBoards">;
   isOpen: boolean;
+  initialTab?: "tasks" | "chat";
   onClose: () => void;
 }
 
@@ -34,6 +39,7 @@ export const ProjectSidebarKanban = ({
   workspaceId,
   boardId,
   isOpen,
+  initialTab = "tasks",
   onClose,
 }: ProjectSidebarKanbanProps) => {
   const { data: currentUser, isLoading: userLoading } = useCurrentUser();
@@ -44,12 +50,18 @@ export const ProjectSidebarKanban = ({
   const lists = useQuery(api.projects.getProjectLists, { boardId });
   const { data: workspaceMembers, isLoading: membersLoading } =
     useGetWorkspaceMembers({ workspaceId });
+  const { mutate: updateTask } = useUpdateProjectTask();
 
   const [selectedMemberIds, setSelectedMemberIds] = useState<Id<"members">[]>(
     [],
   );
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_WIDTH);
   const [isResizing, setIsResizing] = useState(false);
+  const [activeTab, setActiveTab] = useState<"tasks" | "chat">(initialTab);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   const handleMemberToggle = (memberId: Id<"members">) => {
     setSelectedMemberIds((prev) =>
@@ -57,6 +69,37 @@ export const ProjectSidebarKanban = ({
         ? prev.filter((id) => id !== memberId)
         : [...prev, memberId],
     );
+  };
+
+  const handleDragEnd = (result: DropResult) => {
+    const { destination, source, draggableId, type } = result;
+    if (!destination) return;
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    )
+      return;
+
+    if (type === "task") {
+      const taskId = draggableId as Id<"projectTasks">;
+      if (source.droppableId !== destination.droppableId) {
+        const newListId = destination.droppableId as Id<"projectLists">;
+        updateTask(
+          { taskId, listId: newListId, position: destination.index },
+          {
+            onError: (err) => toast.error(err.message || "Failed to move task"),
+          },
+        );
+      } else {
+        updateTask(
+          { taskId, position: destination.index },
+          {
+            onError: (err) =>
+              toast.error(err.message || "Failed to reorder task"),
+          },
+        );
+      }
+    }
   };
 
   const handleClearFilter = () => setSelectedMemberIds([]);
@@ -152,9 +195,23 @@ export const ProjectSidebarKanban = ({
 
                 <div className="h-4 w-px bg-border" />
 
-                <div className="flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium text-foreground"></span>
+                <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-lg">
+                  <Button
+                    variant={activeTab === "tasks" ? "secondary" : "ghost"}
+                    size="sm"
+                    onClick={() => setActiveTab("tasks")}
+                    className="h-8 px-3 text-xs"
+                  >
+                    Tasks
+                  </Button>
+                  <Button
+                    variant={activeTab === "chat" ? "secondary" : "ghost"}
+                    size="sm"
+                    onClick={() => setActiveTab("chat")}
+                    className="h-8 px-3 text-xs"
+                  >
+                    AI Chat
+                  </Button>
                 </div>
               </div>
 
@@ -247,29 +304,45 @@ export const ProjectSidebarKanban = ({
             </div>
 
             {/* Content Area */}
-            {/* <div className="flex-1 overflow-hidden">
-              <div className="h-full">
-                {currentUser ? (
-                  <CompactAIAssistantUI
-                    workspaceId={workspaceId}
-                    boardId={boardId}
-                    currentUserId={currentUser._id}
-                    currentUser={{
-                      name: currentUser.name,
-                      email: currentUser.email,
-                      image: currentUser.image,
-                    }}
-                    projectDetails={projectDetails}
-                    lists={lists || []}
-                    selectedMemberIds={selectedMemberIds}
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                    Loading your chat session...
-                  </div>
-                )}
-              </div>
-            </div> */}
+            <div className="flex-1 overflow-hidden">
+              <DragDropContext onDragEnd={handleDragEnd}>
+                <div className="h-full">
+                  {activeTab === "tasks" ? (
+                    <div className="h-full overflow-hidden flex flex-col">
+                      <ProjectKanbanBoard
+                        boardId={boardId}
+                        lists={lists || []}
+                        selectedMemberIds={selectedMemberIds}
+                        compact={true}
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-full overflow-hidden">
+                      {currentUser ? (
+                        <CompactAIAssistantUI
+                          workspaceId={workspaceId}
+                          boardId={boardId}
+                          currentUserId={currentUser._id}
+                          currentUser={{
+                            name: currentUser.name,
+                            email: currentUser.email,
+                            image: currentUser.image,
+                          }}
+                          projectDetails={projectDetails}
+                          lists={lists || []}
+                          selectedMemberIds={selectedMemberIds}
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-sm text-muted-foreground font-medium">
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Initialising AI session...
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </DragDropContext>
+            </div>
           </motion.div>
         </>
       )}
