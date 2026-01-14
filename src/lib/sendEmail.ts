@@ -10,7 +10,7 @@ export async function sendEmail(
       body: JSON.stringify({ to, subject, body }),
     });
 
-// not working 
+    // not working
     if (!res.ok) {
       console.error("Email send failed:", await res.json());
       return false;

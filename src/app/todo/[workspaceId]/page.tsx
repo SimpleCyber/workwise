@@ -359,7 +359,8 @@ const TodoWorkspacePage = () => {
                         <ScrollArea className="h-[140px]">
                           <div className="space-y-2">
                             {members?.map((member) => {
-                              if (member._id === currentMember?._id) return null;
+                              if (member._id === currentMember?._id)
+                                return null;
 
                               return (
                                 <div
@@ -368,7 +369,9 @@ const TodoWorkspacePage = () => {
                                 >
                                   <Checkbox
                                     id={member._id}
-                                    checked={allowedMembers.includes(member._id)}
+                                    checked={allowedMembers.includes(
+                                      member._id,
+                                    )}
                                     onCheckedChange={(checked) => {
                                       setAllowedMembers((prev) => {
                                         if (checked) {
@@ -568,23 +571,25 @@ const TodoWorkspacePage = () => {
                           board.allowedMembers &&
                           board.allowedMembers.length > 0 && (
                             <div className="flex -space-x-2 overflow-hidden">
-                              {board.allowedMembers.slice(0, 3).map((memberId) => {
-                                const member = members?.find(
-                                  (m) => m._id === memberId,
-                                );
-                                if (!member) return null;
-                                return (
-                                  <Avatar
-                                    key={memberId}
-                                    className="h-5 w-5 border-2 border-background"
-                                  >
-                                    <AvatarImage src={member.user.image} />
-                                    <AvatarFallback className="text-[8px]">
-                                      {member.user.name?.charAt(0)}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                );
-                              })}
+                              {board.allowedMembers
+                                .slice(0, 3)
+                                .map((memberId) => {
+                                  const member = members?.find(
+                                    (m) => m._id === memberId,
+                                  );
+                                  if (!member) return null;
+                                  return (
+                                    <Avatar
+                                      key={memberId}
+                                      className="h-5 w-5 border-2 border-background"
+                                    >
+                                      <AvatarImage src={member.user.image} />
+                                      <AvatarFallback className="text-[8px]">
+                                        {member.user.name?.charAt(0)}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                  );
+                                })}
                               {board.allowedMembers.length > 3 && (
                                 <div className="flex items-center justify-center h-5 w-5 rounded-full border-2 border-background bg-muted text-[8px] font-medium">
                                   +{board.allowedMembers.length - 3}
@@ -610,16 +615,12 @@ const TodoWorkspacePage = () => {
                             </TooltipTrigger>
                             <TooltipContent>
                               <p className="text-xs">
-                                {board.visibility === "public" ? (
-                                  board.allowedMembers &&
-                                  board.allowedMembers.length > 0 ? (
-                                    "Shared with specific members"
-                                  ) : (
-                                    "Public to all members"
-                                  )
-                                ) : (
-                                  "Private"
-                                )}
+                                {board.visibility === "public"
+                                  ? board.allowedMembers &&
+                                    board.allowedMembers.length > 0
+                                    ? "Shared with specific members"
+                                    : "Public to all members"
+                                  : "Private"}
                               </p>
                             </TooltipContent>
                           </Tooltip>

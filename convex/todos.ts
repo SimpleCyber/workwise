@@ -80,8 +80,6 @@ export const getBoard = query({
   },
 });
 
-
-
 export const updateBoard = mutation({
   args: {
     boardId: v.id("todoBoards"),
@@ -976,7 +974,7 @@ export const getBoards = query({
         if (!args.includeArchived && board.isArchived) return false;
 
         // Visibility Check
-        
+
         // 1. If user is the creator (memberId matches), they can see it
         if (board.memberId === member._id) {
           return true;
@@ -989,7 +987,7 @@ export const getBoards = query({
             return board.allowedMembers.includes(member._id);
           }
           // If no allowedMembers (or empty), it acts as "Shared with everyone"
-          return true; 
+          return true;
         }
 
         // 3. Default to private (hidden) if not owner and not public
