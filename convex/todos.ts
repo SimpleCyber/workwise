@@ -9,6 +9,8 @@ export const createBoard = mutation({
     description: v.optional(v.string()),
     background: v.optional(v.string()),
     workspaceId: v.id("workspaces"),
+    visibility: v.optional(v.union(v.literal("private"), v.literal("public"))),
+    allowedMembers: v.optional(v.array(v.id("members"))),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -34,6 +36,8 @@ export const createBoard = mutation({
       workspaceId: args.workspaceId,
       isStarred: false,
       isArchived: false,
+      visibility: args.visibility || "private",
+      allowedMembers: args.allowedMembers,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
@@ -76,6 +80,8 @@ export const getBoard = query({
   },
 });
 
+
+
 export const updateBoard = mutation({
   args: {
     boardId: v.id("todoBoards"),
@@ -84,6 +90,8 @@ export const updateBoard = mutation({
     background: v.optional(v.string()),
     isStarred: v.optional(v.boolean()),
     isArchived: v.optional(v.boolean()),
+    visibility: v.optional(v.union(v.literal("private"), v.literal("public"))),
+    allowedMembers: v.optional(v.array(v.id("members"))),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -955,16 +963,39 @@ export const getBoards = query({
       return [];
     }
 
-    const query = ctx.db
+    const boards = await ctx.db
       .query("todoBoards")
-      .withIndex("by_member_workspace", (q) =>
-        q.eq("memberId", member._id).eq("workspaceId", args.workspaceId),
-      );
-
-    const boards = await query.collect();
+      .withIndex("by_workspace_id", (q) =>
+        q.eq("workspaceId", args.workspaceId),
+      )
+      .collect();
 
     return boards
-      .filter((board) => (args.includeArchived ? true : !board.isArchived))
+      .filter((board) => {
+        // Filter by archived status if requested
+        if (!args.includeArchived && board.isArchived) return false;
+
+        // Visibility Check
+        
+        // 1. If user is the creator (memberId matches), they can see it
+        if (board.memberId === member._id) {
+          return true;
+        }
+
+        // 2. If visibility is public:
+        if (board.visibility === "public") {
+          // If allowedMembers is specified, check if user is in it
+          if (board.allowedMembers && board.allowedMembers.length > 0) {
+            return board.allowedMembers.includes(member._id);
+          }
+          // If no allowedMembers (or empty), it acts as "Shared with everyone"
+          return true; 
+        }
+
+        // 3. Default to private (hidden) if not owner and not public
+        // Also if visibility is undefined, default to private (backward compatibility)
+        return false;
+      })
       .sort((a, b) => {
         // Sort by starred first, then by creation date
         if (a.isStarred && !b.isStarred) return -1;

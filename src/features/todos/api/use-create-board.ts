@@ -11,6 +11,8 @@ type RequestType = {
   description?: string;
   background?: string;
   workspaceId: Id<"workspaces">;
+  visibility?: "private" | "public";
+  allowedMembers?: Id<"members">[];
 };
 
 type ResponseType = Id<"todoBoards"> | null;

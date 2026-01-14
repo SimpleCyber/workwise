@@ -13,6 +13,8 @@ type RequestType = {
   background?: string;
   isStarred?: boolean;
   isArchived?: boolean;
+  visibility?: "private" | "public";
+  allowedMembers?: Id<"members">[];
 };
 
 type ResponseType = void;

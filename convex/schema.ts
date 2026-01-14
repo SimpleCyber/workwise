@@ -191,6 +191,8 @@ const schema = defineSchema({
     workspaceId: v.id("workspaces"),
     isStarred: v.optional(v.boolean()),
     isArchived: v.optional(v.boolean()),
+    visibility: v.optional(v.union(v.literal("private"), v.literal("public"))),
+    allowedMembers: v.optional(v.array(v.id("members"))),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
