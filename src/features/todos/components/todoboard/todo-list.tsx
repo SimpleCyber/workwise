@@ -87,17 +87,20 @@ export const TodoList = ({ list, dragHandleProps }: TodoListProps) => {
   };
 
   const handleSortChange = (newSortBy: SortOption) => {
-    updateList({
-      listId: list._id,
-      sortBy: newSortBy,
-    }, {
-      onSuccess: () => {
-        toast.success(`Sorted by ${newSortBy}`);
+    updateList(
+      {
+        listId: list._id,
+        sortBy: newSortBy,
       },
-      onError: (error) => {
-        toast.error(`Failed to sort: ${error.message}`);
-      }
-    });
+      {
+        onSuccess: () => {
+          toast.success(`Sorted by ${newSortBy}`);
+        },
+        onError: (error) => {
+          toast.error(`Failed to sort: ${error.message}`);
+        },
+      },
+    );
   };
 
   const collapsedWidth = getCollapsedWidth();
