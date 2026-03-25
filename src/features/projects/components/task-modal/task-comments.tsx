@@ -27,6 +27,7 @@ import {
   useUpdateTaskComment,
   useDeleteTaskComment,
 } from "@/features/projects/api/use-task-comments";
+import { useGetWorkspaceMembers } from "@/features/projects/api/use-get-workspace-members";
 import { useGenerateUploadUrl } from "@/features/upload/api/use-generate-upload-url";
 import { useConfirm } from "@/hooks/use-confirm";
 import dynamic from "next/dynamic";
@@ -38,6 +39,7 @@ const Renderer = dynamic(() => import("@/components/renderer"), { ssr: false });
 interface TaskCommentsProps {
   task: {
     _id: Id<"projectTasks">;
+    workspaceId: Id<"workspaces">;
   };
   onImagePreview: (url: string) => void;
 }
@@ -53,6 +55,9 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
   const updateComment = useUpdateTaskComment();
   const deleteComment = useDeleteTaskComment();
   const { mutate: generateUploadUrl } = useGenerateUploadUrl();
+  const { data: members } = useGetWorkspaceMembers({
+    workspaceId: task.workspaceId,
+  });
 
   const [ConfirmDialog, confirm] = useConfirm(
     "Are you sure?",
@@ -213,12 +218,13 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
-          <div className="rounded-lg border bg-background hover:border-border/80 transition-all shadow-sm ring-1 ring-border/50 overflow-hidden focus-within:ring-primary/20 focus-within:border-primary/30">
+          <div className="rounded-lg border bg-background hover:border-border/80 transition-all shadow-sm ring-1 ring-border/50 focus-within:ring-primary/20 focus-within:border-primary/30">
             <Editor
               key={editorKey}
               onSubmit={handleSubmitComment}
               placeholder="Add a comment..."
               variant="create"
+              members={members}
             />
           </div>
         </div>
@@ -278,7 +284,7 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
 
                   <div className="flex flex-col space-y-2">
                     {editingComment === comment._id ? (
-                      <div className="rounded-lg border bg-muted/30 overflow-hidden ring-1 ring-border/50">
+                      <div className="rounded-lg border bg-muted/30 ring-1 ring-border/50">
                         <Editor
                           onSubmit={(data) =>
                             handleUpdateComment(comment._id, data)
@@ -286,6 +292,7 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
                           onCancel={() => setEditingComment(null)}
                           defaultValue={JSON.parse(comment.content)}
                           variant="update"
+                          members={members}
                         />
                       </div>
                     ) : (

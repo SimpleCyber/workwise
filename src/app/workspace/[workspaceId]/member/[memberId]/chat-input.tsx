@@ -10,6 +10,7 @@ import type { Id } from "@/../convex/_generated/dataModel";
 import { useCreateMessage } from "@/features/messages/api/use-create-message";
 import { useGenerateUploadUrl } from "@/features/upload/api/use-generate-upload-url";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
+import { useGetWorkspaceMembers } from "@/features/projects/api/use-get-workspace-members";
 
 const Editor = dynamic(() => import("@/components/editor"), {
   ssr: false,
@@ -39,6 +40,7 @@ export const ChatInput = ({ placeholder, conversationId }: ChatInputProps) => {
   const innerRef = useRef<Quill | null>(null);
 
   const workspaceId = useWorkspaceId();
+  const { data: members } = useGetWorkspaceMembers({ workspaceId });
 
   const { mutate: createMessage } = useCreateMessage();
   const { mutate: generateUploadUrl } = useGenerateUploadUrl();
@@ -103,6 +105,7 @@ export const ChatInput = ({ placeholder, conversationId }: ChatInputProps) => {
         onSubmit={handleSubmit}
         disabled={isPending}
         innerRef={innerRef}
+        members={members}
       />
     </div>
   );

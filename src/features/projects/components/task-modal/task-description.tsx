@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { useUpdateTaskContent } from "@/features/projects/api/use-update-task-content";
+import { useGetWorkspaceMembers } from "@/features/projects/api/use-get-workspace-members";
 import { useGenerateUploadUrl } from "@/features/upload/api/use-generate-upload-url";
 import dynamic from "next/dynamic";
 import type { Id } from "../../../../../convex/_generated/dataModel";
@@ -30,6 +31,7 @@ interface TaskDescriptionProps {
     _id: Id<"projectTasks">;
     description?: string;
     descriptionImages?: string[];
+    workspaceId: Id<"workspaces">;
   };
   onImagePreview: (url: string) => void;
 }
@@ -44,6 +46,9 @@ export const TaskDescription = ({
 
   const { mutate: updateTaskContent, isPending } = useUpdateTaskContent();
   const { mutate: generateUploadUrl } = useGenerateUploadUrl();
+  const { data: members } = useGetWorkspaceMembers({
+    workspaceId: task.workspaceId,
+  });
 
   const handleUpdate = async ({
     body,
@@ -145,7 +150,7 @@ export const TaskDescription = ({
       {!isCollapsed && (
         <div className="space-y-4">
           {isEditing ? (
-            <div className="rounded-lg border bg-muted/30 overflow-hidden ring-1 ring-border/50">
+            <div className="rounded-lg border bg-muted/30 ring-1 ring-border/50">
               <Editor
                 key={editorKey}
                 onSubmit={handleUpdate}
@@ -160,6 +165,7 @@ export const TaskDescription = ({
                 placeholder="Add a more detailed description..."
                 variant="create"
                 disabled={isPending}
+                members={members}
               />
             </div>
           ) : (
