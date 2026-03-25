@@ -48,6 +48,7 @@ import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace
 import { useRemoveProjectBoard } from "@/features/projects/api/use-remove-project-board";
 import { useUpdateProjectBoard } from "@/features/projects/api/use-update-project-board";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
+import { useConfirm } from "@/hooks/use-confirm";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { WorkspaceOnlyTree } from "./workspace-tree";
 
@@ -66,6 +67,11 @@ const ProjectsWorkspacePage = () => {
     useRemoveProjectBoard();
   const { mutate: updateBoard, isPending: isUpdatingBoard } =
     useUpdateProjectBoard();
+
+  const [ConfirmDialog, confirm] = useConfirm(
+    "Are you sure?",
+    "This action cannot be undone.",
+  );
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -135,12 +141,10 @@ const ProjectsWorkspacePage = () => {
     }
   };
 
-  const handleDeleteBoard = (boardId: Id<"projectBoards">) => {
-    if (
-      confirm(
-        "Are you sure you want to delete this project board and all its contents? This action cannot be undone.",
-      )
-    ) {
+  const handleDeleteBoard = async (boardId: Id<"projectBoards">) => {
+    const ok = await confirm();
+
+    if (ok) {
       removeBoard(
         { boardId },
         {
@@ -174,6 +178,7 @@ const ProjectsWorkspacePage = () => {
   }
   return (
     <div className="flex h-full flex-col bg-background/30">
+      <ConfirmDialog />
       <div className="flex h-[49px] items-center justify-between border-b bg-background px-4">
         <h1 className="text-lg font-semibold">
           Project Boards - {workspace.name}

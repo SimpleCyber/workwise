@@ -28,6 +28,7 @@ import {
   useDeleteTaskComment,
 } from "@/features/projects/api/use-task-comments";
 import { useGenerateUploadUrl } from "@/features/upload/api/use-generate-upload-url";
+import { useConfirm } from "@/hooks/use-confirm";
 import dynamic from "next/dynamic";
 import type { Id } from "../../../../../convex/_generated/dataModel";
 
@@ -52,6 +53,11 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
   const updateComment = useUpdateTaskComment();
   const deleteComment = useDeleteTaskComment();
   const { mutate: generateUploadUrl } = useGenerateUploadUrl();
+
+  const [ConfirmDialog, confirm] = useConfirm(
+    "Are you sure?",
+    "This action cannot be undone.",
+  );
 
   const handleSubmitComment = async ({
     body,
@@ -145,7 +151,9 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
   };
 
   const handleDeleteComment = async (commentId: Id<"taskComments">) => {
-    if (!confirm("Are you sure you want to delete this comment?")) return;
+    const ok = await confirm();
+
+    if (!ok) return;
 
     try {
       await deleteComment.mutate({ commentId });
@@ -175,6 +183,7 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
 
   return (
     <div className="flex flex-col">
+      <ConfirmDialog />
       {/* Header */}
       <div className="flex items-center justify-between p-4 bg-gray-50/50 sticky top-0 z-10">
         <div className="flex items-center gap-2">

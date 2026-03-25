@@ -35,6 +35,7 @@ import { useDeleteCard } from "@/features/todos/api/use-delete-card";
 import { useGetChecklists } from "@/features/todos/api/use-get-checklists";
 import { useGetComments } from "@/features/todos/api/use-get-comments";
 import { useUpdateCard } from "@/features/todos/api/use-update-card";
+import { useConfirm } from "@/hooks/use-confirm";
 
 import type { Id } from "../../../../convex/_generated/dataModel";
 
@@ -83,6 +84,11 @@ export const CardDetailModal = ({
   const { mutate: deleteCard, isPending: isDeleting } = useDeleteCard();
   const { data: checklists } = useGetChecklists({ cardId: card._id });
   const { data: comments } = useGetComments({ cardId: card._id });
+
+  const [ConfirmDialog, confirm] = useConfirm(
+    "Are you sure?",
+    "This action cannot be undone.",
+  );
 
   const handleSave = () => {
     updateCard(
@@ -154,12 +160,10 @@ export const CardDetailModal = ({
     );
   };
 
-  const handleDelete = () => {
-    if (
-      confirm(
-        "Are you sure you want to delete this card? This action cannot be undone.",
-      )
-    ) {
+  const handleDelete = async () => {
+    const ok = await confirm();
+
+    if (ok) {
       deleteCard(
         { cardId: card._id },
         {
@@ -177,6 +181,7 @@ export const CardDetailModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
+      <ConfirmDialog />
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Card Details</DialogTitle>

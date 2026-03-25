@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useDeleteList } from "@/features/todos/api/use-delete-list";
 import { useUpdateList } from "@/features/todos/api/use-update-list";
+import { useConfirm } from "@/hooks/use-confirm";
 
 import type { Id } from "../../../../../convex/_generated/dataModel";
 
@@ -76,6 +77,11 @@ export const TodoListHeader = ({
   const { mutate: updateList } = useUpdateList();
   const { mutate: deleteList } = useDeleteList();
 
+  const [ConfirmDialog, confirm] = useConfirm(
+    "Are you sure?",
+    "This action cannot be undone.",
+  );
+
   const handleStartEdit = () => {
     if (isCollapsed) return; // Don't allow editing when collapsed
     setIsEditing(true);
@@ -111,12 +117,10 @@ export const TodoListHeader = ({
     setEditName("");
   };
 
-  const handleDeleteList = () => {
-    if (
-      confirm(
-        "Are you sure you want to delete this list? This will also delete all cards in this list. This action cannot be undone.",
-      )
-    ) {
+  const handleDeleteList = async () => {
+    const ok = await confirm();
+
+    if (ok) {
       deleteList(
         { listId: list._id },
         {
@@ -236,6 +240,7 @@ export const TodoListHeader = ({
   // Expanded horizontal layout
   return (
     <CardHeader className="pb-2">
+      <ConfirmDialog />
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 flex-1">
           <div

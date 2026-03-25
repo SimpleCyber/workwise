@@ -5,6 +5,7 @@ import type React from "react";
 import { toast } from "sonner";
 
 import { useDeleteCard } from "@/features/todos/api/use-delete-card";
+import { useConfirm } from "@/hooks/use-confirm";
 
 import type { Id } from "../../../../../convex/_generated/dataModel";
 
@@ -14,14 +15,17 @@ interface TodoTaskDeleteButtonProps {
 
 export const TodoTaskDeleteButton = ({ cardId }: TodoTaskDeleteButtonProps) => {
   const { mutate: deleteCard, isPending: isDeleting } = useDeleteCard();
+  const [ConfirmDialog, confirm] = useConfirm(
+    "Are you sure?",
+    "This action cannot be undone.",
+  );
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (
-      confirm(
-        "Are you sure you want to delete this card? This action cannot be undone.",
-      )
-    ) {
+
+    const ok = await confirm();
+
+    if (ok) {
       deleteCard(
         { cardId },
         {
@@ -37,10 +41,12 @@ export const TodoTaskDeleteButton = ({ cardId }: TodoTaskDeleteButtonProps) => {
   };
 
   return (
-    <button
-      onClick={handleDelete}
-      disabled={isDeleting}
-      className="
+    <>
+      <ConfirmDialog />
+      <button
+        onClick={handleDelete}
+        disabled={isDeleting}
+        className="
         p-1 
         rounded 
         hover:bg-red-100 
@@ -50,8 +56,9 @@ export const TodoTaskDeleteButton = ({ cardId }: TodoTaskDeleteButtonProps) => {
         hover:text-red-600
         disabled:opacity-50
       "
-    >
-      <Trash2 className="h-4 w-4" />
-    </button>
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
+    </>
   );
 };

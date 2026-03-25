@@ -22,6 +22,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
+import { useConfirm } from "@/hooks/use-confirm";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -90,6 +91,11 @@ const TodoWorkspacePage = () => {
   const { mutate: updateBoard, isPending: isUpdatingBoard } = useUpdateBoard();
   const { mutate: toggleStarBoard, isPending: isTogglingStar } =
     useToggleStarBoard();
+
+  const [ConfirmDialog, confirm] = useConfirm(
+    "Are you sure?",
+    "This action cannot be undone.",
+  );
 
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -170,12 +176,10 @@ const TodoWorkspacePage = () => {
     }
   };
 
-  const handleDeleteBoard = (boardId: string) => {
-    if (
-      confirm(
-        "Are you sure you want to delete this board and all its contents? This action cannot be undone.",
-      )
-    ) {
+  const handleDeleteBoard = async (boardId: string) => {
+    const ok = await confirm();
+
+    if (ok) {
       deleteBoard(
         { boardId: boardId as Id<"todoBoards"> },
         {
@@ -238,6 +242,7 @@ const TodoWorkspacePage = () => {
 
   return (
     <div className="flex h-full flex-col">
+      <ConfirmDialog />
       <div className="flex h-[49px] items-center justify-between border-b bg-background px-4">
         <h1 className="text-lg font-semibold">
           Todo Boards - {workspace.name}

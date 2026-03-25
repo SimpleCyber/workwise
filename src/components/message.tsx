@@ -86,8 +86,8 @@ export const Message = ({
   threadTimestamp,
 }: MessageProps) => {
   const [ConfirmDialog, confirm] = useConfirm(
-    "Delete message",
-    "Are you sure you want to delete this message? This cannot be undone.",
+    "Are you sure?",
+    "This action cannot be undone.",
   );
   const { parentMessageId, onOpenMessage, onOpenProfile, onClose } = usePanel();
 

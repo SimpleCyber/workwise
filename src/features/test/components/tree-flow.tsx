@@ -33,6 +33,7 @@ import { Loader2, Plus, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AITreeDialog } from "./ai-tree-dialog";
 import { aiTreeService } from "@/lib/ai-service";
+import { useConfirm } from "@/hooks/use-confirm";
 
 const nodeTypes = {
   treeNode: TreeNode,
@@ -83,6 +84,11 @@ export function TreeFlow({
   const deleteNode = useDeleteTreeNode();
   const expandWithAI = useExpandNodeWithAI();
   const toggleStar = useToggleStar();
+
+  const [ConfirmDialog, confirm] = useConfirm(
+    "Are you sure?",
+    "This action cannot be undone.",
+  );
 
   const layoutManager = useMemo(() => new TreeLayoutManager(), []);
 
@@ -344,11 +350,9 @@ export function TreeFlow({
 
   const deleteNodeHandler = useCallback(
     async (nodeId: string) => {
-      if (
-        confirm(
-          "Are you sure you want to delete this node and all its children?",
-        )
-      ) {
+      const ok = await confirm();
+
+      if (ok) {
         try {
           await deleteNode({ nodeId });
           toast.success("Node deleted successfully!");
@@ -359,7 +363,7 @@ export function TreeFlow({
         }
       }
     },
-    [deleteNode],
+    [deleteNode, confirm],
   );
 
   const togglestar = useCallback(
@@ -476,6 +480,7 @@ export function TreeFlow({
 
   return (
     <div className="w-full h-full" onClick={closePopup}>
+      <ConfirmDialog />
       <ReactFlow
         key={`flow-${workspaceId}-${nodes.length}`}
         nodes={nodesWithCallbacks}

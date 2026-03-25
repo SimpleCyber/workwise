@@ -68,6 +68,7 @@ import {
 import type { Id } from "../../../../convex/_generated/dataModel";
 
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
+import { useConfirm } from "@/hooks/use-confirm";
 
 interface DataRoomPageProps {
   workspaceId: Id<"workspaces">;
@@ -129,6 +130,11 @@ const DataRoomWorkspacePage = () => {
   const uploadFile = useUploadDataRoomFile();
   const deleteFile = useDeleteDataRoomFile();
   const updatePermissions = useUpdateFilePermissions();
+
+  const [ConfirmDialog, confirm] = useConfirm(
+    "Are you sure?",
+    "This action cannot be undone.",
+  );
 
   // Early return if workspaceId is not available
   if (!workspaceId) {
@@ -231,7 +237,8 @@ const DataRoomWorkspacePage = () => {
   };
 
   const handleDelete = async (fileId: Id<"dataRoomFiles">) => {
-    if (!confirm("Are you sure you want to delete this file?")) return;
+    const ok = await confirm();
+    if (!ok) return;
 
     try {
       await deleteFile.mutate({ fileId });
@@ -253,6 +260,7 @@ const DataRoomWorkspacePage = () => {
 
   return (
     <div className="flex h-full flex-col p-6 overflow-hidden">
+      <ConfirmDialog />
       {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-shrink-0">
         <div>

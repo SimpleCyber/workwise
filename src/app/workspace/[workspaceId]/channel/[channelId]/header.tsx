@@ -35,8 +35,8 @@ export const Header = ({ channelName }: HeaderProps) => {
   const channelId = useChannelId();
   const workspaceId = useWorkspaceId();
   const [ConfirmDialog, confirm] = useConfirm(
-    "Delete this channel?",
-    "You are about to delete this channel and any of its associated messages. This action is irreversible.",
+    "Are you sure?",
+    "This action cannot be undone.",
   );
 
   const [value, setValue] = useState(channelName);

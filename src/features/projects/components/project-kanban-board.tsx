@@ -27,6 +27,7 @@ import {
 } from "@/features/projects/api/use-get-workspace-members";
 import { useUpdateProjectList } from "@/features/projects/api/use-update-project-list";
 import { useUpdateProjectTask } from "@/features/projects/api/use-update-project-task";
+import { useConfirm } from "@/hooks/use-confirm";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { ProjectTaskCard } from "./project-task-card";
 import { ProjectTaskDetailModal } from "./project-task-detail-modal";
@@ -77,6 +78,11 @@ export const ProjectKanbanBoard = ({
   const { mutate: deleteTask } = useDeleteProjectTask();
   const { mutate: updateList } = useUpdateProjectList();
   const { mutate: deleteList } = useDeleteProjectList();
+
+  const [ConfirmDialog, confirm] = useConfirm(
+    "Are you sure?",
+    "This action cannot be undone.",
+  );
 
   // Get workspace members for assignment
   const workspaceId = lists[0]?.workspaceId;
@@ -141,12 +147,10 @@ export const ProjectKanbanBoard = ({
     );
   };
 
-  const handleTaskDelete = (taskId: Id<"projectTasks">) => {
-    if (
-      confirm(
-        "Are you sure you want to delete this task? This action cannot be undone.",
-      )
-    ) {
+  const handleTaskDelete = async (taskId: Id<"projectTasks">) => {
+    const ok = await confirm();
+
+    if (ok) {
       deleteTask(
         { taskId },
         {
@@ -244,12 +248,10 @@ export const ProjectKanbanBoard = ({
     );
   };
 
-  const handleListDelete = (listId: Id<"projectLists">) => {
-    if (
-      confirm(
-        "Are you sure you want to delete this list? All tasks in this list will also be deleted. This action cannot be undone.",
-      )
-    ) {
+  const handleListDelete = async (listId: Id<"projectLists">) => {
+    const ok = await confirm();
+
+    if (ok) {
       deleteList(
         { listId },
         {
@@ -275,6 +277,7 @@ export const ProjectKanbanBoard = ({
 
   return (
     <>
+      <ConfirmDialog />
       <Droppable droppableId="board" type="list" direction="horizontal">
         {(provided) => (
           <div
