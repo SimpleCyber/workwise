@@ -35,7 +35,7 @@ import { useUpdateList } from "@/features/todos/api/use-update-list";
 
 import type { Id } from "../../../../../convex/_generated/dataModel";
 
-export type SortOption = "newest" | "oldest" | "alphabetical";
+export type SortOption = "newest" | "oldest" | "alphabetical" | "manual";
 
 interface TodoListHeaderProps {
   list: {
@@ -139,6 +139,8 @@ export const TodoListHeader = ({
         return <Calendar className="size-4 mr-2" />;
       case "alphabetical":
         return <ArrowDownAZ className="size-4 mr-2" />;
+      case "manual":
+        return <GripVertical className="size-4 mr-2" />;
       default:
         return <ArrowUpDown className="size-4 mr-2" />;
     }
@@ -152,6 +154,8 @@ export const TodoListHeader = ({
         return "Oldest First";
       case "alphabetical":
         return "Alphabetical";
+      case "manual":
+        return "Manual";
       default:
         return "Sort By";
     }

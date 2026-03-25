@@ -25,6 +25,7 @@ interface TodoBoardProps {
     memberId: Id<"members">;
     workspaceId: Id<"workspaces">;
     isArchived?: boolean;
+    sortBy?: "newest" | "oldest" | "alphabetical" | "manual";
     createdAt: number;
     updatedAt: number;
   }>;
@@ -54,6 +55,7 @@ export const TodoBoard = ({ boardId, lists }: TodoBoardProps) => {
           position: destination.index,
         },
         {
+          onSuccess: () => toast.success("List reordered"),
           onError: (error) => {
             toast.error(error.message || "Failed to reorder list");
           },
@@ -67,6 +69,14 @@ export const TodoBoard = ({ boardId, lists }: TodoBoardProps) => {
       const cardId = draggableId as Id<"todoCards">;
       const newListId = destination.droppableId as Id<"todoLists">;
 
+      const destinationList = lists.find((l) => l._id === newListId);
+      if (destinationList && destinationList.sortBy !== "manual") {
+        updateList({
+          listId: newListId,
+          sortBy: "manual",
+        });
+      }
+
       updateCard(
         {
           cardId,
@@ -74,6 +84,7 @@ export const TodoBoard = ({ boardId, lists }: TodoBoardProps) => {
           position: destination.index,
         },
         {
+          onSuccess: () => toast.success("Card moved"),
           onError: (error) => {
             toast.error(error.message || "Failed to move card");
           },
@@ -82,12 +93,23 @@ export const TodoBoard = ({ boardId, lists }: TodoBoardProps) => {
     } else {
       // Handle card reordering within the same list
       const cardId = draggableId as Id<"todoCards">;
+      const listId = source.droppableId as Id<"todoLists">;
+
+      const currentList = lists.find((l) => l._id === listId);
+      if (currentList && currentList.sortBy !== "manual") {
+        updateList({
+          listId,
+          sortBy: "manual",
+        });
+      }
+
       updateCard(
         {
           cardId,
           position: destination.index,
         },
         {
+          onSuccess: () => toast.success("Card reordered"),
           onError: (error) => {
             toast.error(error.message || "Failed to reorder card");
           },

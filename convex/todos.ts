@@ -1,3 +1,4 @@
+// Convex todos mutation logic
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
@@ -213,6 +214,7 @@ export const createList = mutation({
       workspaceId: board.workspaceId,
       position: maxPosition + 1,
       isArchived: false,
+      sortBy: "manual",
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
@@ -258,6 +260,14 @@ export const updateList = mutation({
     position: v.optional(v.number()),
     isArchived: v.optional(v.boolean()),
     isCollapsed: v.optional(v.boolean()),
+    sortBy: v.optional(
+      v.union(
+        v.literal("newest"),
+        v.literal("oldest"),
+        v.literal("alphabetical"),
+        v.literal("manual"),
+      ),
+    ),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);

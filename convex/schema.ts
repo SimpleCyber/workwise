@@ -208,6 +208,14 @@ const schema = defineSchema({
     position: v.number(),
     isArchived: v.optional(v.boolean()),
     isCollapsed: v.optional(v.boolean()),
+    sortBy: v.optional(
+      v.union(
+        v.literal("newest"),
+        v.literal("oldest"),
+        v.literal("alphabetical"),
+        v.literal("manual"),
+      ),
+    ),
     createdAt: v.number(),
     updatedAt: v.number(),
   })

@@ -13,6 +13,7 @@ interface KanbanBoardProps {
     memberId: Id<"members">;
     workspaceId: Id<"workspaces">;
     isArchived?: boolean;
+    sortBy?: "newest" | "oldest" | "alphabetical" | "manual";
     createdAt: number;
     updatedAt: number;
   }>;

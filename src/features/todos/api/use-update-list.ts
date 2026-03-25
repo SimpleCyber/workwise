@@ -12,6 +12,7 @@ type RequestType = {
   position?: number;
   isArchived?: boolean;
   isCollapsed?: boolean;
+  sortBy?: "newest" | "oldest" | "alphabetical" | "manual";
 };
 
 type ResponseType = void | null;

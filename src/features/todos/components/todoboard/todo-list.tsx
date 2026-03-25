@@ -3,6 +3,7 @@
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import { Loader } from "lucide-react";
 import { useState, useMemo } from "react";
+import { toast } from "sonner";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { useGetCards } from "@/features/todos/api/use-get-cards";
@@ -23,6 +24,7 @@ interface TodoListProps {
     workspaceId: Id<"workspaces">;
     isArchived?: boolean;
     isCollapsed?: boolean;
+    sortBy?: SortOption;
     createdAt: number;
     updatedAt: number;
   };
@@ -31,9 +33,9 @@ interface TodoListProps {
 
 export const TodoList = ({ list, dragHandleProps }: TodoListProps) => {
   const [isAddingCard, setIsAddingCard] = useState(false);
-  const [sortBy, setSortBy] = useState<SortOption>("newest");
   const { data: cards, isLoading } = useGetCards({ listId: list._id });
   const { mutate: updateList } = useUpdateList();
+  const sortBy = list.sortBy ?? "manual";
 
   const isCollapsed = list.isCollapsed ?? false;
 
@@ -53,6 +55,7 @@ export const TodoList = ({ list, dragHandleProps }: TodoListProps) => {
         return sorted.sort((a, b) => a.createdAt - b.createdAt);
       case "alphabetical":
         return sorted.sort((a, b) => a.title.localeCompare(b.title));
+      case "manual":
       default:
         return sorted.sort((a, b) => a.position - b.position);
     }
@@ -84,7 +87,17 @@ export const TodoList = ({ list, dragHandleProps }: TodoListProps) => {
   };
 
   const handleSortChange = (newSortBy: SortOption) => {
-    setSortBy(newSortBy);
+    updateList({
+      listId: list._id,
+      sortBy: newSortBy,
+    }, {
+      onSuccess: () => {
+        toast.success(`Sorted by ${newSortBy}`);
+      },
+      onError: (error) => {
+        toast.error(`Failed to sort: ${error.message}`);
+      }
+    });
   };
 
   const collapsedWidth = getCollapsedWidth();
