@@ -8,8 +8,8 @@ import {
 } from "@hello-pangea/dnd";
 import { toast } from "sonner";
 
-import { useUpdateCard } from "@/features/todos/api/use-update-card";
-import { useUpdateList } from "@/features/todos/api/use-update-list";
+import { useReorderCard } from "@/features/todos/api/use-reorder-cards";
+import { useReorderList } from "@/features/todos/api/use-reorder-lists";
 
 import type { Id } from "../../../../../convex/_generated/dataModel";
 import { TodoAddList } from "./todo-add-list";
@@ -32,8 +32,8 @@ interface TodoBoardProps {
 }
 
 export const TodoBoard = ({ boardId, lists }: TodoBoardProps) => {
-  const { mutate: updateCard } = useUpdateCard();
-  const { mutate: updateList } = useUpdateList();
+  const { mutate: reorderCard } = useReorderCard();
+  const { mutate: reorderList } = useReorderList();
 
   const handleDragEnd = (result: DropResult) => {
     const { destination, source, draggableId, type } = result;
@@ -49,10 +49,11 @@ export const TodoBoard = ({ boardId, lists }: TodoBoardProps) => {
     // Handle list reordering
     if (type === "list") {
       const listId = draggableId as Id<"todoLists">;
-      updateList(
+      reorderList(
         {
+          boardId,
           listId,
-          position: destination.index,
+          newIndex: destination.index,
         },
         {
           onSuccess: () => toast.success("List reordered"),
@@ -65,57 +66,28 @@ export const TodoBoard = ({ boardId, lists }: TodoBoardProps) => {
     }
 
     // Handle card movement between lists
-    if (source.droppableId !== destination.droppableId) {
-      const cardId = draggableId as Id<"todoCards">;
-      const newListId = destination.droppableId as Id<"todoLists">;
+    const cardId = draggableId as Id<"todoCards">;
+    const newListId = destination.droppableId as Id<"todoLists">;
 
-      const destinationList = lists.find((l) => l._id === newListId);
-      if (destinationList && destinationList.sortBy !== "manual") {
-        updateList({
-          listId: newListId,
-          sortBy: "manual",
-        });
-      }
-
-      updateCard(
-        {
-          cardId,
-          listId: newListId,
-          position: destination.index,
+    reorderCard(
+      {
+        cardId,
+        newListId,
+        newIndex: destination.index,
+      },
+      {
+        onSuccess: () => {
+          if (source.droppableId !== destination.droppableId) {
+            toast.success("Card moved");
+          } else {
+            toast.success("Card reordered");
+          }
         },
-        {
-          onSuccess: () => toast.success("Card moved"),
-          onError: (error) => {
-            toast.error(error.message || "Failed to move card");
-          },
+        onError: (error) => {
+          toast.error(error.message || "Failed to reorder card");
         },
-      );
-    } else {
-      // Handle card reordering within the same list
-      const cardId = draggableId as Id<"todoCards">;
-      const listId = source.droppableId as Id<"todoLists">;
-
-      const currentList = lists.find((l) => l._id === listId);
-      if (currentList && currentList.sortBy !== "manual") {
-        updateList({
-          listId,
-          sortBy: "manual",
-        });
-      }
-
-      updateCard(
-        {
-          cardId,
-          position: destination.index,
-        },
-        {
-          onSuccess: () => toast.success("Card reordered"),
-          onError: (error) => {
-            toast.error(error.message || "Failed to reorder card");
-          },
-        },
-      );
-    }
+      },
+    );
   };
 
   const sortedLists = [...lists]

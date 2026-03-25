@@ -293,6 +293,54 @@ export const updateList = mutation({
   },
 });
 
+export const reorderList = mutation({
+  args: {
+    boardId: v.id("todoBoards"),
+    listId: v.id("todoLists"),
+    newIndex: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Unauthorized");
+    }
+
+    const board = await ctx.db.get(args.boardId);
+    if (!board) {
+      throw new Error("Board not found");
+    }
+
+    const member = await ctx.db.get(board.memberId);
+    if (!member || member.userId !== userId) {
+      throw new Error("Unauthorized");
+    }
+
+    const lists = await ctx.db
+      .query("todoLists")
+      .withIndex("by_board_id", (q) => q.eq("boardId", args.boardId))
+      .collect();
+
+    const sortedLists = lists
+      .filter((l) => !l.isArchived)
+      .sort((a, b) => a.position - b.position);
+
+    const listToMove = sortedLists.find((l) => l._id === args.listId);
+    if (!listToMove) {
+      throw new Error("List not found");
+    }
+
+    const otherLists = sortedLists.filter((l) => l._id !== args.listId);
+    otherLists.splice(args.newIndex, 0, listToMove);
+
+    for (let i = 0; i < otherLists.length; i++) {
+      await ctx.db.patch(otherLists[i]._id, {
+        position: i,
+        updatedAt: Date.now(),
+      });
+    }
+  },
+});
+
 export const deleteList = mutation({
   args: { listId: v.id("todoLists") },
   handler: async (ctx, args) => {
@@ -479,6 +527,75 @@ export const updateCard = mutation({
       ...updates,
       updatedAt: Date.now(),
     });
+  },
+});
+
+export const reorderCard = mutation({
+  args: {
+    cardId: v.id("todoCards"),
+    newListId: v.id("todoLists"),
+    newIndex: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Unauthorized");
+    }
+
+    const card = await ctx.db.get(args.cardId);
+    if (!card) {
+      throw new Error("Card not found");
+    }
+
+    const list = await ctx.db.get(args.newListId);
+    if (!list) {
+      throw new Error("Destination list not found");
+    }
+
+    const member = await ctx.db.get(list.memberId);
+    if (!member || member.userId !== userId) {
+      throw new Error("Unauthorized");
+    }
+
+    // Get all cards in the destination list
+    const cards = await ctx.db
+      .query("todoCards")
+      .withIndex("by_list_id", (q) => q.eq("listId", args.newListId))
+      .collect();
+
+    let sortedCards = cards
+      .filter((c) => !c.isArchived)
+      .sort((a, b) => a.position - b.position);
+
+    const isSameList = card.listId === args.newListId;
+
+    if (isSameList) {
+      // Remove card from its current position
+      sortedCards = sortedCards.filter((c) => c._id !== args.cardId);
+    }
+
+    // Insert card at new position
+    sortedCards.splice(args.newIndex, 0, {
+      ...card,
+      listId: args.newListId,
+    } as any);
+
+    // Update positions for all cards in destination list
+    for (let i = 0; i < sortedCards.length; i++) {
+      await ctx.db.patch(sortedCards[i]._id, {
+        listId: args.newListId,
+        position: i,
+        updatedAt: Date.now(),
+      });
+    }
+
+    // Update list to manual sorting
+    if (list.sortBy !== "manual") {
+      await ctx.db.patch(args.newListId, {
+        sortBy: "manual",
+        updatedAt: Date.now(),
+      });
+    }
   },
 });
 
