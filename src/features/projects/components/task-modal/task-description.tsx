@@ -113,37 +113,39 @@ export const TaskDescription = ({
   };
 
   return (
-    <div className="p-4 max-h-[400px] overflow-y-auto">
-      {/* Collapsible Header */}
-      <div className="flex items-center justify-between mb-3 sticky top-0 bg-background z-10 pb-2">
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
-        >
-          {isCollapsed ? (
-            <ChevronRight className="w-4 h-4" />
-          ) : (
-            <ChevronDown className="w-4 h-4" />
-          )}
-          Description
-        </button>
+    <div className="flex flex-col space-y-4">
+      {/* Description Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-sm font-semibold text-foreground/80">
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="flex items-center gap-2 hover:text-primary transition-colors"
+          >
+            {isCollapsed ? (
+              <ChevronRight className="w-4 h-4" />
+            ) : (
+              <ChevronDown className="w-4 h-4" />
+            )}
+            Description
+          </button>
+        </div>
         {!isEditing && task.description && (
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsEditing(true)}
-            className="text-xs"
+            className="text-xs h-7 px-2 hover:bg-muted font-medium"
           >
             Edit
           </Button>
         )}
       </div>
 
-      {/* Content */}
+      {/* Content Area */}
       {!isCollapsed && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {isEditing ? (
-            <div className="max-w-full overflow-hidden">
+            <div className="rounded-lg border bg-muted/30 overflow-hidden ring-1 ring-border/50">
               <Editor
                 key={editorKey}
                 onSubmit={handleUpdate}
@@ -155,87 +157,76 @@ export const TaskDescription = ({
                 defaultValue={
                   task.description ? JSON.parse(task.description) : []
                 }
-                placeholder="Add a description..."
+                placeholder="Add a more detailed description..."
                 variant="create"
                 disabled={isPending}
               />
             </div>
           ) : (
             <div
-              className="min-h-[60px] max-w-full cursor-pointer hover:bg-accent rounded p-3 transition-colors break-words overflow-auto"
+              className="group relative min-h-[60px] cursor-pointer rounded-lg hover:bg-muted/30 p-3 -m-3 transition-all border border-transparent hover:border-border/50"
               onClick={() => setIsEditing(true)}
             >
               {task.description ? (
-                <div className="space-y-3">
-                  <Renderer value={task.description} />
+                <div className="space-y-4">
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <Renderer value={task.description} />
+                  </div>
 
-                  {/* Description Images */}
+                  {/* Attachment Images */}
                   {task.descriptionImages &&
                     task.descriptionImages.length > 0 && (
-                      <div className="space-y-2 max-w-full">
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="space-y-3 pt-2">
+                        <div className="flex items-center gap-2 text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
                           <ImageIcon className="w-3 h-3" />
                           <span>
                             {task.descriptionImages.length} attachment(s)
                           </span>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 max-w-full">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                           {task.descriptionImages.map(
                             (imageUrl: string, index: number) => (
                               <div
                                 key={index}
-                                className="relative group rounded overflow-hidden border bg-muted max-w-full"
+                                className="relative group/img aspect-video rounded-lg overflow-hidden border bg-muted shadow-sm hover:shadow-md transition-all ring-1 ring-border/50"
                               >
                                 <Image
-                                  width={200}
-                                  height={120}
+                                  fill
                                   src={imageUrl || "/placeholder.svg"}
                                   alt={`Attachment ${index + 1}`}
-                                  className="w-full h-24 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                                  className="object-cover cursor-pointer hover:scale-105 transition-transform duration-500"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     onImagePreview(imageUrl);
                                   }}
                                 />
-                                <TooltipProvider>
-                                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          variant="secondary"
-                                          size="sm"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            onImagePreview(imageUrl);
-                                          }}
-                                        >
-                                          <Maximize2 className="w-3 h-3" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        View full size
-                                      </TooltipContent>
-                                    </Tooltip>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          variant="secondary"
-                                          size="sm"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDownloadImage(
-                                              imageUrl,
-                                              `attachment-${index + 1}.jpg`,
-                                            );
-                                          }}
-                                        >
-                                          <Download className="w-3 h-3" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>Download</TooltipContent>
-                                    </Tooltip>
-                                  </div>
-                                </TooltipProvider>
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                  <Button
+                                    variant="secondary"
+                                    size="icon"
+                                    className="h-8 w-8 rounded-full shadow-lg"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onImagePreview(imageUrl);
+                                    }}
+                                  >
+                                    <Maximize2 className="w-4 h-4" />
+                                  </Button>
+                                  <Button
+                                    variant="secondary"
+                                    size="icon"
+                                    className="h-8 w-8 rounded-full shadow-lg"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDownloadImage(
+                                        imageUrl,
+                                        `attachment-${index + 1}.jpg`,
+                                      );
+                                    }}
+                                  >
+                                    <Download className="w-4 h-4" />
+                                  </Button>
+                                </div>
                               </div>
                             ),
                           )}
@@ -244,8 +235,8 @@ export const TaskDescription = ({
                     )}
                 </div>
               ) : (
-                <div className="text-center py-6 text-muted-foreground">
-                  <p className="text-sm">Add a description...</p>
+                <div className="py-8 text-center text-muted-foreground bg-muted/10 rounded-lg border-2 border-dashed border-muted-foreground/10 hover:border-muted-foreground/30 transition-all">
+                  <p className="text-sm font-medium">Add a description...</p>
                 </div>
               )}
             </div>

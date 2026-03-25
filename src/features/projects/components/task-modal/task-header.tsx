@@ -11,13 +11,6 @@ import { toast } from "sonner";
 import { useUpdateProjectTask } from "@/features/projects/api/use-update-project-task";
 import type { Id } from "../../../../../convex/_generated/dataModel";
 
-const priorityColors = {
-  low: "bg-green-100 text-green-700 border-green-200",
-  medium: "bg-blue-100 text-blue-700 border-blue-200",
-  high: "bg-orange-100 text-orange-700 border-orange-200",
-  urgent: "bg-red-100 text-red-700 border-red-200",
-};
-
 interface TaskHeaderProps {
   task: {
     _id: Id<"projectTasks">;
@@ -74,40 +67,41 @@ export const TaskHeader = ({ task, onClose }: TaskHeaderProps) => {
   };
 
   return (
-    <div className="flex items-center justify-between p-4 border-b bg-slate-50/50">
-      <div className="flex items-center gap-3 flex-1 min-w-0">
+    <div className="flex flex-col px-6 py-4 border-b bg-background">
+      {/* Breadcrumbs / Task ID */}
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:underline cursor-pointer">
+          {task.taskCode.split("-")[0]}
+        </span>
+        <span className="text-xs text-muted-foreground">/</span>
         <Badge
-          variant="outline"
-          className="font-mono text-xs px-2 py-1 shrink-0"
+          variant="secondary"
+          className="font-mono text-[10px] px-1.5 py-0 h-4 bg-muted text-muted-foreground border-none hover:bg-muted/80 transition-colors cursor-pointer"
         >
           {task.taskCode}
         </Badge>
+      </div>
 
-        <Badge
-          className={`${priorityColors[task.priority]} text-xs px-2 py-1 shrink-0`}
-        >
-          {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
-        </Badge>
-
-        <div className="flex items-center gap-2 flex-1 min-w-0">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex-1 min-w-0 group">
           {isEditingTitle ? (
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               onBlur={handleTitleSave}
               onKeyDown={handleKeyDown}
-              className="text-lg font-medium border-none shadow-none p-0 h-auto focus-visible:ring-0 bg-transparent"
+              className="text-2xl font-bold border-2 border-primary/20 shadow-none px-2 py-1 h-auto focus-visible:ring-2 focus-visible:ring-primary/20 bg-muted/30 rounded-md transition-all"
               autoFocus
             />
           ) : (
             <h1
-              className="text-lg font-medium cursor-pointer hover:bg-slate-100 px-2 py-1 rounded transition-colors flex items-center gap-2 truncate"
+              className="text-2xl font-bold cursor-pointer hover:bg-muted/50 px-2 py-1 -ml-2 rounded-md transition-all flex items-center gap-2 truncate group"
               onClick={() => setIsEditingTitle(true)}
               title={task.title}
             >
               <span className="truncate">{task.title}</span>
               {showSaved && (
-                <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                <Check className="w-5 h-5 text-emerald-500 shrink-0 animate-in fade-in zoom-in duration-300" />
               )}
             </h1>
           )}

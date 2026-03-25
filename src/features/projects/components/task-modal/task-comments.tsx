@@ -43,7 +43,7 @@ interface TaskCommentsProps {
 }
 
 export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [editingComment, setEditingComment] =
     useState<Id<"taskComments"> | null>(null);
   const [editorKey, setEditorKey] = useState(0);
@@ -182,172 +182,179 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
   };
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col space-y-6">
       <ConfirmDialog />
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-gray-50/50 sticky top-0 z-10">
-        <div className="flex items-center gap-2">
+      {/* Activity Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-sm font-semibold text-foreground/80">
           <MessageSquare className="w-4 h-4" />
-          <h3 className="font-medium">Activity ({comments?.length || 0})</h3>
+          <h3>Activity</h3>
+          <span className="text-xs font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+            {comments?.length || 0}
+          </span>
         </div>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-          className="flex items-center gap-1 text-xs"
+          className="h-7 px-2 text-[11px] font-medium hover:bg-muted"
         >
-          <ArrowUpDown className="w-3 h-3" />
-          {sortOrder === "asc" ? "Oldest" : "Newest"}
+          <ArrowUpDown className="w-3 h-3 mr-1.5" />
+          {sortOrder === "asc" ? "Oldest first" : "Newest first"}
         </Button>
       </div>
 
-      {/* Comments List */}
-      <div className="p-4 space-y-4">
-        {isLoading ? (
-          <div className="text-center py-8 text-gray-500 text-sm">
-            Loading comments...
+      {/* New Comment Input - At the top, like Jira */}
+      <div className="flex gap-3 group/editor">
+        <Avatar className="w-8 h-8 rounded-full border shadow-sm shrink-0">
+          {/* Use current user's avatar if possible, but here we just show a placeholder or fixed avatar shell */}
+          <AvatarFallback className="text-[10px] bg-secondary">
+            ME
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1 min-w-0">
+          <div className="rounded-lg border bg-background hover:border-border/80 transition-all shadow-sm ring-1 ring-border/50 overflow-hidden focus-within:ring-primary/20 focus-within:border-primary/30">
+            <Editor
+              key={editorKey}
+              onSubmit={handleSubmitComment}
+              placeholder="Add a comment..."
+              variant="create"
+            />
           </div>
-        ) : comments?.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-30" />
-            <p className="text-sm">No activity yet</p>
-          </div>
-        ) : (
-          comments?.map((comment: any) => (
-            <div key={comment._id} className="flex gap-2 group">
-              <Avatar className="w-6 h-6 mt-1 flex-shrink-0">
-                <AvatarImage
-                  src={comment.member?.user?.image || "/placeholder.svg"}
-                />
-                <AvatarFallback className="text-xs">
-                  {comment.member?.user?.name?.charAt(0).toUpperCase() || "U"}
-                </AvatarFallback>
-              </Avatar>
-
-              <div className="flex-1 space-y-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-medium text-xs">
-                    {comment.member?.user?.name || "Unknown User"}
-                  </span>
-                  <Badge variant="outline" className="text-xs px-1 py-0">
-                    {comment.member?.role}
-                  </Badge>
-                  <span className="text-xs text-gray-500">
-                    {formatDistanceToNow(new Date(comment.createdAt), {
-                      addSuffix: true,
-                    })}
-                  </span>
-                  {comment.isEdited && (
-                    <Badge variant="secondary" className="text-xs px-1 py-0">
-                      edited
-                    </Badge>
-                  )}
-                </div>
-
-                {editingComment === comment._id ? (
-                  <Editor
-                    onSubmit={(data) => handleUpdateComment(comment._id, data)}
-                    onCancel={() => setEditingComment(null)}
-                    defaultValue={JSON.parse(comment.content)}
-                    variant="update"
-                  />
-                ) : (
-                  <>
-                    <div className="bg-gray-50 rounded p-2 text-sm break-words max-h-400px max-w-full overflow-auto">
-                      <Renderer value={comment.content} />
-                      {comment.image && (
-                        <div className="mt-2 max-w-full">
-                          <div className="relative group max-w-full rounded overflow-hidden border">
-                            <Image
-                              src={comment.imageUrl || "/placeholder.svg"}
-                              width={300}
-                              height={200}
-                              alt="Comment attachment"
-                              className="w-full h-auto max-w-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                              onClick={() => onImagePreview(comment.imageUrl)}
-                            />
-                            <TooltipProvider>
-                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="secondary"
-                                      size="sm"
-                                      onClick={() =>
-                                        onImagePreview(comment.imageUrl)
-                                      }
-                                    >
-                                      <Maximize2 className="w-3 h-3" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    View full size
-                                  </TooltipContent>
-                                </Tooltip>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="secondary"
-                                      size="sm"
-                                      onClick={() =>
-                                        handleDownloadImage(
-                                          comment.imageUrl,
-                                          `comment-image-${comment._id}.jpg`,
-                                        )
-                                      }
-                                    >
-                                      <Download className="w-3 h-3" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Download</TooltipContent>
-                                </Tooltip>
-                              </div>
-                            </TooltipProvider>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {comment.member?.userId && (
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setEditingComment(comment._id)}
-                          className="h-6 px-2 text-xs"
-                        >
-                          <Edit2 className="w-3 h-3 mr-1" />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteComment(comment._id)}
-                          className="h-6 px-2 text-xs text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="w-3 h-3 mr-1" />
-                          Delete
-                        </Button>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-          ))
-        )}
+        </div>
       </div>
 
-      {/* New Comment Form */}
-      <div className="border-t p-4 bg-gray-50/30 sticky bottom-0">
-        <div className="max-w-full overflow-hidden">
-          <Editor
-            key={editorKey}
-            onSubmit={handleSubmitComment}
-            placeholder="Add a comment..."
-            variant="create"
-          />
-        </div>
+      {/* Comments List */}
+      <div className="space-y-6">
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-12 space-y-3">
+            <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+            <span className="text-xs text-muted-foreground animate-pulse">
+              Loading activity...
+            </span>
+          </div>
+        ) : comments?.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center bg-muted/5 rounded-xl border-2 border-dashed border-muted-foreground/5">
+            <MessageSquare className="w-10 h-10 mb-3 opacity-10 text-primary" />
+            <p className="text-sm font-medium text-muted-foreground/80">
+              No activity yet
+            </p>
+            <p className="text-xs text-muted-foreground/60 max-w-[200px] mt-1 line-height-relaxed">
+              Start the conversation by adding a comment above.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {comments?.map((comment: any) => (
+              <div key={comment._id} className="flex gap-3 group relative">
+                <Avatar className="w-8 h-8 rounded-full border shadow-sm shrink-0 mt-0.5">
+                  <AvatarImage
+                    src={comment.member?.user?.image || "/placeholder.svg"}
+                  />
+                  <AvatarFallback className="text-[10px] bg-secondary">
+                    {comment.member?.user?.name?.charAt(0).toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+
+                <div className="flex-1 flex flex-col space-y-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-bold text-foreground/90">
+                      {comment.member?.user?.name || "Unknown User"}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded uppercase tracking-tighter font-semibold">
+                      {comment.member?.role}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground">
+                      {formatDistanceToNow(new Date(comment.createdAt), {
+                        addSuffix: true,
+                      })}
+                    </span>
+                    {comment.isEdited && (
+                      <span className="text-[10px] text-muted-foreground italic">
+                        (edited)
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col space-y-2">
+                    {editingComment === comment._id ? (
+                      <div className="rounded-lg border bg-muted/30 overflow-hidden ring-1 ring-border/50">
+                        <Editor
+                          onSubmit={(data) =>
+                            handleUpdateComment(comment._id, data)
+                          }
+                          onCancel={() => setEditingComment(null)}
+                          defaultValue={JSON.parse(comment.content)}
+                          variant="update"
+                        />
+                      </div>
+                    ) : (
+                      <div className="text-sm text-foreground/80 leading-relaxed break-words py-1">
+                        <Renderer value={comment.content} />
+                        {comment.image && (
+                          <div className="mt-3 max-w-sm">
+                            <div className="relative group/img aspect-auto rounded-lg overflow-hidden border bg-muted shadow-sm hover:shadow-md transition-all ring-1 ring-border/50">
+                              <Image
+                                src={comment.imageUrl || "/placeholder.svg"}
+                                width={600}
+                                height={400}
+                                alt="Comment attachment"
+                                className="w-full h-auto cursor-pointer hover:opacity-95 transition-opacity"
+                                onClick={() => onImagePreview(comment.imageUrl)}
+                              />
+                              <div className="absolute inset-x-0 bottom-0 p-2 bg-black/60 translate-y-full group-hover/img:translate-y-0 transition-transform flex items-center justify-end gap-2">
+                                <Button
+                                  variant="secondary"
+                                  size="icon"
+                                  className="h-7 w-7 rounded-sm"
+                                  onClick={() =>
+                                    onImagePreview(comment.imageUrl)
+                                  }
+                                >
+                                  <Maximize2 className="w-3.5 h-3.5" />
+                                </Button>
+                                <Button
+                                  variant="secondary"
+                                  size="icon"
+                                  className="h-7 w-7 rounded-sm"
+                                  onClick={() =>
+                                    handleDownloadImage(
+                                      comment.imageUrl,
+                                      `comment-image-${comment._id}.jpg`,
+                                    )
+                                  }
+                                >
+                                  <Download className="w-3.5 h-3.5" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {!editingComment && comment.member?.userId && (
+                      <div className="flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity pt-1">
+                        <button
+                          onClick={() => setEditingComment(comment._id)}
+                          className="text-[11px] font-semibold text-muted-foreground hover:text-primary transition-colors hover:underline"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteComment(comment._id)}
+                          className="text-[11px] font-semibold text-muted-foreground hover:text-destructive transition-colors hover:underline"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

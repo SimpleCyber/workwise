@@ -49,22 +49,22 @@ export const TaskContent = ({
   onImagePreview,
 }: TaskContentProps) => {
   return (
-    <div className="flex min-h-full">
+    <div className="flex h-full bg-background">
       {/* Main Content Area - Left Side */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto overflow-x-hidden">
         {/* Description Section */}
-        <div className="border-b">
+        <div className="px-6 py-4">
           <TaskDescription task={task} onImagePreview={onImagePreview} />
         </div>
 
-        {/* Comments Section */}
-        <div>
+        {/* Activity/Comments Section */}
+        <div className="px-6 py-4 border-t">
           <TaskComments task={task} onImagePreview={onImagePreview} />
         </div>
       </div>
 
       {/* Details Sidebar - Right Side */}
-      <div className="w-80 border-l bg-gray-50/30 flex-shrink-0 sticky top-0 self-start">
+      <div className="w-80 border-l bg-muted/10 flex-shrink-0 sticky top-0 self-start h-full overflow-y-auto">
         <TaskDetails task={task} lists={lists} />
       </div>
     </div>
