@@ -1,6 +1,7 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
 
 // Upload data room file
 export const uploadDataRoomFile = mutation({
@@ -13,6 +14,7 @@ export const uploadDataRoomFile = mutation({
     comment: v.string(),
     visibility: v.union(v.literal("public"), v.literal("private")),
     allowedMembers: v.array(v.id("members")),
+    folderId: v.optional(v.id("dataRoomFolders")),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -41,6 +43,7 @@ export const uploadDataRoomFile = mutation({
       comment: args.comment,
       visibility: args.visibility,
       allowedMembers: args.allowedMembers,
+      folderId: args.folderId,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
@@ -113,11 +116,12 @@ export const getDataRoomFiles = query({
     dateFilter: v.optional(v.string()),
     userFilter: v.optional(v.string()),
     fileTypeFilter: v.optional(v.string()),
+    folderId: v.optional(v.id("dataRoomFolders")),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
-      return { files: [], total: 0 };
+      return { files: [], folders: [], total: 0 };
     }
 
     // Check if user is a member of the workspace
@@ -129,20 +133,39 @@ export const getDataRoomFiles = query({
       .unique();
 
     if (!member) {
-      return { files: [], total: 0 };
+      return { files: [], folders: [], total: 0 };
     }
 
+    // Get all folders in the current folder (or root)
+    const folders = await ctx.db
+      .query("dataRoomFolders")
+      .withIndex("by_parent_id", (q) => q.eq("parentId", args.folderId))
+      .filter((q) => q.eq(q.field("workspaceId"), args.workspaceId))
+      .collect();
+
     const page = args.page || 1;
-    const limit = args.limit || 12;
+    const limit = args.limit || 100; // Larger limit for folder-based view
+    // ...existing filtering logic...
     const offset = (page - 1) * limit;
 
-    // Get all files for the workspace
-    let files = await ctx.db
-      .query("dataRoomFiles")
-      .withIndex("by_workspace_id", (q) =>
-        q.eq("workspaceId", args.workspaceId),
-      )
-      .collect();
+    // Get files for the workspace and current folder
+    const filesQuery = args.folderId
+      ? ctx.db
+          .query("dataRoomFiles")
+          .withIndex("by_folder_id", (q) => q.eq("folderId", args.folderId))
+      : ctx.db
+          .query("dataRoomFiles")
+          .withIndex("by_workspace_id", (q) =>
+            q.eq("workspaceId", args.workspaceId),
+          )
+          .filter((q) => q.eq(q.field("folderId"), undefined));
+
+    let files = await filesQuery.collect();
+
+    // Filter by workspace if using folder_id index
+    if (args.folderId) {
+      files = files.filter((f) => f.workspaceId === args.workspaceId);
+    }
 
     // Filter files based on visibility and permissions
     files = files.filter((file) => {
@@ -226,12 +249,61 @@ export const getDataRoomFiles = query({
       }),
     );
 
+    // Get breadcrumb path for current folder
+    let breadcrumbPath: { _id: Id<"dataRoomFolders">; name: string }[] = [];
+    if (args.folderId) {
+      let currentFolder = await ctx.db.get(args.folderId);
+      while (currentFolder) {
+        breadcrumbPath.unshift({
+          _id: currentFolder._id,
+          name: currentFolder.name,
+        });
+        if (currentFolder.parentId) {
+          currentFolder = await ctx.db.get(currentFolder.parentId);
+        } else {
+          currentFolder = null;
+        }
+      }
+    }
+
     return {
       files: filesWithDetails,
+      folders,
       total,
       page,
       totalPages: Math.ceil(total / limit),
+      breadcrumbPath,
     };
+  },
+});
+
+// Create data room folder
+export const createDataRoomFolder = mutation({
+  args: {
+    workspaceId: v.id("workspaces"),
+    name: v.string(),
+    parentId: v.optional(v.id("dataRoomFolders")),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Unauthorized");
+
+    const member = await ctx.db
+      .query("members")
+      .withIndex("by_workspace_id_user_id", (q) =>
+        q.eq("workspaceId", args.workspaceId).eq("userId", userId),
+      )
+      .unique();
+
+    if (!member) throw new Error("Not a member of this workspace");
+
+    return await ctx.db.insert("dataRoomFolders", {
+      name: args.name,
+      workspaceId: args.workspaceId,
+      uploaderId: member._id,
+      parentId: args.parentId,
+      createdAt: Date.now(),
+    });
   },
 });
 

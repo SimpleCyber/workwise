@@ -363,12 +363,24 @@ const schema = defineSchema({
     comment: v.string(),
     visibility: v.union(v.literal("public"), v.literal("private")),
     allowedMembers: v.array(v.id("members")),
+    folderId: v.optional(v.id("dataRoomFolders")),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_workspace_id", ["workspaceId"])
     .index("by_uploader_id", ["uploaderId"])
+    .index("by_folder_id", ["folderId"])
     .index("by_created_at", ["createdAt"]),
+
+  dataRoomFolders: defineTable({
+    name: v.string(),
+    workspaceId: v.id("workspaces"),
+    uploaderId: v.id("members"),
+    parentId: v.optional(v.id("dataRoomFolders")),
+    createdAt: v.number(),
+  })
+    .index("by_workspace_id", ["workspaceId"])
+    .index("by_parent_id", ["parentId"]),
   // Advanced Tree Structure tables
   treeNodes: defineTable({
     title: v.string(),

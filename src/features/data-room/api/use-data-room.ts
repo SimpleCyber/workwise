@@ -14,6 +14,7 @@ export const useGetDataRoomFiles = ({
   dateFilter = "",
   userFilter = "",
   fileTypeFilter = "",
+  folderId,
 }: {
   workspaceId?: Id<"workspaces">;
   page?: number;
@@ -22,6 +23,7 @@ export const useGetDataRoomFiles = ({
   dateFilter?: string;
   userFilter?: string;
   fileTypeFilter?: string;
+  folderId?: Id<"dataRoomFolders">;
 }) => {
   const shouldFetch = !!workspaceId;
 
@@ -36,6 +38,7 @@ export const useGetDataRoomFiles = ({
           dateFilter,
           userFilter,
           fileTypeFilter,
+          folderId,
         }
       : "skip",
   );
@@ -47,7 +50,7 @@ export const useGetDataRoomFiles = ({
   };
 };
 
-// Upload data room file need updates
+// Upload data room file
 type UploadFileRequest = {
   workspaceId: Id<"workspaces">;
   storageId: Id<"_storage">;
@@ -57,6 +60,7 @@ type UploadFileRequest = {
   comment: string;
   visibility: "public" | "private";
   allowedMembers: Id<"members">[];
+  folderId?: Id<"dataRoomFolders">;
 };
 
 export const useUploadDataRoomFile = () => {
@@ -71,6 +75,45 @@ export const useUploadDataRoomFile = () => {
 
   const mutate = useCallback(
     async (values: UploadFileRequest) => {
+      try {
+        setData(null);
+        setError(null);
+        setStatus("pending");
+        const response = await mutation(values);
+        setData(response);
+        setStatus("success");
+        return response;
+      } catch (error) {
+        setError(error as Error);
+        setStatus("error");
+        throw error;
+      } finally {
+        setStatus("settled");
+      }
+    },
+    [mutation],
+  );
+
+  return { mutate, data, error, isPending };
+};
+
+// Create data room folder
+export const useCreateDataRoomFolder = () => {
+  const [data, setData] = useState<Id<"dataRoomFolders"> | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+  const [status, setStatus] = useState<
+    "success" | "error" | "settled" | "pending" | null
+  >(null);
+
+  const isPending = useMemo(() => status === "pending", [status]);
+  const mutation = useMutation(api.dataRoom.createDataRoomFolder);
+
+  const mutate = useCallback(
+    async (values: {
+      workspaceId: Id<"workspaces">;
+      name: string;
+      parentId?: Id<"dataRoomFolders">;
+    }) => {
       try {
         setData(null);
         setError(null);

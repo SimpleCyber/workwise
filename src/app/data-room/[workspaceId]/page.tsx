@@ -1,8 +1,7 @@
 "use client";
 
-import type React from "react";
-import { useState } from "react";
-import { format } from "date-fns";
+import React, { useState, useMemo } from "react";
+import { format, isToday, isYesterday, subDays, startOfDay } from "date-fns";
 import {
   Upload,
   Search,
@@ -14,29 +13,32 @@ import {
   Users,
   MoreHorizontal,
   X,
+  LayoutGrid,
+  Trash2,
+  ChevronRight,
+  FileSpreadsheet,
+  FolderPlus,
+  Folder as FolderIcon,
+  List,
+  Grid,
+  FileIcon,
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useQueryState, parseAsString } from "nuqs";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -46,7 +48,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Pagination,
   PaginationContent,
@@ -56,6 +57,15 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { useGetWorkspaceMembers } from "@/features/projects/api/use-get-workspace-members";
 import { useGenerateUploadUrl } from "@/features/upload/api/use-generate-upload-url";
@@ -63,16 +73,13 @@ import {
   useGetDataRoomFiles,
   useUploadDataRoomFile,
   useDeleteDataRoomFile,
-  useUpdateFilePermissions,
+  useCreateDataRoomFolder,
 } from "@/features/data-room/api/use-data-room";
 import type { Id } from "../../../../convex/_generated/dataModel";
 
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { useConfirm } from "@/hooks/use-confirm";
-
-interface DataRoomPageProps {
-  workspaceId: Id<"workspaces">;
-}
+import { cn } from "@/lib/utils";
 
 interface FileUploadData {
   file: File;
@@ -81,34 +88,71 @@ interface FileUploadData {
   allowedMembers: Id<"members">[];
 }
 
-const ITEMS_PER_PAGE = 12;
+const ITEMS_PER_PAGE = 50; // Increased for better grid view experience
 
 const getFileIcon = (fileType: string) => {
   if (fileType.startsWith("image/")) return ImageIcon;
   if (fileType === "application/pdf") return FileText;
+  if (
+    fileType.includes("spreadsheet") ||
+    fileType.includes("excel") ||
+    fileType.includes("csv")
+  )
+    return FileSpreadsheet;
   return File;
 };
 
 const getFileTypeColor = (fileType: string) => {
-  if (fileType.startsWith("image/")) return "bg-green-100 text-green-800";
-  if (fileType === "application/pdf") return "bg-red-100 text-red-800";
+  if (fileType.startsWith("image/")) return "text-green-600";
+  if (fileType === "application/pdf") return "text-red-600";
   if (fileType.includes("document") || fileType.includes("word"))
-    return "bg-blue-100 text-blue-800";
-  if (fileType.includes("spreadsheet") || fileType.includes("excel"))
-    return "bg-emerald-100 text-emerald-800";
-  return "bg-gray-100 text-gray-800";
+    return "text-blue-600";
+  if (
+    fileType.includes("spreadsheet") ||
+    fileType.includes("excel") ||
+    fileType.includes("csv")
+  )
+    return "text-emerald-600";
+  return "text-gray-600";
+};
+
+const FOLDER_LABELS: Record<string, string> = {
+  all: "All Files",
+  image: "Images",
+  document: "Documents",
+  spreadsheet: "Spreadsheets",
+  pdf: "PDFs",
 };
 
 const DataRoomWorkspacePage = () => {
   const workspaceId = useWorkspaceId();
-  // State management
+
+  // URL States
+  const [activeTypeFilter, setActiveTypeFilter] = useQueryState(
+    "folder",
+    parseAsString.withDefault("all"),
+  );
+  const [view, setView] = useQueryState(
+    "view",
+    parseAsString.withDefault("grid"),
+  );
+  const [currentFolderId, setCurrentFolderId] = useQueryState(
+    "folderId",
+    parseAsString,
+  );
+
+  // Local UI States
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isNewFolderModalOpen, setIsNewFolderModalOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [dateFilter, setDateFilter] = useState("");
-  const [userFilter, setUserFilter] = useState("");
-  const [fileTypeFilter, setFileTypeFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFileIds, setSelectedFileIds] = useState<Set<string>>(
+    new Set(),
+  );
+  const [previewFile, setPreviewFile] = useState<any | null>(null);
+
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadData, setUploadData] = useState<Partial<FileUploadData>>({
     comment: "",
     visibility: "public",
@@ -123,103 +167,135 @@ const DataRoomWorkspacePage = () => {
     page: currentPage,
     limit: ITEMS_PER_PAGE,
     search: searchQuery,
-    dateFilter,
-    userFilter,
-    fileTypeFilter,
+    fileTypeFilter: activeTypeFilter === "all" ? "" : activeTypeFilter,
+    folderId: (currentFolderId as Id<"dataRoomFolders">) || undefined,
   });
   const uploadFile = useUploadDataRoomFile();
   const deleteFile = useDeleteDataRoomFile();
-  const updatePermissions = useUpdateFilePermissions();
+  const createFolder = useCreateDataRoomFolder();
 
   const [ConfirmDialog, confirm] = useConfirm(
-    "Are you sure?",
-    "This action cannot be undone.",
+    "Delete File(s)",
+    "Are you sure you want to delete the selected file(s)? This action cannot be undone.",
   );
 
-  // Early return if workspaceId is not available
-  if (!workspaceId) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold">Workspace not found</h2>
-          <p className="text-muted-foreground">
-            Please check the URL and try again.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   const files = filesData?.files || [];
-  const totalPages = Math.ceil((filesData?.total || 0) / ITEMS_PER_PAGE);
+  const folders = filesData?.folders || [];
+  const totalPages = filesData?.totalPages || 1;
+
+  // Grouping logic for Grid View
+  const groupedFiles = useMemo(() => {
+    const groups: { label: string; items: any[] }[] = [
+      { label: "Today", items: [] },
+      { label: "Yesterday", items: [] },
+      { label: "A long time ago", items: [] },
+    ];
+
+    files.forEach((file: any) => {
+      const date = new Date(file.createdAt);
+      if (isToday(date)) groups[0].items.push(file);
+      else if (isYesterday(date)) groups[1].items.push(file);
+      else groups[2].items.push(file);
+    });
+
+    return groups.filter(
+      (g) => g.items.length > 0 || (g.label === "Today" && folders.length > 0),
+    );
+  }, [files, folders]);
+
+  if (!workspaceId) return null;
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Check file size (max 50MB)
-      if (file.size > 50 * 1024 * 1024) {
-        toast.error("File size must be less than 50MB");
-        return;
+    const files = Array.from(event.target.files || []);
+    const validFiles: File[] = [];
+    let oversizedCount = 0;
+
+    files.forEach((file) => {
+      if (file.size <= 50 * 1024 * 1024) {
+        validFiles.push(file);
+      } else {
+        oversizedCount++;
       }
-      setSelectedFile(file);
+    });
+
+    if (oversizedCount > 0) {
+      toast.error(`${oversizedCount} file(s) exceed the 50MB limit`);
+    }
+
+    if (validFiles.length > 0) {
+      setSelectedFiles((prev) => [...prev, ...validFiles]);
     }
   };
 
   const handleUpload = async () => {
-    if (!selectedFile || !uploadData.comment?.trim()) {
-      toast.error("Please select a file and add a comment");
+    if (selectedFiles.length === 0 || !uploadData.comment?.trim()) {
+      toast.error("Please select files and add a description");
       return;
     }
 
     try {
-      const uploadToast = toast.loading("Uploading file...");
+      const uploadToast = toast.loading(
+        `Uploading ${selectedFiles.length} file(s)...`,
+      );
 
-      // Generate upload URL
-      const url = await generateUploadUrl({}, { throwError: true });
-      if (!url) throw new Error("Failed to get upload URL");
+      for (const file of selectedFiles) {
+        const url = await generateUploadUrl({}, { throwError: true });
+        if (!url) throw new Error("Failed to get upload URL");
 
-      // Upload file to storage
-      const result = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": selectedFile.type },
-        body: selectedFile,
-      });
+        const result = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": file.type },
+          body: file,
+        });
 
-      if (!result.ok) throw new Error("Failed to upload file");
+        if (!result.ok) throw new Error(`Failed to upload ${file.name}`);
+        const { storageId } = await result.json();
 
-      const { storageId } = await result.json();
-
-      // Save file metadata
-      await uploadFile.mutate({
-        workspaceId,
-        storageId,
-        fileName: selectedFile.name,
-        fileType: selectedFile.type,
-        fileSize: selectedFile.size,
-        comment: uploadData.comment!,
-        visibility: uploadData.visibility!,
-        allowedMembers: uploadData.allowedMembers!,
-      });
+        await uploadFile.mutate({
+          workspaceId,
+          storageId,
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size,
+          comment: uploadData.comment!,
+          visibility: uploadData.visibility!,
+          allowedMembers: uploadData.allowedMembers!,
+          folderId: (currentFolderId as Id<"dataRoomFolders">) || undefined,
+        });
+      }
 
       toast.dismiss(uploadToast);
-      toast.success("File uploaded successfully!");
-
-      // Reset form
-      setSelectedFile(null);
-      setUploadData({
-        comment: "",
-        visibility: "public",
-        allowedMembers: [],
-      });
+      toast.success("All files uploaded successfully!");
+      setSelectedFiles([]);
+      setUploadData({ comment: "", visibility: "public", allowedMembers: [] });
       setIsUploadModalOpen(false);
     } catch (error) {
-      console.error("Upload error:", error);
-      toast.error("Failed to upload file");
+      toast.error("Failed to upload some or all files");
+    }
+  };
+
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) return;
+    try {
+      await createFolder.mutate({
+        workspaceId,
+        name: newFolderName,
+        parentId: (currentFolderId as Id<"dataRoomFolders">) || undefined,
+      });
+      toast.success("Folder created!");
+      setNewFolderName("");
+      setIsNewFolderModalOpen(false);
+    } catch (e) {
+      toast.error("Failed to create folder");
     }
   };
 
   const handleDownload = async (file: any) => {
     try {
+      if (!file.fileUrl) {
+        toast.error("File URL not available");
+        return;
+      }
       const response = await fetch(file.fileUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
@@ -236,514 +312,647 @@ const DataRoomWorkspacePage = () => {
     }
   };
 
-  const handleDelete = async (fileId: Id<"dataRoomFiles">) => {
+  const handleDelete = async (fileIds: string[]) => {
     const ok = await confirm();
     if (!ok) return;
-
     try {
-      await deleteFile.mutate({ fileId });
-      toast.success("File deleted successfully!");
+      for (const fileId of fileIds) {
+        await deleteFile.mutate({ fileId: fileId as Id<"dataRoomFiles"> });
+      }
+      setSelectedFileIds(new Set());
+      toast.success("Deleted successfully!");
     } catch (error) {
-      toast.error("Failed to delete file");
+      toast.error("Failed to delete");
     }
   };
 
+  const toggleFileSelection = (fileId: string) => {
+    const newSelection = new Set(selectedFileIds);
+    if (newSelection.has(fileId)) newSelection.delete(fileId);
+    else newSelection.add(fileId);
+    setSelectedFileIds(newSelection);
+  };
+
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
+    if (bytes === 0) return "0 B";
     const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const sizes = ["B", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return (
-      Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
+      Number.parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i]
     );
   };
 
   return (
-    <div className="flex h-full flex-col p-6 overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden bg-background">
       <ConfirmDialog />
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6 flex-shrink-0">
-        <div>
-          <h1 className="text-2xl font-bold">Data Room</h1>
-          <p className="text-muted-foreground">
-            Manage and share documents with your team
-          </p>
-        </div>
-        <Dialog open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Upload className="w-4 h-4 mr-2" />
-              Upload File
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Upload Document</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-6">
-              {/* File Selection */}
-              <div className="space-y-2">
-                <Label>Select File</Label>
-                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
-                  <input
-                    type="file"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                    id="file-upload"
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif"
-                  />
-                  <label htmlFor="file-upload" className="cursor-pointer">
-                    <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">
-                      Click to select a file or drag and drop
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      PDF, DOC, XLS, PPT, Images (Max 50MB)
-                    </p>
-                  </label>
-                </div>
-                {selectedFile && (
-                  <div className="flex items-center gap-2 p-2 bg-muted rounded">
-                    <File className="w-4 h-4" />
-                    <span className="text-sm">{selectedFile.name}</span>
-                    <span className="text-xs text-muted-foreground">
-                      ({formatFileSize(selectedFile.size)})
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedFile(null)}
-                      className="ml-auto h-6 w-6 p-0"
+
+      {/* Modals */}
+      <Dialog open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Upload Document</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Select File</Label>
+              <div
+                className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:bg-muted/50 transition cursor-pointer"
+                onClick={() => document.getElementById("file-upload")?.click()}
+              >
+                <input
+                  type="file"
+                  multiple
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  id="file-upload"
+                />
+                <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-sm font-medium">
+                  Click to select or drag and drop
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Max 50MB per file
+                </p>
+              </div>
+              {selectedFiles.length > 0 && (
+                <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                  {selectedFiles.map((file, index) => (
+                    <div
+                      key={`${file.name}-${index}`}
+                      className="flex items-center gap-2 p-2 bg-muted/50 rounded-md border text-sm"
                     >
-                      <X className="w-3 h-3" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              {/* Comment */}
-              <div className="space-y-2">
-                <Label>Description</Label>
-                <Textarea
-                  placeholder="What is this file about?"
-                  value={uploadData.comment}
-                  onChange={(e) =>
-                    setUploadData({ ...uploadData, comment: e.target.value })
-                  }
-                  rows={3}
-                />
-              </div>
-
-              {/* Visibility Settings */}
-              <div className="space-y-4">
-                <Label>Visibility</Label>
-                <Tabs
-                  value={uploadData.visibility}
-                  onValueChange={(value: string) => {
-                    if (value === "public" || value === "private") {
-                      setUploadData({ ...uploadData, visibility: value });
-                    }
-                  }}
-                >
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="public">Public</TabsTrigger>
-                    <TabsTrigger value="private">Private</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="public" className="mt-4">
-                    <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
-                      <Users className="w-4 h-4 text-green-600" />
-                      <span className="text-sm text-green-800">
-                        All workspace members can view this file
+                      <File className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate flex-1">{file.name}</span>
+                      <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                        {formatFileSize(file.size)}
                       </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedFiles((prev) =>
+                            prev.filter((_, i) => i !== index),
+                          );
+                        }}
+                        className="h-6 w-6"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
                     </div>
-                  </TabsContent>
-                  <TabsContent value="private" className="mt-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 p-3 bg-orange-50 rounded-lg">
-                        <Users className="w-4 h-4 text-orange-600" />
-                        <span className="text-sm text-orange-800">
-                          Only selected members can view this file
-                        </span>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Select Members</Label>
-                        <div className="max-h-32 overflow-y-auto space-y-2">
-                          {members?.map((member) => (
-                            <div
-                              key={member._id}
-                              className="flex items-center space-x-2"
-                            >
-                              <Checkbox
-                                id={member._id}
-                                checked={uploadData.allowedMembers?.includes(
-                                  member._id,
-                                )}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setUploadData({
-                                      ...uploadData,
-                                      allowedMembers: [
-                                        ...(uploadData.allowedMembers || []),
-                                        member._id,
-                                      ],
-                                    });
-                                  } else {
-                                    setUploadData({
-                                      ...uploadData,
-                                      allowedMembers:
-                                        uploadData.allowedMembers?.filter(
-                                          (id) => id !== member._id,
-                                        ),
-                                    });
-                                  }
-                                }}
-                              />
-                              <label
-                                htmlFor={member._id}
-                                className="flex items-center gap-2 cursor-pointer"
-                              >
-                                <Avatar className="w-6 h-6">
-                                  <AvatarImage
-                                    src={
-                                      member.user?.image || "/placeholder.svg"
-                                    }
-                                  />
-                                  <AvatarFallback className="text-xs">
-                                    {member.user?.name?.charAt(0).toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <span className="text-sm">
-                                  {member.user?.name}
-                                </span>
-                              </label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </div>
-
-              {/* Actions */}
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsUploadModalOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleUpload}
-                  disabled={!selectedFile || !uploadData.comment?.trim()}
-                >
-                  Upload File
-                </Button>
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Search and Filters */}
-      <Card className="flex-shrink-0">
-        <CardHeader>
-          <CardTitle className="text-lg">Search & Filter</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Search */}
             <div className="space-y-2">
-              <Label>Search</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search files, comments..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            {/* Date Filter */}
-            <div className="space-y-2">
-              <Label>Date</Label>
-              <Input
-                type="date"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
+              <Label>Description</Label>
+              <Textarea
+                placeholder="What is this file about?"
+                value={uploadData.comment}
+                onChange={(e) =>
+                  setUploadData({ ...uploadData, comment: e.target.value })
+                }
+                rows={2}
               />
             </div>
+            <Tabs
+              value={uploadData.visibility}
+              onValueChange={(v) =>
+                setUploadData({ ...uploadData, visibility: v as any })
+              }
+            >
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="public">Public</TabsTrigger>
+                <TabsTrigger value="private">Private</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsUploadModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpload}
+              disabled={
+                selectedFiles.length === 0 || !uploadData.comment?.trim()
+              }
+            >
+              Upload{" "}
+              {selectedFiles.length > 0 ? `(${selectedFiles.length})` : ""}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-            {/* User Filter */}
-            <div className="space-y-2">
-              <Label>Uploaded By</Label>
-              <Select value={userFilter} onValueChange={setUserFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All users" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All users</SelectItem>
-                  {members?.map((member) => (
-                    <SelectItem key={member._id} value={member._id}>
-                      {member.user?.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+      <Dialog
+        open={isNewFolderModalOpen}
+        onOpenChange={setIsNewFolderModalOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>New Folder</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Label>Folder Name</Label>
+            <Input
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              placeholder="Enter folder name..."
+              autoFocus
+              onKeyDown={(e) => e.key === "Enter" && handleCreateFolder()}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsNewFolderModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateFolder}
+              disabled={!newFolderName.trim()}
+            >
+              Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-            {/* File Type Filter */}
-            <div className="space-y-2">
-              <Label>File Type</Label>
-              <Select value={fileTypeFilter} onValueChange={setFileTypeFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All types" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All types</SelectItem>
-                  <SelectItem value="pdf">PDF</SelectItem>
-                  <SelectItem value="image">Images</SelectItem>
-                  <SelectItem value="document">Documents</SelectItem>
-                  <SelectItem value="spreadsheet">Spreadsheets</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+      {/* Main Header */}
+      <div className="border-b bg-background">
+        <div className="flex items-center px-4 py-2 border-b bg-muted/5 overflow-hidden">
+          <div className="flex items-center text-sm text-muted-foreground flex-1 min-w-0">
+            <span
+              className="hover:text-foreground cursor-pointer"
+              onClick={() => {
+                setCurrentFolderId(null);
+                setActiveTypeFilter("all");
+              }}
+            >
+              Data Room
+            </span>
+            {filesData?.breadcrumbPath?.map((folder) => (
+              <React.Fragment key={folder._id}>
+                <ChevronRight className="w-4 h-4 mx-1 flex-shrink-0" />
+                <span
+                  className="hover:text-foreground cursor-pointer truncate max-w-[120px]"
+                  onClick={() => setCurrentFolderId(folder._id)}
+                >
+                  {folder.name}
+                </span>
+              </React.Fragment>
+            ))}
+            {activeTypeFilter !== "all" && (
+              <>
+                <ChevronRight className="w-4 h-4 mx-1" />
+                <Badge variant="secondary" className="font-normal capitalize">
+                  {FOLDER_LABELS[activeTypeFilter] || activeTypeFilter}
+                </Badge>
+              </>
+            )}
           </div>
 
-          {/* Clear Filters */}
-          {(searchQuery || dateFilter || userFilter || fileTypeFilter) && (
-            <div className="mt-4">
+          <div className="flex items-center gap-2 mx-4 flex-shrink-0">
+            <Button
+              size="sm"
+              onClick={() => setIsUploadModalOpen(true)}
+              className="h-8"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Upload
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setIsNewFolderModalOpen(true)}
+              className="h-8"
+            >
+              <FolderPlus className="w-4 h-4 mr-2" />
+              New Folder
+            </Button>
+
+            <div className="w-px h-6 bg-border mx-1" />
+
+            <div className="flex border rounded-md p-0.5 h-8 bg-muted/20">
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setSearchQuery("");
-                  setDateFilter("");
-                  setUserFilter("");
-                  setFileTypeFilter("");
-                  setCurrentPage(1);
-                }}
+                variant={view === "list" ? "secondary" : "ghost"}
+                size="icon"
+                onClick={() => setView("list")}
+                className="h-7 w-7"
               >
-                Clear Filters
+                <List className="w-3.5 h-3.5" />
+              </Button>
+              <Button
+                variant={view === "grid" ? "secondary" : "ghost"}
+                size="icon"
+                onClick={() => setView("grid")}
+                className="h-7 w-7"
+              >
+                <Grid className="w-3.5 h-3.5" />
               </Button>
             </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Files Grid */}
-      <div className="flex-1 min-h-0 overflow-auto space-y-4 pr-1">
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Card key={i} className="animate-pulse">
-                <CardContent className="p-4">
-                  <div className="h-32 bg-muted rounded mb-4" />
-                  <div className="h-4 bg-muted rounded mb-2" />
-                  <div className="h-3 bg-muted rounded w-2/3" />
-                </CardContent>
-              </Card>
-            ))}
+            
+            {selectedFileIds.size > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleDelete(Array.from(selectedFileIds))}
+                className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete ({selectedFileIds.size})
+              </Button>
+            )}
           </div>
-        ) : files.length === 0 ? (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-medium mb-2">No files found</h3>
-              <p className="text-muted-foreground mb-4">
-                {searchQuery || dateFilter || userFilter || fileTypeFilter
-                  ? "Try adjusting your search filters"
-                  : "Upload your first document to get started"}
-              </p>
-              {!searchQuery &&
-                !dateFilter &&
-                !userFilter &&
-                !fileTypeFilter && (
-                  <Button onClick={() => setIsUploadModalOpen(true)}>
-                    <Upload className="w-4 h-4 mr-2" />
-                    Upload File
-                  </Button>
-                )}
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {files.map((file: any) => {
-              const FileIcon = getFileIcon(file.fileType);
-              return (
-                <Card
-                  key={file._id}
-                  className="group hover:shadow-md transition-shadow"
+
+          <div className="relative w-64 flex-shrink-0">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
+            <input
+              placeholder="Search everywhere..."
+              className="h-8 pl-8 text-sm bg-muted/20 border rounded-md w-full outline-none focus:ring-1 focus:ring-primary"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Content Area */}
+      <div className="flex-1 overflow-auto bg-background/50">
+        {isLoading ? (
+          <div className="p-8 space-y-4">
+            <div className="h-10 w-full bg-muted animate-pulse rounded" />
+            <div className="h-40 w-full bg-muted animate-pulse rounded" />
+          </div>
+        ) : folders.length === 0 && files.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full p-12 text-muted-foreground">
+            <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mb-4">
+              <FolderIcon className="w-10 h-10 opacity-20" />
+            </div>
+            <p className="text-lg font-medium text-foreground/70">
+              No files or folders here
+            </p>
+            <p className="text-sm">Upload something to get started</p>
+          </div>
+        ) : view === "list" ? (
+          <Table>
+            <TableHeader className="bg-muted/30 sticky top-0 z-10 backdrop-blur-sm">
+              <TableRow>
+                <TableHead className="w-[40px] px-4">
+                  <Checkbox
+                    checked={
+                      selectedFileIds.size === files.length && files.length > 0
+                    }
+                    onCheckedChange={() =>
+                      setSelectedFileIds(
+                        new Set(
+                          selectedFileIds.size === files.length
+                            ? []
+                            : files.map((f: any) => f._id),
+                        ),
+                      )
+                    }
+                  />
+                </TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Size</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {folders.map((folder) => (
+                <TableRow
+                  key={folder._id}
+                  className="cursor-pointer group hover:bg-muted/40"
+                  onDoubleClick={() => setCurrentFolderId(folder._id)}
                 >
-                  <CardContent className="p-4">
-                    {/* File Preview */}
-                    <div className="relative mb-4">
-                      <div className="h-32 bg-muted rounded-lg flex items-center justify-center">
-                        {file.fileType.startsWith("image/") ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={file.fileUrl || "/placeholder.svg"}
-                            alt={file.fileName}
-                            className="w-full h-full object-cover rounded-lg"
-                          />
-                        ) : (
-                          <FileIcon className="w-12 h-12 text-muted-foreground" />
-                        )}
-                      </div>
-
-                      {/* File Actions */}
-                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                            >
-                              <MoreHorizontal className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() =>
-                                window.open(file.fileUrl, "_blank")
-                              }
-                            >
-                              <Eye className="w-4 h-4 mr-2" />
-                              View
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleDownload(file)}
-                            >
-                              <Download className="w-4 h-4 mr-2" />
-                              Download
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => handleDelete(file._id)}
-                              className="text-destructive focus:text-destructive"
-                            >
-                              <X className="w-4 h-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-
-                      {/* File Type Badge */}
-                      <Badge
-                        className={`absolute bottom-2 left-2 text-xs ${getFileTypeColor(file.fileType)}`}
-                      >
-                        {file.fileType.split("/")[1]?.toUpperCase() || "FILE"}
-                      </Badge>
+                  <TableCell className="px-4">
+                    <FolderIcon className="w-4 h-4 text-yellow-500 fill-yellow-500/20" />
+                  </TableCell>
+                  <TableCell className="font-medium flex items-center gap-2">
+                    <div className="flex items-center gap-2">
+                      <FolderIcon className="w-5 h-5 text-yellow-500 fill-yellow-500/40" />
+                      {folder.name}
                     </div>
-
-                    {/* File Info */}
-                    <div className="space-y-2">
-                      <h4
-                        className="font-medium text-sm truncate"
-                        title={file.fileName}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    Folder
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {format(folder.createdAt, "MMM d, yyyy")}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    --
+                  </TableCell>
+                  <TableCell></TableCell>
+                </TableRow>
+              ))}
+              {files.map((file) => (
+                <TableRow
+                  key={file._id}
+                  className={cn(
+                    "cursor-pointer group",
+                    selectedFileIds.has(file._id) && "bg-primary/5",
+                  )}
+                  onDoubleClick={() => setPreviewFile(file)}
+                >
+                  <TableCell className="px-4">
+                    <Checkbox
+                      checked={selectedFileIds.has(file._id)}
+                      onCheckedChange={() => toggleFileSelection(file._id)}
+                    />
+                  </TableCell>
+                  <TableCell className="font-medium flex items-center gap-3">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={cn(
+                          "p-1.5 rounded-md bg-muted",
+                          getFileTypeColor(file.fileType),
+                        )}
                       >
-                        {file.fileName}
-                      </h4>
-                      <p
-                        className="text-xs text-muted-foreground line-clamp-2"
-                        title={file.comment}
+                        <FileIcon className="w-4 h-4" />
+                      </div>
+                      <span className="truncate">{file.fileName}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {file.fileType.split("/")[1]?.toUpperCase() || "FILE"}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {format(file.createdAt, "MMM d, yyyy")}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {formatFileSize(file.fileSize)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 opacity-0 group-hover:opacity-100"
+                        >
+                          <MoreHorizontal className="h-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          disabled={!file.fileUrl}
+                          onClick={() => setPreviewFile(file)}
+                        >
+                          <Eye className="h-4 h-4 mr-2" />
+                          Preview
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={!file.fileUrl}
+                          onClick={() =>
+                            file.fileUrl && window.open(file.fileUrl, "_blank")
+                          }
+                        >
+                          <ExternalLink className="h-4 h-4 mr-2" />
+                          Open in New Tab
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDownload(file)}>
+                          <Download className="h-4 h-4 mr-2" />
+                          Download
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => handleDelete([file._id])}
+                          className="text-destructive"
+                        >
+                          <Trash2 className="h-4 h-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="p-6 space-y-10">
+            {groupedFiles.map((group) => (
+              <div key={group.label} className="space-y-4">
+                <h3 className="text-sm font-semibold text-muted-foreground border-b pb-1 flex items-center gap-2">
+                  <ChevronRight className="w-3.5 h-3.5" />
+                  {group.label}
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-x-4 gap-y-8">
+                  {/* Folders in Today Group */}
+                  {group.label === "Today" &&
+                    folders.map((folder) => (
+                      <div
+                        key={folder._id}
+                        onDoubleClick={() => setCurrentFolderId(folder._id)}
+                        className="group flex flex-col items-center gap-2 cursor-pointer"
                       >
-                        {file.comment}
-                      </p>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{formatFileSize(file.fileSize)}</span>
-                        <div className="flex items-center gap-1">
-                          {file.visibility === "private" && (
-                            <Badge variant="secondary" className="text-xs">
-                              Private
-                            </Badge>
+                        <div className="w-16 h-20 bg-muted/30 rounded-lg flex items-center justify-center border-2 border-transparent group-hover:bg-muted group-hover:border-primary/20 transition-all relative">
+                          <FolderIcon className="w-10 h-10 text-yellow-500 fill-yellow-500/20" />
+                        </div>
+                        <span className="text-xs text-center font-medium truncate w-full px-1">
+                          {folder.name}
+                        </span>
+                      </div>
+                    ))}
+                  {/* Files */}
+                  {group.items.map((file) => {
+                    const FileIcon = getFileIcon(file.fileType);
+                    const isSelected = selectedFileIds.has(file._id);
+                    return (
+                      <div
+                        key={file._id}
+                        onClick={() => {
+                          if (selectedFileIds.size > 0) {
+                            toggleFileSelection(file._id);
+                          } else {
+                            setPreviewFile(file);
+                          }
+                        }}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          toggleFileSelection(file._id);
+                        }}
+                        className="group flex flex-col items-center gap-2 cursor-pointer"
+                      >
+                        <div
+                          className={cn(
+                            "w-16 h-20 rounded-lg flex items-center justify-center border-2 transition-all relative overflow-hidden",
+                            isSelected
+                              ? "bg-primary/10 border-primary"
+                              : "bg-muted/30 border-transparent hover:bg-muted",
+                          )}
+                        >
+                          {file.fileType.startsWith("image/") ? (
+                            <img
+                              src={file.fileUrl || undefined}
+                              className="w-full h-full object-cover"
+                              alt=""
+                            />
+                          ) : (
+                            <div
+                              className={cn(
+                                "p-2",
+                                getFileTypeColor(file.fileType),
+                              )}
+                            >
+                              <FileIcon className="w-8 h-8" />
+                            </div>
+                          )}
+                          {isSelected && (
+                            <div className="absolute top-1 right-1 bg-primary text-white rounded-full p-0.5">
+                              <X className="w-3 h-3 rotate-45" />
+                            </div>
                           )}
                         </div>
+                        <span className="text-[10px] text-center font-medium line-clamp-2 w-full px-1 leading-tight">
+                          {file.fileName}
+                        </span>
                       </div>
-
-                      {/* Uploader Info */}
-                      <div className="flex items-center gap-2 pt-2 border-t">
-                        <Avatar className="w-6 h-6">
-                          <AvatarImage
-                            src={
-                              file.uploader?.user?.image || "/placeholder.svg"
-                            }
-                          />
-                          <AvatarFallback className="text-xs">
-                            {file.uploader?.user?.name?.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium truncate">
-                            {file.uploader?.user?.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {format(new Date(file.createdAt), "MMM d, yyyy")}
-                          </p>
+                    );
+                  })}
+                  {/* Preview Modal */}
+                  <Dialog
+                    open={!!previewFile}
+                    onOpenChange={() => setPreviewFile(null)}
+                  >
+                    <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-1 gap-0">
+                      <DialogHeader className="p-4 border-b flex flex-row items-center justify-between space-y-0">
+                        <div className="flex items-center gap-2 overflow-hidden mr-8">
+                          <div
+                            className={cn(
+                              "p-1.5 rounded-md bg-muted",
+                              previewFile &&
+                                getFileTypeColor(previewFile.fileType),
+                            )}
+                          >
+                            {previewFile &&
+                              React.createElement(
+                                getFileIcon(previewFile.fileType),
+                                { className: "w-4 h-4" },
+                              )}
+                          </div>
+                          <DialogTitle className="text-base font-semibold truncate">
+                            {previewFile?.fileName}
+                          </DialogTitle>
                         </div>
+                        <div className="flex items-center gap-2 pr-8">
+                          {previewFile?.fileUrl && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 gap-2"
+                              onClick={() =>
+                                window.open(previewFile.fileUrl, "_blank")
+                              }
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                              Open in New Tab
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 gap-2"
+                            onClick={() =>
+                              previewFile && handleDownload(previewFile)
+                            }
+                          >
+                            <Download className="w-4 h-4" />
+                            Download
+                          </Button>
+                        </div>
+                      </DialogHeader>
+                      <div className="flex-1 bg-muted/20 relative flex items-center justify-center overflow-hidden">
+                        {previewFile && (
+                          <>
+                            {previewFile.fileType.startsWith("image/") ? (
+                              <img
+                                src={previewFile.fileUrl}
+                                alt={previewFile.fileName}
+                                className="max-w-full max-h-full object-contain"
+                              />
+                            ) : previewFile.fileType === "application/pdf" ? (
+                              <iframe
+                                src={previewFile.fileUrl}
+                                className="w-full h-full border-none"
+                                title="PDF Preview"
+                              />
+                            ) : previewFile.fileType.includes("document") ||
+                              previewFile.fileType.includes("word") ||
+                              previewFile.fileType.includes("spreadsheet") ||
+                              previewFile.fileType.includes("excel") ||
+                              previewFile.fileType.includes("presentation") ||
+                              previewFile.fileType.includes("powerpoint") ? (
+                              <iframe
+                                src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewFile.fileUrl)}&embedded=true`}
+                                className="w-full h-full border-none"
+                                title="Document Preview"
+                              />
+                            ) : (
+                              <div className="text-center p-8">
+                                <File className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-20" />
+                                <p className="text-lg font-medium">
+                                  No preview available for this file type
+                                </p>
+                                <p className="text-sm text-muted-foreground mb-4">
+                                  You can still download or open it in a new tab
+                                </p>
+                                <Button
+                                  onClick={() =>
+                                    window.open(previewFile.fileUrl, "_blank")
+                                  }
+                                >
+                                  Open in New Tab
+                                </Button>
+                              </div>
+                            )}
+                          </>
+                        )}
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+            ))}
           </div>
         )}
+      </div>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex justify-center">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    className={
-                      currentPage === 1
-                        ? "pointer-events-none opacity-50"
-                        : "cursor-pointer"
-                    }
-                  />
-                </PaginationItem>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const page = i + 1;
-                  return (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        onClick={() => setCurrentPage(page)}
-                        isActive={currentPage === page}
-                        className="cursor-pointer"
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  );
-                })}
-                {totalPages > 5 && (
-                  <PaginationItem>
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                )}
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() =>
-                      setCurrentPage(Math.min(totalPages, currentPage + 1))
-                    }
-                    className={
-                      currentPage === totalPages
-                        ? "pointer-events-none opacity-50"
-                        : "cursor-pointer"
-                    }
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </div>
-        )}
+      {/* Pagination Fix if needed */}
+      <div className="p-2 border-t text-[10px] text-muted-foreground bg-muted/5 flex justify-between items-center px-4">
+        <span>{files.length + folders.length} items in total</span>
+        <div className="flex gap-2 items-center">
+          <Button
+            size="icon"
+            variant="ghost"
+            disabled={currentPage === 1}
+            className="h-6 w-6"
+            onClick={() => setCurrentPage((c) => c - 1)}
+          >
+            <ChevronRight className="rotate-180 w-3 h-3" />
+          </Button>
+          <span>
+            {currentPage} / {totalPages}
+          </span>
+          <Button
+            size="icon"
+            variant="ghost"
+            disabled={currentPage === totalPages}
+            className="h-6 w-6"
+            onClick={() => setCurrentPage((c) => c + 1)}
+          >
+            <ChevronRight className="w-3 h-3" />
+          </Button>
+        </div>
       </div>
     </div>
   );
