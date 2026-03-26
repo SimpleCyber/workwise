@@ -9,8 +9,6 @@ import {
   Network,
   PanelLeftOpen,
   PanelLeftClose,
-  PinIcon,
-  // TestTubeDiagonalIcon,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { UserButton } from "@/features/auth/components/user-button";
@@ -18,6 +16,7 @@ import { SidebarButton } from "./sidebar-button";
 import { WorkspaceSwitcher } from "../workspace-sidebar/workspace-sidebar-switcher";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { usePinnedBoard } from "@/hooks/use-pinned-board";
+import { useFeatureFlags } from "@/components/feature-flags";
 
 import { PanelButtons } from "./notification-calender-button";
 import type { Id } from "../../../convex/_generated/dataModel";
@@ -34,6 +33,7 @@ export const Sidebar = ({
   const pathname = usePathname();
   const router = useRouter();
   const workspaceId = useWorkspaceId();
+  const { isEnabled } = useFeatureFlags();
 
   // Cast workspaceId to the proper type
   const typedWorkspaceId = workspaceId as Id<"workspaces"> | null;
@@ -44,22 +44,19 @@ export const Sidebar = ({
       icon: Network,
       label: "Planning",
       path: `/test/${workspaceId}`,
+      flag: "tree_planning",
     },
-    // {
-    //   icon: Network,
-    //   label: "All Data",
-    //   path: `/tree/${workspaceId}`,
-    // },
-
     {
       icon: ListTodo,
       label: "Project",
       path: `/projects/${workspaceId}`,
+      flag: "projects",
     },
     {
       icon: MessagesSquare,
       label: "Chat",
       path: `/workspace/${workspaceId}`,
+      flag: "messaging",
     },
     {
       icon: Kanban,
@@ -69,17 +66,20 @@ export const Sidebar = ({
           ? `/todo/${workspaceId}/board/${pinnedBoard[0]._id}`
           : `/todo/${workspaceId}`,
       isPinned: pinnedBoard && pinnedBoard.length > 0,
+      flag: "todos",
     },
 
     {
       icon: Files,
       label: "Documents",
       path: `/data-room/${workspaceId}`,
+      flag: "data_room",
     },
     {
       icon: Calendar,
       label: "Attendance",
       path: `/attendance/${workspaceId}`,
+      flag: "attendance",
     },
   ];
 
@@ -102,6 +102,10 @@ export const Sidebar = ({
     }
   };
 
+  const visibleNavigationItems = navigationItems.filter(
+    (item) => !item.flag || isEnabled(item.flag),
+  );
+
   if (!workspaceId) {
     return (
       <aside className="flex h-full w-[60px] flex-col items-center gap-y-4 bg-gray-900 pb-[4px] pt-[9px] border-r border-gray-800">
@@ -109,8 +113,7 @@ export const Sidebar = ({
           <WorkspaceSwitcher />
         </div>
         <div className="mt-auto flex flex-col items-center justify-center gap-y-1 animate-in fade-in-0 slide-in-from-bottom-5 duration-500 delay-300">
-          {/* Place PanelButtons above UserButton */}
-          <PanelButtons />
+          {isEnabled("calendar") && <PanelButtons />}
           <UserButton />
         </div>
       </aside>
@@ -118,9 +121,6 @@ export const Sidebar = ({
   }
   return (
     <aside className="flex h-full w-[60px] flex-col items-center gap-y-4 bg-sidebar pb-[4px] pt-[9px] border-r border-sidebar-border relative">
-      {/* Subtle animated background gradient */}
-      {/* <div className="absolute inset-0 bg-gradient-to-b from-gray-900 via-gray-900/95 to-gray-900 opacity-80" /> */}
-
       <div className="relative z-10 flex h-full w-full flex-col items-center gap-y-4">
         <div>
           <WorkspaceSwitcher />
@@ -149,7 +149,7 @@ export const Sidebar = ({
         )}
 
         <div className="flex flex-1 flex-col items-center justify-center gap-y-2">
-          {navigationItems.map((item) => (
+          {visibleNavigationItems.map((item) => (
             <div key={item.path}>
               <SidebarButton
                 icon={item.icon}
@@ -162,13 +162,10 @@ export const Sidebar = ({
         </div>
 
         <div className="mt-auto flex flex-col items-center justify-center gap-y-1">
-          {/* Add PanelButtons here, above UserButton */}
-          <PanelButtons />
+          {isEnabled("calendar") && <PanelButtons />}
           <UserButton />
         </div>
       </div>
-
-      {/* <div className="absolute right-0 top-0 h-full w-px bg-gradient-to-b from-transparent via-white/10 to-transparent" /> */}
     </aside>
   );
 };

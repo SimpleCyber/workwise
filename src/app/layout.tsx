@@ -9,6 +9,7 @@ import { ConvexClientProvider } from "@/components/convex-client-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { JotaiProvider } from "@/components/jotai-provider";
 import { ModalProvider } from "@/components/modal-provider";
+import { FeatureFlagProvider } from "@/components/feature-flags";
 import { Toaster } from "@/components/ui/sonner";
 import { siteConfig } from "@/config";
 import { Analytics } from "@vercel/analytics/next";
@@ -26,21 +27,23 @@ export default function RootLayout({ children }: Readonly<PropsWithChildren>) {
         <body className={`${inter.className} antialiased`}>
           <ConvexClientProvider>
             <Analytics />
-            <JotaiProvider>
-              <ThemeProvider
-                attribute="class"
-                defaultTheme="system"
-                enableSystem
-                disableTransitionOnChange
-              >
-                <Toaster theme="light" richColors closeButton />
-                <ModalProvider />
+            <FeatureFlagProvider>
+              <JotaiProvider>
+                <ThemeProvider
+                  attribute="class"
+                  defaultTheme="system"
+                  enableSystem
+                  disableTransitionOnChange
+                >
+                  <Toaster theme="light" richColors closeButton />
+                  <ModalProvider />
 
-                <div className="flex h-screen">
-                  <div className="flex-1 overflow-auto">{children}</div>
-                </div>
-              </ThemeProvider>
-            </JotaiProvider>
+                  <div className="flex h-screen">
+                    <div className="flex-1 overflow-auto">{children}</div>
+                  </div>
+                </ThemeProvider>
+              </JotaiProvider>
+            </FeatureFlagProvider>
           </ConvexClientProvider>
         </body>
       </html>

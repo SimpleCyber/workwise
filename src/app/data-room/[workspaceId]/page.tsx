@@ -33,7 +33,7 @@ import {
   PinOff,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useQueryState, parseAsString } from "nuqs";
+import { useQueryState, parseAsString, parseAsBoolean } from "nuqs";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -91,6 +91,7 @@ import type { Id } from "../../../../convex/_generated/dataModel";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { useConfirm } from "@/hooks/use-confirm";
 import { cn } from "@/lib/utils";
+import { PdfToolsPanel } from "./pdf-tools-panel";
 
 interface FileUploadData {
   file: File;
@@ -151,9 +152,26 @@ const DataRoomWorkspacePage = () => {
     "folderId",
     parseAsString,
   );
+  const [tool, setTool] = useQueryState("tool", parseAsString);
+  const [isUploadParam, setIsUploadParam] = useQueryState(
+    "upload",
+    parseAsBoolean.withDefault(false),
+  );
 
   // Local UI States
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (isUploadParam) {
+      setIsUploadModalOpen(true);
+    }
+  }, [isUploadParam]);
+
+  const handleOpenChangeUpload = (open: boolean) => {
+    setIsUploadModalOpen(open);
+    if (!open) setIsUploadParam(null);
+  };
+
   const [isNewFolderModalOpen, setIsNewFolderModalOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -346,7 +364,7 @@ const DataRoomWorkspacePage = () => {
       toast.success("All files uploaded successfully!");
       setSelectedFiles([]);
       setUploadData({ comment: "", visibility: "public", allowedMembers: [] });
-      setIsUploadModalOpen(false);
+      handleOpenChangeUpload(false);
     } catch (error) {
       toast.error("Failed to upload some or all files");
     }
@@ -658,7 +676,7 @@ const DataRoomWorkspacePage = () => {
       <ConfirmFolderDeleteDialog />
 
       {/* Modals */}
-      <Dialog open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>
+      <Dialog open={isUploadModalOpen} onOpenChange={handleOpenChangeUpload}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Upload Document</DialogTitle>
@@ -905,519 +923,539 @@ const DataRoomWorkspacePage = () => {
       </div>
 
       {/* Content Area */}
-      <div
-        ref={containerRef}
-        onMouseDown={handleMouseDown}
-        className={cn(
-          "flex-1 overflow-auto bg-background/50 relative selection-area",
-          dragStart && "select-none",
-        )}
-      >
-        {dragStart && dragEnd && (
-          <div
-            className="absolute z-50 bg-primary/20 border border-primary/50 rounded-sm pointer-events-none"
-            style={{
-              left: Math.min(dragStart.x, dragEnd.x),
-              top: Math.min(dragStart.y, dragEnd.y),
-              width: Math.abs(dragStart.x - dragEnd.x),
-              height: Math.abs(dragStart.y - dragEnd.y),
-            }}
-          />
-        )}
-        {isLoading ? (
-          <div className="p-8 space-y-4">
-            <div className="h-10 w-full bg-muted animate-pulse rounded" />
-            <div className="h-40 w-full bg-muted animate-pulse rounded" />
-          </div>
-        ) : folders.length === 0 && files.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full p-12 text-muted-foreground">
-            <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mb-4">
-              <FolderIcon className="w-10 h-10 opacity-20" />
+      <div className="flex-1 flex overflow-hidden">
+        <div
+          ref={containerRef}
+          onMouseDown={handleMouseDown}
+          className={cn(
+            "flex-1 overflow-auto bg-background/50 relative selection-area",
+            dragStart && "select-none",
+          )}
+        >
+          {dragStart && dragEnd && (
+            <div
+              className="absolute z-50 bg-primary/20 border border-primary/50 rounded-sm pointer-events-none"
+              style={{
+                left: Math.min(dragStart.x, dragEnd.x),
+                top: Math.min(dragStart.y, dragEnd.y),
+                width: Math.abs(dragStart.x - dragEnd.x),
+                height: Math.abs(dragStart.y - dragEnd.y),
+              }}
+            />
+          )}
+          {isLoading ? (
+            <div className="p-8 space-y-4">
+              <div className="h-10 w-full bg-muted animate-pulse rounded" />
+              <div className="h-40 w-full bg-muted animate-pulse rounded" />
             </div>
-            <p className="text-lg font-medium text-foreground/70">
-              No files or folders here
-            </p>
-            <p className="text-sm">Upload something to get started</p>
-          </div>
-        ) : view === "list" ? (
-          <Table>
-            <TableHeader className="bg-muted/30 sticky top-0 z-10 backdrop-blur-sm">
-              <TableRow>
-                <TableHead className="w-[40px] px-4">
-                  <Checkbox
-                    checked={
-                      selectedFileIds.size === files.length && files.length > 0
-                    }
-                    onCheckedChange={() =>
-                      setSelectedFileIds(
-                        new Set(
-                          selectedFileIds.size === files.length
-                            ? []
-                            : files.map((f: any) => f._id),
-                        ),
-                      )
-                    }
-                  />
-                </TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Size</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {folders.map((folder) => (
-                <TableRow
-                  key={folder._id}
-                  data-selectable-id={folder._id}
-                  draggable
-                  onDragStart={(e) =>
-                    handleItemDragStart(e, folder._id, "folder")
-                  }
-                  onDragOver={(e) => handleItemDragOver(e, folder._id)}
-                  onDragLeave={() => setDropTargetId(null)}
-                  onDrop={(e) => handleItemDrop(e, folder._id)}
-                  className={cn(
-                    "cursor-pointer group hover:bg-muted/40 transition-colors relative",
-                    selectedFileIds.has(folder._id) && "bg-primary/5",
-                    dropTargetId === folder._id &&
-                      "bg-primary/10 shadow-[inset_0_0_0_2px_rgba(var(--primary),0.2)]",
-                  )}
-                  onDoubleClick={() => setCurrentFolderId(folder._id)}
-                >
-                  <TableCell className="px-4">
-                    <FolderIcon className="w-4 h-4 text-yellow-500 fill-yellow-500/20" />
-                  </TableCell>
-                  <TableCell className="font-medium flex items-center gap-2">
-                    <div className="flex items-center gap-2">
-                      <FolderIcon className="w-5 h-5 text-yellow-500 fill-yellow-500/40" />
-                      {folder.name}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    Folder
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {format(folder.createdAt, "MMM d, yyyy")}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 opacity-0 group-hover:opacity-100"
-                        >
-                          <MoreHorizontal className="h-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() =>
-                            togglePinFolder.mutate({
-                              folderId: folder._id,
-                              isPinned: !folder.isPinned,
-                            })
-                          }
-                        >
-                          {folder.isPinned ? (
-                            <>
-                              <PinOff className="h-4 h-4 mr-2" />
-                              Unpin from Sidebar
-                            </>
-                          ) : (
-                            <>
-                              <Pin className="h-4 h-4 mr-2" />
-                              Pin to Sidebar
-                            </>
-                          )}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-destructive"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteFolder(folder._id);
-                          }}
-                        >
-                          <Trash2 className="h-4 h-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {files.map((file) => (
-                <TableRow
-                  key={file._id}
-                  data-selectable-id={file._id}
-                  draggable
-                  onDragStart={(e) => handleItemDragStart(e, file._id, "file")}
-                  className={cn(
-                    "cursor-pointer group transition-colors",
-                    selectedFileIds.has(file._id) && "bg-primary/5",
-                  )}
-                  onDoubleClick={() => setPreviewFile(file)}
-                >
-                  <TableCell className="px-4">
+          ) : folders.length === 0 && files.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full p-12 text-muted-foreground">
+              <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mb-4">
+                <FolderIcon className="w-10 h-10 opacity-20" />
+              </div>
+              <p className="text-lg font-medium text-foreground/70">
+                No files or folders here
+              </p>
+              <p className="text-sm">Upload something to get started</p>
+            </div>
+          ) : view === "list" ? (
+            <Table>
+              <TableHeader className="bg-muted/30 sticky top-0 z-10 backdrop-blur-sm">
+                <TableRow>
+                  <TableHead className="w-[40px] px-4">
                     <Checkbox
-                      checked={selectedFileIds.has(file._id)}
-                      onCheckedChange={() => toggleFileSelection(file._id)}
+                      checked={
+                        selectedFileIds.size === files.length &&
+                        files.length > 0
+                      }
+                      onCheckedChange={() =>
+                        setSelectedFileIds(
+                          new Set(
+                            selectedFileIds.size === files.length
+                              ? []
+                              : files.map((f: any) => f._id),
+                          ),
+                        )
+                      }
                     />
-                  </TableCell>
-                  <TableCell className="font-medium flex items-center gap-3">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={cn(
-                          "p-1.5 rounded-md bg-muted",
-                          getFileTypeColor(file.fileType),
-                        )}
-                      >
-                        <FileIcon className="w-4 h-4" />
-                      </div>
-                      <span className="truncate">{file.fileName}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {file.fileType.split("/")[1]?.toUpperCase() || "FILE"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {format(file.createdAt, "MMM d, yyyy")}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {formatFileSize(file.fileSize)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 opacity-0 group-hover:opacity-100"
-                        >
-                          <MoreHorizontal className="h-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          disabled={!file.fileUrl}
-                          onClick={() => setPreviewFile(file)}
-                        >
-                          <Eye className="h-4 h-4 mr-2" />
-                          Preview
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          disabled={!file.fileUrl}
-                          onClick={() =>
-                            file.fileUrl && window.open(file.fileUrl, "_blank")
-                          }
-                        >
-                          <ExternalLink className="h-4 h-4 mr-2" />
-                          Open in New Tab
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDownload(file)}>
-                          <Download className="h-4 h-4 mr-2" />
-                          Download
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => handleDelete([file._id])}
-                          className="text-destructive"
-                        >
-                          <Trash2 className="h-4 h-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+                  </TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Size</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        ) : (
-          <div className="p-6 space-y-10">
-            {groupedFiles.map((group) => (
-              <div key={group.label} className="space-y-4">
-                <h3 className="text-sm font-semibold text-muted-foreground border-b pb-1 flex items-center gap-2">
-                  <ChevronRight className="w-3.5 h-3.5" />
-                  {group.label}
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-x-4 gap-y-8">
-                  {/* Folders in Today Group */}
-                  {group.label === "Today" &&
-                    folders.map((folder) => (
-                      <div
-                        key={folder._id}
-                        data-selectable-id={folder._id}
-                        draggable
-                        onDragStart={(e) =>
-                          handleItemDragStart(e, folder._id, "folder")
-                        }
-                        onDragOver={(e) => handleItemDragOver(e, folder._id)}
-                        onDragLeave={() => setDropTargetId(null)}
-                        onDrop={(e) => handleItemDrop(e, folder._id)}
-                        onDoubleClick={() => setCurrentFolderId(folder._id)}
-                        className={cn(
-                          "group flex flex-col items-center gap-2 cursor-pointer relative p-2 rounded-lg transition-all",
-                          selectedFileIds.has(folder._id) &&
-                            "bg-primary/5 shadow-sm",
-                          dropTargetId === folder._id &&
-                            "bg-primary/10 scale-105 ring-2 ring-primary/20",
-                        )}
-                      >
-                        <div className="w-16 h-20 bg-muted/30 rounded-lg flex items-center justify-center border-2 border-transparent group-hover:bg-muted group-hover:border-primary/20 transition-all relative drag-preview">
-                          <FolderIcon className="w-10 h-10 text-yellow-500 fill-yellow-500/20" />
-                          {selectedFileIds.has(folder._id) && (
-                            <div
-                              className="absolute top-1 right-1 bg-primary text-white rounded-full p-0.5 hover:bg-primary/80 transition-colors cursor-pointer z-[60]"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleFileSelection(folder._id);
-                              }}
-                            >
-                              <X className="w-3 h-3 rotate-45" />
-                            </div>
-                          )}
-                          <div className="absolute top-1 right-1">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <MoreHorizontal className="h-3 h-3 text-muted-foreground" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="start">
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    togglePinFolder.mutate({
-                                      folderId: folder._id,
-                                      isPinned: !folder.isPinned,
-                                    });
-                                  }}
-                                >
-                                  {folder.isPinned ? (
-                                    <>
-                                      <PinOff className="h-4 h-4 mr-2" />
-                                      Unpin from Sidebar
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Pin className="h-4 h-4 mr-2" />
-                                      Pin to Sidebar
-                                    </>
-                                  )}
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  className="text-destructive"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteFolder(folder._id);
-                                  }}
-                                >
-                                  <Trash2 className="h-4 h-4 mr-2" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </div>
-                        <span className="text-xs text-center font-medium truncate w-full px-1">
-                          {folder.name}
-                        </span>
+              </TableHeader>
+              <TableBody>
+                {folders.map((folder) => (
+                  <TableRow
+                    key={folder._id}
+                    data-selectable-id={folder._id}
+                    draggable
+                    onDragStart={(e) =>
+                      handleItemDragStart(e, folder._id, "folder")
+                    }
+                    onDragOver={(e) => handleItemDragOver(e, folder._id)}
+                    onDragLeave={() => setDropTargetId(null)}
+                    onDrop={(e) => handleItemDrop(e, folder._id)}
+                    className={cn(
+                      "cursor-pointer group hover:bg-muted/40 transition-colors relative",
+                      selectedFileIds.has(folder._id) && "bg-primary/5",
+                      dropTargetId === folder._id &&
+                        "bg-primary/10 shadow-[inset_0_0_0_2px_rgba(var(--primary),0.2)]",
+                    )}
+                    onDoubleClick={() => setCurrentFolderId(folder._id)}
+                  >
+                    <TableCell className="px-4">
+                      <FolderIcon className="w-4 h-4 text-yellow-500 fill-yellow-500/20" />
+                    </TableCell>
+                    <TableCell className="font-medium flex items-center gap-2">
+                      <div className="flex items-center gap-2">
+                        <FolderIcon className="w-5 h-5 text-yellow-500 fill-yellow-500/40" />
+                        {folder.name}
                       </div>
-                    ))}
-                  {/* Files */}
-                  {group.items.map((file) => {
-                    const FileIcon = getFileIcon(file.fileType);
-                    const isSelected = selectedFileIds.has(file._id);
-                    return (
-                      <div
-                        key={file._id}
-                        data-selectable-id={file._id}
-                        draggable
-                        onDragStart={(e) =>
-                          handleItemDragStart(e, file._id, "file")
-                        }
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (e.shiftKey || e.ctrlKey || e.metaKey) {
-                            toggleFileSelection(file._id);
-                          } else {
-                            if (
-                              selectedFileIds.size > 0 &&
-                              !selectedFileIds.has(file._id)
-                            ) {
-                              setSelectedFileIds(new Set([file._id]));
-                            } else {
-                              setPreviewFile(file);
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      Folder
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {format(folder.createdAt, "MMM d, yyyy")}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100"
+                          >
+                            <MoreHorizontal className="h-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() =>
+                              togglePinFolder.mutate({
+                                folderId: folder._id,
+                                isPinned: !folder.isPinned,
+                              })
                             }
-                          }
-                        }}
-                        onContextMenu={(e) => {
-                          e.preventDefault();
-                          toggleFileSelection(file._id);
-                        }}
-                        className={cn(
-                          "group flex flex-col items-center gap-2 cursor-pointer p-2 rounded-lg transition-all",
-                          selectedFileIds.has(file._id) &&
-                            "bg-primary/5 shadow-sm",
-                        )}
-                      >
+                          >
+                            {folder.isPinned ? (
+                              <>
+                                <PinOff className="h-4 h-4 mr-2" />
+                                Unpin from Sidebar
+                              </>
+                            ) : (
+                              <>
+                                <Pin className="h-4 h-4 mr-2" />
+                                Pin to Sidebar
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteFolder(folder._id);
+                            }}
+                          >
+                            <Trash2 className="h-4 h-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {files.map((file) => (
+                  <TableRow
+                    key={file._id}
+                    data-selectable-id={file._id}
+                    draggable
+                    onDragStart={(e) =>
+                      handleItemDragStart(e, file._id, "file")
+                    }
+                    className={cn(
+                      "cursor-pointer group transition-colors",
+                      selectedFileIds.has(file._id) && "bg-primary/5",
+                    )}
+                    onDoubleClick={() => setPreviewFile(file)}
+                  >
+                    <TableCell className="px-4">
+                      <Checkbox
+                        checked={selectedFileIds.has(file._id)}
+                        onCheckedChange={() => toggleFileSelection(file._id)}
+                      />
+                    </TableCell>
+                    <TableCell className="font-medium flex items-center gap-3">
+                      <div className="flex items-center gap-3">
                         <div
                           className={cn(
-                            "w-16 h-20 rounded-lg flex items-center justify-center border-2 transition-all relative overflow-hidden drag-preview",
-                            isSelected
-                              ? "bg-primary/10 border-primary"
-                              : "bg-muted/30 border-transparent hover:bg-muted",
+                            "p-1.5 rounded-md bg-muted",
+                            getFileTypeColor(file.fileType),
                           )}
                         >
-                          {file.fileType.startsWith("image/") ? (
-                            <img
-                              src={file.fileUrl || undefined}
-                              className="w-full h-full object-cover"
-                              alt=""
-                            />
-                          ) : (
-                            <div
-                              className={cn(
-                                "p-2",
-                                getFileTypeColor(file.fileType),
-                              )}
-                            >
-                              <FileIcon className="w-8 h-8" />
-                            </div>
-                          )}
-                          {isSelected && (
-                            <div
-                              className="absolute top-1 right-1 bg-primary text-white rounded-full p-0.5 hover:bg-primary/80 transition-colors cursor-pointer z-[60]"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleFileSelection(file._id);
-                              }}
-                            >
-                              <X className="w-3 h-3 rotate-45" />
-                            </div>
-                          )}
+                          <FileIcon className="w-4 h-4" />
                         </div>
-                        <span className="text-[10px] text-center font-medium line-clamp-2 w-full px-1 leading-tight">
-                          {file.fileName}
-                        </span>
+                        <span className="truncate">{file.fileName}</span>
                       </div>
-                    );
-                  })}
-                  {/* Preview Modal */}
-                  <Dialog
-                    open={!!previewFile}
-                    onOpenChange={() => setPreviewFile(null)}
-                  >
-                    <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-1 gap-0">
-                      <DialogHeader className="p-4 border-b flex flex-row items-center justify-between space-y-0">
-                        <div className="flex items-center gap-2 overflow-hidden mr-8">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {file.fileType.split("/")[1]?.toUpperCase() || "FILE"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {format(file.createdAt, "MMM d, yyyy")}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {formatFileSize(file.fileSize)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100"
+                          >
+                            <MoreHorizontal className="h-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            disabled={!file.fileUrl}
+                            onClick={() => setPreviewFile(file)}
+                          >
+                            <Eye className="h-4 h-4 mr-2" />
+                            Preview
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={!file.fileUrl}
+                            onClick={() =>
+                              file.fileUrl &&
+                              window.open(file.fileUrl, "_blank")
+                            }
+                          >
+                            <ExternalLink className="h-4 h-4 mr-2" />
+                            Open in New Tab
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleDownload(file)}
+                          >
+                            <Download className="h-4 h-4 mr-2" />
+                            Download
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => handleDelete([file._id])}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="h-4 h-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="p-6 space-y-10">
+              {groupedFiles.map((group) => (
+                <div key={group.label} className="space-y-4">
+                  <h3 className="text-sm font-semibold text-muted-foreground border-b pb-1 flex items-center gap-2">
+                    <ChevronRight className="w-3.5 h-3.5" />
+                    {group.label}
+                  </h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-x-4 gap-y-8">
+                    {/* Folders in Today Group */}
+                    {group.label === "Today" &&
+                      folders.map((folder) => (
+                        <div
+                          key={folder._id}
+                          data-selectable-id={folder._id}
+                          draggable
+                          onDragStart={(e) =>
+                            handleItemDragStart(e, folder._id, "folder")
+                          }
+                          onDragOver={(e) => handleItemDragOver(e, folder._id)}
+                          onDragLeave={() => setDropTargetId(null)}
+                          onDrop={(e) => handleItemDrop(e, folder._id)}
+                          onDoubleClick={() => setCurrentFolderId(folder._id)}
+                          className={cn(
+                            "group flex flex-col items-center gap-2 cursor-pointer relative p-2 rounded-lg transition-all",
+                            selectedFileIds.has(folder._id) &&
+                              "bg-primary/5 shadow-sm",
+                            dropTargetId === folder._id &&
+                              "bg-primary/10 scale-105 ring-2 ring-primary/20",
+                          )}
+                        >
+                          <div className="w-16 h-20 bg-muted/30 rounded-lg flex items-center justify-center border-2 border-transparent group-hover:bg-muted group-hover:border-primary/20 transition-all relative drag-preview">
+                            <FolderIcon className="w-10 h-10 text-yellow-500 fill-yellow-500/20" />
+                            {selectedFileIds.has(folder._id) && (
+                              <div
+                                className="absolute top-1 right-1 bg-primary text-white rounded-full p-0.5 hover:bg-primary/80 transition-colors cursor-pointer z-[60]"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleFileSelection(folder._id);
+                                }}
+                              >
+                                <X className="w-3 h-3 rotate-45" />
+                              </div>
+                            )}
+                            <div className="absolute top-1 right-1">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <MoreHorizontal className="h-3 h-3 text-muted-foreground" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="start">
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      togglePinFolder.mutate({
+                                        folderId: folder._id,
+                                        isPinned: !folder.isPinned,
+                                      });
+                                    }}
+                                  >
+                                    {folder.isPinned ? (
+                                      <>
+                                        <PinOff className="h-4 h-4 mr-2" />
+                                        Unpin from Sidebar
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Pin className="h-4 h-4 mr-2" />
+                                        Pin to Sidebar
+                                      </>
+                                    )}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    className="text-destructive"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteFolder(folder._id);
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 h-4 mr-2" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
+                          <span className="text-xs text-center font-medium truncate w-full px-1">
+                            {folder.name}
+                          </span>
+                        </div>
+                      ))}
+                    {/* Files */}
+                    {group.items.map((file) => {
+                      const FileIcon = getFileIcon(file.fileType);
+                      const isSelected = selectedFileIds.has(file._id);
+                      return (
+                        <div
+                          key={file._id}
+                          data-selectable-id={file._id}
+                          draggable
+                          onDragStart={(e) =>
+                            handleItemDragStart(e, file._id, "file")
+                          }
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (e.shiftKey || e.ctrlKey || e.metaKey) {
+                              toggleFileSelection(file._id);
+                            } else {
+                              if (
+                                selectedFileIds.size > 0 &&
+                                !selectedFileIds.has(file._id)
+                              ) {
+                                setSelectedFileIds(new Set([file._id]));
+                              } else {
+                                setPreviewFile(file);
+                              }
+                            }
+                          }}
+                          onContextMenu={(e) => {
+                            e.preventDefault();
+                            toggleFileSelection(file._id);
+                          }}
+                          className={cn(
+                            "group flex flex-col items-center gap-2 cursor-pointer p-2 rounded-lg transition-all",
+                            selectedFileIds.has(file._id) &&
+                              "bg-primary/5 shadow-sm",
+                          )}
+                        >
                           <div
                             className={cn(
-                              "p-1.5 rounded-md bg-muted",
-                              previewFile &&
-                                getFileTypeColor(previewFile.fileType),
+                              "w-16 h-20 rounded-lg flex items-center justify-center border-2 transition-all relative overflow-hidden drag-preview",
+                              isSelected
+                                ? "bg-primary/10 border-primary"
+                                : "bg-muted/30 border-transparent hover:bg-muted",
                             )}
                           >
-                            {previewFile &&
-                              React.createElement(
-                                getFileIcon(previewFile.fileType),
-                                { className: "w-4 h-4" },
-                              )}
+                            {file.fileType.startsWith("image/") ? (
+                              <img
+                                src={file.fileUrl || undefined}
+                                className="w-full h-full object-cover"
+                                alt=""
+                              />
+                            ) : (
+                              <div
+                                className={cn(
+                                  "p-2",
+                                  getFileTypeColor(file.fileType),
+                                )}
+                              >
+                                <FileIcon className="w-8 h-8" />
+                              </div>
+                            )}
+                            {isSelected && (
+                              <div
+                                className="absolute top-1 right-1 bg-primary text-white rounded-full p-0.5 hover:bg-primary/80 transition-colors cursor-pointer z-[60]"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleFileSelection(file._id);
+                                }}
+                              >
+                                <X className="w-3 h-3 rotate-45" />
+                              </div>
+                            )}
                           </div>
-                          <DialogTitle className="text-base font-semibold truncate">
-                            {previewFile?.fileName}
-                          </DialogTitle>
+                          <span className="text-[10px] text-center font-medium line-clamp-2 w-full px-1 leading-tight">
+                            {file.fileName}
+                          </span>
                         </div>
-                        <div className="flex items-center gap-2 pr-8">
-                          {previewFile?.fileUrl && (
+                      );
+                    })}
+                    {/* Preview Modal */}
+                    <Dialog
+                      open={!!previewFile}
+                      onOpenChange={() => setPreviewFile(null)}
+                    >
+                      <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-1 gap-0">
+                        <DialogHeader className="p-4 border-b flex flex-row items-center justify-between space-y-0">
+                          <div className="flex items-center gap-2 overflow-hidden mr-8">
+                            <div
+                              className={cn(
+                                "p-1.5 rounded-md bg-muted",
+                                previewFile &&
+                                  getFileTypeColor(previewFile.fileType),
+                              )}
+                            >
+                              {previewFile &&
+                                React.createElement(
+                                  getFileIcon(previewFile.fileType),
+                                  { className: "w-4 h-4" },
+                                )}
+                            </div>
+                            <DialogTitle className="text-base font-semibold truncate">
+                              {previewFile?.fileName}
+                            </DialogTitle>
+                          </div>
+                          <div className="flex items-center gap-2 pr-8">
+                            {previewFile?.fileUrl && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 gap-2"
+                                onClick={() =>
+                                  window.open(previewFile.fileUrl, "_blank")
+                                }
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                                Open in New Tab
+                              </Button>
+                            )}
                             <Button
                               variant="outline"
                               size="sm"
                               className="h-8 gap-2"
                               onClick={() =>
-                                window.open(previewFile.fileUrl, "_blank")
+                                previewFile && handleDownload(previewFile)
                               }
                             >
-                              <ExternalLink className="w-4 h-4" />
-                              Open in New Tab
+                              <Download className="w-4 h-4" />
+                              Download
                             </Button>
+                          </div>
+                        </DialogHeader>
+                        <div className="flex-1 bg-muted/20 relative flex items-center justify-center overflow-hidden">
+                          {previewFile && (
+                            <>
+                              {previewFile.fileType.startsWith("image/") ? (
+                                <img
+                                  src={previewFile.fileUrl}
+                                  alt={previewFile.fileName}
+                                  className="max-w-full max-h-full object-contain"
+                                />
+                              ) : previewFile.fileType === "application/pdf" ? (
+                                <iframe
+                                  src={previewFile.fileUrl}
+                                  className="w-full h-full border-none"
+                                  title="PDF Preview"
+                                />
+                              ) : previewFile.fileType.includes("document") ||
+                                previewFile.fileType.includes("word") ||
+                                previewFile.fileType.includes("spreadsheet") ||
+                                previewFile.fileType.includes("excel") ||
+                                previewFile.fileType.includes("presentation") ||
+                                previewFile.fileType.includes("powerpoint") ? (
+                                <iframe
+                                  src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewFile.fileUrl)}&embedded=true`}
+                                  className="w-full h-full border-none"
+                                  title="Document Preview"
+                                />
+                              ) : (
+                                <div className="text-center p-8">
+                                  <File className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-20" />
+                                  <p className="text-lg font-medium">
+                                    No preview available for this file type
+                                  </p>
+                                  <p className="text-sm text-muted-foreground mb-4">
+                                    You can still download or open it in a new
+                                    tab
+                                  </p>
+                                  <Button
+                                    onClick={() =>
+                                      window.open(previewFile.fileUrl, "_blank")
+                                    }
+                                  >
+                                    Open in New Tab
+                                  </Button>
+                                </div>
+                              )}
+                            </>
                           )}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 gap-2"
-                            onClick={() =>
-                              previewFile && handleDownload(previewFile)
-                            }
-                          >
-                            <Download className="w-4 h-4" />
-                            Download
-                          </Button>
                         </div>
-                      </DialogHeader>
-                      <div className="flex-1 bg-muted/20 relative flex items-center justify-center overflow-hidden">
-                        {previewFile && (
-                          <>
-                            {previewFile.fileType.startsWith("image/") ? (
-                              <img
-                                src={previewFile.fileUrl}
-                                alt={previewFile.fileName}
-                                className="max-w-full max-h-full object-contain"
-                              />
-                            ) : previewFile.fileType === "application/pdf" ? (
-                              <iframe
-                                src={previewFile.fileUrl}
-                                className="w-full h-full border-none"
-                                title="PDF Preview"
-                              />
-                            ) : previewFile.fileType.includes("document") ||
-                              previewFile.fileType.includes("word") ||
-                              previewFile.fileType.includes("spreadsheet") ||
-                              previewFile.fileType.includes("excel") ||
-                              previewFile.fileType.includes("presentation") ||
-                              previewFile.fileType.includes("powerpoint") ? (
-                              <iframe
-                                src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewFile.fileUrl)}&embedded=true`}
-                                className="w-full h-full border-none"
-                                title="Document Preview"
-                              />
-                            ) : (
-                              <div className="text-center p-8">
-                                <File className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-20" />
-                                <p className="text-lg font-medium">
-                                  No preview available for this file type
-                                </p>
-                                <p className="text-sm text-muted-foreground mb-4">
-                                  You can still download or open it in a new tab
-                                </p>
-                                <Button
-                                  onClick={() =>
-                                    window.open(previewFile.fileUrl, "_blank")
-                                  }
-                                >
-                                  Open in New Tab
-                                </Button>
-                              </div>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right PDF Tools Panel */}
+        {process.env.NODE_ENV !== "production" && (
+          <PdfToolsPanel
+            isOpen={!!tool}
+            tool={tool}
+            onClose={() => setTool(null)}
+            workspaceId={workspaceId}
+            currentFolderId={currentFolderId as Id<"dataRoomFolders"> | null}
+          />
         )}
       </div>
 

@@ -8,6 +8,7 @@ import { Profile } from "@/features/members/components/profile";
 import { Thread } from "@/features/messages/components/thread";
 import { usePanel } from "@/hooks/use-panel";
 import { WorkspaceSidebarContent } from "./workspace-sidebar-content";
+import { FeatureGuard } from "@/components/feature-flags";
 
 const WorkspaceIdLayout = ({ children }: Readonly<PropsWithChildren>) => {
   const { parentMessageId, profileMemberId, onClose } = usePanel();
@@ -27,13 +28,15 @@ const WorkspaceIdLayout = ({ children }: Readonly<PropsWithChildren>) => {
   ) : undefined;
 
   return (
-    <WorkspaceLayout
-      autoSaveId="woodls-workspace-layout"
-      sidebarContent={<WorkspaceSidebarContent />}
-      rightPanel={rightPanelContent}
-    >
-      {children}
-    </WorkspaceLayout>
+    <FeatureGuard flag="messaging">
+      <WorkspaceLayout
+        autoSaveId="woodls-workspace-layout"
+        sidebarContent={<WorkspaceSidebarContent />}
+        rightPanel={rightPanelContent}
+      >
+        {children}
+      </WorkspaceLayout>
+    </FeatureGuard>
   );
 };
 

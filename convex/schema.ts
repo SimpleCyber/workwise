@@ -502,6 +502,15 @@ const schema = defineSchema({
     redirectUri: v.optional(v.string()),
     createdAt: v.number(),
   }).index("by_state", ["state"]),
+
+  featureFlags: defineTable({
+    key: v.string(),
+    label: v.string(),
+    description: v.string(),
+    enabled: v.boolean(),
+    updatedAt: v.number(),
+    updatedBy: v.optional(v.string()),
+  }).index("by_key", ["key"]),
 });
 
 export default schema;

@@ -1,5 +1,7 @@
 "use client";
 
+import { useFeatureFlag } from "@/components/feature-flags";
+
 import {
   ImageIcon,
   FileText,
@@ -7,8 +9,11 @@ import {
   FileSpreadsheet,
   PlusIcon,
   FolderIcon,
+  FileStack,
+  Upload,
+  Plus,
 } from "lucide-react";
-import { useQueryState, parseAsString } from "nuqs";
+import { useQueryState, parseAsString, parseAsBoolean } from "nuqs";
 
 import { WorkspaceSection } from "@/app/workspace/[workspaceId]/workspace-section";
 import { Button } from "@/components/ui/button";
@@ -28,13 +33,19 @@ const SIDEBAR_FOLDERS: { id: SidebarFolder; label: string; icon: any }[] = [
 
 export const WorkspaceSidebarContent = () => {
   const workspaceId = useWorkspaceId();
+  const { enabled: toolsEnabled } = useFeatureFlag("data_room_tools");
   const [activeFolder, setActiveFolder] = useQueryState(
     "folder",
     parseAsString.withDefault("all"),
   );
+  const [tool, setTool] = useQueryState("tool", parseAsString);
   const [folderId, setFolderId] = useQueryState(
     "folderId",
     parseAsString.withDefault(""),
+  );
+  const [isUploadParam, setIsUploadParam] = useQueryState(
+    "upload",
+    parseAsBoolean.withDefault(false),
   );
 
   const { data: pinnedFolders, isLoading: isLoadingPinned } =
@@ -88,6 +99,7 @@ export const WorkspaceSidebarContent = () => {
                 onClick={() => {
                   setFolderId(folder._id);
                   setActiveFolder("all");
+                  setTool(null);
                 }}
                 className={cn(
                   "h-7 justify-start px-[18px] text-sm font-normal",
@@ -106,6 +118,64 @@ export const WorkspaceSidebarContent = () => {
               </Button>
             );
           })}
+        </WorkspaceSection>
+      )}
+
+      {toolsEnabled && (
+        <WorkspaceSection label="Tools" hint="PDF & Image editing">
+          <Button
+            variant="transparent"
+            size="sm"
+            onClick={() => {
+              setTool("create");
+              setFolderId("");
+            }}
+            className={cn(
+              "h-7 justify-start px-[18px] text-sm font-normal",
+              tool === "create"
+                ? "bg-[#f9EDFF]/20 text-white font-semibold"
+                : "text-[#f9EDFFCC] hover:bg-[#f9EDFF]/10 transition",
+            )}
+          >
+            <Plus
+              className={cn(
+                "mr-2 size-3.5 shrink-0",
+                tool === "create" ? "text-white" : "text-[#f9EDFFCC]",
+              )}
+            />
+            <span>Create</span>
+          </Button>
+          <Button
+            variant="transparent"
+            size="sm"
+            onClick={() => {
+              setTool("merge");
+              setFolderId("");
+            }}
+            className={cn(
+              "h-7 justify-start px-[18px] text-sm font-normal",
+              tool === "merge"
+                ? "bg-[#f9EDFF]/20 text-white font-semibold"
+                : "text-[#f9EDFFCC] hover:bg-[#f9EDFF]/10 transition",
+            )}
+          >
+            <FileStack
+              className={cn(
+                "mr-2 size-3.5 shrink-0",
+                tool === "merge" ? "text-white" : "text-[#f9EDFFCC]",
+              )}
+            />
+            <span>Merge</span>
+          </Button>
+          <Button
+            variant="transparent"
+            size="sm"
+            onClick={() => setIsUploadParam(true)}
+            className="h-7 justify-start px-[18px] text-sm font-normal text-[#f9EDFFCC] hover:bg-[#f9EDFF]/10 transition"
+          >
+            <Upload className="mr-2 size-3.5 shrink-0 text-[#f9EDFFCC]" />
+            <span>Upload</span>
+          </Button>
         </WorkspaceSection>
       )}
     </div>
