@@ -34,7 +34,7 @@ export interface NotificationData {
   actionBy?: Id<"users">;
   isRead: boolean;
   createdAt: number;
-  sendedmail: boolean;
+  emailSent: boolean;
   workspace?: {
     _id: Id<"workspaces">;
     name: string;

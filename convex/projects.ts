@@ -25,15 +25,8 @@ export const createProjectBoard = mutation({
     if (!member) {
       throw new Error("Unauthorized");
     }
-    // Generate board code (B01, B02, etc.)
-    const existingBoards = await ctx.db
-      .query("projectBoards")
-      .withIndex("by_workspace_id", (q) =>
-        q.eq("workspaceId", args.workspaceId),
-      )
-      .collect();
-    const boardNumber = existingBoards.length + 1;
-    const boardCode = `B${boardNumber.toString().padStart(2, "0")}`;
+    // Generate a secure random short code to prevent race conditions
+    const boardCode = `B${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
     const boardId = await ctx.db.insert("projectBoards", {
       name: args.name,
       description: args.description,
@@ -57,16 +50,6 @@ export const createProjectBoard = mutation({
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
-    // await ctx.db.insert("projectLists", {
-    //   name: "In Progress",
-    //   boardId,
-    //   memberId: member._id,
-    //   workspaceId: args.workspaceId,
-    //   position: 1,
-    //   isArchived: false,
-    //   createdAt: Date.now(),
-    //   updatedAt: Date.now(),
-    // });
     await ctx.db.insert("projectLists", {
       name: "Hold Task",
       boardId,
@@ -77,16 +60,6 @@ export const createProjectBoard = mutation({
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
-    // await ctx.db.insert("projectLists", {
-    //   name: "In Review",
-    //   boardId,
-    //   memberId: member._id,
-    //   workspaceId: args.workspaceId,
-    //   position: 3,
-    //   isArchived: false,
-    //   createdAt: Date.now(),
-    //   updatedAt: Date.now(),
-    // });
     await ctx.db.insert("projectLists", {
       name: "Done",
       boardId,
@@ -246,12 +219,8 @@ export const createProjectTask = mutation({
       throw new Error("Board not found");
     }
     // Generate task code (B01-1, B01-2, etc.)
-    const existingTasks = await ctx.db
-      .query("projectTasks")
-      .withIndex("by_board_id", (q) => q.eq("boardId", list.boardId))
-      .collect();
-    const taskNumber = existingTasks.length + 1;
-    const taskCode = `${board.boardCode}-${taskNumber}`;
+    // Generate random short code to prevent race conditions
+    const taskCode = `T${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
     // Get the highest position in this list
     const tasks = await ctx.db
       .query("projectTasks")
@@ -292,7 +261,7 @@ export const createProjectTask = mutation({
           actionBy: userId,
           isRead: false,
           createdAt: Date.now(),
-          sendedmail: false, // Uncomment if you want to track email sending
+          emailSent: false, // Uncomment if you want to track email sending
         });
       }
     }
@@ -477,7 +446,7 @@ export const updateProjectTask = mutation({
           actionBy: userId,
           isRead: false,
           createdAt: Date.now(),
-          sendedmail: false,
+          emailSent: false,
         });
       }
     } else {
@@ -513,7 +482,7 @@ export const updateProjectTask = mutation({
           actionBy: userId,
           isRead: false,
           createdAt: Date.now(),
-          sendedmail: false,
+          emailSent: false,
         });
       }
 
@@ -533,7 +502,7 @@ export const updateProjectTask = mutation({
           actionBy: userId,
           isRead: false,
           createdAt: Date.now(),
-          sendedmail: false,
+          emailSent: false,
         });
       }
 
@@ -555,7 +524,7 @@ export const updateProjectTask = mutation({
               actionBy: userId,
               isRead: false,
               createdAt: now,
-              sendedmail: false,
+              emailSent: false,
             });
           }
         }
@@ -572,7 +541,7 @@ export const updateProjectTask = mutation({
             actionBy: userId,
             isRead: false,
             createdAt: now,
-            sendedmail: false,
+            emailSent: false,
           });
         }
       }
@@ -849,7 +818,7 @@ export const createTaskComment = mutation({
         actionBy: userId,
         isRead: false,
         createdAt: Date.now(),
-        sendedmail: false,
+        emailSent: false,
       });
     }
 
@@ -870,7 +839,7 @@ export const createTaskComment = mutation({
         actionBy: userId,
         isRead: false,
         createdAt: Date.now(),
-        sendedmail: false,
+        emailSent: false,
       });
     }
 

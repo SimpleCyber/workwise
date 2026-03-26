@@ -39,7 +39,7 @@ export const realtimeSearch = query({
     }
 
     const searchQuery = args.query.toLowerCase().trim();
-    const limit = args.limit || 100;
+    const limit = args.limit || 50;
     const results: any[] = [];
 
     // If no query, return empty results
@@ -76,221 +76,193 @@ export const realtimeSearch = query({
       return { text, highlights };
     };
 
-    // Search Messages (Chat)
+    // Search Messages (Chat) — uses search index
     if (searchTypes.includes("chat")) {
       const messages = await ctx.db
         .query("messages")
-        .withIndex("by_workspace_id", (q) =>
-          q.eq("workspaceId", args.workspaceId),
+        .withSearchIndex("search_body", (q) =>
+          q.search("body", searchQuery).eq("workspaceId", args.workspaceId),
         )
-        .collect();
+        .take(limit);
 
       for (const message of messages) {
-        const bodyMatch = message.body.toLowerCase().includes(searchQuery);
-
-        if (bodyMatch) {
-          // Apply date filter
-          if (args.filters.dateRange) {
-            const messageDate = message._creationTime;
-            if (
-              messageDate < args.filters.dateRange.start ||
-              messageDate > args.filters.dateRange.end
-            ) {
-              continue;
-            }
+        // Apply date filter
+        if (args.filters.dateRange) {
+          const messageDate = message._creationTime;
+          if (
+            messageDate < args.filters.dateRange.start ||
+            messageDate > args.filters.dateRange.end
+          ) {
+            continue;
           }
-
-          const messageMember = await ctx.db.get(message.memberId);
-          const messageUser = messageMember
-            ? await ctx.db.get(messageMember.userId)
-            : null;
-
-          // Get channel or conversation info
-          let contextInfo: {
-            type: string;
-            name: string;
-            id: Id<"channels"> | null;
-          } = {
-            type: "conversation",
-            name: "Direct Message",
-            id: null,
-          };
-          if (message.channelId) {
-            const channel = await ctx.db.get(message.channelId);
-            contextInfo = {
-              type: "channel",
-              name: channel?.name || "Unknown Channel",
-              id: message.channelId,
-            };
-          }
-
-          const titleHighlights = createHighlights(
-            `Message in ${contextInfo.name}`,
-            searchQuery,
-          );
-          const contentHighlights = createHighlights(message.body, searchQuery);
-
-          results.push({
-            id: message._id,
-            type: "chat",
-            title: `Message in ${contextInfo.name}`,
-            titleHighlights,
-            content: message.body,
-            contentHighlights,
-            author: messageUser?.name || "Unknown User",
-            authorImage: messageUser?.image,
-            date: message._creationTime,
-            url: message.channelId
-              ? `/workspace/${args.workspaceId}/channel/${message.channelId}`
-              : `/workspace/${args.workspaceId}/member/${message.memberId}`,
-            metadata: {
-              channelId: message.channelId,
-              conversationId: message.conversationId,
-              hasImage: !!message.image,
-              contextType: contextInfo.type,
-            },
-            relevanceScore: bodyMatch ? 10 : 0,
-          });
         }
+
+        const messageMember = await ctx.db.get(message.memberId);
+        const messageUser = messageMember
+          ? await ctx.db.get(messageMember.userId)
+          : null;
+
+        // Get channel or conversation info
+        let contextInfo: {
+          type: string;
+          name: string;
+          id: Id<"channels"> | null;
+        } = {
+          type: "conversation",
+          name: "Direct Message",
+          id: null,
+        };
+        if (message.channelId) {
+          const channel = await ctx.db.get(message.channelId);
+          contextInfo = {
+            type: "channel",
+            name: channel?.name || "Unknown Channel",
+            id: message.channelId,
+          };
+        }
+
+        const titleHighlights = createHighlights(
+          `Message in ${contextInfo.name}`,
+          searchQuery,
+        );
+        const contentHighlights = createHighlights(message.body, searchQuery);
+
+        results.push({
+          id: message._id,
+          type: "chat",
+          title: `Message in ${contextInfo.name}`,
+          titleHighlights,
+          content: message.body,
+          contentHighlights,
+          author: messageUser?.name || "Unknown User",
+          authorImage: messageUser?.image,
+          date: message._creationTime,
+          url: message.channelId
+            ? `/workspace/${args.workspaceId}/channel/${message.channelId}`
+            : `/workspace/${args.workspaceId}/member/${message.memberId}`,
+          metadata: {
+            channelId: message.channelId,
+            conversationId: message.conversationId,
+            hasImage: !!message.image,
+            contextType: contextInfo.type,
+          },
+          relevanceScore: 10,
+        });
       }
     }
 
-    // Search Project Tasks
+    // Search Project Tasks — uses search index
     if (searchTypes.includes("projects")) {
       const tasks = await ctx.db
         .query("projectTasks")
-        .withIndex("by_workspace_id", (q) =>
-          q.eq("workspaceId", args.workspaceId),
+        .withSearchIndex("search_title", (q) =>
+          q.search("title", searchQuery).eq("workspaceId", args.workspaceId),
         )
-        .collect();
+        .take(limit);
 
       for (const task of tasks) {
-        const titleMatch = task.title.toLowerCase().includes(searchQuery);
-        const descriptionMatch = task.description
-          ?.toLowerCase()
-          .includes(searchQuery);
-        const taskCodeMatch = task.taskCode.toLowerCase().includes(searchQuery);
-
-        if (titleMatch || descriptionMatch || taskCodeMatch) {
-          // Apply date filter
-          if (args.filters.dateRange) {
-            if (
-              task.createdAt < args.filters.dateRange.start ||
-              task.createdAt > args.filters.dateRange.end
-            ) {
-              continue;
-            }
+        // Apply date filter
+        if (args.filters.dateRange) {
+          if (
+            task.createdAt < args.filters.dateRange.start ||
+            task.createdAt > args.filters.dateRange.end
+          ) {
+            continue;
           }
-
-          const assignedTo = task.assignedToId
-            ? await ctx.db.get(task.assignedToId)
-            : null;
-          const assignedUser = assignedTo
-            ? await ctx.db.get(assignedTo.userId)
-            : null;
-          const board = await ctx.db.get(task.boardId);
-
-          const titleText = `${task.taskCode}: ${task.title}`;
-          const titleHighlights = createHighlights(titleText, searchQuery);
-          const contentHighlights = createHighlights(
-            task.description || "No description",
-            searchQuery,
-          );
-
-          let relevanceScore = 0;
-          if (taskCodeMatch) relevanceScore += 15;
-          if (titleMatch) relevanceScore += 10;
-          if (descriptionMatch) relevanceScore += 5;
-
-          results.push({
-            id: task._id,
-            type: "projects",
-            title: titleText,
-            titleHighlights,
-            content: task.description || "No description",
-            contentHighlights,
-            author: assignedUser?.name || "Unassigned",
-            authorImage: assignedUser?.image,
-            date: task.createdAt,
-            url: `/projects/${args.workspaceId}/board/${task.boardId}`,
-            metadata: {
-              taskCode: task.taskCode,
-              priority: task.priority,
-              boardName: board?.name,
-              isCompleted: task.isCompleted,
-            },
-            relevanceScore,
-          });
         }
+
+        const assignedTo = task.assignedToId
+          ? await ctx.db.get(task.assignedToId)
+          : null;
+        const assignedUser = assignedTo
+          ? await ctx.db.get(assignedTo.userId)
+          : null;
+        const board = await ctx.db.get(task.boardId);
+
+        const titleText = `${task.taskCode}: ${task.title}`;
+        const titleHighlights = createHighlights(titleText, searchQuery);
+        const contentHighlights = createHighlights(
+          task.description || "No description",
+          searchQuery,
+        );
+
+        results.push({
+          id: task._id,
+          type: "projects",
+          title: titleText,
+          titleHighlights,
+          content: task.description || "No description",
+          contentHighlights,
+          author: assignedUser?.name || "Unassigned",
+          authorImage: assignedUser?.image,
+          date: task.createdAt,
+          url: `/projects/${args.workspaceId}/board/${task.boardId}`,
+          metadata: {
+            taskCode: task.taskCode,
+            priority: task.priority,
+            boardName: board?.name,
+            isCompleted: task.isCompleted,
+          },
+          relevanceScore: 10,
+        });
       }
     }
 
-    // Search Todo Cards
+    // Search Todo Cards — uses search index
     if (searchTypes.includes("todo")) {
       const cards = await ctx.db
         .query("todoCards")
-        .withIndex("by_workspace_id", (q) =>
-          q.eq("workspaceId", args.workspaceId),
+        .withSearchIndex("search_title", (q) =>
+          q.search("title", searchQuery).eq("workspaceId", args.workspaceId),
         )
-        .collect();
+        .take(limit);
 
       for (const card of cards) {
-        const titleMatch = card.title.toLowerCase().includes(searchQuery);
-        const descriptionMatch = card.description
-          ?.toLowerCase()
-          .includes(searchQuery);
-
-        if (titleMatch || descriptionMatch) {
-          // Apply date filter
-          if (args.filters.dateRange) {
-            if (
-              card.createdAt < args.filters.dateRange.start ||
-              card.createdAt > args.filters.dateRange.end
-            ) {
-              continue;
-            }
+        // Apply date filter
+        if (args.filters.dateRange) {
+          if (
+            card.createdAt < args.filters.dateRange.start ||
+            card.createdAt > args.filters.dateRange.end
+          ) {
+            continue;
           }
-
-          const cardMember = await ctx.db.get(card.memberId);
-          const cardUser = cardMember
-            ? await ctx.db.get(cardMember.userId)
-            : null;
-          const board = await ctx.db.get(card.boardId);
-
-          const titleHighlights = createHighlights(card.title, searchQuery);
-          const contentHighlights = createHighlights(
-            card.description || "No description",
-            searchQuery,
-          );
-
-          let relevanceScore = 0;
-          if (titleMatch) relevanceScore += 10;
-          if (descriptionMatch) relevanceScore += 5;
-
-          results.push({
-            id: card._id,
-            type: "todo",
-            title: card.title,
-            titleHighlights,
-            content: card.description || "No description",
-            contentHighlights,
-            author: cardUser?.name || "Unknown User",
-            authorImage: cardUser?.image,
-            date: card.createdAt,
-            url: `/todo/${args.workspaceId}/board/${card.boardId}`,
-            metadata: {
-              boardName: board?.name,
-              isCompleted: card.isCompleted,
-              dueDate: card.dueDate,
-              labels: card.labels,
-            },
-            relevanceScore,
-          });
         }
+
+        const cardMember = await ctx.db.get(card.memberId);
+        const cardUser = cardMember
+          ? await ctx.db.get(cardMember.userId)
+          : null;
+        const board = await ctx.db.get(card.boardId);
+
+        const titleHighlights = createHighlights(card.title, searchQuery);
+        const contentHighlights = createHighlights(
+          card.description || "No description",
+          searchQuery,
+        );
+
+        results.push({
+          id: card._id,
+          type: "todo",
+          title: card.title,
+          titleHighlights,
+          content: card.description || "No description",
+          contentHighlights,
+          author: cardUser?.name || "Unknown User",
+          authorImage: cardUser?.image,
+          date: card.createdAt,
+          url: `/todo/${args.workspaceId}/board/${card.boardId}`,
+          metadata: {
+            boardName: board?.name,
+            isCompleted: card.isCompleted,
+            dueDate: card.dueDate,
+            labels: card.labels,
+          },
+          relevanceScore: 10,
+        });
       }
     }
 
-    // Search Members
+    // Search Members — small table, index scan is fine
     if (searchTypes.includes("members")) {
       const members = await ctx.db
         .query("members")
@@ -338,70 +310,61 @@ export const realtimeSearch = query({
       }
     }
 
-    // Search Data Room Files
+    // Search Data Room Files — uses search index
     if (searchTypes.includes("dataroom")) {
       const files = await ctx.db
         .query("dataRoomFiles")
-        .withIndex("by_workspace_id", (q) =>
-          q.eq("workspaceId", args.workspaceId),
+        .withSearchIndex("search_fileName", (q) =>
+          q.search("fileName", searchQuery).eq("workspaceId", args.workspaceId),
         )
-        .collect();
+        .take(limit);
 
       for (const file of files) {
-        const fileNameMatch = file.fileName.toLowerCase().includes(searchQuery);
-        const commentMatch = file.comment.toLowerCase().includes(searchQuery);
+        // Check file permissions
+        if (
+          file.visibility === "private" &&
+          file.uploaderId !== member._id &&
+          !file.allowedMembers.includes(member._id)
+        ) {
+          continue;
+        }
 
-        if (fileNameMatch || commentMatch) {
-          // Check file permissions
+        // Apply date filter
+        if (args.filters.dateRange) {
           if (
-            file.visibility === "private" &&
-            file.uploaderId !== member._id &&
-            !file.allowedMembers.includes(member._id)
+            file.createdAt < args.filters.dateRange.start ||
+            file.createdAt > args.filters.dateRange.end
           ) {
             continue;
           }
-
-          // Apply date filter
-          if (args.filters.dateRange) {
-            if (
-              file.createdAt < args.filters.dateRange.start ||
-              file.createdAt > args.filters.dateRange.end
-            ) {
-              continue;
-            }
-          }
-
-          const uploader = await ctx.db.get(file.uploaderId);
-          const uploaderUser = uploader
-            ? await ctx.db.get(uploader.userId)
-            : null;
-
-          const titleHighlights = createHighlights(file.fileName, searchQuery);
-          const contentHighlights = createHighlights(file.comment, searchQuery);
-
-          let relevanceScore = 0;
-          if (fileNameMatch) relevanceScore += 10;
-          if (commentMatch) relevanceScore += 5;
-
-          results.push({
-            id: file._id,
-            type: "dataroom",
-            title: file.fileName,
-            titleHighlights,
-            content: file.comment,
-            contentHighlights,
-            author: uploaderUser?.name || "Unknown User",
-            authorImage: uploaderUser?.image,
-            date: file.createdAt,
-            url: `/workspace/${args.workspaceId}/data-room`,
-            metadata: {
-              fileType: file.fileType,
-              fileSize: file.fileSize,
-              visibility: file.visibility,
-            },
-            relevanceScore,
-          });
         }
+
+        const uploader = await ctx.db.get(file.uploaderId);
+        const uploaderUser = uploader
+          ? await ctx.db.get(uploader.userId)
+          : null;
+
+        const titleHighlights = createHighlights(file.fileName, searchQuery);
+        const contentHighlights = createHighlights(file.comment, searchQuery);
+
+        results.push({
+          id: file._id,
+          type: "dataroom",
+          title: file.fileName,
+          titleHighlights,
+          content: file.comment,
+          contentHighlights,
+          author: uploaderUser?.name || "Unknown User",
+          authorImage: uploaderUser?.image,
+          date: file.createdAt,
+          url: `/workspace/${args.workspaceId}/data-room`,
+          metadata: {
+            fileType: file.fileType,
+            fileSize: file.fileSize,
+            visibility: file.visibility,
+          },
+          relevanceScore: 10,
+        });
       }
     }
 

@@ -27,6 +27,7 @@ import type * as googleCalendarActions from "../googleCalendarActions.js";
 import type * as http from "../http.js";
 import type * as members from "../members.js";
 import type * as messages from "../messages.js";
+import type * as migration from "../migration.js";
 import type * as notifications from "../notifications.js";
 import type * as projectChats from "../projectChats.js";
 import type * as projects from "../projects.js";
@@ -61,6 +62,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   members: typeof members;
   messages: typeof messages;
+  migration: typeof migration;
   notifications: typeof notifications;
   projectChats: typeof projectChats;
   projects: typeof projects;

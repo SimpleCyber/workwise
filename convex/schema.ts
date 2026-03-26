@@ -45,7 +45,11 @@ const schema = defineSchema({
       "channelId",
       "parentMessageId",
       "conversationId",
-    ]),
+    ])
+    .searchIndex("search_body", {
+      searchField: "body",
+      filterFields: ["workspaceId", "channelId"],
+    }),
   reactions: defineTable({
     workspaceId: v.id("workspaces"),
     messageId: v.id("messages"),
@@ -62,27 +66,23 @@ const schema = defineSchema({
     title: v.string(),
     pinned: v.boolean(),
     createdBy: v.id("users"),
-    createdAt: v.string(), // ISO
-    updatedAt: v.string(), // ISO
-  })
-    .index("by_board", ["boardId", "updatedAt"])
-    .index("by_workspace", ["workspaceId", "updatedAt"])
-    .index("by_pinned", ["boardId", "pinned", "updatedAt"]),
-
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    messageCount: v.number(),
+  }).index("by_board", ["boardId"]),
   projectChatMessages: defineTable({
     chatId: v.id("projectChats"),
     role: v.union(v.literal("user"), v.literal("assistant")),
     content: v.string(),
-    createdAt: v.string(), // ISO
+    createdAt: v.number(),
     userId: v.optional(v.id("users")), // present for "user" role
-  }).index("by_chat", ["chatId", "createdAt"]),
-
+  }).index("by_chat", ["chatId"]),
   projectChatHooks: defineTable({
     chatId: v.id("projectChats"),
     messageId: v.id("projectChatMessages"),
-    content: v.string(),
+    content: v.string(), // e.g., "Create a file named...", "Open the modal...", etc.
     selected: v.boolean(),
-    createdAt: v.string(), // ISO
+    createdAt: v.union(v.number(), v.string()),
   })
     .index("by_chat", ["chatId", "createdAt"])
     .index("by_chat_message", ["chatId", "messageId"]),
@@ -138,12 +138,14 @@ const schema = defineSchema({
     actionBy: v.optional(v.id("users")),
     isRead: v.boolean(),
     createdAt: v.number(),
-    sendedmail: v.boolean(),
+    emailSent: v.optional(v.boolean()),
+    sendedmail: v.optional(v.boolean()),
   })
     .index("by_user_id", ["userId"])
     .index("by_workspace_id", ["workspaceId"])
     .index("by_created_at", ["createdAt"])
-    .index("by_is_read", ["isRead"]),
+    .index("by_is_read", ["isRead"])
+    .index("by_user_is_read", ["userId", "isRead"]),
 
   // Attendance comments table
   attendanceComments: defineTable({
@@ -243,7 +245,11 @@ const schema = defineSchema({
     .index("by_board_id", ["boardId"])
     .index("by_member_id", ["memberId"])
     .index("by_workspace_id", ["workspaceId"])
-    .index("by_list_archived", ["listId", "isArchived"]),
+    .index("by_list_archived", ["listId", "isArchived"])
+    .searchIndex("search_title", {
+      searchField: "title",
+      filterFields: ["workspaceId", "boardId"],
+    }),
   todoChecklists: defineTable({
     title: v.string(),
     cardId: v.id("todoCards"),
@@ -352,7 +358,11 @@ const schema = defineSchema({
     .index("by_assigned_to", ["assignedToId"])
     .index("by_assigned_by", ["assignedById"])
     .index("by_workspace_id", ["workspaceId"])
-    .index("by_list_archived", ["listId", "isArchived"]),
+    .index("by_list_archived", ["listId", "isArchived"])
+    .searchIndex("search_title", {
+      searchField: "title",
+      filterFields: ["workspaceId", "boardId"],
+    }),
   dataRoomFiles: defineTable({
     workspaceId: v.id("workspaces"),
     uploaderId: v.id("members"),
@@ -370,7 +380,11 @@ const schema = defineSchema({
     .index("by_workspace_id", ["workspaceId"])
     .index("by_uploader_id", ["uploaderId"])
     .index("by_folder_id", ["folderId"])
-    .index("by_created_at", ["createdAt"]),
+    .index("by_created_at", ["createdAt"])
+    .searchIndex("search_fileName", {
+      searchField: "fileName",
+      filterFields: ["workspaceId"],
+    }),
 
   dataRoomFolders: defineTable({
     name: v.string(),

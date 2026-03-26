@@ -72,8 +72,27 @@ export const getBoard = query({
       return null;
     }
 
-    const member = await ctx.db.get(board.memberId);
-    if (!member || member.userId !== userId) {
+    const boardMember = await ctx.db.get(board.memberId);
+
+    // Get the current user's membership in the board's workspace
+    const member = await ctx.db
+      .query("members")
+      .withIndex("by_workspace_id_user_id", (q) =>
+        q.eq("workspaceId", board.workspaceId).eq("userId", userId),
+      )
+      .first();
+
+    if (!member) {
+      return null;
+    }
+
+    // Access control check
+    const isCreator = boardMember?.userId === userId;
+    const isPublic = board.visibility === "public";
+    const isAllowed =
+      board.allowedMembers && board.allowedMembers.includes(member._id);
+
+    if (!isCreator && !isPublic && !isAllowed) {
       return null;
     }
 

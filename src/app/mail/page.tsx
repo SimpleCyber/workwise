@@ -206,7 +206,7 @@ export default function AdminNotificationsPage() {
       `"${notification.title}"`,
       `"${notification.message}"`,
       notification.isRead ? "Read" : "Unread",
-      notification.sendedmail ? "Yes" : "No",
+      notification.emailSent ? "Yes" : "No",
       notification.actionUser?.name ||
         notification.actionUser?.email ||
         "System",
@@ -534,13 +534,13 @@ export default function AdminNotificationsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
-                          {notification.sendedmail ? (
+                          {notification.emailSent ? (
                             <MailOpen className="h-4 w-4 text-green-600" />
                           ) : (
                             <Mail className="h-4 w-4 text-gray-400" />
                           )}
                           <span className="text-xs text-muted-foreground">
-                            {notification.sendedmail ? "Sent" : "Not sent"}
+                            {notification.emailSent ? "Sent" : "Not sent"}
                           </span>
                         </div>
                       </TableCell>
@@ -559,11 +559,11 @@ export default function AdminNotificationsPage() {
                         <Button
                           size="sm"
                           variant={
-                            notification.sendedmail ? "outline" : "default"
+                            notification.emailSent ? "outline" : "default"
                           }
                           onClick={() => handleSendEmail(notification)}
                           disabled={
-                            notification.sendedmail ||
+                            notification.emailSent ||
                             sendingEmails.has(notification._id) ||
                             !notification.user?.email
                           }
@@ -574,7 +574,7 @@ export default function AdminNotificationsPage() {
                           ) : (
                             <Send className="h-4 w-4" />
                           )}
-                          {notification.sendedmail ? "Sent" : "Send Email"}
+                          {notification.emailSent ? "Sent" : "Send Email"}
                         </Button>
                       </TableCell>
                     </TableRow>

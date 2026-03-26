@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 export const listForBoard = query({
   args: { boardId: v.id("projectBoards") },
@@ -19,11 +20,7 @@ export const listForBoard = query({
           .take(1);
         const last = msgs[0];
 
-        const allForCount = await ctx.db
-          .query("projectChatMessages")
-          .withIndex("by_chat", (q) => q.eq("chatId", c._id))
-          .collect();
-        const messageCount = allForCount.length;
+        const messageCount = c.messageCount || 0;
 
         return {
           ...c,
@@ -58,7 +55,7 @@ export const create = mutation({
     createdBy: v.id("users"),
   },
   handler: async (ctx, { workspaceId, boardId, title, createdBy }) => {
-    const now = new Date().toISOString();
+    const now = Date.now();
     const chatId = await ctx.db.insert("projectChats", {
       workspaceId,
       boardId,
@@ -67,6 +64,7 @@ export const create = mutation({
       createdBy,
       createdAt: now,
       updatedAt: now,
+      messageCount: 0,
     });
     return chatId;
   },
@@ -75,20 +73,24 @@ export const create = mutation({
 export const rename = mutation({
   args: { chatId: v.id("projectChats"), title: v.string() },
   handler: async (ctx, { chatId, title }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Unauthorized");
     const chat = await ctx.db.get(chatId);
     if (!chat) throw new Error("Chat not found");
-    await ctx.db.patch(chatId, { title, updatedAt: new Date().toISOString() });
+    await ctx.db.patch(chatId, { title, updatedAt: Date.now() });
   },
 });
 
 export const togglePin = mutation({
   args: { chatId: v.id("projectChats") },
   handler: async (ctx, { chatId }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Unauthorized");
     const chat = await ctx.db.get(chatId);
     if (!chat) throw new Error("Chat not found");
     await ctx.db.patch(chatId, {
       pinned: !chat.pinned,
-      updatedAt: new Date().toISOString(),
+      updatedAt: Date.now(),
     });
   },
 });
@@ -96,6 +98,8 @@ export const togglePin = mutation({
 export const remove = mutation({
   args: { chatId: v.id("projectChats") },
   handler: async (ctx, { chatId }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Unauthorized");
     // Delete messages
     const msgs = await ctx.db
       .query("projectChatMessages")
@@ -115,7 +119,9 @@ export const appendMessage = mutation({
     userId: v.optional(v.id("users")),
   },
   handler: async (ctx, { chatId, role, content, userId }) => {
-    const now = new Date().toISOString();
+    const authUserId = await getAuthUserId(ctx);
+    if (!authUserId) throw new Error("Unauthorized");
+    const now = Date.now();
     await ctx.db.insert("projectChatMessages", {
       chatId,
       role,
@@ -123,7 +129,11 @@ export const appendMessage = mutation({
       createdAt: now,
       userId,
     });
-    await ctx.db.patch(chatId, { updatedAt: now });
+    const chat = await ctx.db.get(chatId);
+    await ctx.db.patch(chatId, {
+      updatedAt: now,
+      messageCount: (chat?.messageCount || 0) + 1,
+    });
   },
 });
 
@@ -133,6 +143,8 @@ export const deleteFromMessage = mutation({
     fromMessageId: v.id("projectChatMessages"),
   },
   handler: async (ctx, { chatId, fromMessageId }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Unauthorized");
     const fromMsg = await ctx.db.get(fromMessageId);
     if (!fromMsg) throw new Error("Message not found");
     if (fromMsg.chatId !== chatId)
@@ -149,7 +161,11 @@ export const deleteFromMessage = mutation({
     const del = toDelete.filter((m) => m.createdAt >= boundary);
     await Promise.all(del.map((m) => ctx.db.delete(m._id)));
 
-    await ctx.db.patch(chatId, { updatedAt: new Date().toISOString() });
+    const chat = await ctx.db.get(chatId);
+    await ctx.db.patch(chatId, {
+      updatedAt: Date.now(),
+      messageCount: Math.max(0, (chat?.messageCount || 0) - del.length),
+    });
   },
 });
 
@@ -172,6 +188,8 @@ export const toggleHook = mutation({
     content: v.string(),
   },
   handler: async (ctx, { chatId, messageId, content }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Unauthorized");
     const existing = await ctx.db
       .query("projectChatHooks")
       .withIndex("by_chat_message", (q) =>
@@ -180,7 +198,7 @@ export const toggleHook = mutation({
       .unique()
       .catch(() => null as any);
 
-    const now = new Date().toISOString();
+    const now = Date.now();
     if (!existing) {
       await ctx.db.insert("projectChatHooks", {
         chatId,
@@ -199,6 +217,8 @@ export const toggleHook = mutation({
 export const setHookSelected = mutation({
   args: { hookId: v.id("projectChatHooks"), selected: v.boolean() },
   handler: async (ctx, { hookId, selected }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Unauthorized");
     await ctx.db.patch(hookId, { selected });
   },
 });

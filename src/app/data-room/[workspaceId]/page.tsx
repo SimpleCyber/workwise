@@ -31,6 +31,8 @@ import {
   ExternalLink,
   Pin,
   PinOff,
+  Film,
+  ChevronLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryState, parseAsString, parseAsBoolean } from "nuqs";
@@ -92,6 +94,7 @@ import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { useConfirm } from "@/hooks/use-confirm";
 import { cn } from "@/lib/utils";
 import { PdfToolsPanel } from "./pdf-tools-panel";
+import { CsvViewer } from "@/features/data-room/components/csv-viewer";
 
 interface FileUploadData {
   file: File;
@@ -111,6 +114,7 @@ const getFileIcon = (fileType: string) => {
     fileType.includes("csv")
   )
     return FileSpreadsheet;
+  if (fileType.startsWith("video/")) return Film;
   return File;
 };
 
@@ -125,6 +129,7 @@ const getFileTypeColor = (fileType: string) => {
     fileType.includes("csv")
   )
     return "text-emerald-600";
+  if (fileType.startsWith("video/")) return "text-purple-600";
   return "text-gray-600";
 };
 
@@ -451,6 +456,39 @@ const DataRoomWorkspacePage = () => {
       Number.parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i]
     );
   };
+
+  const handleNextFile = useCallback(() => {
+    if (!previewFile || files.length <= 1) return;
+    const currentIndex = files.findIndex((f: any) => f._id === previewFile._id);
+    if (currentIndex === -1) return;
+    const nextIndex = (currentIndex + 1) % files.length;
+    setPreviewFile(files[nextIndex]);
+  }, [previewFile, files]);
+
+  const handlePreviousFile = useCallback(() => {
+    if (!previewFile || files.length <= 1) return;
+    const currentIndex = files.findIndex((f: any) => f._id === previewFile._id);
+    if (currentIndex === -1) return;
+    const prevIndex = (currentIndex - 1 + files.length) % files.length;
+    setPreviewFile(files[prevIndex]);
+  }, [previewFile, files]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!previewFile) return;
+      // Don't navigate if user is typing in an input
+      if (
+        document.activeElement?.tagName === "INPUT" ||
+        document.activeElement?.tagName === "TEXTAREA"
+      )
+        return;
+
+      if (e.key === "ArrowRight") handleNextFile();
+      if (e.key === "ArrowLeft") handlePreviousFile();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [previewFile, handleNextFile, handlePreviousFile]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
@@ -1363,7 +1401,13 @@ const DataRoomWorkspacePage = () => {
                               {previewFile?.fileName}
                             </DialogTitle>
                           </div>
-                          <div className="flex items-center gap-2 pr-8">
+                          <div className="flex items-center gap-3 pr-8">
+                            <span className="text-xs font-medium text-muted-foreground bg-muted/50 px-2 py-1 rounded-md border whitespace-nowrap">
+                              {files.findIndex(
+                                (f: any) => f._id === previewFile?._id,
+                              ) + 1}{" "}
+                              of {files.length}
+                            </span>
                             {previewFile?.fileUrl && (
                               <Button
                                 variant="outline"
@@ -1390,7 +1434,31 @@ const DataRoomWorkspacePage = () => {
                             </Button>
                           </div>
                         </DialogHeader>
-                        <div className="flex-1 bg-muted/20 relative flex items-center justify-center overflow-hidden">
+                        <div className="flex-1 bg-muted/20 relative flex items-center justify-center overflow-hidden group/preview">
+                          {/* Side Navigation Buttons */}
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 z-50">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={handlePreviousFile}
+                              disabled={files.length <= 1}
+                              className="h-12 w-12 rounded-full opacity-10 group-hover/preview:opacity-100 hover:bg-background/20 transition-all duration-300"
+                            >
+                              <ChevronLeft className="w-8 h-8" />
+                            </Button>
+                          </div>
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2 z-50">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={handleNextFile}
+                              disabled={files.length <= 1}
+                              className="h-12 w-12 rounded-full opacity-10 group-hover/preview:opacity-100 hover:bg-background/20 transition-all duration-300"
+                            >
+                              <ChevronRight className="w-8 h-8" />
+                            </Button>
+                          </div>
+
                           {previewFile && (
                             <>
                               {previewFile.fileType.startsWith("image/") ? (
@@ -1416,6 +1484,22 @@ const DataRoomWorkspacePage = () => {
                                   className="w-full h-full border-none"
                                   title="Document Preview"
                                 />
+                              ) : previewFile.fileType.includes("csv") ||
+                                previewFile.fileName
+                                  .toLowerCase()
+                                  .endsWith(".csv") ? (
+                                <CsvViewer url={previewFile.fileUrl} />
+                              ) : previewFile.fileType.startsWith("video/") ? (
+                                <div className="w-full h-full flex items-center justify-center bg-black">
+                                  <video
+                                    src={previewFile.fileUrl}
+                                    controls
+                                    className="max-w-full max-h-full"
+                                    autoPlay
+                                  >
+                                    Your browser does not support the video tag.
+                                  </video>
+                                </div>
                               ) : (
                                 <div className="text-center p-8">
                                   <File className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-20" />

@@ -2,14 +2,17 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
-const ADMIN_EMAIL = "satyamyadav9uv@gmail.com";
+// Admin emails from environment variable (comma-separated)
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "satyamyadav9uv@gmail.com")
+  .split(",")
+  .map((e) => e.trim().toLowerCase());
 
 // Helper: verify current user is the super-admin
 async function requireAdmin(ctx: any) {
   const userId = await getAuthUserId(ctx);
   if (!userId) throw new Error("Not authenticated");
   const user = await ctx.db.get(userId);
-  if (!user || user.email !== ADMIN_EMAIL) {
+  if (!user || !ADMIN_EMAILS.includes(user.email?.toLowerCase())) {
     throw new Error("Unauthorized: admin access required");
   }
   return user;
@@ -20,6 +23,8 @@ async function requireAdmin(ctx: any) {
 export const getFeatureFlags = query({
   args: {},
   handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
     return await ctx.db.query("featureFlags").collect();
   },
 });
@@ -30,7 +35,7 @@ export const isAdmin = query({
     const userId = await getAuthUserId(ctx);
     if (!userId) return false;
     const user = await ctx.db.get(userId);
-    return user?.email === ADMIN_EMAIL;
+    return ADMIN_EMAILS.includes(user?.email?.toLowerCase() ?? "");
   },
 });
 

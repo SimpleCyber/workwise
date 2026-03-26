@@ -18,16 +18,7 @@ export default convexAuthNextjsMiddleware(
     const isPublic = isPublicPage(req);
     const isAuthenticated = await isAuthenticatedNextjs();
 
-    console.log(`Middleware: ${req.nextUrl.pathname}`, {
-      isPublic,
-      isAuthenticated,
-      cookies: req.cookies.getAll().map((c) => c.name),
-    });
-
     if (!isPublic && !isAuthenticated) {
-      console.log(
-        "Middleware: Redirecting to /home due to unauthenticated access",
-      );
       return nextjsMiddlewareRedirect(req, "/home");
     }
 
@@ -39,7 +30,7 @@ export default convexAuthNextjsMiddleware(
     cookieConfig: {
       maxAge: 60 * 60 * 24 * 30, // 30 days
       sameSite: "lax",
-      secure: false, // Force false for localhost
+      secure: process.env.NODE_ENV === "production",
     } as any,
   },
 );

@@ -20,15 +20,8 @@ async function createLinkedProjectBoard(
     creatorMemberId: Id<"members">;
   },
 ) {
-  // Generate board code (B01, B02, etc.) similar to createProjectBoard
-  const existingBoards = await ctx.db
-    .query("projectBoards")
-    .withIndex("by_workspace_id", (q: any) =>
-      q.eq("workspaceId", args.workspaceId),
-    )
-    .collect();
-  const boardNumber = existingBoards.length + 1;
-  const boardCode = `B${boardNumber.toString().padStart(2, "0")}`;
+  // Generate a random short code to prevent race conditions
+  const boardCode = `B${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
   const boardId: Id<"projectBoards"> = await ctx.db.insert("projectBoards", {
     name: args.name,
@@ -239,8 +232,8 @@ export const updateTreeNode = mutation({
       if (Object.keys(boardUpdates).length > 0) {
         await ctx.db.patch(boardId, boardUpdates);
       }
-    } catch (_e) {
-      // ignore if cast fails or board is missing
+    } catch (e) {
+      console.error("Failed to update linked board for node", args.nodeId, e);
     }
 
     return node._id;
@@ -340,8 +333,8 @@ export const deleteTreeNode = mutation({
 
         // Finally delete the board itself
         await ctx.db.delete(boardId);
-      } catch (_e) {
-        // ignore if cast fails or board missing
+      } catch (e) {
+        console.error("Failed to delete linked board for node", nodeId, e);
       }
     }
 

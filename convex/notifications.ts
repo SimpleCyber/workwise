@@ -37,7 +37,7 @@ export const createNotification = mutation({
       actionBy: args.actionBy,
       isRead: false,
       createdAt: Date.now(),
-      sendedmail: false,
+      emailSent: false,
     });
     return notificationId;
   },
@@ -145,9 +145,13 @@ export const getAllNotifications = query({
     const currentUserId = await getAuthUserId(ctx);
     if (!currentUserId) return [];
 
-    // TODO: Add admin role check here
-    // const currentUser = await ctx.db.get(currentUserId);
-    // if (!currentUser?.isAdmin) throw new Error("Unauthorized - Admin access required");
+    // Verify admin: must be admin of at least one workspace
+    const adminMembership = await ctx.db
+      .query("members")
+      .withIndex("by_user_id", (q) => q.eq("userId", currentUserId))
+      .filter((q) => q.eq(q.field("role"), "admin"))
+      .first();
+    if (!adminMembership) return [];
 
     let notifications = await ctx.db
       .query("notifications")
@@ -171,7 +175,7 @@ export const getAllNotifications = query({
 
     if (args.emailSent !== undefined) {
       notifications = notifications.filter(
-        (n) => n.sendedmail === args.emailSent,
+        (n) => n.emailSent === args.emailSent,
       );
     }
 
@@ -244,20 +248,30 @@ export const getNotificationStats = query({
     const currentUserId = await getAuthUserId(ctx);
     if (!currentUserId) return null;
 
-    // TODO: Add admin role check here
+    // Verify admin: must be admin of at least one workspace
+    const adminMembership = await ctx.db
+      .query("members")
+      .withIndex("by_user_id", (q) => q.eq("userId", currentUserId))
+      .filter((q) => q.eq(q.field("role"), "admin"))
+      .first();
+    if (!adminMembership) return null;
 
-    let notifications = await ctx.db.query("notifications").collect();
-
+    let notifications;
     if (args.workspaceId) {
-      notifications = notifications.filter(
-        (n) => n.workspaceId === args.workspaceId,
-      );
+      notifications = await ctx.db
+        .query("notifications")
+        .withIndex("by_workspace_id", (q) =>
+          q.eq("workspaceId", args.workspaceId!),
+        )
+        .collect();
+    } else {
+      notifications = await ctx.db.query("notifications").collect();
     }
 
     const stats = {
       total: notifications.length,
       unread: notifications.filter((n) => !n.isRead).length,
-      emailsSent: notifications.filter((n) => n.sendedmail).length,
+      emailsSent: notifications.filter((n) => n.emailSent).length,
       byType: {} as Record<string, number>,
       byWorkspace: {} as Record<string, number>,
       recentActivity: notifications.filter(
@@ -298,7 +312,13 @@ export const markEmailAsSent = mutation({
     const currentUserId = await getAuthUserId(ctx);
     if (!currentUserId) throw new Error("Unauthorized");
 
-    // TODO: Add admin role check here
+    // Verify admin: must be admin of at least one workspace
+    const adminMembership = await ctx.db
+      .query("members")
+      .withIndex("by_user_id", (q) => q.eq("userId", currentUserId))
+      .filter((q) => q.eq(q.field("role"), "admin"))
+      .first();
+    if (!adminMembership) throw new Error("Admin access required");
 
     const notification = await ctx.db.get(args.notificationId);
     if (!notification) {
@@ -306,7 +326,7 @@ export const markEmailAsSent = mutation({
     }
 
     await ctx.db.patch(args.notificationId, {
-      sendedmail: true,
+      emailSent: true,
     });
 
     return args.notificationId;
@@ -441,5 +461,31 @@ export const deleteNotification = mutation({
 
     await ctx.db.delete(args.notificationId);
     return args.notificationId;
+  },
+});
+
+// Migration mutation to fix legacy data (rename sendedmail to emailSent)
+export const migrateNotificationFields = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const notifications = await ctx.db.query("notifications").collect();
+    let updatedCount = 0;
+
+    for (const notification of notifications) {
+      const anyNotification = notification as any;
+      if (anyNotification.emailSent === undefined) {
+        const emailSentValue = anyNotification.sendedmail ?? false;
+
+        // Use patch to add the missing field.
+        // Note: Extra fields like 'sendedmail' will still exist in the document
+        // unless we use replace, but adding the missing required field should
+        // fix the immediate validation error.
+        await ctx.db.patch(notification._id, {
+          emailSent: emailSentValue,
+        });
+        updatedCount++;
+      }
+    }
+    return { updatedCount };
   },
 });

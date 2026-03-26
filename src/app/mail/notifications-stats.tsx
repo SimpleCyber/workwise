@@ -12,7 +12,7 @@ export function NotificationsStats() {
   const unreadCount = useGetUnreadCount("all");
 
   const totalNotifications = notifications?.length || 0;
-  const emailsSent = notifications?.filter((n) => n.sendedmail).length || 0;
+  const emailsSent = notifications?.filter((n) => n.emailSent).length || 0;
   const processedNotifications =
     notifications?.filter((n) => n.hasBeenProcessed).length || 0;
 
