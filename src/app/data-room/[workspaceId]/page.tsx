@@ -200,8 +200,8 @@ const DataRoomWorkspacePage = () => {
     "Are you sure you want to delete the selected file(s)? This action cannot be undone.",
   );
 
-  const files = filesData?.files || [];
-  const folders = filesData?.folders || [];
+  const files = useMemo(() => filesData?.files || [], [filesData?.files]);
+  const folders = useMemo(() => filesData?.folders || [], [filesData?.folders]);
   const totalPages = filesData?.totalPages || 1;
 
   // Grouping logic for Grid View
@@ -223,8 +223,6 @@ const DataRoomWorkspacePage = () => {
       (g) => g.items.length > 0 || (g.label === "Today" && folders.length > 0),
     );
   }, [files, folders]);
-
-  if (!workspaceId) return null;
 
   const processFiles = (files: File[]) => {
     const validFiles: File[] = [];
@@ -609,6 +607,8 @@ const DataRoomWorkspacePage = () => {
       console.error("Drop error:", err);
     }
   };
+
+  if (!workspaceId) return null;
 
   return (
     <div
