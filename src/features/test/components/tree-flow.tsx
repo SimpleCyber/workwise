@@ -71,7 +71,6 @@ export function TreeFlow({
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [activePopup, setActivePopup] = useState<string | null>(null);
   const [isAIDialogOpen, setIsAIDialogOpen] = useState(false);
-  const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
 
   const { data: treeNodes, isLoading: nodesLoading } = useGetTreeNodes({
     workspaceId,
@@ -93,24 +92,21 @@ export function TreeFlow({
   const layoutManager = useMemo(() => new TreeLayoutManager(), []);
 
   // Function to check if a node should be visible (not hidden by collapsed parent)
-  const isNodeVisible = useCallback(
-    (nodeId: string, allNodes: any[]) => {
-      const node = allNodes.find((n) => n.nodeId === nodeId);
-      if (!node || !node.parentId) return true;
+  const isNodeVisible = useCallback((nodeId: string, allNodes: any[]) => {
+    const node = allNodes.find((n) => n.nodeId === nodeId);
+    if (!node || !node.parentId) return true;
 
-      // Check if any ancestor is collapsed
-      let currentParentId = node.parentId;
-      while (currentParentId) {
-        if (collapsedNodes.has(currentParentId)) {
-          return false;
-        }
-        const parentNode = allNodes.find((n) => n.nodeId === currentParentId);
-        currentParentId = parentNode?.parentId;
+    // Check if any ancestor is collapsed
+    let currentParentId = node.parentId;
+    while (currentParentId) {
+      const parentNode = allNodes.find((n) => n.nodeId === currentParentId);
+      if (parentNode?.isCollapsed) {
+        return false;
       }
-      return true;
-    },
-    [collapsedNodes],
-  );
+      currentParentId = parentNode?.parentId;
+    }
+    return true;
+  }, []);
 
   // Function to get all descendant nodes of a given node
   const getDescendantNodes = useCallback(
@@ -128,18 +124,49 @@ export function TreeFlow({
     [],
   );
 
-  // Toggle collapse state of a node
-  const toggleNodeCollapse = useCallback((nodeId: string) => {
-    setCollapsedNodes((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(nodeId)) {
-        newSet.delete(nodeId);
-      } else {
-        newSet.add(nodeId);
+  const updateNodeHandler = useCallback(
+    async (
+      nodeId: string,
+      updates: Partial<{
+        title: string;
+        description: string;
+        status: string;
+        isCollapsed: boolean;
+      }>,
+    ) => {
+      const updateData: any = { nodeId, workspaceId };
+      if (updates.title) updateData.title = updates.title;
+      if (updates.description) updateData.description = updates.description;
+      if (updates.status) updateData.status = updates.status;
+      if (updates.isCollapsed !== undefined)
+        updateData.isCollapsed = updates.isCollapsed;
+
+      try {
+        await updateNode(updateData);
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to update node",
+        );
       }
-      return newSet;
-    });
-  }, []);
+    },
+    [workspaceId, updateNode],
+  );
+
+  // Toggle collapse state of a node
+  const toggleNodeCollapse = useCallback(
+    (nodeId: string) => {
+      const node = treeNodes?.find((n) => n.nodeId === nodeId);
+      if (!node) return;
+
+      const newCollapsedState = !node.isCollapsed;
+
+      updateNodeHandler(nodeId, {
+        // @ts-ignore - we added isCollapsed to the mutation
+        isCollapsed: newCollapsedState,
+      });
+    },
+    [treeNodes, updateNodeHandler],
+  );
 
   const createInitialWorkspaceNode = useCallback(async () => {
     // Close any pending AI dialog open state before creating a manual node
@@ -230,7 +257,8 @@ export function TreeFlow({
         toast.success("Child node created successfully!");
 
         // Auto-expand the parent if it was collapsed
-        if (collapsedNodes.has(parentId)) {
+        const parentData = treeNodes?.find((n) => n.nodeId === parentId);
+        if (parentData?.isCollapsed) {
           toggleNodeCollapse(parentId);
         }
       } catch (error) {
@@ -241,7 +269,7 @@ export function TreeFlow({
         );
       }
     },
-    [workspaceId, createNode, nodes, edges, collapsedNodes, toggleNodeCollapse],
+    [workspaceId, createNode, nodes, edges, treeNodes, toggleNodeCollapse],
   );
 
   const deleteNodeHandler = useCallback(
@@ -269,27 +297,6 @@ export function TreeFlow({
     [toggleStar],
   );
 
-  const updateNodeHandler = useCallback(
-    async (
-      nodeId: string,
-      updates: Partial<{ title: string; description: string; status: string }>,
-    ) => {
-      const updateData: any = { nodeId, workspaceId };
-      if (updates.title) updateData.title = updates.title;
-      if (updates.description) updateData.description = updates.description;
-      if (updates.status) updateData.status = updates.status;
-
-      try {
-        await updateNode(updateData);
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Failed to update node",
-        );
-      }
-    },
-    [workspaceId, updateNode],
-  );
-
   useEffect(() => {
     if (!treeNodes || treeNodes.length === 0) return;
 
@@ -311,7 +318,7 @@ export function TreeFlow({
         (n) => n.parentId === node.nodeId,
       );
       const hasChildren = directChildren.length > 0;
-      const isCollapsed = collapsedNodes.has(node.nodeId);
+      const isCollapsed = node.isCollapsed || false;
 
       const reactFlowNode: Node = {
         id: node.nodeId,
@@ -384,7 +391,6 @@ export function TreeFlow({
   }, [
     treeNodes,
     workspaceId,
-    collapsedNodes,
     setNodes,
     setEdges,
     expandNodeWithAIHandler,

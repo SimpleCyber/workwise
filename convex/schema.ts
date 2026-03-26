@@ -388,6 +388,7 @@ const schema = defineSchema({
       y: v.number(),
     }),
     level: v.number(), // Tree depth level
+    isCollapsed: v.optional(v.boolean()),
     isArchived: v.optional(v.boolean()),
     createdAt: v.number(),
     updatedAt: v.number(),

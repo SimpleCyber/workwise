@@ -173,6 +173,7 @@ export const createTreeNode = mutation({
       status: "in-progress" as const,
       position: args.position,
       level,
+      isCollapsed: false,
       isArchived: false,
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -480,6 +481,7 @@ export const expandNodeWithAI = mutation({
           status: "in-progress",
           position,
           level,
+          isCollapsed: false,
           isArchived: false,
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -561,6 +563,7 @@ export const createAIGeneratedTree = mutation({
       status: "in-progress",
       position: args.rootPosition,
       level: 0,
+      isCollapsed: false,
       isArchived: false,
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -612,6 +615,7 @@ export const createAIGeneratedTree = mutation({
           status: "in-progress",
           position,
           level,
+          isCollapsed: false,
           isArchived: false,
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -904,6 +908,7 @@ export const updateNodeWithPermission = mutation({
       ),
     ),
     position: v.optional(v.object({ x: v.number(), y: v.number() })),
+    isCollapsed: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const identity = await getAuthUserId(ctx);
@@ -945,6 +950,8 @@ export const updateNodeWithPermission = mutation({
       updateData.description = args.description;
     if (args.status !== undefined) updateData.status = args.status;
     if (args.position !== undefined) updateData.position = args.position;
+    if (args.isCollapsed !== undefined)
+      updateData.isCollapsed = args.isCollapsed;
 
     await ctx.db.patch(node._id, updateData);
 
