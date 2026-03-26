@@ -296,3 +296,35 @@ export const useMoveDataRoomItems = () => {
 
   return { mutate, data, error, isPending };
 };
+
+export const useDeleteDataRoomFolder = () => {
+  const [data, setData] = useState<any>(null);
+  const [error, setError] = useState<Error | null>(null);
+  const [isPending, setIsPending] = useState(false);
+
+  const mutation = useMutation(api.dataRoom.deleteDataRoomFolder);
+
+  const mutate = useCallback(
+    async (values: { folderId: Id<"dataRoomFolders"> }, options?: any) => {
+      try {
+        setData(null);
+        setError(null);
+        setIsPending(true);
+
+        const response = await mutation(values);
+        setData(response);
+        options?.onSuccess?.(response);
+        return response;
+      } catch (e) {
+        setError(e as Error);
+        options?.onError?.(e as Error);
+        if (options?.throwError) throw e;
+      } finally {
+        setIsPending(false);
+      }
+    },
+    [mutation],
+  );
+
+  return { mutate, data, error, isPending };
+};

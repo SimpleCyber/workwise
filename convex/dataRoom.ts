@@ -478,3 +478,48 @@ export const moveDataRoomItems = mutation({
     return { success: true };
   },
 });
+
+// Delete a folder and all its contents recursively
+export const deleteDataRoomFolder = mutation({
+  args: { folderId: v.id("dataRoomFolders") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Unauthorized");
+    }
+
+    const folder = await ctx.db.get(args.folderId);
+    if (!folder) {
+      throw new Error("Folder not found");
+    }
+
+    // Recursive deletion helper
+    const deleteFolderRecursive = async (id: Id<"dataRoomFolders">) => {
+      // 1. Delete all files in this folder
+      const files = await ctx.db
+        .query("dataRoomFiles")
+        .withIndex("by_folder_id", (q) => q.eq("folderId", id))
+        .collect();
+
+      for (const file of files) {
+        await ctx.db.delete(file._id);
+      }
+
+      // 2. Delete all subfolders recursively
+      const subfolders = await ctx.db
+        .query("dataRoomFolders")
+        .withIndex("by_parent_id", (q) => q.eq("parentId", id))
+        .collect();
+
+      for (const subfolder of subfolders) {
+        await deleteFolderRecursive(subfolder._id);
+      }
+
+      // 3. Delete the folder itself
+      await ctx.db.delete(id);
+    };
+
+    await deleteFolderRecursive(args.folderId);
+    return { success: true };
+  },
+});

@@ -84,6 +84,7 @@ import {
   useCreateDataRoomFolder,
   useTogglePinDataRoomFolder,
   useMoveDataRoomItems,
+  useDeleteDataRoomFolder,
 } from "@/features/data-room/api/use-data-room";
 import type { Id } from "../../../../convex/_generated/dataModel";
 
@@ -189,6 +190,7 @@ const DataRoomWorkspacePage = () => {
   const createFolder = useCreateDataRoomFolder();
   const togglePinFolder = useTogglePinDataRoomFolder();
   const deleteFile = useDeleteDataRoomFile();
+  const deleteFolder = useDeleteDataRoomFolder();
   const moveItems = useMoveDataRoomItems();
 
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
@@ -198,6 +200,11 @@ const DataRoomWorkspacePage = () => {
   const [ConfirmDialog, confirm] = useConfirm(
     "Delete File(s)",
     "Are you sure you want to delete the selected file(s)? This action cannot be undone.",
+  );
+
+  const [ConfirmFolderDeleteDialog, confirmFolderDelete] = useConfirm(
+    "Delete Folder",
+    "Are you sure you want to delete this folder and all its contents? This action cannot be undone.",
   );
 
   const files = useMemo(() => filesData?.files || [], [filesData?.files]);
@@ -394,6 +401,19 @@ const DataRoomWorkspacePage = () => {
       toast.success("Deleted successfully!");
     } catch (error) {
       toast.error("Failed to delete");
+    }
+  };
+
+  const handleDeleteFolder = async (folderId: string) => {
+    const ok = await confirmFolderDelete();
+    if (!ok) return;
+    try {
+      await deleteFolder.mutate({
+        folderId: folderId as Id<"dataRoomFolders">,
+      });
+      toast.success("Folder and its contents deleted!");
+    } catch (error) {
+      toast.error("Failed to delete folder");
     }
   };
 
@@ -635,6 +655,7 @@ const DataRoomWorkspacePage = () => {
         </div>
       )}
       <ConfirmDialog />
+      <ConfirmFolderDeleteDialog />
 
       {/* Modals */}
       <Dialog open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>
@@ -1014,11 +1035,11 @@ const DataRoomWorkspacePage = () => {
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() => {
-                            // Add folder deletion logic here if needed
-                            toast.error("Folder deletion not implemented yet");
-                          }}
                           className="text-destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteFolder(folder._id);
+                          }}
                         >
                           <Trash2 className="h-4 h-4 mr-2" />
                           Delete
@@ -1198,9 +1219,7 @@ const DataRoomWorkspacePage = () => {
                                   className="text-destructive"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    toast.error(
-                                      "Folder deletion not implemented",
-                                    );
+                                    handleDeleteFolder(folder._id);
                                   }}
                                 >
                                   <Trash2 className="h-4 h-4 mr-2" />
