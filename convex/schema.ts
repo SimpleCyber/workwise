@@ -66,15 +66,15 @@ const schema = defineSchema({
     title: v.string(),
     pinned: v.boolean(),
     createdBy: v.id("users"),
-    createdAt: v.number(),
-    updatedAt: v.number(),
+    createdAt: v.union(v.number(), v.string()),
+    updatedAt: v.union(v.number(), v.string()),
     messageCount: v.optional(v.number()),
   }).index("by_board", ["boardId"]),
   projectChatMessages: defineTable({
     chatId: v.id("projectChats"),
     role: v.union(v.literal("user"), v.literal("assistant")),
     content: v.string(),
-    createdAt: v.number(),
+    createdAt: v.union(v.number(), v.string()),
     userId: v.optional(v.id("users")), // present for "user" role
   }).index("by_chat", ["chatId"]),
   projectChatHooks: defineTable({
