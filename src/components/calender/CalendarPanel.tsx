@@ -174,7 +174,8 @@ export const DraggableCalendarPanel = ({
 
   const handleConnectGoogleCalendar = async () => {
     try {
-      const authUrl = await generateCalendarAuthUrl();
+      const redirectUri = `${window.location.origin}/api/calendar/google/callback`;
+      const authUrl = await generateCalendarAuthUrl({ redirectUri });
       window.location.href = authUrl;
     } catch (error: any) {
       toast.error("Failed to start Google Calendar connection", {

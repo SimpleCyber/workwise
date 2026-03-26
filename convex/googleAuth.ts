@@ -162,11 +162,13 @@ export const storeOAuthState = internalMutation({
   args: {
     state: v.string(),
     userId: v.id("users"),
+    redirectUri: v.string(),
   },
   handler: async (ctx, args) => {
     await ctx.db.insert("authStates", {
       state: args.state,
       userId: args.userId,
+      redirectUri: args.redirectUri,
       createdAt: Date.now(),
     });
   },
@@ -190,6 +192,6 @@ export const getUserByState = internalMutation({
     // Optional: Delete state after use (one-time use)
     await ctx.db.delete(authState._id);
 
-    return { userId: authState.userId };
+    return { userId: authState.userId, redirectUri: authState.redirectUri };
   },
 });

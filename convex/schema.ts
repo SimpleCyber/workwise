@@ -484,6 +484,7 @@ const schema = defineSchema({
   authStates: defineTable({
     state: v.string(),
     userId: v.id("users"),
+    redirectUri: v.optional(v.string()),
     createdAt: v.number(),
   }).index("by_state", ["state"]),
 });

@@ -18,30 +18,26 @@ const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const CALENDAR_API_URL = "https://www.googleapis.com/calendar/v3";
 
 export const generateAuthUrl = action({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    redirectUri: v.string(),
+  },
+  handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
       throw new Error("Not authenticated");
     }
 
     const clientId = process.env.GOOGLE_CALENDAR_CLIENT_ID;
-    const redirectUri = process.env.GOOGLE_CALENDAR_REDIRECT_URI;
 
-    console.log("Debug Env Vars:", {
-      clientId,
-      redirectUri,
-    });
-
-    if (!clientId || !redirectUri) {
-      throw new Error("Missing Google Client ID or Redirect URI");
+    if (!clientId) {
+      throw new Error("Missing Google Client ID");
     }
 
     const state = generateState();
 
     const params = new URLSearchParams({
       client_id: clientId,
-      redirect_uri: redirectUri,
+      redirect_uri: args.redirectUri,
       response_type: "code",
       scope:
         "https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events",
@@ -50,10 +46,11 @@ export const generateAuthUrl = action({
       state: state, // Secure random state
     });
 
-    // Store state in DB
+    // Store state and redirectUri in DB
     await ctx.runMutation(internal.googleAuth.storeOAuthState, {
       state,
       userId,
+      redirectUri: args.redirectUri,
     });
 
     const url = `${GOOGLE_AUTH_URL}?${params.toString()}`;
@@ -68,7 +65,7 @@ export const exchangeCode = action({
     state: v.string(),
   },
   handler: async (ctx, args) => {
-    // 1. Look up the state to recover user ID
+    // 1. Look up the state to recover user ID and redirectUri
     const authRecord: any = await ctx.runMutation(
       internal.googleAuth.getUserByState,
       { state: args.state },
@@ -79,10 +76,10 @@ export const exchangeCode = action({
     }
 
     const userId = authRecord.userId;
+    const redirectUri = authRecord.redirectUri;
 
     const clientId = process.env.GOOGLE_CALENDAR_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CALENDAR_CLIENT_SECRET;
-    const redirectUri = process.env.GOOGLE_CALENDAR_REDIRECT_URI;
 
     if (!clientId || !clientSecret || !redirectUri) {
       throw new Error("Missing Google Client credentials or Redirect URI");
