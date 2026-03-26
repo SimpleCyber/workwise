@@ -68,7 +68,7 @@ const schema = defineSchema({
     createdBy: v.id("users"),
     createdAt: v.number(),
     updatedAt: v.number(),
-    messageCount: v.number(),
+    messageCount: v.optional(v.number()),
   }).index("by_board", ["boardId"]),
   projectChatMessages: defineTable({
     chatId: v.id("projectChats"),
