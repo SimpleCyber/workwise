@@ -363,3 +363,72 @@ export const updateFilePermissions = mutation({
     return args.fileId;
   },
 });
+
+// Toggle data room folder pin
+export const togglePinDataRoomFolder = mutation({
+  args: {
+    folderId: v.id("dataRoomFolders"),
+    isPinned: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Unauthorized");
+    }
+
+    const folder = await ctx.db.get(args.folderId);
+    if (!folder) {
+      throw new Error("Folder not found");
+    }
+
+    const member = await ctx.db
+      .query("members")
+      .withIndex("by_workspace_id_user_id", (q) =>
+        q.eq("workspaceId", folder.workspaceId).eq("userId", userId),
+      )
+      .unique();
+
+    if (!member) {
+      throw new Error("Unauthorized");
+    }
+
+    await ctx.db.patch(args.folderId, {
+      isPinned: args.isPinned,
+    });
+
+    return args.folderId;
+  },
+});
+
+// Get pinned data room folders
+export const getPinnedDataRoomFolders = query({
+  args: {
+    workspaceId: v.id("workspaces"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return [];
+    }
+
+    const member = await ctx.db
+      .query("members")
+      .withIndex("by_workspace_id_user_id", (q) =>
+        q.eq("workspaceId", args.workspaceId).eq("userId", userId),
+      )
+      .unique();
+
+    if (!member) {
+      return [];
+    }
+
+    const pinnedFolders = await ctx.db
+      .query("dataRoomFolders")
+      .withIndex("by_workspace_id_pinned", (q) =>
+        q.eq("workspaceId", args.workspaceId).eq("isPinned", true),
+      )
+      .collect();
+
+    return pinnedFolders;
+  },
+});

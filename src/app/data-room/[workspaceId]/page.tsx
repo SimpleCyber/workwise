@@ -23,6 +23,8 @@ import {
   Grid,
   FileIcon,
   ExternalLink,
+  Pin,
+  PinOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryState, parseAsString } from "nuqs";
@@ -74,6 +76,7 @@ import {
   useUploadDataRoomFile,
   useDeleteDataRoomFile,
   useCreateDataRoomFolder,
+  useTogglePinDataRoomFolder,
 } from "@/features/data-room/api/use-data-room";
 import type { Id } from "../../../../convex/_generated/dataModel";
 
@@ -170,9 +173,10 @@ const DataRoomWorkspacePage = () => {
     fileTypeFilter: activeTypeFilter === "all" ? "" : activeTypeFilter,
     folderId: (currentFolderId as Id<"dataRoomFolders">) || undefined,
   });
-  const uploadFile = useUploadDataRoomFile();
-  const deleteFile = useDeleteDataRoomFile();
   const createFolder = useCreateDataRoomFolder();
+  const togglePinFolder = useTogglePinDataRoomFolder();
+  const deleteFile = useDeleteDataRoomFile();
+  const uploadFile = useUploadDataRoomFile();
 
   const [ConfirmDialog, confirm] = useConfirm(
     "Delete File(s)",
@@ -648,10 +652,52 @@ const DataRoomWorkspacePage = () => {
                   <TableCell className="text-muted-foreground text-sm">
                     {format(folder.createdAt, "MMM d, yyyy")}
                   </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    --
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 opacity-0 group-hover:opacity-100"
+                        >
+                          <MoreHorizontal className="h-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() =>
+                            togglePinFolder.mutate({
+                              folderId: folder._id,
+                              isPinned: !folder.isPinned,
+                            })
+                          }
+                        >
+                          {folder.isPinned ? (
+                            <>
+                              <PinOff className="h-4 h-4 mr-2" />
+                              Unpin from Sidebar
+                            </>
+                          ) : (
+                            <>
+                              <Pin className="h-4 h-4 mr-2" />
+                              Pin to Sidebar
+                            </>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => {
+                            // Add folder deletion logic here if needed
+                            toast.error("Folder deletion not implemented yet");
+                          }}
+                          className="text-destructive"
+                        >
+                          <Trash2 className="h-4 h-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
-                  <TableCell></TableCell>
                 </TableRow>
               ))}
               {files.map((file) => (
@@ -753,10 +799,60 @@ const DataRoomWorkspacePage = () => {
                       <div
                         key={folder._id}
                         onDoubleClick={() => setCurrentFolderId(folder._id)}
-                        className="group flex flex-col items-center gap-2 cursor-pointer"
+                        className="group flex flex-col items-center gap-2 cursor-pointer relative"
                       >
                         <div className="w-16 h-20 bg-muted/30 rounded-lg flex items-center justify-center border-2 border-transparent group-hover:bg-muted group-hover:border-primary/20 transition-all relative">
                           <FolderIcon className="w-10 h-10 text-yellow-500 fill-yellow-500/20" />
+                          <div className="absolute top-1 right-1">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <MoreHorizontal className="h-3 h-3 text-muted-foreground" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="start">
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    togglePinFolder.mutate({
+                                      folderId: folder._id,
+                                      isPinned: !folder.isPinned,
+                                    });
+                                  }}
+                                >
+                                  {folder.isPinned ? (
+                                    <>
+                                      <PinOff className="h-4 h-4 mr-2" />
+                                      Unpin from Sidebar
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Pin className="h-4 h-4 mr-2" />
+                                      Pin to Sidebar
+                                    </>
+                                  )}
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-destructive"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toast.error(
+                                      "Folder deletion not implemented",
+                                    );
+                                  }}
+                                >
+                                  <Trash2 className="h-4 h-4 mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </div>
                         <span className="text-xs text-center font-medium truncate w-full px-1">
                           {folder.name}

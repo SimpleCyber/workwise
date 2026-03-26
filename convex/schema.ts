@@ -377,10 +377,12 @@ const schema = defineSchema({
     workspaceId: v.id("workspaces"),
     uploaderId: v.id("members"),
     parentId: v.optional(v.id("dataRoomFolders")),
+    isPinned: v.optional(v.boolean()),
     createdAt: v.number(),
   })
     .index("by_workspace_id", ["workspaceId"])
-    .index("by_parent_id", ["parentId"]),
+    .index("by_parent_id", ["parentId"])
+    .index("by_workspace_id_pinned", ["workspaceId", "isPinned"]),
   // Advanced Tree Structure tables
   treeNodes: defineTable({
     title: v.string(),

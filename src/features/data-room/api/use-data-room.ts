@@ -209,3 +209,58 @@ export const useUpdateFilePermissions = () => {
 
   return { mutate, data, error, isPending };
 };
+
+// Toggle pinned folder
+export const useTogglePinDataRoomFolder = () => {
+  const [data, setData] = useState<Id<"dataRoomFolders"> | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+  const [status, setStatus] = useState<
+    "success" | "error" | "settled" | "pending" | null
+  >(null);
+
+  const isPending = useMemo(() => status === "pending", [status]);
+  const mutation = useMutation(api.dataRoom.togglePinDataRoomFolder);
+
+  const mutate = useCallback(
+    async (values: { folderId: Id<"dataRoomFolders">; isPinned: boolean }) => {
+      try {
+        setData(null);
+        setError(null);
+        setStatus("pending");
+        const response = await mutation(values);
+        setData(response);
+        setStatus("success");
+        return response;
+      } catch (error) {
+        setError(error as Error);
+        setStatus("error");
+        throw error;
+      } finally {
+        setStatus("settled");
+      }
+    },
+    [mutation],
+  );
+
+  return { mutate, data, error, isPending };
+};
+
+// Get pinned folders
+export const useGetPinnedDataRoomFolders = ({
+  workspaceId,
+}: {
+  workspaceId?: Id<"workspaces">;
+}) => {
+  const shouldFetch = !!workspaceId;
+
+  const result = useQuery(
+    api.dataRoom.getPinnedDataRoomFolders,
+    shouldFetch ? { workspaceId } : "skip",
+  );
+
+  return {
+    data: result,
+    isLoading: result === undefined,
+    error: null,
+  };
+};
