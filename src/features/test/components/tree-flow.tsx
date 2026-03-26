@@ -205,6 +205,91 @@ export function TreeFlow({
     [workspaceId, expandWithAI, treeNodes],
   );
 
+  const onConnect = useCallback(
+    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
+    [setEdges],
+  );
+
+  const addChildNodeHandler = useCallback(
+    async (parentId: string) => {
+      try {
+        const parentNode = nodes.find((n) => n.id === parentId);
+        const childrenCount = edges.filter((e) => e.source === parentId).length;
+        const newPosition = {
+          x: (parentNode?.position.x || 0) + 350,
+          y: (parentNode?.position.y || 0) + childrenCount * 150 - 75,
+        };
+
+        await createNode({
+          workspaceId,
+          parentId,
+          title: "New Node",
+          description: "New child node",
+          position: newPosition,
+        });
+        toast.success("Child node created successfully!");
+
+        // Auto-expand the parent if it was collapsed
+        if (collapsedNodes.has(parentId)) {
+          toggleNodeCollapse(parentId);
+        }
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to create child node",
+        );
+      }
+    },
+    [workspaceId, createNode, nodes, edges, collapsedNodes, toggleNodeCollapse],
+  );
+
+  const deleteNodeHandler = useCallback(
+    async (nodeId: string) => {
+      const ok = await confirm();
+
+      if (ok) {
+        try {
+          await deleteNode({ nodeId });
+          toast.success("Node deleted successfully!");
+        } catch (error) {
+          toast.error(
+            error instanceof Error ? error.message : "Failed to delete node",
+          );
+        }
+      }
+    },
+    [deleteNode, confirm],
+  );
+
+  const togglestar = useCallback(
+    async (nodeId: string) => {
+      toggleStar({ nodeId });
+    },
+    [toggleStar],
+  );
+
+  const updateNodeHandler = useCallback(
+    async (
+      nodeId: string,
+      updates: Partial<{ title: string; description: string; status: string }>,
+    ) => {
+      const updateData: any = { nodeId, workspaceId };
+      if (updates.title) updateData.title = updates.title;
+      if (updates.description) updateData.description = updates.description;
+      if (updates.status) updateData.status = updates.status;
+
+      try {
+        await updateNode(updateData);
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to update node",
+        );
+      }
+    },
+    [workspaceId, updateNode],
+  );
+
   useEffect(() => {
     if (!treeNodes || treeNodes.length === 0) return;
 
@@ -307,92 +392,10 @@ export function TreeFlow({
     toggleNodeCollapse,
     activeNodeId,
     layoutManager,
+    addChildNodeHandler,
+    deleteNodeHandler,
+    updateNodeHandler,
   ]);
-
-  const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges],
-  );
-
-  const addChildNodeHandler = useCallback(
-    async (parentId: string) => {
-      try {
-        const parentNode = nodes.find((n) => n.id === parentId);
-        const childrenCount = edges.filter((e) => e.source === parentId).length;
-        const newPosition = {
-          x: (parentNode?.position.x || 0) + 350,
-          y: (parentNode?.position.y || 0) + childrenCount * 150 - 75,
-        };
-
-        await createNode({
-          workspaceId,
-          parentId,
-          title: "New Node",
-          description: "New child node",
-          position: newPosition,
-        });
-        toast.success("Child node created successfully!");
-
-        // Auto-expand the parent if it was collapsed
-        if (collapsedNodes.has(parentId)) {
-          toggleNodeCollapse(parentId);
-        }
-      } catch (error) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : "Failed to create child node",
-        );
-      }
-    },
-    [workspaceId, createNode, nodes, edges, collapsedNodes, toggleNodeCollapse],
-  );
-
-  const deleteNodeHandler = useCallback(
-    async (nodeId: string) => {
-      const ok = await confirm();
-
-      if (ok) {
-        try {
-          await deleteNode({ nodeId });
-          toast.success("Node deleted successfully!");
-        } catch (error) {
-          toast.error(
-            error instanceof Error ? error.message : "Failed to delete node",
-          );
-        }
-      }
-    },
-    [deleteNode, confirm],
-  );
-
-  const togglestar = useCallback(
-    async (nodeId: string) => {
-      toggleStar({ nodeId });
-    },
-    [toggleStar],
-  );
-
-  const updateNodeHandler = useCallback(
-    async (
-      nodeId: string,
-      updates: Partial<{ title: string; description: string; status: string }>,
-    ) => {
-      const updateData: any = { nodeId, workspaceId };
-      if (updates.title) updateData.title = updates.title;
-      if (updates.description) updateData.description = updates.description;
-      if (updates.status) updateData.status = updates.status;
-
-      try {
-        await updateNode(updateData);
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Failed to update node",
-        );
-      }
-    },
-    [workspaceId, updateNode],
-  );
 
   const closePopup = useCallback(() => {
     setActivePopup(null);

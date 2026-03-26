@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, SearchIcon, Plus, Clock } from "lucide-react";
 
@@ -73,10 +73,10 @@ export default function SearchModal({
     return groups;
   }, [filteredConversations]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setQuery("");
     onClose();
-  };
+  }, [onClose]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -86,7 +86,7 @@ export default function SearchModal({
       document.addEventListener("keydown", handleEscape);
       return () => document.removeEventListener("keydown", handleEscape);
     }
-  }, [isOpen]);
+  }, [isOpen, handleClose]);
 
   return (
     <AnimatePresence>

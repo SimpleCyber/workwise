@@ -39,7 +39,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import Link from "next/link";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 
 interface Position {
   x: number;
@@ -83,35 +83,41 @@ export const DraggableNotificationPanel = () => {
     );
   }, [position]);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest(".no-drag")) return;
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if ((e.target as HTMLElement).closest(".no-drag")) return;
 
-    setIsDragging(true);
-    setDragStart({
-      x: e.clientX - position.x,
-      y: e.clientY - position.y,
-    });
-  };
+      setIsDragging(true);
+      setDragStart({
+        x: e.clientX - position.x,
+        y: e.clientY - position.y,
+      });
+    },
+    [position],
+  );
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging) return;
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!isDragging) return;
 
-    const newX = e.clientX - dragStart.x;
-    const newY = e.clientY - dragStart.y;
+      const newX = e.clientX - dragStart.x;
+      const newY = e.clientY - dragStart.y;
 
-    // Keep within viewport bounds
-    const maxX = window.innerWidth - 400;
-    const maxY = window.innerHeight - 100;
+      // Keep within viewport bounds
+      const maxX = window.innerWidth - 400;
+      const maxY = window.innerHeight - 100;
 
-    setPosition({
-      x: Math.max(0, Math.min(newX, maxX)),
-      y: Math.max(0, Math.min(newY, maxY)),
-    });
-  };
+      setPosition({
+        x: Math.max(0, Math.min(newX, maxX)),
+        y: Math.max(0, Math.min(newY, maxY)),
+      });
+    },
+    [isDragging, dragStart],
+  );
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     setIsDragging(false);
-  };
+  }, []);
 
   useEffect(() => {
     if (isDragging) {
@@ -122,7 +128,7 @@ export const DraggableNotificationPanel = () => {
         document.removeEventListener("mouseup", handleMouseUp);
       };
     }
-  }, [isDragging, dragStart]);
+  }, [isDragging, handleMouseMove, handleMouseUp]);
 
   if (!open) return null;
 

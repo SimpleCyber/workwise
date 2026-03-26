@@ -95,12 +95,7 @@ const Renderer = ({ value }: RendererProps) => {
   const [hoverPos, setHoverPos] = useState({ top: 0, left: 0 });
   const router = useRouter();
 
-  // Try to safely get workspaceId. If not inside a workspace route context, this may fail,
-  // but most of the app is within the workspace context.
-  let workspaceId: Id<"workspaces"> | undefined;
-  try {
-    workspaceId = useWorkspaceId();
-  } catch (e) {}
+  const workspaceId = useWorkspaceId();
 
   useEffect(() => {
     if (!rendererRef.current) return;
