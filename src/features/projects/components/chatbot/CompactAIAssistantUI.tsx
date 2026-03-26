@@ -281,14 +281,19 @@ export default function CompactAIAssistantUI({
     }
   };
 
-  const sorted = sortChatsByUpdatedAt(chats);
-  const selectedChatId = selectedId as any;
+  const mappedChats: UIConversation[] = useMemo(() => {
+    return chats.map((c: any) => ({
+      id: c.id,
+      title: c.title ?? "Chat",
+      updatedAt: new Date(c.updatedAt ?? Date.now()).toISOString(),
+      preview: c.preview ?? "Ask anything...",
+      pinned: c.pinned ?? false,
+      messages: c.messages ?? [],
+    }));
+  }, [chats]);
 
-  // Chat management
-  const pinned = chats.filter((c) => c.pinned);
-  const recent = chats.filter((c) => !c.pinned);
-  sortChatsByUpdatedAt(pinned);
-  sortChatsByUpdatedAt(recent);
+  const pinned = sortChatsByUpdatedAt(mappedChats.filter((c) => c.pinned));
+  const recent = sortChatsByUpdatedAt(mappedChats.filter((c) => !c.pinned));
 
   const selectedHookMessageIds = useMemo(() => {
     const set = new Set<string>();
@@ -298,12 +303,14 @@ export default function CompactAIAssistantUI({
     return set;
   }, [hooks]);
 
+  const selectedChatId = selectedId as any;
   const selected: UIConversation | null = selectedChatId
     ? {
         id: selectedChatId as any,
-        title: chats.find((c: any) => c.id === selectedChatId)?.title ?? "Chat",
+        title:
+          mappedChats.find((c: any) => c.id === selectedId)?.title ?? "Chat",
         updatedAt:
-          chats.find((c: any) => c.id === selectedChatId)?.updatedAt ??
+          mappedChats.find((c: any) => c.id === selectedId)?.updatedAt ??
           new Date().toISOString(),
         messages: messages as any,
         preview:
@@ -311,7 +318,7 @@ export default function CompactAIAssistantUI({
             (messages as any[])[(messages as any[]).length - 1]
               ?.content) as string) ?? "Ask anything…",
         pinned:
-          chats.find((c: any) => c.id === selectedChatId)?.pinned ?? false,
+          mappedChats.find((c: any) => c.id === selectedId)?.pinned ?? false,
       }
     : null;
 
@@ -761,7 +768,7 @@ export default function CompactAIAssistantUI({
             <SearchModal
               isOpen={showSearchModal}
               onClose={() => setShowSearchModal(false)}
-              conversations={chats}
+              conversations={mappedChats}
               selectedId={selectedChatId}
               onSelect={(id: string) => setSelectedId(id as any)}
               togglePin={(id: string) => togglePin(id as any)}

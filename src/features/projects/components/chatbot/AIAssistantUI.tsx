@@ -66,8 +66,15 @@ export default function AIAssistantUI({
     }
   }, [chats, selectedId]);
 
-  const filtered = useMemo(() => {
-    const base = chats.map((c) => ({ ...c }));
+  const filtered: UIConversation[] = useMemo(() => {
+    const base: UIConversation[] = chats.map((c: any) => ({
+      id: c.id,
+      title: c.title ?? "Chat",
+      updatedAt: new Date(c.updatedAt ?? Date.now()).toISOString(),
+      preview: c.preview ?? "Ask anything...",
+      pinned: c.pinned ?? false,
+      messages: c.messages ?? [],
+    }));
     if (!query.trim()) return base;
     const q = query.toLowerCase();
     return base.filter(
@@ -77,10 +84,8 @@ export default function AIAssistantUI({
     );
   }, [chats, query]);
 
-  const pinned = filtered.filter((c) => c.pinned);
-  const recent = filtered.filter((c) => !c.pinned);
-  sortChatsByUpdatedAt(pinned);
-  sortChatsByUpdatedAt(recent);
+  const pinned = sortChatsByUpdatedAt(filtered.filter((c) => c.pinned));
+  const recent = sortChatsByUpdatedAt(filtered.filter((c) => !c.pinned));
 
   const selectedChatId = selectedId ?? (chats[0]?.id as any) ?? null;
 
@@ -274,9 +279,10 @@ export default function AIAssistantUI({
     ? {
         id: selectedChatId as any,
         title: chats.find((c: any) => c.id === selectedChatId)?.title ?? "Chat",
-        updatedAt:
+        updatedAt: new Date(
           chats.find((c: any) => c.id === selectedChatId)?.updatedAt ??
-          new Date().toISOString(),
+            Date.now(),
+        ).toISOString(),
         messages: messages as any,
         preview:
           ((messages &&
