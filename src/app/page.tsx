@@ -30,14 +30,16 @@ export default function Home() {
   useEffect(() => {
     if (isLoading) return;
 
-    if (workspaceId) {
-      router.replace(`/test/${workspaceId}`);
+    if (workspaces && workspaces.length > 0) {
+      const lastActive = localStorage.getItem("lastActiveWorkspaceId");
+      const targetWorkspace = workspaces.find((w) => w._id === lastActive) || workspaces[0];
+      
+      router.replace(`/test/${targetWorkspace._id}`);
     } else if (!open) {
       // If no workspaces and modal not open, open it
       setOpen(true);
     }
-  }, [workspaceId, isLoading, open, setOpen, router]);
-
+  }, [workspaces, isLoading, open, setOpen, router]);
   if (isLoading || workspaceId) {
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-black text-white">
