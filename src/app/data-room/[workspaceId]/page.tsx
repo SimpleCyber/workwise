@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { format, isToday, isYesterday, subDays, startOfDay } from "date-fns";
 import {
   Upload,
@@ -161,6 +161,12 @@ const DataRoomWorkspacePage = () => {
     visibility: "public",
     allowedMembers: [],
   });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(
+    null,
+  );
+  const [dragEnd, setDragEnd] = useState<{ x: number; y: number } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // API hooks
   const { data: members } = useGetWorkspaceMembers({ workspaceId });
@@ -209,8 +215,7 @@ const DataRoomWorkspacePage = () => {
 
   if (!workspaceId) return null;
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
+  const processFiles = (files: File[]) => {
     const validFiles: File[] = [];
     let oversizedCount = 0;
 
@@ -228,8 +233,36 @@ const DataRoomWorkspacePage = () => {
 
     if (validFiles.length > 0) {
       setSelectedFiles((prev) => [...prev, ...validFiles]);
+      setIsUploadModalOpen(true);
     }
   };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    processFiles(files);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    processFiles(files);
+  };
+
 
   const handleUpload = async () => {
     if (selectedFiles.length === 0 || !uploadData.comment?.trim()) {
@@ -347,8 +380,140 @@ const DataRoomWorkspacePage = () => {
     );
   };
 
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const isInteractive = target.closest(
+      "button, a, input, [role='menuitem'], .no-select, .dropdown-trigger",
+    );
+
+    if (!isInteractive) {
+      // Clear selection if not holding modifier keys
+      if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
+        setSelectedFileIds(new Set());
+      }
+
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (rect) {
+        const x = e.clientX - rect.left + (containerRef.current?.scrollLeft || 0);
+        const y = e.clientY - rect.top + (containerRef.current?.scrollTop || 0);
+        setDragStart({ x, y });
+        setDragEnd({ x, y });
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!dragStart) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (rect) {
+        setDragEnd({
+          x: e.clientX - rect.left + (containerRef.current?.scrollLeft || 0),
+          y: e.clientY - rect.top + (containerRef.current?.scrollTop || 0),
+        });
+      }
+    };
+
+    const handleMouseUp = () => {
+      if (dragStart && dragEnd) {
+        const rect = {
+          left: Math.min(dragStart.x, dragEnd.x),
+          top: Math.min(dragStart.y, dragEnd.y),
+          right: Math.max(dragStart.x, dragEnd.x),
+          bottom: Math.max(dragStart.y, dragEnd.y),
+        };
+
+        const width = Math.abs(dragStart.x - dragEnd.x);
+        const height = Math.abs(dragStart.y - dragEnd.y);
+
+        // Only select if it was actually a drag (e.g. > 5px)
+        if (width > 5 || height > 5) {
+          const selectableItems =
+            containerRef.current?.querySelectorAll("[data-selectable-id]");
+          const newSelection = new Set<string>();
+
+          selectableItems?.forEach((item) => {
+            const itemRect = (item as HTMLElement).getBoundingClientRect();
+            const containerRect = containerRef.current?.getBoundingClientRect();
+            if (containerRect) {
+              const relativeItemRect = {
+                left:
+                  itemRect.left -
+                  containerRect.left +
+                  (containerRef.current?.scrollLeft || 0),
+                top:
+                  itemRect.top -
+                  containerRect.top +
+                  (containerRef.current?.scrollTop || 0),
+                right:
+                  itemRect.right -
+                  containerRect.left +
+                  (containerRef.current?.scrollLeft || 0),
+                bottom:
+                  itemRect.bottom -
+                  containerRect.top +
+                  (containerRef.current?.scrollTop || 0),
+              };
+
+              const isIntersecting = !(
+                relativeItemRect.left > rect.right ||
+                relativeItemRect.right < rect.left ||
+                relativeItemRect.top > rect.bottom ||
+                relativeItemRect.bottom < rect.top
+              );
+
+              if (isIntersecting) {
+                const id = item.getAttribute("data-selectable-id");
+                if (id) newSelection.add(id);
+              }
+            }
+          });
+
+          if (newSelection.size > 0) {
+            setSelectedFileIds(newSelection);
+          } else {
+            setSelectedFileIds(new Set());
+          }
+        }
+      }
+      setDragStart(null);
+      setDragEnd(null);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [dragStart, dragEnd]);
+
+
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-background">
+    <div
+      className="flex flex-col h-full overflow-hidden bg-background relative"
+      onDragOver={handleDragOver}
+      onDragEnter={handleDragOver}
+    >
+      {isDragging && (
+        <div
+          className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex items-center justify-center border-4 border-dashed border-primary/40 m-4 rounded-xl transition-all animate-in fade-in zoom-in duration-200"
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          <div className="flex flex-col items-center gap-4 text-primary pointer-events-none">
+            <div className="p-6 bg-primary/10 rounded-full animate-bounce">
+              <Upload className="w-12 h-12" />
+            </div>
+            <p className="text-2xl font-bold">Drop files to upload</p>
+            <p className="text-muted-foreground">
+              Release your files to start the upload process
+            </p>
+          </div>
+        </div>
+      )}
       <ConfirmDialog />
 
       {/* Modals */}
@@ -587,7 +752,25 @@ const DataRoomWorkspacePage = () => {
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-auto bg-background/50">
+      <div
+        ref={containerRef}
+        onMouseDown={handleMouseDown}
+        className={cn(
+          "flex-1 overflow-auto bg-background/50 relative selection-area",
+          dragStart && "select-none",
+        )}
+      >
+        {dragStart && dragEnd && (
+          <div
+            className="absolute z-50 bg-primary/20 border border-primary/50 rounded-sm pointer-events-none"
+            style={{
+              left: Math.min(dragStart.x, dragEnd.x),
+              top: Math.min(dragStart.y, dragEnd.y),
+              width: Math.abs(dragStart.x - dragEnd.x),
+              height: Math.abs(dragStart.y - dragEnd.y),
+            }}
+          />
+        )}
         {isLoading ? (
           <div className="p-8 space-y-4">
             <div className="h-10 w-full bg-muted animate-pulse rounded" />
@@ -634,7 +817,11 @@ const DataRoomWorkspacePage = () => {
               {folders.map((folder) => (
                 <TableRow
                   key={folder._id}
-                  className="cursor-pointer group hover:bg-muted/40"
+                  data-selectable-id={folder._id}
+                  className={cn(
+                    "cursor-pointer group hover:bg-muted/40 transition-colors",
+                    selectedFileIds.has(folder._id) && "bg-primary/5",
+                  )}
                   onDoubleClick={() => setCurrentFolderId(folder._id)}
                 >
                   <TableCell className="px-4">
@@ -703,8 +890,9 @@ const DataRoomWorkspacePage = () => {
               {files.map((file) => (
                 <TableRow
                   key={file._id}
+                  data-selectable-id={file._id}
                   className={cn(
-                    "cursor-pointer group",
+                    "cursor-pointer group transition-colors",
                     selectedFileIds.has(file._id) && "bg-primary/5",
                   )}
                   onDoubleClick={() => setPreviewFile(file)}
@@ -798,11 +986,26 @@ const DataRoomWorkspacePage = () => {
                     folders.map((folder) => (
                       <div
                         key={folder._id}
+                        data-selectable-id={folder._id}
                         onDoubleClick={() => setCurrentFolderId(folder._id)}
-                        className="group flex flex-col items-center gap-2 cursor-pointer relative"
+                        className={cn(
+                          "group flex flex-col items-center gap-2 cursor-pointer relative p-2 rounded-lg transition-all",
+                          selectedFileIds.has(folder._id) && "bg-primary/5 shadow-sm",
+                        )}
                       >
                         <div className="w-16 h-20 bg-muted/30 rounded-lg flex items-center justify-center border-2 border-transparent group-hover:bg-muted group-hover:border-primary/20 transition-all relative">
                           <FolderIcon className="w-10 h-10 text-yellow-500 fill-yellow-500/20" />
+                          {selectedFileIds.has(folder._id) && (
+                            <div
+                              className="absolute top-1 right-1 bg-primary text-white rounded-full p-0.5 hover:bg-primary/80 transition-colors cursor-pointer z-[60]"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleFileSelection(folder._id);
+                              }}
+                            >
+                              <X className="w-3 h-3 rotate-45" />
+                            </div>
+                          )}
                           <div className="absolute top-1 right-1">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -866,18 +1069,27 @@ const DataRoomWorkspacePage = () => {
                     return (
                       <div
                         key={file._id}
-                        onClick={() => {
-                          if (selectedFileIds.size > 0) {
+                        data-selectable-id={file._id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (e.shiftKey || e.ctrlKey || e.metaKey) {
                             toggleFileSelection(file._id);
                           } else {
-                            setPreviewFile(file);
+                            if (selectedFileIds.size > 0 && !selectedFileIds.has(file._id)) {
+                              setSelectedFileIds(new Set([file._id]));
+                            } else {
+                              setPreviewFile(file);
+                            }
                           }
                         }}
                         onContextMenu={(e) => {
                           e.preventDefault();
                           toggleFileSelection(file._id);
                         }}
-                        className="group flex flex-col items-center gap-2 cursor-pointer"
+                        className={cn(
+                          "group flex flex-col items-center gap-2 cursor-pointer p-2 rounded-lg transition-all",
+                          selectedFileIds.has(file._id) && "bg-primary/5 shadow-sm",
+                        )}
                       >
                         <div
                           className={cn(
@@ -904,7 +1116,13 @@ const DataRoomWorkspacePage = () => {
                             </div>
                           )}
                           {isSelected && (
-                            <div className="absolute top-1 right-1 bg-primary text-white rounded-full p-0.5">
+                            <div
+                              className="absolute top-1 right-1 bg-primary text-white rounded-full p-0.5 hover:bg-primary/80 transition-colors cursor-pointer z-[60]"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleFileSelection(file._id);
+                              }}
+                            >
                               <X className="w-3 h-3 rotate-45" />
                             </div>
                           )}
