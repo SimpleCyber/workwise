@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useMemo,
+  useRef,
+  useEffect,
+  useCallback,
+} from "react";
 import { format, isToday, isYesterday, subDays, startOfDay } from "date-fns";
 import {
   Upload,
@@ -77,6 +83,7 @@ import {
   useDeleteDataRoomFile,
   useCreateDataRoomFolder,
   useTogglePinDataRoomFolder,
+  useMoveDataRoomItems,
 } from "@/features/data-room/api/use-data-room";
 import type { Id } from "../../../../convex/_generated/dataModel";
 
@@ -182,6 +189,10 @@ const DataRoomWorkspacePage = () => {
   const createFolder = useCreateDataRoomFolder();
   const togglePinFolder = useTogglePinDataRoomFolder();
   const deleteFile = useDeleteDataRoomFile();
+  const moveItems = useMoveDataRoomItems();
+
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+  const [isInternalDragging, setIsInternalDragging] = useState(false);
   const uploadFile = useUploadDataRoomFile();
 
   const [ConfirmDialog, confirm] = useConfirm(
@@ -245,7 +256,17 @@ const DataRoomWorkspacePage = () => {
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragging(true);
+
+    const isInternalMove = e.dataTransfer.types.includes(
+      "application/workwise-items",
+    );
+    const hasFiles = e.dataTransfer.types.includes("Files");
+
+    if (hasFiles && !isInternalMove) {
+      setIsDragging(true);
+    } else {
+      setIsDragging(false);
+    }
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
@@ -259,10 +280,25 @@ const DataRoomWorkspacePage = () => {
     e.stopPropagation();
     setIsDragging(false);
 
-    const files = Array.from(e.dataTransfer.files);
-    processFiles(files);
-  };
+    if (e.dataTransfer.types.includes("application/workwise-items")) return;
 
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      processFiles(files);
+      return;
+    }
+
+    const url = e.dataTransfer.getData("text/uri-list");
+    if (url) {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      if (
+        url.includes(appUrl.replace("http://", "").replace("https://", "")) ||
+        url.includes("localhost:3000")
+      ) {
+        return;
+      }
+    }
+  };
 
   const handleUpload = async () => {
     if (selectedFiles.length === 0 || !uploadData.comment?.trim()) {
@@ -383,7 +419,7 @@ const DataRoomWorkspacePage = () => {
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     const isInteractive = target.closest(
-      "button, a, input, [role='menuitem'], .no-select, .dropdown-trigger",
+      "button, a, input, [role='menuitem'], .no-select, .dropdown-trigger, [data-selectable-id], [draggable='true']",
     );
 
     if (!isInteractive) {
@@ -394,7 +430,8 @@ const DataRoomWorkspacePage = () => {
 
       const rect = containerRef.current?.getBoundingClientRect();
       if (rect) {
-        const x = e.clientX - rect.left + (containerRef.current?.scrollLeft || 0);
+        const x =
+          e.clientX - rect.left + (containerRef.current?.scrollLeft || 0);
         const y = e.clientY - rect.top + (containerRef.current?.scrollTop || 0);
         setDragStart({ x, y });
         setDragEnd({ x, y });
@@ -429,8 +466,9 @@ const DataRoomWorkspacePage = () => {
 
         // Only select if it was actually a drag (e.g. > 5px)
         if (width > 5 || height > 5) {
-          const selectableItems =
-            containerRef.current?.querySelectorAll("[data-selectable-id]");
+          const selectableItems = containerRef.current?.querySelectorAll(
+            "[data-selectable-id]",
+          );
           const newSelection = new Set<string>();
 
           selectableItems?.forEach((item) => {
@@ -479,6 +517,7 @@ const DataRoomWorkspacePage = () => {
       }
       setDragStart(null);
       setDragEnd(null);
+      setIsInternalDragging(false);
     };
 
     window.addEventListener("mousemove", handleMouseMove);
@@ -489,6 +528,87 @@ const DataRoomWorkspacePage = () => {
     };
   }, [dragStart, dragEnd]);
 
+  const handleItemDragStart = (
+    e: React.DragEvent,
+    id: string,
+    type: "file" | "folder",
+  ) => {
+    setIsInternalDragging(true);
+    let idsToMove = Array.from(selectedFileIds);
+    if (!selectedFileIds.has(id)) {
+      idsToMove = [id];
+    }
+
+    e.dataTransfer.setData(
+      "application/workwise-items",
+      JSON.stringify(idsToMove),
+    );
+    e.dataTransfer.effectAllowed = "move";
+
+    // Center the drag image on the icon container
+    const dragPreview = (e.currentTarget as HTMLElement).querySelector(
+      ".drag-preview",
+    );
+    if (dragPreview) {
+      e.dataTransfer.setDragImage(dragPreview, 32, 40);
+    }
+  };
+
+  const handleItemDragOver = (e: React.DragEvent, targetId: string | null) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isInternalDragging) {
+      setDropTargetId(targetId || "root");
+    }
+  };
+
+  const handleItemDrop = async (
+    e: React.DragEvent,
+    targetId: string | null,
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDropTargetId(null);
+    setIsInternalDragging(false);
+
+    const data = e.dataTransfer.getData("application/workwise-items");
+    if (!data) return;
+
+    try {
+      const ids = JSON.parse(data) as string[];
+      const fileIds: Id<"dataRoomFiles">[] = [];
+      const folderIds: Id<"dataRoomFolders">[] = [];
+
+      // Categorize IDs (simplified check using provided data or lookup)
+      // In this app, we can just check against our current files/folders
+      ids.forEach((id) => {
+        if (filesData?.files.some((f) => f._id === id)) {
+          fileIds.push(id as Id<"dataRoomFiles">);
+        } else if (filesData?.folders.some((f) => f._id === id)) {
+          folderIds.push(id as Id<"dataRoomFolders">);
+        }
+      });
+
+      if (fileIds.length === 0 && folderIds.length === 0) return;
+
+      const promise = moveItems.mutate({
+        workspaceId: workspaceId as Id<"workspaces">,
+        fileIds,
+        folderIds,
+        targetFolderId: (targetId as Id<"dataRoomFolders">) || null,
+      });
+
+      toast.promise(promise, {
+        loading: "Moving items...",
+        success: "Items moved successfully",
+        error: "Failed to move items",
+      });
+
+      setSelectedFileIds(new Set());
+    } catch (err) {
+      console.error("Drop error:", err);
+    }
+  };
 
   return (
     <div
@@ -657,7 +777,13 @@ const DataRoomWorkspacePage = () => {
         <div className="flex items-center px-4 py-2 border-b bg-muted/5 overflow-hidden">
           <div className="flex items-center text-sm text-muted-foreground flex-1 min-w-0">
             <span
-              className="hover:text-foreground cursor-pointer"
+              className={cn(
+                "hover:text-foreground cursor-pointer px-1 rounded transition-colors",
+                dropTargetId === "root" && "bg-primary/20",
+              )}
+              onDragOver={(e) => handleItemDragOver(e, null)}
+              onDragLeave={() => setDropTargetId(null)}
+              onDrop={(e) => handleItemDrop(e, null)}
               onClick={() => {
                 setCurrentFolderId(null);
                 setActiveTypeFilter("all");
@@ -669,7 +795,13 @@ const DataRoomWorkspacePage = () => {
               <React.Fragment key={folder._id}>
                 <ChevronRight className="w-4 h-4 mx-1 flex-shrink-0" />
                 <span
-                  className="hover:text-foreground cursor-pointer truncate max-w-[120px]"
+                  className={cn(
+                    "hover:text-foreground cursor-pointer truncate max-w-[120px] px-1 rounded transition-colors",
+                    dropTargetId === folder._id && "bg-primary/20",
+                  )}
+                  onDragOver={(e) => handleItemDragOver(e, folder._id)}
+                  onDragLeave={() => setDropTargetId(null)}
+                  onDrop={(e) => handleItemDrop(e, folder._id)}
                   onClick={() => setCurrentFolderId(folder._id)}
                 >
                   {folder.name}
@@ -818,9 +950,18 @@ const DataRoomWorkspacePage = () => {
                 <TableRow
                   key={folder._id}
                   data-selectable-id={folder._id}
+                  draggable
+                  onDragStart={(e) =>
+                    handleItemDragStart(e, folder._id, "folder")
+                  }
+                  onDragOver={(e) => handleItemDragOver(e, folder._id)}
+                  onDragLeave={() => setDropTargetId(null)}
+                  onDrop={(e) => handleItemDrop(e, folder._id)}
                   className={cn(
-                    "cursor-pointer group hover:bg-muted/40 transition-colors",
+                    "cursor-pointer group hover:bg-muted/40 transition-colors relative",
                     selectedFileIds.has(folder._id) && "bg-primary/5",
+                    dropTargetId === folder._id &&
+                      "bg-primary/10 shadow-[inset_0_0_0_2px_rgba(var(--primary),0.2)]",
                   )}
                   onDoubleClick={() => setCurrentFolderId(folder._id)}
                 >
@@ -891,6 +1032,8 @@ const DataRoomWorkspacePage = () => {
                 <TableRow
                   key={file._id}
                   data-selectable-id={file._id}
+                  draggable
+                  onDragStart={(e) => handleItemDragStart(e, file._id, "file")}
                   className={cn(
                     "cursor-pointer group transition-colors",
                     selectedFileIds.has(file._id) && "bg-primary/5",
@@ -987,13 +1130,23 @@ const DataRoomWorkspacePage = () => {
                       <div
                         key={folder._id}
                         data-selectable-id={folder._id}
+                        draggable
+                        onDragStart={(e) =>
+                          handleItemDragStart(e, folder._id, "folder")
+                        }
+                        onDragOver={(e) => handleItemDragOver(e, folder._id)}
+                        onDragLeave={() => setDropTargetId(null)}
+                        onDrop={(e) => handleItemDrop(e, folder._id)}
                         onDoubleClick={() => setCurrentFolderId(folder._id)}
                         className={cn(
                           "group flex flex-col items-center gap-2 cursor-pointer relative p-2 rounded-lg transition-all",
-                          selectedFileIds.has(folder._id) && "bg-primary/5 shadow-sm",
+                          selectedFileIds.has(folder._id) &&
+                            "bg-primary/5 shadow-sm",
+                          dropTargetId === folder._id &&
+                            "bg-primary/10 scale-105 ring-2 ring-primary/20",
                         )}
                       >
-                        <div className="w-16 h-20 bg-muted/30 rounded-lg flex items-center justify-center border-2 border-transparent group-hover:bg-muted group-hover:border-primary/20 transition-all relative">
+                        <div className="w-16 h-20 bg-muted/30 rounded-lg flex items-center justify-center border-2 border-transparent group-hover:bg-muted group-hover:border-primary/20 transition-all relative drag-preview">
                           <FolderIcon className="w-10 h-10 text-yellow-500 fill-yellow-500/20" />
                           {selectedFileIds.has(folder._id) && (
                             <div
@@ -1070,12 +1223,19 @@ const DataRoomWorkspacePage = () => {
                       <div
                         key={file._id}
                         data-selectable-id={file._id}
+                        draggable
+                        onDragStart={(e) =>
+                          handleItemDragStart(e, file._id, "file")
+                        }
                         onClick={(e) => {
                           e.stopPropagation();
                           if (e.shiftKey || e.ctrlKey || e.metaKey) {
                             toggleFileSelection(file._id);
                           } else {
-                            if (selectedFileIds.size > 0 && !selectedFileIds.has(file._id)) {
+                            if (
+                              selectedFileIds.size > 0 &&
+                              !selectedFileIds.has(file._id)
+                            ) {
                               setSelectedFileIds(new Set([file._id]));
                             } else {
                               setPreviewFile(file);
@@ -1088,12 +1248,13 @@ const DataRoomWorkspacePage = () => {
                         }}
                         className={cn(
                           "group flex flex-col items-center gap-2 cursor-pointer p-2 rounded-lg transition-all",
-                          selectedFileIds.has(file._id) && "bg-primary/5 shadow-sm",
+                          selectedFileIds.has(file._id) &&
+                            "bg-primary/5 shadow-sm",
                         )}
                       >
                         <div
                           className={cn(
-                            "w-16 h-20 rounded-lg flex items-center justify-center border-2 transition-all relative overflow-hidden",
+                            "w-16 h-20 rounded-lg flex items-center justify-center border-2 transition-all relative overflow-hidden drag-preview",
                             isSelected
                               ? "bg-primary/10 border-primary"
                               : "bg-muted/30 border-transparent hover:bg-muted",

@@ -432,3 +432,49 @@ export const getPinnedDataRoomFolders = query({
     return pinnedFolders;
   },
 });
+
+// Move multiple files and folders to a new target folder
+export const moveDataRoomItems = mutation({
+  args: {
+    workspaceId: v.id("workspaces"),
+    fileIds: v.array(v.id("dataRoomFiles")),
+    folderIds: v.array(v.id("dataRoomFolders")),
+    targetFolderId: v.union(v.id("dataRoomFolders"), v.null()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Unauthorized");
+    }
+
+    const member = await ctx.db
+      .query("members")
+      .withIndex("by_workspace_id_user_id", (q) =>
+        q.eq("workspaceId", args.workspaceId).eq("userId", userId),
+      )
+      .unique();
+
+    if (!member) {
+      throw new Error("Member not found");
+    }
+
+    // Move Folders
+    for (const folderId of args.folderIds) {
+      // Prevent moving a folder into itself
+      if (folderId === args.targetFolderId) continue;
+
+      await ctx.db.patch(folderId, {
+        parentId: args.targetFolderId || undefined,
+      });
+    }
+
+    // Move Files
+    for (const fileId of args.fileIds) {
+      await ctx.db.patch(fileId, {
+        folderId: args.targetFolderId || undefined,
+      });
+    }
+
+    return { success: true };
+  },
+});
