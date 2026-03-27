@@ -32,8 +32,9 @@ export default function Home() {
 
     if (workspaces && workspaces.length > 0) {
       const lastActive = localStorage.getItem("lastActiveWorkspaceId");
-      const targetWorkspace = workspaces.find((w) => w._id === lastActive) || workspaces[0];
-      
+      const targetWorkspace =
+        workspaces.find((w) => w._id === lastActive) || workspaces[0];
+
       router.replace(`/test/${targetWorkspace._id}`);
     } else if (!open) {
       // If no workspaces and modal not open, open it
