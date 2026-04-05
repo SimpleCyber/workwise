@@ -33,6 +33,9 @@ import {
   PinOff,
   Film,
   ChevronLeft,
+  Play,
+  Pause,
+  Clock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryState, parseAsString, parseAsBoolean } from "nuqs";
@@ -95,6 +98,7 @@ import { useConfirm } from "@/hooks/use-confirm";
 import { cn } from "@/lib/utils";
 import { PdfToolsPanel } from "./pdf-tools-panel";
 import { CsvViewer } from "@/features/data-room/components/csv-viewer";
+import { JsonViewer } from "@/features/data-room/components/json-viewer";
 
 interface FileUploadData {
   file: File;
@@ -219,6 +223,9 @@ const DataRoomWorkspacePage = () => {
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
   const [isInternalDragging, setIsInternalDragging] = useState(false);
   const uploadFile = useUploadDataRoomFile();
+
+  const [isSlideshowActive, setIsSlideshowActive] = useState(false);
+  const [slideshowInterval, setSlideshowInterval] = useState(3000); // 3 seconds
 
   const [ConfirmDialog, confirm] = useConfirm(
     "Delete File(s)",
@@ -489,6 +496,29 @@ const DataRoomWorkspacePage = () => {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [previewFile, handleNextFile, handlePreviousFile]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isSlideshowActive && previewFile) {
+      interval = setInterval(() => {
+        handleNextFile();
+      }, slideshowInterval);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isSlideshowActive, previewFile, handleNextFile, slideshowInterval]);
+
+  const toggleSlideshow = useCallback(() => {
+    if (!isSlideshowActive) {
+      if (!previewFile && files.length > 0) {
+        setPreviewFile(files[0]);
+      }
+      setIsSlideshowActive(true);
+    } else {
+      setIsSlideshowActive(false);
+    }
+  }, [isSlideshowActive, previewFile, files]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
@@ -901,8 +931,7 @@ const DataRoomWorkspacePage = () => {
               onClick={() => setIsUploadModalOpen(true)}
               className="h-8"
             >
-              <Upload className="w-4 h-4 mr-2" />
-              Upload
+              <Upload className="w-4 h-4 " />
             </Button>
             <Button
               size="sm"
@@ -910,8 +939,22 @@ const DataRoomWorkspacePage = () => {
               onClick={() => setIsNewFolderModalOpen(true)}
               className="h-8"
             >
-              <FolderPlus className="w-4 h-4 mr-2" />
-              New Folder
+              <FolderPlus className="w-4 h-4 " />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={toggleSlideshow}
+              className={cn(
+                "h-8",
+                isSlideshowActive && "bg-primary/10 border-primary",
+              )}
+            >
+              {isSlideshowActive ? (
+                <Pause className="w-4 h-4 " />
+              ) : (
+                <Play className="w-4 h-4 " />
+              )}
             </Button>
 
             <div className="w-px h-6 bg-border mx-1" />
@@ -1379,7 +1422,12 @@ const DataRoomWorkspacePage = () => {
                     {/* Preview Modal */}
                     <Dialog
                       open={!!previewFile}
-                      onOpenChange={() => setPreviewFile(null)}
+                      onOpenChange={(open) => {
+                        if (!open) {
+                          setPreviewFile(null);
+                          setIsSlideshowActive(false);
+                        }
+                      }}
                     >
                       <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-1 gap-0">
                         <DialogHeader className="p-4 border-b flex flex-row items-center justify-between space-y-0">
@@ -1408,6 +1456,40 @@ const DataRoomWorkspacePage = () => {
                               ) + 1}{" "}
                               of {files.length}
                             </span>
+                            <div className="flex items-center gap-1 bg-muted/50 rounded-md border p-0.5">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={toggleSlideshow}
+                              >
+                                {isSlideshowActive ? (
+                                  <Pause className="w-3.5 h-3.5" />
+                                ) : (
+                                  <Play className="w-3.5 h-3.5" />
+                                )}
+                              </Button>
+                              <div className="flex border-l pl-1 items-center gap-1">
+                                <Clock className="w-3 h-3 text-muted-foreground mr-0.5" />
+                                {[3, 5, 10].map((s) => (
+                                  <Button
+                                    key={s}
+                                    variant={
+                                      slideshowInterval === s * 1000
+                                        ? "secondary"
+                                        : "ghost"
+                                    }
+                                    size="sm"
+                                    className="h-6 px-1.5 min-w-[24px] text-[10px]"
+                                    onClick={() =>
+                                      setSlideshowInterval(s * 1000)
+                                    }
+                                  >
+                                    {s}s
+                                  </Button>
+                                ))}
+                              </div>
+                            </div>
                             {previewFile?.fileUrl && (
                               <Button
                                 variant="outline"
@@ -1418,7 +1500,6 @@ const DataRoomWorkspacePage = () => {
                                 }
                               >
                                 <ExternalLink className="w-4 h-4" />
-                                Open in New Tab
                               </Button>
                             )}
                             <Button
@@ -1430,7 +1511,6 @@ const DataRoomWorkspacePage = () => {
                               }
                             >
                               <Download className="w-4 h-4" />
-                              Download
                             </Button>
                           </div>
                         </DialogHeader>
@@ -1489,6 +1569,11 @@ const DataRoomWorkspacePage = () => {
                                   .toLowerCase()
                                   .endsWith(".csv") ? (
                                 <CsvViewer url={previewFile.fileUrl} />
+                              ) : previewFile.fileType.includes("json") ||
+                                previewFile.fileName
+                                  .toLowerCase()
+                                  .endsWith(".json") ? (
+                                <JsonViewer url={previewFile.fileUrl} />
                               ) : previewFile.fileType.startsWith("video/") ? (
                                 <div className="w-full h-full flex items-center justify-center bg-black">
                                   <video
