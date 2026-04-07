@@ -25,11 +25,6 @@ export const BottomNav = () => {
       path: `/workspace/${workspaceId}`,
     },
     {
-      icon: ListTodo,
-      label: "Projects",
-      path: `/projects/${workspaceId}`,
-    },
-    {
       icon: Kanban,
       label: "ToDo",
       path: `/todo/${workspaceId}`,
