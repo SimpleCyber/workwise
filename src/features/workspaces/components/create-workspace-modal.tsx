@@ -59,7 +59,10 @@ export const CreateWorkspaceModal = () => {
   };
 
   const renderForm = () => (
-    <form onSubmit={handleSubmit} className="space-y-4 px-4 pb-4 md:px-0 md:pb-0">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4 px-4 pb-4 md:px-0 md:pb-0"
+    >
       <Input
         disabled={isPending}
         value={name}
@@ -72,7 +75,9 @@ export const CreateWorkspaceModal = () => {
       />
 
       <div className="flex justify-end">
-        <Button disabled={isPending} className="w-full md:w-auto">Create</Button>
+        <Button disabled={isPending} className="w-full md:w-auto">
+          Create
+        </Button>
       </div>
     </form>
   );

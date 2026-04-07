@@ -57,7 +57,7 @@ export const JoinWorkspaceModal = () => {
       <p className="text-sm text-muted-foreground text-center">
         Enter the 6-digit workspace code to join an existing workspace.
       </p>
-      
+
       <VerificationInput
         onComplete={handleComplete}
         validChars="A-Za-z0-9"
@@ -76,8 +76,8 @@ export const JoinWorkspaceModal = () => {
         autoFocus
       />
 
-      <Button 
-        variant="ghost" 
+      <Button
+        variant="ghost"
         onClick={handleClose}
         className="w-full md:w-auto"
       >

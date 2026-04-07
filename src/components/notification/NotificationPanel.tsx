@@ -253,10 +253,7 @@ export const DraggableNotificationPanel = () => {
     >
       <div className="p-4 border-b border-border no-drag">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger
-            value="all"
-            className="flex items-center gap-1 text-xs"
-          >
+          <TabsTrigger value="all" className="flex items-center gap-1 text-xs">
             <Bell className="w-3 h-3" />
             All
           </TabsTrigger>
@@ -288,7 +285,9 @@ export const DraggableNotificationPanel = () => {
         value={activeCategory}
         className="mt-0 flex-1 overflow-hidden"
       >
-        <ScrollArea className={cn("no-drag", isMobile ? "h-[60vh] pb-10" : "h-[400px]")}>
+        <ScrollArea
+          className={cn("no-drag", isMobile ? "h-[60vh] pb-10" : "h-[400px]")}
+        >
           {isLoading ? (
             <div className="flex items-center justify-center p-8">
               <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent"></div>
@@ -340,9 +339,7 @@ export const DraggableNotificationPanel = () => {
                               <div className="flex items-center gap-1">
                                 <Avatar className="w-4 h-4 border">
                                   <AvatarImage
-                                    src={
-                                      notification.actionUser.image || ""
-                                    }
+                                    src={notification.actionUser.image || ""}
                                   />
                                   <AvatarFallback className="text-[10px]">
                                     {notification.actionUser.name
@@ -482,9 +479,7 @@ export const DraggableNotificationPanel = () => {
               )}
             </div>
           </DrawerHeader>
-          <div className="overflow-hidden">
-            {renderContent()}
-          </div>
+          <div className="overflow-hidden">{renderContent()}</div>
         </DrawerContent>
       </Drawer>
     );

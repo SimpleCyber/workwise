@@ -10,7 +10,9 @@ type ResponseType = Id<"workspaces"> | null;
 export const useJoinByCode = () => {
   const [data, setData] = useState<ResponseType>(null);
   const [error, setError] = useState<Error | null>(null);
-  const [status, setStatus] = useState<"success" | "error" | "settled" | "pending" | null>(null);
+  const [status, setStatus] = useState<
+    "success" | "error" | "settled" | "pending" | null
+  >(null);
 
   const isPending = useMemo(() => status === "pending", [status]);
   const isSuccess = useMemo(() => status === "success", [status]);
@@ -19,27 +21,37 @@ export const useJoinByCode = () => {
 
   const mutation = useMutation(api.workspaces.joinByOnlyCode);
 
-  const mutate = useCallback(async (values: RequestType, options?: { onSuccess?: (data: Id<"workspaces">) => void; onError?: (error: Error) => void; onSettled?: () => void }) => {
-    try {
-      setData(null);
-      setError(null);
-      setStatus("pending");
+  const mutate = useCallback(
+    async (
+      values: RequestType,
+      options?: {
+        onSuccess?: (data: Id<"workspaces">) => void;
+        onError?: (error: Error) => void;
+        onSettled?: () => void;
+      },
+    ) => {
+      try {
+        setData(null);
+        setError(null);
+        setStatus("pending");
 
-      const response = await mutation(values);
-      options?.onSuccess?.(response);
-      setData(response);
-      setStatus("success");
-      return response;
-    } catch (e) {
-      options?.onError?.(e as Error);
-      setError(e as Error);
-      setStatus("error");
-      throw e;
-    } finally {
-      setStatus("settled");
-      options?.onSettled?.();
-    }
-  }, [mutation]);
+        const response = await mutation(values);
+        options?.onSuccess?.(response);
+        setData(response);
+        setStatus("success");
+        return response;
+      } catch (e) {
+        options?.onError?.(e as Error);
+        setError(e as Error);
+        setStatus("error");
+        throw e;
+      } finally {
+        setStatus("settled");
+        options?.onSettled?.();
+      }
+    },
+    [mutation],
+  );
 
   return {
     mutate,

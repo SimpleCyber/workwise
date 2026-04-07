@@ -15,12 +15,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { 
-  ChevronLeft, 
-  Plus, 
-  LogOut, 
-  Moon, 
-  Sun, 
+import {
+  ChevronLeft,
+  Plus,
+  LogOut,
+  Moon,
+  Sun,
   ChevronRight,
   Bell,
   Settings,
@@ -30,7 +30,7 @@ import {
   LayoutGrid,
   Users,
   UserPlus,
-  Calendar
+  Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { InviteModal } from "@/features/members/components/invite-modal";
@@ -42,12 +42,14 @@ const MobileProfilePage = () => {
   const { signOut } = useAuthActions();
   const [_open, setOpen] = useCreateWorkspaceModal();
   const [_joinOpen, setJoinOpen] = useJoinWorkspaceModal();
-  
+
   const [workspacesOpen, setWorkspacesOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
 
   const { data: user, isLoading: userLoading } = useCurrentUser();
-  const { data: workspace, isLoading: workspaceLoading } = useGetWorkspace({ id: workspaceId });
+  const { data: workspace, isLoading: workspaceLoading } = useGetWorkspace({
+    id: workspaceId,
+  });
   const { data: workspaces } = useGetWorkspaces();
 
   const handleLogout = async () => {
@@ -69,16 +71,16 @@ const MobileProfilePage = () => {
 
   if (!user) return null;
 
-  const NavItem = ({ 
-    icon: Icon, 
-    label, 
-    onClick, 
-    rightElement, 
-    danger 
-  }: { 
-    icon: any; 
-    label: string; 
-    onClick?: () => void; 
+  const NavItem = ({
+    icon: Icon,
+    label,
+    onClick,
+    rightElement,
+    danger,
+  }: {
+    icon: any;
+    label: string;
+    onClick?: () => void;
     rightElement?: React.ReactNode;
     danger?: boolean;
   }) => (
@@ -86,7 +88,7 @@ const MobileProfilePage = () => {
       onClick={onClick}
       className={cn(
         "flex w-full items-center justify-between p-4 transition-colors active:bg-muted/60 text-left",
-        danger ? "text-rose-500" : "text-foreground"
+        danger ? "text-rose-500" : "text-foreground",
       )}
     >
       <div className="flex items-center gap-x-3 overflow-hidden">
@@ -94,27 +96,29 @@ const MobileProfilePage = () => {
         <span className="text-[15px] font-medium truncate">{label}</span>
       </div>
       <div className="flex items-center gap-x-2 shrink-0">
-        {rightElement || <ChevronRight className="size-4 text-muted-foreground/50" />}
+        {rightElement || (
+          <ChevronRight className="size-4 text-muted-foreground/50" />
+        )}
       </div>
     </button>
   );
 
   return (
     <div className="flex h-full flex-col bg-background md:hidden overflow-y-auto pb-24">
-      <InviteModal 
-        open={inviteOpen} 
-        setOpen={setInviteOpen} 
-        name={workspace?.name || ""} 
-        workspaceId={workspaceId as any} 
+      <InviteModal
+        open={inviteOpen}
+        setOpen={setInviteOpen}
+        name={workspace?.name || ""}
+        workspaceId={workspaceId as any}
         joinCode={workspace?.joinCode || ""}
       />
 
       {/* Slack-like Sticky Header */}
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md px-4 py-4 flex items-center justify-between border-b">
         <div className="flex items-center gap-x-3">
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => router.back()}
             className="size-8"
           >
@@ -139,7 +143,9 @@ const MobileProfilePage = () => {
           <h2 className="text-xl font-bold">{user.name}</h2>
           <div className="flex items-center gap-x-1.5 mt-0.5">
             <Circle className="size-2 fill-emerald-500 text-emerald-500 animate-pulse" />
-            <span className="text-xs text-muted-foreground font-medium">Active</span>
+            <span className="text-xs text-muted-foreground font-medium">
+              Active
+            </span>
           </div>
         </div>
       </section>
@@ -149,7 +155,9 @@ const MobileProfilePage = () => {
       {/* Quick Actions Grid */}
       <div className="px-5 py-4 grid grid-cols-3 gap-3">
         <button
-          onClick={() => { /* Open notifications */ }}
+          onClick={() => {
+            /* Open notifications */
+          }}
           className="flex flex-col items-center justify-center gap-y-2 p-3 rounded-xl border bg-card hover:bg-muted/50 transition active:scale-95"
         >
           <div className="size-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm border border-blue-200/50">
@@ -197,7 +205,7 @@ const MobileProfilePage = () => {
           </div>
           <span className="text-[10px] sm:text-xs font-bold">Attendance</span>
         </button>
-        
+
         <button
           onClick={() => setInviteOpen(true)}
           className="flex flex-col items-center justify-center gap-y-2 p-3 rounded-xl border bg-card hover:bg-muted/50 transition active:scale-95 text-rose-600"
@@ -213,15 +221,19 @@ const MobileProfilePage = () => {
 
       {/* Preferences List */}
       <div className="py-2">
-        <h3 className="px-5 py-2 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Settings</h3>
-        <NavItem 
-          icon={theme === "dark" ? Sun : Moon} 
-          label={theme === "dark" ? "Light Mode" : "Dark Mode"} 
+        <h3 className="px-5 py-2 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+          Settings
+        </h3>
+        <NavItem
+          icon={theme === "dark" ? Sun : Moon}
+          label={theme === "dark" ? "Light Mode" : "Dark Mode"}
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           rightElement={
-            <Switch 
-              checked={theme === "dark"} 
-              onCheckedChange={() => setTheme(theme === "dark" ? "light" : "dark")} 
+            <Switch
+              checked={theme === "dark"}
+              onCheckedChange={() =>
+                setTheme(theme === "dark" ? "light" : "dark")
+              }
             />
           }
         />
@@ -231,8 +243,10 @@ const MobileProfilePage = () => {
 
       {/* Workspaces Section */}
       <div className="py-2">
-        <h3 className="px-5 py-2 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Your Workspaces</h3>
-        
+        <h3 className="px-5 py-2 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+          Your Workspaces
+        </h3>
+
         {/* Active Workspace */}
         <div className="px-5 py-3 flex items-center justify-between hover:bg-muted/30 active:bg-muted/60 transition-colors">
           <div className="flex items-center gap-x-3 overflow-hidden">
@@ -242,10 +256,12 @@ const MobileProfilePage = () => {
             <span className="font-bold truncate">{workspace?.name}</span>
           </div>
           <div className="flex items-center gap-x-2">
-            <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">Active</span>
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">
+              Active
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
               className="size-8 text-muted-foreground"
               onClick={() => setInviteOpen(true)}
             >
@@ -256,18 +272,20 @@ const MobileProfilePage = () => {
 
         {/* Other Workspaces List */}
         <div className="mt-1">
-          {workspaces?.filter(ws => ws._id !== workspaceId).map((ws) => (
-            <NavItem 
-              key={ws._id}
-              icon={() => (
-                <div className="size-9 rounded-lg bg-muted flex items-center justify-center font-bold text-sm border shrink-0">
-                  {ws.name.charAt(0).toUpperCase()}
-                </div>
-              )}
-              label={ws.name}
-              onClick={() => handleWorkspaceSwitch(ws._id)}
-            />
-          ))}
+          {workspaces
+            ?.filter((ws) => ws._id !== workspaceId)
+            .map((ws) => (
+              <NavItem
+                key={ws._id}
+                icon={() => (
+                  <div className="size-9 rounded-lg bg-muted flex items-center justify-center font-bold text-sm border shrink-0">
+                    {ws.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                label={ws.name}
+                onClick={() => handleWorkspaceSwitch(ws._id)}
+              />
+            ))}
         </div>
       </div>
 
@@ -275,18 +293,17 @@ const MobileProfilePage = () => {
 
       {/* Account Actions */}
       <div className="py-2">
-        <NavItem 
-          icon={LogOut} 
-          label="Sign out" 
-          onClick={handleLogout}
-          danger
-        />
+        <NavItem icon={LogOut} label="Sign out" onClick={handleLogout} danger />
       </div>
 
       {/* Version/App info footer */}
       <div className="mt-auto px-5 py-10 flex flex-col items-center gap-y-1 bg-muted/5">
-        <p className="text-[10px] text-muted-foreground uppercase font-black tracking-[0.2em]">WorkWise</p>
-        <p className="text-[10px] text-muted-foreground/40">Powered by simplecyber</p>
+        <p className="text-[10px] text-muted-foreground uppercase font-black tracking-[0.2em]">
+          WorkWise
+        </p>
+        <p className="text-[10px] text-muted-foreground/40">
+          Powered by simplecyber
+        </p>
       </div>
     </div>
   );
