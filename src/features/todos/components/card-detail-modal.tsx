@@ -21,12 +21,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ResponsiveModal, ModalClose } from "@/components/responsive-modal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -180,13 +175,14 @@ export const CardDetailModal = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <>
       <ConfirmDialog />
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Card Details</DialogTitle>
-        </DialogHeader>
-
+      <ResponsiveModal
+        open={open}
+        onOpenChange={onOpenChange}
+        title="Card Details"
+        className="sm:max-w-xl"
+      >
         <div className="space-y-4">
           {/* Title */}
           <div className="space-y-2">
@@ -391,12 +387,13 @@ export const CardDetailModal = ({
           )}
 
           {/* Actions */}
-          <div className="flex items-center justify-between pt-4">
-            <div className="flex gap-2">
+          <div className="flex flex-col-reverse md:flex-row gap-4 pt-4 md:justify-between">
+            <div className="flex flex-wrap gap-2 justify-center md:justify-start">
               <Button
                 variant={card.isCompleted ? "outline" : "default"}
                 onClick={handleToggleComplete}
                 disabled={isPending}
+                className="w-full sm:w-auto"
               >
                 <CheckSquare className="size-4 mr-2" />
                 {card.isCompleted ? "Mark Incomplete" : "Mark Complete"}
@@ -405,6 +402,7 @@ export const CardDetailModal = ({
                 variant="outline"
                 onClick={handleArchive}
                 disabled={isPending}
+                className="w-full sm:w-auto flex-1 sm:flex-none"
               >
                 <Archive className="size-4 mr-2" />
                 Archive
@@ -413,30 +411,33 @@ export const CardDetailModal = ({
                 variant="outline"
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="text-destructive hover:text-destructive bg-transparent"
+                className="text-destructive hover:text-destructive bg-transparent w-full sm:w-auto flex-1 sm:flex-none"
               >
                 <Trash2 className="size-4 mr-2" />
                 Delete
               </Button>
             </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={isPending}
-              >
-                Cancel
-              </Button>
+            <div className="flex flex-wrap gap-2 justify-center md:justify-end">
+              <ModalClose>
+                <Button
+                  variant="outline"
+                  disabled={isPending}
+                  className="w-full sm:w-auto flex-1 sm:flex-none"
+                >
+                  Cancel
+                </Button>
+              </ModalClose>
               <Button
                 onClick={handleSave}
                 disabled={isPending || !title.trim()}
+                className="w-full sm:w-auto flex-1 sm:flex-none"
               >
                 {isPending ? "Saving..." : "Save Changes"}
               </Button>
             </div>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveModal>
+    </>
   );
 };

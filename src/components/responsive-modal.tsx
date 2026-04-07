@@ -23,6 +23,7 @@ interface ResponsiveModalProps {
   onOpenChange: (open: boolean) => void;
   title?: string;
   description?: string;
+  className?: string;
 }
 
 export const ModalClose = ({ children }: { children: React.ReactNode }) => {
@@ -41,20 +42,23 @@ export const ResponsiveModal = ({
   onOpenChange,
   title,
   description,
+  className,
 }: ResponsiveModalProps) => {
   const isMobile = useMobile();
 
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent>
+        <DrawerContent
+          className={className ? `max-h-[85vh] ${className}` : "max-h-[85vh]"}
+        >
           <DrawerHeader className="text-left">
             {title && <DrawerTitle>{title}</DrawerTitle>}
             {description && (
               <DrawerDescription>{description}</DrawerDescription>
             )}
           </DrawerHeader>
-          <div className="px-4 pb-12">{children}</div>
+          <div className="px-4 pb-12 overflow-y-auto w-full">{children}</div>
         </DrawerContent>
       </Drawer>
     );
@@ -62,7 +66,7 @@ export const ResponsiveModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className={className}>
         <DialogHeader>
           {title && <DialogTitle>{title}</DialogTitle>}
           {description && <DialogDescription>{description}</DialogDescription>}

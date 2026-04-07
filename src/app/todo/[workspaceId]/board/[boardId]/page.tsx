@@ -1,7 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Loader, TriangleAlert } from "lucide-react";
+import { Loader, TriangleAlert, ChevronLeft } from "lucide-react";
+
+import { useMobile } from "@/hooks/use-mobile";
+import { Button } from "@/components/ui/button";
 
 import { useGetBoard } from "@/features/todos/api/use-get-board";
 import { useGetLists } from "@/features/todos/api/use-get-lists";
@@ -27,6 +30,7 @@ interface BoardPageProps {
 
 const BoardPage = ({ params }: BoardPageProps) => {
   const router = useRouter();
+  const isMobile = useMobile();
   const boardId = params.boardId as Id<"todoBoards">;
 
   const { data: board, isLoading: boardLoading } = useGetBoard({ boardId });
@@ -55,6 +59,16 @@ const BoardPage = ({ params }: BoardPageProps) => {
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-[49px] items-center border-b bg-background px-4">
+        {isMobile && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="mr-2"
+            onClick={() => router.push(`/todo/${params.workspaceId}`)}
+          >
+            <ChevronLeft className="size-5" />
+          </Button>
+        )}
         <h1 className="text-lg font-semibold">{board.name}</h1>
         {board.description && (
           <span className="ml-4 text-sm text-muted-foreground">
