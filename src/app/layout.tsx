@@ -20,6 +20,13 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = siteConfig;
 
+export const viewport = {
+  themeColor: "#6d28d9",
+  initialScale: 1,
+  width: "device-width",
+  maximumScale: 1,
+};
+
 export default function RootLayout({ children }: Readonly<PropsWithChildren>) {
   return (
     <ConvexAuthNextjsServerProvider>

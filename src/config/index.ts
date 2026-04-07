@@ -43,6 +43,10 @@ export const siteConfig: Metadata = {
     name: "Cyber Chakra",
     url: "https://github.com/SimpleCyber",
   },
+  manifest: "/manifest.json",
+  icons: {
+    apple: "/icon-192x192.png",
+  },
 } as const;
 
 export const links = {
