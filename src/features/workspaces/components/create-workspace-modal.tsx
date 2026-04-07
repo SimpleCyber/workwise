@@ -12,13 +12,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 
 import { useCreateWorkspace } from "../api/use-create-workspace";
 import { useCreateWorkspaceModal } from "../store/use-create-workspace-modal";
+import { useMobile } from "@/hooks/use-mobile";
 
 export const CreateWorkspaceModal = () => {
   const router = useRouter();
+  const isMobile = useMobile();
 
   const [name, setName] = useState("");
   const [open, setOpen] = useCreateWorkspaceModal();
@@ -49,6 +58,41 @@ export const CreateWorkspaceModal = () => {
     );
   };
 
+  const renderForm = () => (
+    <form onSubmit={handleSubmit} className="space-y-4 px-4 pb-4 md:px-0 md:pb-0">
+      <Input
+        disabled={isPending}
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        required
+        autoFocus
+        minLength={3}
+        maxLength={20}
+        placeholder="Workspace name e.g 'Work', 'Personal', 'Home'"
+      />
+
+      <div className="flex justify-end">
+        <Button disabled={isPending} className="w-full md:w-auto">Create</Button>
+      </div>
+    </form>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={open || isPending} onOpenChange={handleClose}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Add a workspace</DrawerTitle>
+            <DrawerDescription>
+              Get started by creating a new workspace.
+            </DrawerDescription>
+          </DrawerHeader>
+          {renderForm()}
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
     <Dialog open={open || isPending} onOpenChange={handleClose}>
       <DialogContent>
@@ -58,23 +102,7 @@ export const CreateWorkspaceModal = () => {
             Get started by creating a new workspace.
           </DialogDescription>
         </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            disabled={isPending}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            autoFocus
-            minLength={3}
-            maxLength={20}
-            placeholder="Workspace name e.g 'Work', 'Personal', 'Home'"
-          />
-
-          <div className="flex justify-end">
-            <Button disabled={isPending}>Create</Button>
-          </div>
-        </form>
+        {renderForm()}
       </DialogContent>
     </Dialog>
   );

@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import { useAtom } from "jotai";
 import { notificationOpenAtom } from "@/lib/panel-atoms";
 import {
@@ -40,6 +39,14 @@ import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { cn } from "@/lib/utils";
+import { useMobile } from "@/hooks/use-mobile";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 
 interface Position {
   x: number;
@@ -48,6 +55,7 @@ interface Position {
 
 export const DraggableNotificationPanel = () => {
   const [open, setOpen] = useAtom(notificationOpenAtom);
+  const isMobile = useMobile();
   const [activeCategory, setActiveCategory] = useState<
     "all" | "attendance" | "projects" | "dataroom"
   >("all");
@@ -66,6 +74,7 @@ export const DraggableNotificationPanel = () => {
 
   // Load saved position from localStorage
   useEffect(() => {
+    if (isMobile) return;
     const savedPosition = localStorage.getItem("notification-panel-position");
     if (savedPosition) {
       setPosition(JSON.parse(savedPosition));
@@ -73,19 +82,20 @@ export const DraggableNotificationPanel = () => {
       // Default position - center top
       setPosition({ x: window.innerWidth / 2 - 200, y: 80 });
     }
-  }, []);
+  }, [isMobile]);
 
   // Save position to localStorage
   useEffect(() => {
+    if (isMobile) return;
     localStorage.setItem(
       "notification-panel-position",
       JSON.stringify(position),
     );
-  }, [position]);
+  }, [position, isMobile]);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      if ((e.target as HTMLElement).closest(".no-drag")) return;
+      if (isMobile || (e.target as HTMLElement).closest(".no-drag")) return;
 
       setIsDragging(true);
       setDragStart({
@@ -93,7 +103,7 @@ export const DraggableNotificationPanel = () => {
         y: e.clientY - position.y,
       });
     },
-    [position],
+    [position, isMobile],
   );
 
   const handleMouseMove = useCallback(
@@ -129,8 +139,6 @@ export const DraggableNotificationPanel = () => {
       };
     }
   }, [isDragging, handleMouseMove, handleMouseUp]);
-
-  if (!open) return null;
 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
@@ -237,6 +245,251 @@ export const DraggableNotificationPanel = () => {
     );
   };
 
+  const renderContent = () => (
+    <Tabs
+      value={activeCategory}
+      onValueChange={(value) => setActiveCategory(value as any)}
+      className="w-full h-full flex flex-col"
+    >
+      <div className="p-4 border-b border-border no-drag">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger
+            value="all"
+            className="flex items-center gap-1 text-xs"
+          >
+            <Bell className="w-3 h-3" />
+            All
+          </TabsTrigger>
+          <TabsTrigger
+            value="attendance"
+            className="flex items-center gap-1 text-xs"
+          >
+            <Users className="w-3 h-3" />
+            Attend
+          </TabsTrigger>
+          <TabsTrigger
+            value="projects"
+            className="flex items-center gap-1 text-xs"
+          >
+            <Briefcase className="w-3 h-3" />
+            Projects
+          </TabsTrigger>
+          <TabsTrigger
+            value="dataroom"
+            className="flex items-center gap-1 text-xs"
+          >
+            <FolderOpen className="w-3 h-3" />
+            Docs
+          </TabsTrigger>
+        </TabsList>
+      </div>
+
+      <TabsContent
+        value={activeCategory}
+        className="mt-0 flex-1 overflow-hidden"
+      >
+        <ScrollArea className={cn("no-drag", isMobile ? "h-[60vh] pb-10" : "h-[400px]")}>
+          {isLoading ? (
+            <div className="flex items-center justify-center p-8">
+              <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent"></div>
+            </div>
+          ) : notifications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-12 text-center">
+              <Bell className="w-12 h-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">
+                No notifications
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                You are all caught up!
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {notifications.map((notification) => (
+                <div
+                  key={notification._id}
+                  className={`p-4 hover:bg-muted/50 transition-colors ${
+                    !notification.isRead ? "bg-blue-500/10" : ""
+                  }`}
+                >
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0 mt-1">
+                      {getNotificationIcon(notification.type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="text-sm font-medium text-foreground">
+                              {notification.title}
+                            </h4>
+                            {getAttendanceStatusBadge(notification)}
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            {notification.message}
+                          </p>
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3 font-semibold">
+                            <div className="flex items-center gap-1">
+                              <Building className="w-3 h-3" />
+                              <span>
+                                {notification.workspace?.name ||
+                                  "Unknown Workspace"}
+                              </span>
+                            </div>
+                            {notification.actionUser && (
+                              <div className="flex items-center gap-1">
+                                <Avatar className="w-4 h-4 border">
+                                  <AvatarImage
+                                    src={
+                                      notification.actionUser.image || ""
+                                    }
+                                  />
+                                  <AvatarFallback className="text-[10px]">
+                                    {notification.actionUser.name
+                                      ?.charAt(0)
+                                      .toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span>{notification.actionUser.name}</span>
+                              </div>
+                            )}
+                            <span className="opacity-70">
+                              {formatDistanceToNow(
+                                new Date(notification.createdAt),
+                                {
+                                  addSuffix: true,
+                                },
+                              )}
+                            </span>
+                          </div>
+
+                          {canShowAttendanceActions(notification) && (
+                            <div className="flex gap-2 mb-3">
+                              <Button
+                                size="sm"
+                                className="h-7 text-xs bg-green-600 hover:bg-green-700"
+                                onClick={() =>
+                                  handleAttendanceAction(
+                                    notification.relatedId!,
+                                    "approved",
+                                  )
+                                }
+                              >
+                                <UserCheck className="w-3 h-3 mr-1" />
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                className="h-7 text-xs"
+                                onClick={() =>
+                                  handleAttendanceAction(
+                                    notification.relatedId!,
+                                    "rejected",
+                                  )
+                                }
+                              >
+                                <UserX className="w-3 h-3 mr-1" />
+                                Reject
+                              </Button>
+                            </div>
+                          )}
+
+                          {notification.type === "attendance_submitted" &&
+                            notification.relatedId &&
+                            notification.hasBeenProcessed && (
+                              <div className="text-xs text-muted-foreground mb-3 italic">
+                                This attendance has already been processed.
+                              </div>
+                            )}
+
+                          <div className="flex items-center gap-2">
+                            <Link href={getActionUrl(notification)}>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 text-xs bg-transparent"
+                                onClick={() => {
+                                  if (!notification.isRead) {
+                                    handleMarkAsRead(notification._id);
+                                  }
+                                  setOpen(false);
+                                }}
+                              >
+                                View
+                              </Button>
+                            </Link>
+                            {!notification.isRead && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 text-xs text-muted-foreground"
+                                onClick={() =>
+                                  handleMarkAsRead(notification._id)
+                                }
+                              >
+                                <Check className="w-3 h-3 mr-1" />
+                                Mark read
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-muted-foreground hover:text-red-500"
+                            onClick={() =>
+                              handleDeleteNotification(notification._id)
+                            }
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                          {!notification.isRead && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </ScrollArea>
+      </TabsContent>
+    </Tabs>
+  );
+
+  if (!open) return null;
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerContent className="max-h-[85vh]">
+          <DrawerHeader className="border-b bg-muted/5">
+            <div className="flex items-center justify-between">
+              <DrawerTitle>Notifications</DrawerTitle>
+              {unreadCount! > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleMarkAllAsRead}
+                  className="text-xs text-muted-foreground"
+                >
+                  Mark all read
+                </Button>
+              )}
+            </div>
+          </DrawerHeader>
+          <div className="overflow-hidden">
+            {renderContent()}
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
     <Card
       ref={cardRef}
@@ -290,222 +543,7 @@ export const DraggableNotificationPanel = () => {
       </CardHeader>
 
       <CardContent className="p-0 flex-1 overflow-hidden">
-        <Tabs
-          value={activeCategory}
-          onValueChange={(value) => setActiveCategory(value as any)}
-          className="w-full h-full flex flex-col"
-        >
-          <div className="p-4 border-b border-border no-drag">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger
-                value="all"
-                className="flex items-center gap-1 text-xs"
-              >
-                <Bell className="w-3 h-3" />
-                All
-              </TabsTrigger>
-              <TabsTrigger
-                value="attendance"
-                className="flex items-center gap-1 text-xs"
-              >
-                <Users className="w-3 h-3" />
-                Attend
-              </TabsTrigger>
-              <TabsTrigger
-                value="projects"
-                className="flex items-center gap-1 text-xs"
-              >
-                <Briefcase className="w-3 h-3" />
-                Projects
-              </TabsTrigger>
-              <TabsTrigger
-                value="dataroom"
-                className="flex items-center gap-1 text-xs"
-              >
-                <FolderOpen className="w-3 h-3" />
-                Docs
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          <TabsContent
-            value={activeCategory}
-            className="mt-0 flex-1 overflow-hidden"
-          >
-            <ScrollArea className="h-[400px] no-drag">
-              {isLoading ? (
-                <div className="flex items-center justify-center p-8">
-                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent"></div>
-                </div>
-              ) : notifications.length === 0 ? (
-                <div className="flex flex-col items-center justify-center p-12 text-center">
-                  <Bell className="w-12 h-12 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium text-foreground mb-2">
-                    No notifications
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    You are all caught up!
-                  </p>
-                </div>
-              ) : (
-                <div className="divide-y divide-border">
-                  {notifications.map((notification) => (
-                    <div
-                      key={notification._id}
-                      className={`p-4 hover:bg-muted/50 transition-colors ${
-                        !notification.isRead ? "bg-blue-500/10" : ""
-                      }`}
-                    >
-                      <div className="flex gap-3">
-                        <div className="flex-shrink-0 mt-1">
-                          {getNotificationIcon(notification.type)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2 mb-2">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <h4 className="text-sm font-medium text-foreground">
-                                  {notification.title}
-                                </h4>
-                                {getAttendanceStatusBadge(notification)}
-                              </div>
-                              <p className="text-sm text-muted-foreground mb-2">
-                                {notification.message}
-                              </p>
-                              <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-                                <div className="flex items-center gap-1">
-                                  <Building className="w-3 h-3" />
-                                  <span>
-                                    {notification.workspace?.name ||
-                                      "Unknown Workspace"}
-                                  </span>
-                                </div>
-                                {notification.actionUser && (
-                                  <div className="flex items-center gap-1">
-                                    <Avatar className="w-3 h-3">
-                                      <AvatarImage
-                                        src={
-                                          notification.actionUser.image ||
-                                          "/placeholder.svg" ||
-                                          "/placeholder.svg"
-                                        }
-                                      />
-                                      <AvatarFallback className="text-xs">
-                                        {notification.actionUser.name
-                                          ?.charAt(0)
-                                          .toUpperCase()}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    <span>{notification.actionUser.name}</span>
-                                  </div>
-                                )}
-                                <span>
-                                  {formatDistanceToNow(
-                                    new Date(notification.createdAt),
-                                    {
-                                      addSuffix: true,
-                                    },
-                                  )}
-                                </span>
-                              </div>
-
-                              {canShowAttendanceActions(notification) && (
-                                <div className="flex gap-2 mb-3">
-                                  <Button
-                                    size="sm"
-                                    className="h-7 text-xs bg-green-600 hover:bg-green-700"
-                                    onClick={() =>
-                                      handleAttendanceAction(
-                                        notification.relatedId!,
-                                        "approved",
-                                      )
-                                    }
-                                  >
-                                    <UserCheck className="w-3 h-3 mr-1" />
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    className="h-7 text-xs"
-                                    onClick={() =>
-                                      handleAttendanceAction(
-                                        notification.relatedId!,
-                                        "rejected",
-                                      )
-                                    }
-                                  >
-                                    <UserX className="w-3 h-3 mr-1" />
-                                    Reject
-                                  </Button>
-                                </div>
-                              )}
-
-                              {notification.type === "attendance_submitted" &&
-                                notification.relatedId &&
-                                notification.hasBeenProcessed && (
-                                  <div className="text-xs text-muted-foreground mb-3 italic">
-                                    This attendance has already been marked by
-                                    an admin.
-                                  </div>
-                                )}
-
-                              <div className="flex items-center gap-2">
-                                <Link href={getActionUrl(notification)}>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-7 text-xs bg-transparent"
-                                    onClick={() => {
-                                      if (!notification.isRead) {
-                                        handleMarkAsRead(notification._id);
-                                      }
-                                      setOpen(false);
-                                    }}
-                                  >
-                                    View
-                                  </Button>
-                                </Link>
-                                {!notification.isRead && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-7 text-xs text-muted-foreground"
-                                    onClick={() =>
-                                      handleMarkAsRead(notification._id)
-                                    }
-                                  >
-                                    <Check className="w-3 h-3 mr-1" />
-                                    Mark read
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex flex-col items-end gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0 text-muted-foreground hover:text-red-500"
-                                onClick={() =>
-                                  handleDeleteNotification(notification._id)
-                                }
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
-                              {!notification.isRead && (
-                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
-          </TabsContent>
-        </Tabs>
+        {renderContent()}
       </CardContent>
     </Card>
   );

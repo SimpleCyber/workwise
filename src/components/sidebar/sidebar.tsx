@@ -108,7 +108,7 @@ export const Sidebar = ({
 
   if (!workspaceId) {
     return (
-      <aside className="flex h-full w-[60px] flex-col items-center gap-y-4 bg-gray-900 pb-[4px] pt-[9px] border-r border-gray-800">
+      <aside className="hidden md:flex h-full w-[60px] flex-col items-center gap-y-4 bg-gray-900 pb-[4px] pt-[9px] border-r border-gray-800">
         <div className="animate-in fade-in-0 slide-in-from-left-5 duration-500">
           <WorkspaceSwitcher />
         </div>
@@ -120,7 +120,7 @@ export const Sidebar = ({
     );
   }
   return (
-    <aside className="flex h-full w-[60px] flex-col items-center gap-y-4 bg-sidebar pb-[4px] pt-[9px] border-r border-sidebar-border relative">
+    <aside className="hidden md:flex h-full w-[60px] flex-col items-center gap-y-4 bg-sidebar pb-[4px] pt-[9px] border-r border-sidebar-border relative">
       <div className="relative z-10 flex h-full w-full flex-col items-center gap-y-4">
         <div>
           <WorkspaceSwitcher />

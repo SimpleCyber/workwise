@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/resizable";
 import { WorkspaceSidebar } from "@/components/workspace-sidebar/workspace-sidebar";
 import { useWorkspacePanel } from "./use-workspace-sidebar-panel-context";
+import { BottomNav } from "@/components/sidebar/bottom-nav";
 
 interface WorkspaceLayoutProps extends PropsWithChildren {
   autoSaveId: string;
@@ -64,28 +65,31 @@ const WorkspaceLayout = ({
             defaultSize={defaultPanelSize}
             minSize={minPanelSize}
             maxSize={maxPanelSize}
-            className="bg-sidebar"
+            className="hidden md:block bg-sidebar"
             onResize={handlePanelResize}
           >
             <WorkspaceSidebar>{sidebarContent}</WorkspaceSidebar>
           </ResizablePanel>
 
-          <ResizableHandle withHandle />
+          <ResizableHandle withHandle className="hidden md:flex" />
 
           <ResizablePanel
             defaultSize={calculatedMainPanelSize}
             minSize={mainPanelMinSize}
-            className="flex flex-col"
+            className="flex flex-col h-full w-full"
           >
-            <div className="flex-1 overflow-hidden">{children}</div>
+            <div className="flex-1 overflow-y-auto mb-16 md:mb-0">
+              {children}
+            </div>
           </ResizablePanel>
 
           {rightPanel && (
             <>
-              <ResizableHandle withHandle />
+              <ResizableHandle withHandle className="hidden md:flex" />
               <ResizablePanel
                 minSize={rightPanelMinSize}
                 defaultSize={rightPanelDefaultSize}
+                className="hidden md:block"
               >
                 {rightPanel}
               </ResizablePanel>
@@ -93,6 +97,7 @@ const WorkspaceLayout = ({
           )}
         </ResizablePanelGroup>
       </div>
+      <BottomNav />
     </div>
   );
 };
