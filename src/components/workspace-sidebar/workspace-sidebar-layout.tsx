@@ -25,6 +25,7 @@ interface WorkspaceLayoutProps extends PropsWithChildren {
   rightPanelMinSize?: number;
   rightPanelDefaultSize?: number;
   heightOffset?: string;
+  hideMobileNav?: boolean;
   onClose?: () => void;
 }
 
@@ -46,6 +47,7 @@ const WorkspaceLayout = ({
   rightPanelMinSize = 20,
   rightPanelDefaultSize = 29,
   heightOffset = "0px",
+  hideMobileNav = false,
   onClose,
 }: WorkspaceLayoutProps) => {
   const isMobile = useMobile();
@@ -84,7 +86,9 @@ const WorkspaceLayout = ({
             minSize={mainPanelMinSize}
             className="flex flex-col h-full w-full"
           >
-            <div className="flex-1 overflow-y-auto mb-16 md:mb-0">
+            <div
+              className={`flex-1 overflow-y-auto md:mb-0 ${hideMobileNav ? "" : "mb-16"}`}
+            >
               {children}
             </div>
           </ResizablePanel>
@@ -123,7 +127,7 @@ const WorkspaceLayout = ({
           )}
         </ResizablePanelGroup>
       </div>
-      <BottomNav />
+      {!hideMobileNav && <BottomNav />}
     </div>
   );
 };

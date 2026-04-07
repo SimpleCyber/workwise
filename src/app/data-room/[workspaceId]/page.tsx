@@ -96,6 +96,7 @@ import type { Id } from "../../../../convex/_generated/dataModel";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { useConfirm } from "@/hooks/use-confirm";
 import { cn } from "@/lib/utils";
+import { ResponsiveModal } from "@/components/responsive-modal";
 import { PdfToolsPanel } from "./pdf-tools-panel";
 import { CsvViewer } from "@/features/data-room/components/csv-viewer";
 import { JsonViewer } from "@/features/data-room/components/json-viewer";
@@ -202,6 +203,18 @@ const DataRoomWorkspacePage = () => {
   );
   const [dragEnd, setDragEnd] = useState<{ x: number; y: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastFolderTapRef = useRef<number>(0);
+
+  const handleFolderClick = (e: React.MouseEvent, folderId: string) => {
+    // Only intercept to catch fast sequential mobile taps
+    const now = Date.now();
+    if (now - lastFolderTapRef.current < 400) {
+      setCurrentFolderId(folderId as Id<"dataRoomFolders">);
+      lastFolderTapRef.current = 0;
+    } else {
+      lastFolderTapRef.current = now;
+    }
+  };
 
   // API hooks
   const { data: members } = useGetWorkspaceMembers({ workspaceId });
@@ -744,222 +757,286 @@ const DataRoomWorkspacePage = () => {
       <ConfirmFolderDeleteDialog />
 
       {/* Modals */}
-      <Dialog open={isUploadModalOpen} onOpenChange={handleOpenChangeUpload}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Upload Document</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Select File</Label>
-              <div
-                className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:bg-muted/50 transition cursor-pointer"
-                onClick={() => document.getElementById("file-upload")?.click()}
-              >
-                <input
-                  type="file"
-                  multiple
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  id="file-upload"
-                />
-                <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm font-medium">
-                  Click to select or drag and drop
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Max 50MB per file
-                </p>
-              </div>
-              {selectedFiles.length > 0 && (
-                <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
-                  {selectedFiles.map((file, index) => (
-                    <div
-                      key={`${file.name}-${index}`}
-                      className="flex items-center gap-2 p-2 bg-muted/50 rounded-md border text-sm"
-                    >
-                      <File className="w-4 h-4 flex-shrink-0" />
-                      <span className="truncate flex-1">{file.name}</span>
-                      <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                        {formatFileSize(file.size)}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedFiles((prev) =>
-                            prev.filter((_, i) => i !== index),
-                          );
-                        }}
-                        className="h-6 w-6"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label>Description</Label>
-              <Textarea
-                placeholder="What is this file about?"
-                value={uploadData.comment}
-                onChange={(e) =>
-                  setUploadData({ ...uploadData, comment: e.target.value })
-                }
-                rows={2}
-              />
-            </div>
-            <Tabs
-              value={uploadData.visibility}
-              onValueChange={(v) =>
-                setUploadData({ ...uploadData, visibility: v as any })
-              }
-            >
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="public">Public</TabsTrigger>
-                <TabsTrigger value="private">Private</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsUploadModalOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleUpload}
-              disabled={
-                selectedFiles.length === 0 || !uploadData.comment?.trim()
-              }
-            >
-              Upload{" "}
-              {selectedFiles.length > 0 ? `(${selectedFiles.length})` : ""}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={isNewFolderModalOpen}
-        onOpenChange={setIsNewFolderModalOpen}
+      <ResponsiveModal
+        open={isUploadModalOpen}
+        onOpenChange={handleOpenChangeUpload}
+        title="Upload Document"
+        className="max-w-2xl"
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>New Folder</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <Label>Folder Name</Label>
-            <Input
-              value={newFolderName}
-              onChange={(e) => setNewFolderName(e.target.value)}
-              placeholder="Enter folder name..."
-              autoFocus
-              onKeyDown={(e) => e.key === "Enter" && handleCreateFolder()}
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsNewFolderModalOpen(false)}
+        <div className="space-y-4 pt-2">
+          <div className="space-y-2">
+            <Label>Select File</Label>
+            <div
+              className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:bg-muted/50 transition cursor-pointer"
+              onClick={() => document.getElementById("file-upload")?.click()}
             >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleCreateFolder}
-              disabled={!newFolderName.trim()}
-            >
-              Create
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Main Header */}
-      <div className="border-b bg-background">
-        <div className="flex items-center px-4 py-2 border-b bg-muted/5 overflow-hidden">
-          <div className="flex items-center text-sm text-muted-foreground flex-1 min-w-0">
-            <span
-              className={cn(
-                "hover:text-foreground cursor-pointer px-1 rounded transition-colors",
-                dropTargetId === "root" && "bg-primary/20",
-              )}
-              onDragOver={(e) => handleItemDragOver(e, null)}
-              onDragLeave={() => setDropTargetId(null)}
-              onDrop={(e) => handleItemDrop(e, null)}
-              onClick={() => {
-                setCurrentFolderId(null);
-                setActiveTypeFilter("all");
-              }}
-            >
-              Data Room
-            </span>
-            {filesData?.breadcrumbPath?.map((folder) => (
-              <React.Fragment key={folder._id}>
-                <ChevronRight className="w-4 h-4 mx-1 flex-shrink-0" />
-                <span
-                  className={cn(
-                    "hover:text-foreground cursor-pointer truncate max-w-[120px] px-1 rounded transition-colors",
-                    dropTargetId === folder._id && "bg-primary/20",
-                  )}
-                  onDragOver={(e) => handleItemDragOver(e, folder._id)}
-                  onDragLeave={() => setDropTargetId(null)}
-                  onDrop={(e) => handleItemDrop(e, folder._id)}
-                  onClick={() => setCurrentFolderId(folder._id)}
-                >
-                  {folder.name}
-                </span>
-              </React.Fragment>
-            ))}
-            {activeTypeFilter !== "all" && (
-              <>
-                <ChevronRight className="w-4 h-4 mx-1" />
-                <Badge variant="secondary" className="font-normal capitalize">
-                  {FOLDER_LABELS[activeTypeFilter] || activeTypeFilter}
-                </Badge>
-              </>
+              <input
+                type="file"
+                multiple
+                onChange={handleFileSelect}
+                className="hidden"
+                id="file-upload"
+              />
+              <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+              <p className="text-sm font-medium">
+                Click to select or drag and drop
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Max 50MB per file
+              </p>
+            </div>
+            {selectedFiles.length > 0 && (
+              <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                {selectedFiles.map((file, index) => (
+                  <div
+                    key={`${file.name}-${index}`}
+                    className="flex items-center gap-2 p-2 bg-muted/50 rounded-md border text-sm"
+                  >
+                    <File className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate flex-1">{file.name}</span>
+                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                      {formatFileSize(file.size)}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedFiles((prev) =>
+                          prev.filter((_, i) => i !== index),
+                        );
+                      }}
+                      className="h-6 w-6"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
+          <div className="space-y-2">
+            <Label>Description</Label>
+            <Textarea
+              placeholder="What is this file about?"
+              value={uploadData.comment}
+              onChange={(e) =>
+                setUploadData({ ...uploadData, comment: e.target.value })
+              }
+              rows={2}
+            />
+          </div>
+          <Tabs
+            value={uploadData.visibility}
+            onValueChange={(v) =>
+              setUploadData({ ...uploadData, visibility: v as any })
+            }
+          >
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="public">Public</TabsTrigger>
+              <TabsTrigger value="private">Private</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 mt-4">
+          <Button
+            variant="outline"
+            className="w-full sm:w-auto"
+            onClick={() => setIsUploadModalOpen(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleUpload}
+            className="w-full sm:w-auto"
+            disabled={selectedFiles.length === 0 || !uploadData.comment?.trim()}
+          >
+            Upload {selectedFiles.length > 0 ? `(${selectedFiles.length})` : ""}
+          </Button>
+        </div>
+      </ResponsiveModal>
 
-          <div className="flex items-center gap-2 mx-4 flex-shrink-0">
-            <Button
-              size="sm"
-              onClick={() => setIsUploadModalOpen(true)}
-              className="h-8"
-            >
-              <Upload className="w-4 h-4 " />
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setIsNewFolderModalOpen(true)}
-              className="h-8"
-            >
-              <FolderPlus className="w-4 h-4 " />
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={toggleSlideshow}
-              className={cn(
-                "h-8",
-                isSlideshowActive && "bg-primary/10 border-primary",
+      <ResponsiveModal
+        open={isNewFolderModalOpen}
+        onOpenChange={setIsNewFolderModalOpen}
+        title="New Folder"
+      >
+        <div className="py-4">
+          <Label>Folder Name</Label>
+          <Input
+            value={newFolderName}
+            onChange={(e) => setNewFolderName(e.target.value)}
+            placeholder="Enter folder name..."
+            autoFocus
+            onKeyDown={(e) => e.key === "Enter" && handleCreateFolder()}
+          />
+        </div>
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 mt-4">
+          <Button
+            variant="outline"
+            className="w-full sm:w-auto"
+            onClick={() => setIsNewFolderModalOpen(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            className="w-full sm:w-auto"
+            onClick={handleCreateFolder}
+            disabled={!newFolderName.trim()}
+          >
+            Create
+          </Button>
+        </div>
+      </ResponsiveModal>
+
+      {/* Main Header */}
+      <div className="border-b bg-background sticky top-0 z-10 w-full">
+        <div className="flex flex-col md:flex-row justify-between md:items-center px-4 py-3 md:py-2 border-b bg-muted/5 gap-3 md:gap-0 overflow-hidden w-full">
+          {/* Row 1 Mobile / Left Desktop: Breadcrumbs & Mobile Actions */}
+          <div className="flex items-center justify-between w-full md:w-auto md:flex-1 min-w-0">
+            <div className="flex items-center text-[13px] md:text-sm text-muted-foreground min-w-0 overflow-x-auto hide-scrollbar flex-nowrap shrink">
+              <span
+                className={cn(
+                  "hover:text-foreground cursor-pointer px-1 rounded transition-colors whitespace-nowrap",
+                  dropTargetId === "root" && "bg-primary/20",
+                )}
+                onDragOver={(e) => handleItemDragOver(e, null)}
+                onDragLeave={() => setDropTargetId(null)}
+                onDrop={(e) => handleItemDrop(e, null)}
+                onClick={() => {
+                  setCurrentFolderId(null);
+                  setActiveTypeFilter("all");
+                }}
+              >
+                Data Room
+              </span>
+              {filesData?.breadcrumbPath?.map((folder) => (
+                <React.Fragment key={folder._id}>
+                  <ChevronRight className="w-4 h-4 mx-1 flex-shrink-0" />
+                  <span
+                    className={cn(
+                      "hover:text-foreground cursor-pointer truncate max-w-[120px] px-1 rounded transition-colors whitespace-nowrap",
+                      dropTargetId === folder._id && "bg-primary/20",
+                    )}
+                    onDragOver={(e) => handleItemDragOver(e, folder._id)}
+                    onDragLeave={() => setDropTargetId(null)}
+                    onDrop={(e) => handleItemDrop(e, folder._id)}
+                    onClick={() => setCurrentFolderId(folder._id)}
+                  >
+                    {folder.name}
+                  </span>
+                </React.Fragment>
+              ))}
+              {activeTypeFilter !== "all" && (
+                <>
+                  <ChevronRight className="w-4 h-4 mx-1 flex-shrink-0" />
+                  <Badge
+                    variant="secondary"
+                    className="font-normal capitalize whitespace-nowrap"
+                  >
+                    {FOLDER_LABELS[activeTypeFilter] || activeTypeFilter}
+                  </Badge>
+                </>
               )}
-            >
-              {isSlideshowActive ? (
-                <Pause className="w-4 h-4 " />
-              ) : (
-                <Play className="w-4 h-4 " />
-              )}
-            </Button>
+            </div>
 
-            <div className="w-px h-6 bg-border mx-1" />
+            {/* Mobile Actions (Hidden on Desktop) */}
+            <div className="flex md:hidden items-center gap-1 flex-shrink-0 ml-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={toggleSlideshow}
+                className={cn(
+                  "h-8 w-8 px-0",
+                  isSlideshowActive && "bg-primary/10 text-primary",
+                )}
+              >
+                {isSlideshowActive ? (
+                  <Pause className="w-4 h-4" />
+                ) : (
+                  <Play className="w-4 h-4" />
+                )}
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => setIsUploadModalOpen(true)}
+                className="h-8 w-8 px-0"
+              >
+                <Upload className="w-4 h-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setIsNewFolderModalOpen(true)}
+                className="h-8 w-8 px-0"
+              >
+                <FolderPlus className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
 
-            <div className="flex border rounded-md p-0.5 h-8 bg-muted/20">
+          {/* Row 2 Mobile / Right Desktop: Desktop Actions, Toggles & Search */}
+          <div className="flex items-center gap-2 w-full md:w-auto flex-shrink-0 overflow-x-auto hide-scrollbar pb-1 md:pb-0">
+            {/* Desktop Actions (Hidden on Mobile) */}
+            <div className="hidden md:flex items-center gap-2 mr-2">
+              <Button
+                size="sm"
+                onClick={() => setIsUploadModalOpen(true)}
+                className="h-8"
+              >
+                <Upload className="w-4 h-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setIsNewFolderModalOpen(true)}
+                className="h-8"
+              >
+                <FolderPlus className="w-4 h-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={toggleSlideshow}
+                className={cn(
+                  "h-8",
+                  isSlideshowActive && "bg-primary/10 border-primary",
+                )}
+              >
+                {isSlideshowActive ? (
+                  <Pause className="w-4 h-4" />
+                ) : (
+                  <Play className="w-4 h-4" />
+                )}
+              </Button>
+              <div className="w-px h-6 bg-border mx-1" />
+            </div>
+
+            {/* Delete Selection Actions (Mobile & Desktop) */}
+            {selectedFileIds.size > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleDelete(Array.from(selectedFileIds))}
+                className="h-8 w-8 text-destructive hover:bg-destructive/10 md:hidden flex-shrink-0"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
+            {selectedFileIds.size > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleDelete(Array.from(selectedFileIds))}
+                className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10 hidden md:flex"
+              >
+                <Trash2 className="w-4 h-4 mr-2" /> Delete (
+                {selectedFileIds.size})
+              </Button>
+            )}
+
+            {/* View Mode Toggle */}
+            <div className="flex border rounded-md p-0.5 h-8 bg-muted/20 flex-shrink-0">
               <Button
                 variant={view === "list" ? "secondary" : "ghost"}
                 size="icon"
@@ -978,27 +1055,16 @@ const DataRoomWorkspacePage = () => {
               </Button>
             </div>
 
-            {selectedFileIds.size > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleDelete(Array.from(selectedFileIds))}
-                className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete ({selectedFileIds.size})
-              </Button>
-            )}
-          </div>
-
-          <div className="relative w-64 flex-shrink-0">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
-            <input
-              placeholder="Search everywhere..."
-              className="h-8 pl-8 text-sm bg-muted/20 border rounded-md w-full outline-none focus:ring-1 focus:ring-primary"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            {/* Search - Flex-1 on mobile, fixed width on desktop */}
+            <div className="relative flex-1 md:w-64 md:flex-none">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
+              <input
+                placeholder="Search everywhere..."
+                className="h-8 pl-8 text-sm bg-muted/20 border rounded-md w-full outline-none focus:ring-1 focus:ring-primary transition-all"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -1079,13 +1145,14 @@ const DataRoomWorkspacePage = () => {
                     onDragOver={(e) => handleItemDragOver(e, folder._id)}
                     onDragLeave={() => setDropTargetId(null)}
                     onDrop={(e) => handleItemDrop(e, folder._id)}
+                    onClick={(e) => handleFolderClick(e, folder._id)}
+                    onDoubleClick={() => setCurrentFolderId(folder._id)}
                     className={cn(
                       "cursor-pointer group hover:bg-muted/40 transition-colors relative",
                       selectedFileIds.has(folder._id) && "bg-primary/5",
                       dropTargetId === folder._id &&
                         "bg-primary/10 shadow-[inset_0_0_0_2px_rgba(var(--primary),0.2)]",
                     )}
-                    onDoubleClick={() => setCurrentFolderId(folder._id)}
                   >
                     <TableCell className="px-4">
                       <FolderIcon className="w-4 h-4 text-yellow-500 fill-yellow-500/20" />
@@ -1264,6 +1331,7 @@ const DataRoomWorkspacePage = () => {
                           onDragOver={(e) => handleItemDragOver(e, folder._id)}
                           onDragLeave={() => setDropTargetId(null)}
                           onDrop={(e) => handleItemDrop(e, folder._id)}
+                          onClick={(e) => handleFolderClick(e, folder._id)}
                           onDoubleClick={() => setCurrentFolderId(folder._id)}
                           className={cn(
                             "group flex flex-col items-center gap-2 cursor-pointer relative p-2 rounded-lg transition-all",
@@ -1429,12 +1497,12 @@ const DataRoomWorkspacePage = () => {
                         }
                       }}
                     >
-                      <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-1 gap-0">
-                        <DialogHeader className="p-4 border-b flex flex-row items-center justify-between space-y-0">
-                          <div className="flex items-center gap-2 overflow-hidden mr-8">
+                      <DialogContent className="max-w-5xl w-full h-[100dvh] max-h-[100dvh] sm:h-[90vh] sm:max-h-[90vh] border-0 sm:border rounded-none sm:rounded-lg flex flex-col p-0 sm:p-1 gap-0 !m-0">
+                        <DialogHeader className="p-3 sm:p-4 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 space-y-0">
+                          <div className="flex items-center gap-2 overflow-hidden w-full sm:w-auto pr-8 sm:pr-0">
                             <div
                               className={cn(
-                                "p-1.5 rounded-md bg-muted",
+                                "p-1.5 rounded-md bg-muted flex-shrink-0",
                                 previewFile &&
                                   getFileTypeColor(previewFile.fileType),
                               )}
@@ -1449,69 +1517,75 @@ const DataRoomWorkspacePage = () => {
                               {previewFile?.fileName}
                             </DialogTitle>
                           </div>
-                          <div className="flex items-center gap-3 pr-8">
-                            <span className="text-xs font-medium text-muted-foreground bg-muted/50 px-2 py-1 rounded-md border whitespace-nowrap">
-                              {files.findIndex(
-                                (f: any) => f._id === previewFile?._id,
-                              ) + 1}{" "}
-                              of {files.length}
-                            </span>
-                            <div className="flex items-center gap-1 bg-muted/50 rounded-md border p-0.5">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7"
-                                onClick={toggleSlideshow}
-                              >
-                                {isSlideshowActive ? (
-                                  <Pause className="w-3.5 h-3.5" />
-                                ) : (
-                                  <Play className="w-3.5 h-3.5" />
-                                )}
-                              </Button>
-                              <div className="flex border-l pl-1 items-center gap-1">
-                                <Clock className="w-3 h-3 text-muted-foreground mr-0.5" />
-                                {[3, 5, 10].map((s) => (
-                                  <Button
-                                    key={s}
-                                    variant={
-                                      slideshowInterval === s * 1000
-                                        ? "secondary"
-                                        : "ghost"
-                                    }
-                                    size="sm"
-                                    className="h-6 px-1.5 min-w-[24px] text-[10px]"
-                                    onClick={() =>
-                                      setSlideshowInterval(s * 1000)
-                                    }
-                                  >
-                                    {s}s
-                                  </Button>
-                                ))}
+
+                          <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end overflow-x-auto hide-scrollbar pb-1 sm:pb-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[11px] sm:text-xs font-medium text-muted-foreground bg-muted/50 px-2 py-1 rounded-md border whitespace-nowrap">
+                                {files.findIndex(
+                                  (f: any) => f._id === previewFile?._id,
+                                ) + 1}{" "}
+                                of {files.length}
+                              </span>
+                              <div className="flex items-center gap-1 bg-muted/50 rounded-md border p-0.5">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  onClick={toggleSlideshow}
+                                >
+                                  {isSlideshowActive ? (
+                                    <Pause className="w-3.5 h-3.5" />
+                                  ) : (
+                                    <Play className="w-3.5 h-3.5" />
+                                  )}
+                                </Button>
+                                <div className="hidden sm:flex border-l pl-1 items-center gap-1">
+                                  <Clock className="w-3 h-3 text-muted-foreground mr-0.5" />
+                                  {[3, 5, 10].map((s) => (
+                                    <Button
+                                      key={s}
+                                      variant={
+                                        slideshowInterval === s * 1000
+                                          ? "secondary"
+                                          : "ghost"
+                                      }
+                                      size="sm"
+                                      className="h-6 px-1.5 min-w-[24px] text-[10px]"
+                                      onClick={() =>
+                                        setSlideshowInterval(s * 1000)
+                                      }
+                                    >
+                                      {s}s
+                                    </Button>
+                                  ))}
+                                </div>
                               </div>
                             </div>
-                            {previewFile?.fileUrl && (
+
+                            <div className="flex items-center gap-1 sm:gap-2">
+                              {previewFile?.fileUrl && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 w-8 sm:w-auto sm:px-3 px-0 flex-shrink-0"
+                                  onClick={() =>
+                                    window.open(previewFile.fileUrl, "_blank")
+                                  }
+                                >
+                                  <ExternalLink className="w-4 h-4" />
+                                </Button>
+                              )}
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-8 gap-2"
+                                className="h-8 w-8 sm:w-auto sm:px-3 px-0 flex-shrink-0"
                                 onClick={() =>
-                                  window.open(previewFile.fileUrl, "_blank")
+                                  previewFile && handleDownload(previewFile)
                                 }
                               >
-                                <ExternalLink className="w-4 h-4" />
+                                <Download className="w-4 h-4" />
                               </Button>
-                            )}
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 gap-2"
-                              onClick={() =>
-                                previewFile && handleDownload(previewFile)
-                              }
-                            >
-                              <Download className="w-4 h-4" />
-                            </Button>
+                            </div>
                           </div>
                         </DialogHeader>
                         <div className="flex-1 bg-muted/20 relative flex items-center justify-center overflow-hidden group/preview">
