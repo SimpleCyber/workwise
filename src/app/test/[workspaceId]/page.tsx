@@ -2,6 +2,7 @@
 
 import { Loader2, TriangleAlert } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useMobile } from "@/hooks/use-mobile";
 import { useEffect, useState } from "react";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { useGetTreeData } from "@/features/test/api/use-get-tree-data";
@@ -26,6 +27,8 @@ export default function TreeWorkspacePage({
   const { data: workspace, isLoading: workspaceLoading } = useGetWorkspaceInfo({
     id: workspaceId,
   });
+
+  const isMobile = useMobile();
 
   const { data: treeData, isLoading: treeLoading } = useGetTreeData({
     workspaceId,
@@ -83,7 +86,7 @@ export default function TreeWorkspacePage({
       <div
         className="flex-1 overflow-auto p-6 transition-all duration-300 ease-in-out"
         style={{
-          marginRight: sidebarOpen ? `600px` : "0px", // Dynamic margin for sidebar (matches default width)
+          marginRight: sidebarOpen && !isMobile ? `600px` : "0px", // Dynamic margin for sidebar (matches default width)
         }}
       >
         <TreeFlow

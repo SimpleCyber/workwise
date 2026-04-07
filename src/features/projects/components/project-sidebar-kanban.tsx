@@ -22,6 +22,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useMobile } from "@/hooks/use-mobile";
 
 interface ProjectSidebarKanbanProps {
   workspaceId: Id<"workspaces">;
@@ -58,6 +59,7 @@ export const ProjectSidebarKanban = ({
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_WIDTH);
   const [isResizing, setIsResizing] = useState(false);
   const [activeTab, setActiveTab] = useState<"tasks" | "chat">(initialTab);
+  const isMobile = useMobile();
 
   useEffect(() => {
     setActiveTab(initialTab);
@@ -172,13 +174,15 @@ export const ProjectSidebarKanban = ({
               opacity: { duration: 0.2 },
             }}
             className="fixed right-0 top-0 h-full bg-background border-l-2 border-border shadow-2xl z-[60] flex flex-col rounded-l-2xl"
-            style={{ width: sidebarWidth }}
+            style={{ width: isMobile ? "100vw" : sidebarWidth }}
           >
             {/* Resize Handle */}
-            <div
-              className="absolute left-0 top-0 w-2 h-full cursor-ew-resize bg-transparent hover:bg-blue-500 hover:bg-opacity-40 transition-all z-[70] rounded-l-2xl"
-              onMouseDown={handleMouseDown}
-            />
+            {!isMobile && (
+              <div
+                className="absolute left-0 top-0 w-2 h-full cursor-ew-resize bg-transparent hover:bg-blue-500 hover:bg-opacity-40 transition-all z-[70] rounded-l-2xl"
+                onMouseDown={handleMouseDown}
+              />
+            )}
 
             {/* Single Consolidated Header */}
             <div className="flex h-[60px] items-center border-b border-border bg-card px-4 flex-shrink-0 rounded-tl-3xl shadow-sm">

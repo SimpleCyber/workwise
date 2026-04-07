@@ -28,6 +28,7 @@ import { useToggleStar } from "../api/use-toggle-stars";
 
 import { useGetWorkspaceMembers } from "../api/use-get-workspace-members";
 import { useExpandNodeWithAI } from "../api/use-ai-tree-generation";
+import { useMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { Loader2, Plus, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -71,6 +72,7 @@ export function TreeFlow({
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [activePopup, setActivePopup] = useState<string | null>(null);
   const [isAIDialogOpen, setIsAIDialogOpen] = useState(false);
+  const isMobile = useMobile();
 
   const { data: treeNodes, isLoading: nodesLoading } = useGetTreeNodes({
     workspaceId,
@@ -512,10 +514,23 @@ export function TreeFlow({
           zoomable={true}
           className="bg-background border border-border rounded-lg transition-all duration-300"
           style={{
-            width: sidebarOpen ? 150 : 200,
-            height: sidebarOpen ? 120 : 150,
+            width: isMobile
+              ? sidebarOpen
+                ? 80
+                : 120
+              : sidebarOpen
+                ? 150
+                : 200,
+            height: isMobile
+              ? sidebarOpen
+                ? 60
+                : 90
+              : sidebarOpen
+                ? 120
+                : 150,
           }}
         />
+
         <Background
           variant={BackgroundVariant.Dots}
           gap={20}

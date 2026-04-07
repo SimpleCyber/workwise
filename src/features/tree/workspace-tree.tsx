@@ -17,6 +17,7 @@ import { TreeControls } from "./components/tree-controls";
 import type { TreeData } from "./api/tree-types";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { useWorkspaceTreeData } from "./api/use-workspace-tree-data";
+import { useMobile } from "@/hooks/use-mobile";
 
 const nodeTypes = {
   workspaceNode: WorkspaceNode,
@@ -61,6 +62,7 @@ export const WorkspaceOnlyVisualization = ({
   data,
   workspaceId,
 }: WorkspaceOnlyVisualizationProps) => {
+  const isMobile = useMobile();
   const { layout, viewMode, nodes, edges, onLayoutChange, setViewMode } =
     useWorkspaceTreeData({ data, workspaceId });
 
@@ -125,8 +127,8 @@ export const WorkspaceOnlyVisualization = ({
               borderRadius: "12px",
               boxShadow:
                 "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-              width: 200,
-              height: 150,
+              width: isMobile ? 120 : 200,
+              height: isMobile ? 90 : 150,
             }}
             pannable
             zoomable
