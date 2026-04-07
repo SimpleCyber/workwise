@@ -68,7 +68,7 @@ export const SignUpCard = ({ setState }: SignUpCardProps) => {
   };
 
   return (
-    <Card className="size-full p-8">
+    <Card className="h-auto w-full p-4 sm:p-8">
       <CardHeader className="px-0 pt-0">
         <CardTitle>Sign up to continue</CardTitle>
         <CardDescription>
