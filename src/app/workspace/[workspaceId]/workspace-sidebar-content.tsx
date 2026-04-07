@@ -5,6 +5,7 @@ import {
   MessageSquareText,
   SendHorizonal,
   Loader,
+  Users,
 } from "lucide-react";
 import { useGetChannels } from "@/features/channels/api/use-get-channels";
 import { useCreateChannelModal } from "@/features/channels/store/use-create-channel-modal";
@@ -13,6 +14,7 @@ import { useGetMembers } from "@/features/members/api/use-get-members";
 import { useChannelId } from "@/hooks/use-channel-id";
 import { useMemberId } from "@/hooks/use-member-id";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
+import { useGetWorkspaceProjectChats } from "@/features/projects/api/use-get-workspace-project-chats";
 
 import { SidebarItem } from "@/app/workspace/[workspaceId]/sidebar-item";
 import { UserItem } from "@/app/workspace/[workspaceId]/user-item";
@@ -32,8 +34,10 @@ export const WorkspaceSidebarContent = () => {
   const { data: members, isLoading: membersLoading } = useGetMembers({
     workspaceId,
   });
+  const { chats: projectChats, isLoading: chatsLoading } =
+    useGetWorkspaceProjectChats(workspaceId);
 
-  if (channelsLoading || membersLoading) {
+  if (channelsLoading || membersLoading || chatsLoading) {
     return (
       <div className="flex items-center justify-center p-4">
         <Loader className="size-4 animate-spin text-sidebar-foreground" />
@@ -43,10 +47,7 @@ export const WorkspaceSidebarContent = () => {
 
   return (
     <>
-      {/* <div className="mt-3 flex flex-col px-2">
-        <SidebarItem label="Threads" icon={MessageSquareText} id="threads" />
-        <SidebarItem label="Drafts & Sent" icon={SendHorizonal} id="draft" />
-      </div> */}
+      <div className="mt-2" />
 
       {channels && channels.length !== 0 && (
         <WorkspaceSection
@@ -61,6 +62,20 @@ export const WorkspaceSidebarContent = () => {
               id={item._id}
               icon={HashIcon}
               label={item.name}
+            />
+          ))}
+        </WorkspaceSection>
+      )}
+
+      {projectChats && projectChats.length !== 0 && (
+        <WorkspaceSection label="Groups">
+          {projectChats.map((item) => (
+            <SidebarItem
+              key={item._id}
+              id={item._id}
+              icon={Users}
+              label={item.title || "Untitled Group"}
+              href={`/projects/${workspaceId}/board/${item.boardId}`}
             />
           ))}
         </WorkspaceSection>

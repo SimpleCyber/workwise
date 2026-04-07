@@ -35,6 +35,45 @@ export const listForBoard = query({
   },
 });
 
+export const listForWorkspace = query({
+  args: { workspaceId: v.id("workspaces") },
+  handler: async (ctx, { workspaceId }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+
+    const member = await ctx.db
+      .query("members")
+      .withIndex("by_workspace_id_user_id", (q) =>
+        q.eq("workspaceId", workspaceId).eq("userId", userId),
+      )
+      .unique();
+
+    if (!member) return [];
+
+    const chats = await ctx.db
+      .query("projectChats")
+      .filter((q) => q.eq(q.field("workspaceId"), workspaceId))
+      .collect();
+
+    return Promise.all(
+      chats.map(async (c) => {
+        const msgs = await ctx.db
+          .query("projectChatMessages")
+          .withIndex("by_chat", (q) => q.eq("chatId", c._id))
+          .order("desc")
+          .take(1);
+        const last = msgs[0];
+
+        return {
+          ...c,
+          id: c._id,
+          preview: last?.content ?? "Ask anything…",
+        };
+      }),
+    );
+  },
+});
+
 export const getMessages = query({
   args: { chatId: v.id("projectChats"), limit: v.optional(v.number()) },
   handler: async (ctx, { chatId, limit = 200 }) => {
