@@ -47,11 +47,19 @@ export const useConfirm = (
         </AlertDialogHeader>
 
         <AlertDialogFooter className="pt-2">
-          <Button onClick={handleCancel} variant="outline">
+          <Button
+            onClick={handleCancel}
+            variant="outline"
+            className="w-full sm:w-auto"
+          >
             Cancel
           </Button>
 
-          <Button onClick={handleConfirm} variant="destructive">
+          <Button
+            onClick={handleConfirm}
+            variant="destructive"
+            className="w-full sm:w-auto"
+          >
             Confirm
           </Button>
         </AlertDialogFooter>
