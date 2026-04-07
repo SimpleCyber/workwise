@@ -13,8 +13,10 @@ const sidebarItemVariants = cva(
   {
     variants: {
       variant: {
-        default: "text-foreground md:text-[#f9EDFFCC] font-medium md:font-normal",
-        active: "text-primary/90 md:text-sidebar-foreground bg-accent/90 md:bg-white/20 hover:bg-accent md:hover:bg-white/30",
+        default:
+          "text-foreground md:text-[#f9EDFFCC] font-medium md:font-normal",
+        active:
+          "text-primary/90 md:text-sidebar-foreground bg-accent/90 md:bg-white/20 hover:bg-accent md:hover:bg-white/30",
       },
     },
     defaultVariants: {

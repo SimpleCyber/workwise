@@ -2,15 +2,15 @@
 
 import { useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  HashIcon, 
-  Search, 
-  Bell, 
-  Settings, 
-  MessageSquareText, 
-  Plus, 
-  Loader, 
-  TriangleAlert 
+import {
+  HashIcon,
+  Search,
+  Bell,
+  Settings,
+  MessageSquareText,
+  Plus,
+  Loader,
+  TriangleAlert,
 } from "lucide-react";
 
 import { useGetWorkspace } from "@/features/workspaces/api/use-get-workspace";
@@ -35,9 +35,10 @@ const WorkspaceIdPage = () => {
   const isMobile = useMobile();
   const [open, setOpen] = useCreateChannelModal();
 
-  const { data: workspaceInfo, isLoading: workspaceLoading } = useGetWorkspaceInfo({
-    id: workspaceId,
-  });
+  const { data: workspaceInfo, isLoading: workspaceLoading } =
+    useGetWorkspaceInfo({
+      id: workspaceId,
+    });
   const { data: workspace } = useGetWorkspace({ id: workspaceId });
   const { data: channels, isLoading: channelsLoading } = useGetChannels({
     workspaceId,
@@ -62,7 +63,7 @@ const WorkspaceIdPage = () => {
     setOpen,
     router,
     workspaceId,
-    isMobile
+    isMobile,
   ]);
 
   if (workspaceLoading || channelsLoading) {
@@ -87,10 +88,12 @@ const WorkspaceIdPage = () => {
       <div className="flex flex-col h-full bg-background pb-20">
         <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md px-4 py-4 flex items-center justify-between border-b">
           <div className="flex items-center gap-x-3">
-             <div className="size-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold border border-primary/20 shrink-0">
+            <div className="size-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold border border-primary/20 shrink-0">
               {workspace?.name?.charAt(0).toUpperCase()}
             </div>
-            <h1 className="text-xl font-bold truncate max-w-[200px]">{workspace?.name}</h1>
+            <h1 className="text-xl font-bold truncate max-w-[200px]">
+              {workspace?.name}
+            </h1>
           </div>
           <div className="flex items-center gap-x-1">
             <Button variant="ghost" size="icon" className="size-9">
@@ -104,10 +107,12 @@ const WorkspaceIdPage = () => {
 
         <div className="flex-1 overflow-y-auto px-2 pt-4">
           <div className="px-3 mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Conversations</h2>
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
+              Conversations
+            </h2>
+            <Button
+              variant="ghost"
+              size="icon"
               className="size-7 text-muted-foreground"
               onClick={() => setOpen(true)}
             >
