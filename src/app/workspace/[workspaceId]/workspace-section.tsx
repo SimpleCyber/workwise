@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 interface WorkspaceSectionProps {
   label: string;
-  hint: string;
+  hint?: string;
   onNew?: () => void;
 }
 
@@ -45,7 +45,7 @@ export const WorkspaceSection = ({
         </Button>
 
         {onNew && (
-          <Hint label={hint} side="top" align="center">
+          <ConditionalHint label={hint}>
             <Button
               onClick={onNew}
               variant="transparent"
@@ -54,11 +54,29 @@ export const WorkspaceSection = ({
             >
               <PlusIcon className="size-5" />
             </Button>
-          </Hint>
+          </ConditionalHint>
         )}
       </div>
 
       {on && children}
     </div>
+  );
+};
+
+const ConditionalHint = ({
+  label,
+  children,
+}: {
+  label?: string;
+  children: React.ReactNode;
+}) => {
+  if (!label) {
+    return <>{children}</>;
+  }
+
+  return (
+    <Hint label={label} side="top" align="center">
+      {children}
+    </Hint>
   );
 };

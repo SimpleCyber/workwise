@@ -96,6 +96,7 @@ import type { Id } from "../../../../convex/_generated/dataModel";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { useConfirm } from "@/hooks/use-confirm";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 import { ResponsiveModal } from "@/components/responsive-modal";
 import { PdfToolsPanel } from "./pdf-tools-panel";
 import { CsvViewer } from "@/features/data-room/components/csv-viewer";
@@ -1454,10 +1455,11 @@ const DataRoomWorkspacePage = () => {
                             )}
                           >
                             {file.fileType.startsWith("image/") ? (
-                              <img
-                                src={file.fileUrl || undefined}
-                                className="w-full h-full object-cover"
-                                alt=""
+                              <Image
+                                src={file.fileUrl || ""}
+                                fill
+                                className="object-cover"
+                                alt={file.fileName || "Image"}
                               />
                             ) : (
                               <div
@@ -1616,10 +1618,11 @@ const DataRoomWorkspacePage = () => {
                           {previewFile && (
                             <>
                               {previewFile.fileType.startsWith("image/") ? (
-                                <img
-                                  src={previewFile.fileUrl}
+                                <Image
+                                  src={previewFile.fileUrl || ""}
                                   alt={previewFile.fileName}
-                                  className="max-w-full max-h-full object-contain"
+                                  fill
+                                  className="object-contain"
                                 />
                               ) : previewFile.fileType === "application/pdf" ? (
                                 <iframe
