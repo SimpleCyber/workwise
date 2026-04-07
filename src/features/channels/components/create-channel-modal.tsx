@@ -5,13 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ResponsiveModal } from "@/components/responsive-modal";
 import { Input } from "@/components/ui/input";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 
@@ -60,33 +54,28 @@ export const CreateChannelModal = () => {
   };
 
   return (
-    <Dialog open={open || isPending} onOpenChange={handleClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add a channel</DialogTitle>
-          <DialogDescription>
-            Channels are where your team communicates. They are best when
-            organized around a topic.
-          </DialogDescription>
-        </DialogHeader>
+    <ResponsiveModal
+      open={open || isPending}
+      onOpenChange={handleClose}
+      title="Add a channel"
+      description="Channels are where your team communicates. They are best when organized around a topic."
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input
+          value={name}
+          onChange={handleChange}
+          disabled={isPending}
+          required
+          autoFocus
+          minLength={3}
+          maxLength={20}
+          placeholder="e.g. plan-budget"
+        />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            value={name}
-            onChange={handleChange}
-            disabled={isPending}
-            required
-            autoFocus
-            minLength={3}
-            maxLength={20}
-            placeholder="e.g. plan-budget"
-          />
-
-          <div className="flex justify-end">
-            <Button disabled={isPending}>Create</Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        <div className="flex justify-end">
+          <Button disabled={isPending}>Create</Button>
+        </div>
+      </form>
+    </ResponsiveModal>
   );
 };

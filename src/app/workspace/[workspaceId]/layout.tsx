@@ -33,6 +33,7 @@ const WorkspaceIdLayout = ({ children }: Readonly<PropsWithChildren>) => {
         autoSaveId="woodls-workspace-layout"
         sidebarContent={<WorkspaceSidebarContent />}
         rightPanel={rightPanelContent}
+        onClose={onClose}
       >
         {children}
       </WorkspaceLayout>

@@ -29,7 +29,7 @@ export const WorkspaceSection = ({
         <Button
           onClick={toggle}
           variant="transparent"
-          className="size-6 shrink-0 p-0.5 text-sm text-[#F9EDFFCC]"
+          className="size-6 shrink-0 p-0.5 text-sm text-muted-foreground md:text-[#F9EDFFCC]"
         >
           <FaCaretDown
             className={cn("size-4 transition-transform", !on && "-rotate-90")}
@@ -39,7 +39,7 @@ export const WorkspaceSection = ({
         <Button
           variant="transparent"
           size="sm"
-          className="group h-[28px] items-center justify-start overflow-hidden px-1.5 text-sm text-[#F9EDFFCC]"
+          className="group h-[28px] items-center justify-start overflow-hidden px-1.5 text-sm text-muted-foreground md:text-[#F9EDFFCC]"
         >
           <span className="truncate">{label}</span>
         </Button>
@@ -50,7 +50,7 @@ export const WorkspaceSection = ({
               onClick={onNew}
               variant="transparent"
               size="iconSm"
-              className="ml-auto size-6 shrink-0 p-0.5 text-sm text-[#F9EDFFCC] opacity-0 transition-opacity group-hover:opacity-100"
+              className="ml-auto size-6 shrink-0 p-0.5 text-sm text-muted-foreground md:text-[#F9EDFFCC] opacity-0 transition-opacity group-hover:opacity-100"
             >
               <PlusIcon className="size-5" />
             </Button>

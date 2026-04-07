@@ -4,14 +4,7 @@ import { CopyIcon, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ResponsiveModal, ModalClose } from "@/components/responsive-modal";
 import { useNewJoinCode } from "@/features/workspaces/api/use-new-join-code";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
@@ -70,46 +63,42 @@ export const InviteModal = ({
     <>
       <ConfirmDialog />
 
-      <Dialog open={open || isPending} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Invite people to {name}</DialogTitle>
-            <DialogDescription>
-              Use the code below to invite people to your workspace.
-            </DialogDescription>
-          </DialogHeader>
+      <ResponsiveModal
+        open={open || isPending}
+        onOpenChange={setOpen}
+        title={`Invite people to ${name}`}
+        description="Use the code below to invite people to your workspace."
+      >
+        <div className="flex flex-col items-center justify-center gap-y-4 py-10">
+          <p className="text-4xl font-bold uppercase tracking-widest">
+            {joinCode}
+          </p>
 
-          <div className="flex flex-col items-center justify-center gap-y-4 py-10">
-            <p className="text-4xl font-bold uppercase tracking-widest">
-              {joinCode}
-            </p>
+          <Button
+            disabled={isPending}
+            onClick={handleCopy}
+            variant="ghost"
+            size="sm"
+          >
+            Copy link <CopyIcon className="ml-2 size-4" />
+          </Button>
+        </div>
 
-            <Button
-              disabled={isPending}
-              onClick={handleCopy}
-              variant="ghost"
-              size="sm"
-            >
-              Copy link <CopyIcon className="ml-2 size-4" />
-            </Button>
-          </div>
+        <div className="flex w-full items-center justify-between">
+          <Button
+            disabled={isPending}
+            onClick={handleNewCode}
+            variant="outline"
+          >
+            New code
+            <RefreshCcw className="ml-2 size-4" />
+          </Button>
 
-          <div className="flex w-full items-center justify-between">
-            <Button
-              disabled={isPending}
-              onClick={handleNewCode}
-              variant="outline"
-            >
-              New code
-              <RefreshCcw className="ml-2 size-4" />
-            </Button>
-
-            <DialogClose asChild>
-              <Button disabled={isPending}>Close</Button>
-            </DialogClose>
-          </div>
-        </DialogContent>
-      </Dialog>
+          <ModalClose>
+            <Button disabled={isPending}>Close</Button>
+          </ModalClose>
+        </div>
+      </ResponsiveModal>
     </>
   );
 };

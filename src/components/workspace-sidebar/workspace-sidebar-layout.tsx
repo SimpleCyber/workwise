@@ -25,7 +25,14 @@ interface WorkspaceLayoutProps extends PropsWithChildren {
   rightPanelMinSize?: number;
   rightPanelDefaultSize?: number;
   heightOffset?: string;
+  onClose?: () => void;
 }
+
+import { useMobile } from "@/hooks/use-mobile";
+import {
+  Drawer,
+  DrawerContent,
+} from "@/components/ui/drawer";
 
 const WorkspaceLayout = ({
   children,
@@ -42,7 +49,9 @@ const WorkspaceLayout = ({
   rightPanelMinSize = 20,
   rightPanelDefaultSize = 29,
   heightOffset = "0px",
+  onClose,
 }: WorkspaceLayoutProps) => {
+  const isMobile = useMobile();
   const { leftPanelRef, isCollapsed, togglePanel, handlePanelResize } =
     useWorkspacePanel(defaultPanelSize);
 
@@ -93,6 +102,26 @@ const WorkspaceLayout = ({
               >
                 {rightPanel}
               </ResizablePanel>
+
+              {/* Mobile Drawer for Right Panel (Threads/Profiles) */}
+              {isMobile && (
+                <Drawer 
+                  open={!!rightPanel} 
+                  onOpenChange={(open) => {
+                    if (!open && onClose) {
+                      onClose();
+                    }
+                  }}
+                >
+                  <DrawerContent className="h-[92vh]">
+                    <div className="h-full overflow-y-auto pt-2">
+                       {/* Handle for visual indicator (drawer style) */}
+                      <div className="mx-auto w-12 h-1.5 rounded-full bg-muted mb-4 shrink-0" />
+                      {rightPanel}
+                    </div>
+                  </DrawerContent>
+                </Drawer>
+              )}
             </>
           )}
         </ResizablePanelGroup>
