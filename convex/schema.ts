@@ -377,6 +377,15 @@ const schema = defineSchema({
     workspaceId: v.id("workspaces"),
     assignedToId: v.optional(v.id("members")),
     assignmentStatus: v.optional(v.union(v.literal("assigned"), v.literal("unassigned"))),
+    stage: v.optional(v.union(
+      v.literal("new"),
+      v.literal("contacted"),
+      v.literal("rejected"),
+      v.literal("retry"),
+      v.literal("scheduled"),
+      v.literal("won"),
+      v.literal("lost")
+    )),
     status: v.optional(v.string()),       // Legacy field
     isDiscarded: v.optional(v.boolean()),
     isArchived: v.optional(v.boolean()),  // Legacy field
@@ -386,6 +395,41 @@ const schema = defineSchema({
     .index("by_board_id", ["boardId"])
     .index("by_workspace_id", ["workspaceId"])
     .index("by_assigned_to", ["assignedToId"]),
+    
+  callLogs: defineTable({
+    leadId: v.id("salesLeads"),
+    agentId: v.id("members"),
+    disposition: v.union(
+      v.literal("rejected"),
+      v.literal("no_answer"),
+      v.literal("retry_scheduled"),
+      v.literal("meeting_scheduled"),
+      v.literal("won"),
+      v.literal("lost")
+    ),
+    notes: v.optional(v.string()),
+    nextActionAt: v.optional(v.number()),
+    timestamp: v.number(),
+  })
+    .index("by_lead", ["leadId"])
+    .index("by_agent", ["agentId"]),
+
+  clients: defineTable({
+    originalLeadId: v.optional(v.id("salesLeads")),
+    name: v.string(),
+    company: v.optional(v.string()),
+    contactEmail: v.optional(v.string()),
+    contactPhone: v.optional(v.string()),
+    workspaceId: v.id("workspaces"),
+    accountOwnerId: v.id("members"),
+    contractValue: v.optional(v.number()),
+    renewalDate: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_owner", ["accountOwnerId"]),
+
   dataRoomFiles: defineTable({
     workspaceId: v.id("workspaces"),
     uploaderId: v.id("members"),

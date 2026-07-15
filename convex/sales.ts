@@ -44,6 +44,15 @@ export const getLeads = query({
   },
 });
 
+export const getLead = query({
+  args: { leadId: v.id("salesLeads") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Unauthorized");
+    return await ctx.db.get(args.leadId);
+  }
+});
+
 export const addLead = mutation({
   args: {
     boardId: v.id("projectBoards"),
@@ -178,4 +187,86 @@ export const discardLead = mutation({
       updatedAt: Date.now(),
     });
   },
+});
+
+export const getCallLogs = query({
+  args: {
+    leadId: v.id("salesLeads")
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+
+    const logs = await ctx.db
+      .query("callLogs")
+      .withIndex("by_lead", (q) => q.eq("leadId", args.leadId))
+      .order("desc")
+      .collect();
+
+    return Promise.all(
+      logs.map(async (log) => {
+        const agent = await ctx.db.get(log.agentId);
+        const user = agent ? await ctx.db.get(agent.userId) : null;
+        return {
+          ...log,
+          agentName: user?.name || "Unknown",
+          agentAvatar: user?.image || null
+        };
+      })
+    );
+  }
+});
+
+export const logCall = mutation({
+  args: {
+    leadId: v.id("salesLeads"),
+    disposition: v.union(
+      v.literal("rejected"),
+      v.literal("no_answer"),
+      v.literal("retry_scheduled"),
+      v.literal("meeting_scheduled"),
+      v.literal("won"),
+      v.literal("lost")
+    ),
+    notes: v.optional(v.string()),
+    nextActionAt: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Unauthorized");
+
+    const lead = await ctx.db.get(args.leadId);
+    if (!lead) throw new Error("Lead not found");
+
+    const member = await ctx.db
+      .query("members")
+      .withIndex("by_workspace_id_user_id", (q) =>
+        q.eq("workspaceId", lead.workspaceId).eq("userId", userId)
+      )
+      .unique();
+
+    if (!member) throw new Error("Member not found");
+
+    const now = Date.now();
+    await ctx.db.insert("callLogs", {
+      leadId: args.leadId,
+      agentId: member._id,
+      disposition: args.disposition,
+      notes: args.notes,
+      nextActionAt: args.nextActionAt,
+      timestamp: now,
+    });
+
+    let nextStage: any = lead.stage;
+    if (args.disposition === "rejected" || args.disposition === "lost") nextStage = "rejected";
+    else if (args.disposition === "retry_scheduled") nextStage = "retry";
+    else if (args.disposition === "meeting_scheduled") nextStage = "scheduled";
+    else if (args.disposition === "won") nextStage = "won";
+    else nextStage = "contacted";
+
+    await ctx.db.patch(args.leadId, {
+      stage: nextStage,
+      updatedAt: now,
+    });
+  }
 });

@@ -29,11 +29,17 @@ import {
   Check,
   Loader2,
   UserMinus,
+  Clock,
+  Calendar,
+  CheckCircle2,
+  XCircle,
+  Sparkles
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCurrentMember } from "@/features/members/api/use-current-member";
 import { Hint } from "@/components/hint";
 import { parsePhoneNumberFromString } from "libphonenumber-js/min";
+import { LeadDetailDrawer } from "./lead-detail-drawer";
 
 const URL_REGEX = /(https?:\/\/[^\s]+)/g;
 
@@ -46,6 +52,7 @@ export function SalesPipelineBoard({
   boardId,
   workspaceId,
 }: SalesPipelineBoardProps) {
+  const [selectedLeadId, setSelectedLeadId] = useState<Id<"salesLeads"> | null>(null);
   const { data: currentMember } = useCurrentMember({ workspaceId });
 
   const leads = useQuery(api.sales.getLeads, { boardId });
@@ -146,6 +153,7 @@ export function SalesPipelineBoard({
                 onUnassign={handleUnassignLead}
                 onDiscard={handleDiscard}
                 onUpdateLead={updateLead}
+                onOpenDrawer={(id: Id<"salesLeads">) => setSelectedLeadId(id)}
               />
             ))}
             {leads.length === 0 && (
@@ -161,6 +169,11 @@ export function SalesPipelineBoard({
           </TableBody>
         </Table>
       </div>
+      
+      <LeadDetailDrawer 
+        leadId={selectedLeadId} 
+        onClose={() => setSelectedLeadId(null)} 
+      />
     </div>
   );
 }
@@ -172,6 +185,7 @@ function LeadRow({
   onUnassign,
   onDiscard,
   onUpdateLead,
+  onOpenDrawer,
 }: any) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -247,24 +261,30 @@ function LeadRow({
   return (
     <TableRow className="hover:bg-muted/30 transition-colors">
       <TableCell className="w-[80px] text-center align-top pt-4">
-        {lead.assignmentStatus === "assigned" && lead.assignedUser ? (
-          <Hint label={lead.assignedUser.name}>
-            <div className="flex justify-center">
-              <Avatar className="size-8 cursor-pointer">
-                <AvatarImage src={lead.assignedUser.avatar} />
-                <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
-                  {lead.assignedUser.name.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-            </div>
-          </Hint>
-        ) : (
-          <Hint label="Unassigned">
-            <div className="mx-auto size-8 rounded-full flex items-center justify-center bg-muted/50 hover:bg-muted transition-colors cursor-help">
-              <UserPlus className="size-4 text-muted-foreground" />
-            </div>
-          </Hint>
-        )}
+        {(() => {
+          let icon = <Sparkles className="size-4 text-blue-500" />;
+          let label = "New";
+          
+          if (lead.stage === "retry") {
+            icon = <Clock className="size-4 text-amber-500" />; label = "Retry";
+          } else if (lead.stage === "scheduled") {
+            icon = <Calendar className="size-4 text-blue-500" />; label = "Scheduled";
+          } else if (lead.stage === "won") {
+            icon = <CheckCircle2 className="size-4 text-emerald-500" />; label = "Won";
+          } else if (lead.stage === "rejected" || lead.stage === "lost") {
+            icon = <XCircle className="size-4 text-red-500" />; label = "Rejected";
+          } else if (lead.stage === "contacted") {
+            icon = <Check className="size-4 text-muted-foreground" />; label = "Contacted";
+          }
+
+          return (
+            <Hint label={label}>
+              <div className="mx-auto size-8 rounded-full flex items-center justify-center bg-muted/50 transition-colors cursor-help">
+                {icon}
+              </div>
+            </Hint>
+          );
+        })()}
       </TableCell>
 
       <TableCell className="w-[180px] font-medium text-sm align-top pt-4">
@@ -399,14 +419,22 @@ function LeadRow({
               </Button>
             </Hint>
           ) : (
-            <Hint label="Remove assignment">
+            <Hint label={`Assigned to ${lead.assignedUser?.name || "User"} - Click to unassign`}>
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-8 text-muted-foreground hover:text-orange-500 transition-colors flex-shrink-0"
+                className="size-8 rounded-full flex-shrink-0 relative group p-0 overflow-hidden"
                 onClick={() => onUnassign(lead._id)}
               >
-                <UserMinus className="size-4" />
+                <Avatar className="size-8">
+                  <AvatarImage src={lead.assignedUser?.avatar} />
+                  <AvatarFallback className="text-[10px] font-semibold bg-primary/10 text-primary">
+                    {lead.assignedUser?.name?.charAt(0) || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                  <UserMinus className="size-4 text-white" />
+                </div>
               </Button>
             </Hint>
           )}
@@ -427,6 +455,7 @@ function LeadRow({
               variant="ghost"
               size="icon"
               className="size-8 text-primary bg-primary/5 hover:bg-primary/20 transition-colors ml-1 shadow-sm flex-shrink-0"
+              onClick={() => onOpenDrawer(lead._id)}
             >
               <ArrowRight className="size-4" />
             </Button>
