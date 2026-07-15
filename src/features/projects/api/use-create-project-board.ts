@@ -10,6 +10,8 @@ type RequestType = {
   name: string;
   description?: string;
   background?: string;
+  projectType?: string;
+  columns?: string[];
   workspaceId: Id<"workspaces">;
 };
 

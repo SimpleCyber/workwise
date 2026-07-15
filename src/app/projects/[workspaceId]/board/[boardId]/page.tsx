@@ -9,8 +9,7 @@ import { useState, useRef, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProjectKanbanBoard } from "@/features/projects/components/project-kanban-board";
 import { useGetWorkspaceMembers } from "@/features/projects/api/use-get-workspace-members";
-import AIAssistantUI from "@/features/projects/components/chatbot/AIAssistantUI";
-import { DragDropContext, Droppable, type DropResult } from "@hello-pangea/dnd";
+import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
 import { useUpdateProjectTask } from "@/features/projects/api/use-update-project-task";
 import { toast } from "sonner";
 
@@ -40,16 +39,6 @@ export default function ProjectBoardPage({
     [],
   );
   const { mutate: updateTask } = useUpdateProjectTask();
-  const lastDragPayloadRef = useRef<any | null>(null);
-
-  useEffect(() => {
-    function handleDragStartEvt(ev: any) {
-      lastDragPayloadRef.current = ev?.detail || null;
-    }
-    window.addEventListener("kanban:task-drag-start", handleDragStartEvt);
-    return () =>
-      window.removeEventListener("kanban:task-drag-start", handleDragStartEvt);
-  }, []);
 
   function handleDragEnd(result: DropResult) {
     const { destination, source, draggableId, type } = result;
@@ -61,20 +50,6 @@ export default function ProjectBoardPage({
       return;
 
     if (type === "task") {
-      if (destination.droppableId === "chat-dropzone") {
-        const payload = lastDragPayloadRef.current;
-        const cached = (window as any).__lastDraggedTask;
-        const detail =
-          (payload?.type === "project-task" && payload?.task && payload) ||
-          (cached
-            ? { type: "project-task", task: cached }
-            : { type: "project-task", task: { taskId: String(draggableId) } });
-
-        window.dispatchEvent(
-          new CustomEvent("kanban:task-drop-to-chat", { detail }),
-        );
-        return;
-      }
 
       const taskId = draggableId as Id<"projectTasks">;
       if (source.droppableId !== destination.droppableId) {
@@ -179,39 +154,7 @@ export default function ProjectBoardPage({
 
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex overflow-hidden w-full h-full">
-          <Droppable droppableId="chat-dropzone" type="task">
-            {(provided, snapshot) => (
-              <div
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-                className={
-                  "basis-[50%] flex-shrink-0 flex-grow border-r-[3px] border-gray-200 " +
-                  (snapshot.isDraggingOver ? "bg-blue-50" : "")
-                }
-              >
-                {currentUser ? (
-                  <AIAssistantUI
-                    workspaceId={workspaceId}
-                    boardId={boardId}
-                    currentUserId={currentUser._id} // ✅ from useCurrentUser
-                    currentUser={{
-                      name: currentUser.name,
-                      email: currentUser.email,
-                      image: currentUser.image,
-                    }}
-                    projectDetails={projectDetails}
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                    Loading your chat session...
-                  </div>
-                )}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-
-          <div className="basis-[50%] flex-shrink-0 flex-grow">
+          <div className="w-full flex-shrink-0 flex-grow h-full bg-background">
             <ProjectKanbanBoard
               boardId={boardId}
               lists={lists || []}

@@ -177,6 +177,40 @@ export const ProjectKanbanBoard = ({
       return;
     }
 
+    if (type === "list") {
+      const listId = draggableId as Id<"projectLists">;
+      const sortedListsArray = [...lists]
+        .filter((list) => !list.isArchived)
+        .sort((a, b) => a.position - b.position);
+
+      const startIndex = source.index;
+      const endIndex = destination.index;
+
+      let newPosition = 0;
+      if (endIndex === 0) {
+        newPosition = sortedListsArray[0].position - 1000;
+      } else if (endIndex === sortedListsArray.length - 1) {
+        newPosition = sortedListsArray[sortedListsArray.length - 1].position + 1000;
+      } else {
+        const itemBefore = sortedListsArray[endIndex < startIndex ? endIndex - 1 : endIndex];
+        const itemAfter = sortedListsArray[endIndex < startIndex ? endIndex : endIndex + 1];
+        newPosition = (itemBefore.position + itemAfter.position) / 2;
+      }
+
+      updateList(
+        {
+          listId,
+          position: newPosition,
+        },
+        {
+          onError: (error) => {
+            toast.error(error.message || "Failed to reorder list");
+          },
+        }
+      );
+      return;
+    }
+
     if (type === "task") {
       const taskId = draggableId as Id<"projectTasks">;
       // Moving to different list
@@ -319,6 +353,8 @@ export const ProjectKanbanBoard = ({
               />
             ))}
             {provided.placeholder}
+            
+
           </div>
         )}
       </Droppable>
@@ -441,7 +477,10 @@ const ProjectKanbanList = ({
         >
           <Card className="bg-muted/50 border-border">
             <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
+              <div 
+                className="flex items-center justify-between cursor-grab active:cursor-grabbing"
+                {...provided.dragHandleProps}
+              >
                 <div className="flex items-center gap-2 flex-1">
                   {editingListId === list._id ? (
                     <Input
@@ -467,7 +506,14 @@ const ProjectKanbanList = ({
                       autoFocus
                     />
                   ) : (
-                    <h3 className="font-medium text-sm flex justify-center">
+                    <h3 
+                      className="font-medium text-sm flex justify-center cursor-pointer hover:bg-muted p-1 rounded transition-colors"
+                      onClick={() => {
+                        setEditingListId(list._id);
+                        setEditingListName(list.name);
+                      }}
+                      title="Click to rename list"
+                    >
                       {list.name}
                       {sortedTasks.length > 0 && (
                         <div className="text-xs text-muted-foreground ml-2 border-2 border-border rounded-sm px-1 bg-muted">
@@ -492,7 +538,90 @@ const ProjectKanbanList = ({
                       <Loader className="size-4 animate-spin" />
                     </div>
                   ) : (
-                    sortedTasks.map((task, taskIndex) => (
+                    <>
+                      {/* Task form placed strictly at the top of the first list (index === 0) */}
+                      {index === 0 && (
+                        isAddingTask ? (
+                          <div className="space-y-2 mb-3">
+                            <Input
+                              value={newTaskTitle}
+                              onChange={(e) => setNewTaskTitle(e.target.value)}
+                              placeholder="Enter task title..."
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  onCreateTask();
+                                } else if (e.key === "Escape") {
+                                  onCancelAddTask();
+                                }
+                              }}
+                              autoFocus
+                              disabled={isCreatingTask}
+                            />
+                            <div className="flex items-center gap-2">
+                              <Select
+                                value={selectedAssignee ?? ""}
+                                onValueChange={(value) =>
+                                  setSelectedAssignee(value as Id<"members">)
+                                }
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Assign to..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {members.map((member) => (
+                                    <SelectItem key={member._id} value={member._id}>
+                                      <div className="flex items-center gap-2">
+                                        <Avatar className="w-5 h-5">
+                                          <AvatarImage
+                                            src={
+                                              member.user?.image || "/placeholder.svg"
+                                            }
+                                          />
+                                          <AvatarFallback className="text-xs">
+                                            {member.user?.name
+                                              ?.charAt(0)
+                                              .toUpperCase()}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                        <span>{member.user?.name}</span>
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={onCreateTask}
+                                disabled={!newTaskTitle.trim() || isCreatingTask}
+                              >
+                                Add task
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={onCancelAddTask}
+                                disabled={isCreatingTask}
+                              >
+                                <X className="size-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full justify-start text-muted-foreground hover:text-foreground mb-2"
+                            onClick={onAddTask}
+                          >
+                            <Plus className="size-4 mr-2" />
+                            Add a task
+                          </Button>
+                        )
+                      )}
+                      
+                      {sortedTasks.map((task, taskIndex) => (
                       <Draggable
                         key={task._id}
                         draggableId={task._id}
@@ -584,88 +713,10 @@ const ProjectKanbanList = ({
                           </div>
                         )}
                       </Draggable>
-                    ))
+                    ))}
+                    </>
                   )}
                   {provided.placeholder}
-                  {/* Keep existing task creation form */}
-                  {isAddingTask ? (
-                    <div className="space-y-2">
-                      <Input
-                        value={newTaskTitle}
-                        onChange={(e) => setNewTaskTitle(e.target.value)}
-                        placeholder="Enter task title..."
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            onCreateTask();
-                          } else if (e.key === "Escape") {
-                            onCancelAddTask();
-                          }
-                        }}
-                        autoFocus
-                        disabled={isCreatingTask}
-                      />
-                      <div className="flex items-center gap-2">
-                        <Select
-                          value={selectedAssignee ?? ""}
-                          onValueChange={(value) =>
-                            setSelectedAssignee(value as Id<"members">)
-                          }
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Assign to..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {members.map((member) => (
-                              <SelectItem key={member._id} value={member._id}>
-                                <div className="flex items-center gap-2">
-                                  <Avatar className="w-5 h-5">
-                                    <AvatarImage
-                                      src={
-                                        member.user?.image || "/placeholder.svg"
-                                      }
-                                    />
-                                    <AvatarFallback className="text-xs">
-                                      {member.user?.name
-                                        ?.charAt(0)
-                                        .toUpperCase()}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <span>{member.user?.name}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={onCreateTask}
-                          disabled={!newTaskTitle.trim() || isCreatingTask}
-                        >
-                          Add task
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={onCancelAddTask}
-                          disabled={isCreatingTask}
-                        >
-                          <X className="size-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start text-muted-foreground hover:text-foreground"
-                      onClick={onAddTask}
-                    >
-                      <Plus className="size-4 mr-2" />
-                      Add a task
-                    </Button>
-                  )}
                 </CardContent>
               )}
             </Droppable>

@@ -8,6 +8,8 @@ export const createProjectBoard = mutation({
     name: v.string(),
     description: v.optional(v.string()),
     background: v.optional(v.string()),
+    projectType: v.optional(v.string()),
+    columns: v.optional(v.array(v.string())),
     workspaceId: v.id("workspaces"),
   },
   handler: async (ctx, args) => {
@@ -31,6 +33,7 @@ export const createProjectBoard = mutation({
       name: args.name,
       description: args.description,
       background: args.background,
+      projectType: args.projectType as any,
       boardCode,
       memberId: member._id,
       workspaceId: args.workspaceId,
@@ -40,36 +43,23 @@ export const createProjectBoard = mutation({
       updatedAt: Date.now(),
     });
     // Create default lists
-    await ctx.db.insert("projectLists", {
-      name: "To Do",
-      boardId,
-      memberId: member._id,
-      workspaceId: args.workspaceId,
-      position: 0,
-      isArchived: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    });
-    await ctx.db.insert("projectLists", {
-      name: "Hold Task",
-      boardId,
-      memberId: member._id,
-      workspaceId: args.workspaceId,
-      position: 2,
-      isArchived: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    });
-    await ctx.db.insert("projectLists", {
-      name: "Done",
-      boardId,
-      memberId: member._id,
-      workspaceId: args.workspaceId,
-      position: 4,
-      isArchived: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    });
+    const listNames = args.columns && args.columns.length > 0
+      ? args.columns
+      : ["To Do", "In Progress", "On Hold", "Done"];
+
+    for (let i = 0; i < listNames.length; i++) {
+      await ctx.db.insert("projectLists", {
+        name: listNames[i],
+        boardId,
+        memberId: member._id,
+        workspaceId: args.workspaceId,
+        position: i,
+        isArchived: false,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    }
+
     return boardId;
   },
 });
@@ -226,7 +216,9 @@ export const createProjectTask = mutation({
       .query("projectTasks")
       .withIndex("by_list_id", (q) => q.eq("listId", args.listId))
       .collect();
-    const maxPosition = Math.max(...tasks.map((t) => t.position), -1);
+    const minPosition = tasks.length > 0 
+      ? Math.min(...tasks.map((t) => t.position)) 
+      : 0;
 
     const taskId = await ctx.db.insert("projectTasks", {
       title: args.title,
@@ -237,7 +229,7 @@ export const createProjectTask = mutation({
       assignedToId: args.assignedToId || member._id, // Self-assign if no assignee specified
       assignedById: member._id,
       workspaceId: list.workspaceId,
-      position: maxPosition + 1,
+      position: minPosition - 1,
       isCompleted: false,
       isArchived: false,
       priority: "medium",
