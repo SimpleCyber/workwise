@@ -32,6 +32,7 @@ import type * as notifications from "../notifications.js";
 import type * as projectChats from "../projectChats.js";
 import type * as projects from "../projects.js";
 import type * as reactions from "../reactions.js";
+import type * as sales from "../sales.js";
 import type * as search from "../search.js";
 import type * as todos from "../todos.js";
 import type * as tree from "../tree.js";
@@ -67,6 +68,7 @@ declare const fullApi: ApiFromModules<{
   projectChats: typeof projectChats;
   projects: typeof projects;
   reactions: typeof reactions;
+  sales: typeof sales;
   search: typeof search;
   todos: typeof todos;
   tree: typeof tree;

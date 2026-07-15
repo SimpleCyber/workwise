@@ -366,6 +366,26 @@ const schema = defineSchema({
       searchField: "title",
       filterFields: ["workspaceId", "boardId"],
     }),
+  salesLeads: defineTable({
+    name: v.optional(v.string()),         // New field, made optional for backward compatibility
+    contactName: v.optional(v.string()),  // Legacy field
+    company: v.optional(v.string()),      // Legacy field
+    phone: v.string(),
+    email: v.optional(v.string()),
+    description: v.optional(v.string()),
+    boardId: v.id("projectBoards"),
+    workspaceId: v.id("workspaces"),
+    assignedToId: v.optional(v.id("members")),
+    assignmentStatus: v.optional(v.union(v.literal("assigned"), v.literal("unassigned"))),
+    status: v.optional(v.string()),       // Legacy field
+    isDiscarded: v.optional(v.boolean()),
+    isArchived: v.optional(v.boolean()),  // Legacy field
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_board_id", ["boardId"])
+    .index("by_workspace_id", ["workspaceId"])
+    .index("by_assigned_to", ["assignedToId"]),
   dataRoomFiles: defineTable({
     workspaceId: v.id("workspaces"),
     uploaderId: v.id("members"),
