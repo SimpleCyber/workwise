@@ -88,8 +88,15 @@ const ProjectsWorkspacePage = () => {
   const [editingBoardId, setEditingBoardId] =
     useState<Id<"projectBoards"> | null>(null);
   const [view, setView] = useState<"graph" | "list">("graph");
-  const [projectType, setProjectType] = useState<"development" | "sales">("development");
-  const [columns, setColumns] = useState<string[]>(["To Do", "In Progress", "On Hold", "Done"]);
+  const [projectType, setProjectType] = useState<"development" | "sales">(
+    "development",
+  );
+  const [columns, setColumns] = useState<string[]>([
+    "To Do",
+    "In Progress",
+    "On Hold",
+    "Done",
+  ]);
   const [newColumnName, setNewColumnName] = useState("");
 
   const MAX_NAME_WORDS = 10;
@@ -232,215 +239,239 @@ const ProjectsWorkspacePage = () => {
                 New Project Board
               </Button>
             </DialogTrigger>
-          <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-semibold">
-                {editingBoardId
-                  ? "Edit Project Board"
-                  : "Create New Project Board"}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="flex flex-col mt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:divide-x pb-6">
-                {/* Left Partition: Basic Information */}
-                <div className="space-y-6 md:pr-4">
-                  <div className="space-y-3">
-                    <Label
-                      htmlFor="name"
-                      className="text-sm font-medium text-foreground"
-                    >
-                      Project Name
-                    </Label>
-                    <Input
-                      id="name"
-                      value={name}
-                      onChange={(e) => {
-                        const input = e.target.value;
-                        const words = input.trim().split(/\s+/).filter(Boolean);
-                        if (words.length <= MAX_NAME_WORDS) {
-                          setName(input);
-                        } else {
-                          toast.error(
-                            `Title can not exceed ${MAX_NAME_WORDS} words.`,
-                          );
-                        }
-                      }}
-                      placeholder="Enter project name..."
-                      disabled={isCreatingBoard || isUpdatingBoard}
-                      className="h-11 border-border focus:border-gray-500 focus:ring-gray-500/20"
-                    />
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <FileText className="size-3" />
-                      {name.trim().split(/\s+/).filter(Boolean).length} /{" "}
-                      {MAX_NAME_WORDS} words
-                    </p>
-                  </div>
-                  <div className="space-y-3">
-                    <Label
-                      htmlFor="description"
-                      className="text-sm font-medium text-foreground"
-                    >
-                      Description (Optional)
-                    </Label>
-                    <Textarea
-                      id="description"
-                      value={description}
-                      onChange={(e) => {
-                        const input = e.target.value;
-                        const words = input.trim().split(/\s+/).filter(Boolean);
-                        if (words.length <= MAX_DESCRIPTION_WORDS) {
-                          setDescription(input);
-                        } else {
-                          toast.error(
-                            `Description can not exceed ${MAX_DESCRIPTION_WORDS} words.`,
-                          );
-                        }
-                      }}
-                      placeholder="Enter project description..."
-                      disabled={isCreatingBoard || isUpdatingBoard}
-                      className="min-h-[100px] border-border focus:border-gray-500 focus:ring-gray-500/20 resize-none"
-                    />
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <FileText className="size-3" />
-                      {
-                        description.trim().split(/\s+/).filter(Boolean).length
-                      } / {MAX_DESCRIPTION_WORDS} words
-                    </p>
-                  </div>
-                </div>
-
-                {/* Right Partition: Project Type & Settings */}
-                <div className="space-y-6 pt-6 md:pt-0 md:pl-6">
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium text-foreground">
-                      Project Type
-                    </Label>
-                    <Select
-                      value={projectType}
-                      onValueChange={(val: "development" | "sales") =>
-                        setProjectType(val)
-                      }
-                      disabled={isCreatingBoard || isUpdatingBoard || !!editingBoardId}
-                    >
-                      <SelectTrigger className="h-11 border-border">
-                        <SelectValue placeholder="Select project type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="development">Development</SelectItem>
-                        <SelectItem value="sales">Sales (Cold Calling)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {projectType === "development" && !editingBoardId && (
-                    <div className="space-y-3 border-t pt-4">
-                      <Label className="text-sm font-medium text-foreground">
-                        Board Columns
+            <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-semibold">
+                  {editingBoardId
+                    ? "Edit Project Board"
+                    : "Create New Project Board"}
+                </DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="flex flex-col mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:divide-x pb-6">
+                  {/* Left Partition: Basic Information */}
+                  <div className="space-y-6 md:pr-4">
+                    <div className="space-y-3">
+                      <Label
+                        htmlFor="name"
+                        className="text-sm font-medium text-foreground"
+                      >
+                        Project Name
                       </Label>
-                      <p className="text-xs text-muted-foreground">
-                        Customize the columns for this project board. Once created, these cannot be edited here.
+                      <Input
+                        id="name"
+                        value={name}
+                        onChange={(e) => {
+                          const input = e.target.value;
+                          const words = input
+                            .trim()
+                            .split(/\s+/)
+                            .filter(Boolean);
+                          if (words.length <= MAX_NAME_WORDS) {
+                            setName(input);
+                          } else {
+                            toast.error(
+                              `Title can not exceed ${MAX_NAME_WORDS} words.`,
+                            );
+                          }
+                        }}
+                        placeholder="Enter project name..."
+                        disabled={isCreatingBoard || isUpdatingBoard}
+                        className="h-11 border-border focus:border-gray-500 focus:ring-gray-500/20"
+                      />
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <FileText className="size-3" />
+                        {name.trim().split(/\s+/).filter(Boolean).length} /{" "}
+                        {MAX_NAME_WORDS} words
                       </p>
-                      
-                      <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
-                        {columns.map((col, index) => (
-                          <div key={index} className="flex items-center gap-2 bg-muted/30 p-2 rounded-md border">
-                            <Input
-                              value={col}
-                              onChange={(e) => {
-                                const newCols = [...columns];
-                                newCols[index] = e.target.value;
-                                setColumns(newCols);
-                              }}
-                              className="h-8 bg-transparent border-0 focus-visible:ring-1 focus-visible:ring-gray-500/30"
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
-                              onClick={() => {
-                                setColumns(columns.filter((_, i) => i !== index));
-                              }}
-                            >
-                              <X className="size-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <Label
+                        htmlFor="description"
+                        className="text-sm font-medium text-foreground"
+                      >
+                        Description (Optional)
+                      </Label>
+                      <Textarea
+                        id="description"
+                        value={description}
+                        onChange={(e) => {
+                          const input = e.target.value;
+                          const words = input
+                            .trim()
+                            .split(/\s+/)
+                            .filter(Boolean);
+                          if (words.length <= MAX_DESCRIPTION_WORDS) {
+                            setDescription(input);
+                          } else {
+                            toast.error(
+                              `Description can not exceed ${MAX_DESCRIPTION_WORDS} words.`,
+                            );
+                          }
+                        }}
+                        placeholder="Enter project description..."
+                        disabled={isCreatingBoard || isUpdatingBoard}
+                        className="min-h-[100px] border-border focus:border-gray-500 focus:ring-gray-500/20 resize-none"
+                      />
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <FileText className="size-3" />
+                        {
+                          description.trim().split(/\s+/).filter(Boolean).length
+                        }{" "}
+                        / {MAX_DESCRIPTION_WORDS} words
+                      </p>
+                    </div>
+                  </div>
 
-                      <div className="flex gap-2">
-                        <Input
-                          value={newColumnName}
-                          onChange={(e) => setNewColumnName(e.target.value)}
-                          placeholder="Add new column..."
-                          className="h-9"
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
+                  {/* Right Partition: Project Type & Settings */}
+                  <div className="space-y-6 pt-6 md:pt-0 md:pl-6">
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium text-foreground">
+                        Project Type
+                      </Label>
+                      <Select
+                        value={projectType}
+                        onValueChange={(val: "development" | "sales") =>
+                          setProjectType(val)
+                        }
+                        disabled={
+                          isCreatingBoard || isUpdatingBoard || !!editingBoardId
+                        }
+                      >
+                        <SelectTrigger className="h-11 border-border">
+                          <SelectValue placeholder="Select project type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="development">
+                            Development
+                          </SelectItem>
+                          <SelectItem value="sales">
+                            Sales (Cold Calling)
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {projectType === "development" && !editingBoardId && (
+                      <div className="space-y-3 border-t pt-4">
+                        <Label className="text-sm font-medium text-foreground">
+                          Board Columns
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Customize the columns for this project board. Once
+                          created, these cannot be edited here.
+                        </p>
+
+                        <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                          {columns.map((col, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center gap-2 bg-muted/30 p-2 rounded-md border"
+                            >
+                              <Input
+                                value={col}
+                                onChange={(e) => {
+                                  const newCols = [...columns];
+                                  newCols[index] = e.target.value;
+                                  setColumns(newCols);
+                                }}
+                                className="h-8 bg-transparent border-0 focus-visible:ring-1 focus-visible:ring-gray-500/30"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+                                onClick={() => {
+                                  setColumns(
+                                    columns.filter((_, i) => i !== index),
+                                  );
+                                }}
+                              >
+                                <X className="size-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Input
+                            value={newColumnName}
+                            onChange={(e) => setNewColumnName(e.target.value)}
+                            placeholder="Add new column..."
+                            className="h-9"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                if (newColumnName.trim()) {
+                                  setColumns([
+                                    ...columns,
+                                    newColumnName.trim(),
+                                  ]);
+                                  setNewColumnName("");
+                                }
+                              }
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            className="h-9 shrink-0"
+                            onClick={() => {
                               if (newColumnName.trim()) {
                                 setColumns([...columns, newColumnName.trim()]);
                                 setNewColumnName("");
                               }
-                            }
-                          }}
-                        />
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          className="h-9 shrink-0"
-                          onClick={() => {
-                            if (newColumnName.trim()) {
-                              setColumns([...columns, newColumnName.trim()]);
-                              setNewColumnName("");
-                            }
-                          }}
-                        >
-                          <Plus className="size-4 mr-1.5" /> Add
-                        </Button>
+                            }}
+                          >
+                            <Plus className="size-4 mr-1.5" /> Add
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setOpen(false);
-                    setEditingBoardId(null);
-                    setName("");
-                    setDescription("");
-                    setProjectType("development");
-                    setColumns(["To Do", "In Progress", "On Hold", "Done"]);
-                    setNewColumnName("");
-                  }}
-                  disabled={isCreatingBoard || isUpdatingBoard}
-                  className="px-6 border-slate-200 text-slate-600 hover:bg-slate-50"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isCreatingBoard || isUpdatingBoard || !name.trim()}
-                  className="px-6 bg-gray-600 hover:bg-gray-700 text-white shadow-sm"
-                >
-                  {isCreatingBoard || isUpdatingBoard ? (
-                    <>
-                      <Loader className="size-4 mr-2 animate-spin" />
-                      {editingBoardId ? "Updating..." : "Creating..."}
-                    </>
-                  ) : editingBoardId ? (
-                    "Update Project Board"
-                  ) : (
-                    "Create Project Board"
-                  )}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+                <div className="flex justify-end gap-3 pt-4 border-t">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setOpen(false);
+                      setEditingBoardId(null);
+                      setName("");
+                      setDescription("");
+                      setProjectType("development");
+                      setColumns(["To Do", "In Progress", "On Hold", "Done"]);
+                      setNewColumnName("");
+                    }}
+                    disabled={isCreatingBoard || isUpdatingBoard}
+                    className="px-6 border-slate-200 text-slate-600 hover:bg-slate-50"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={
+                      isCreatingBoard || isUpdatingBoard || !name.trim()
+                    }
+                    className="px-6 bg-gray-600 hover:bg-gray-700 text-white shadow-sm"
+                  >
+                    {isCreatingBoard || isUpdatingBoard ? (
+                      <>
+                        <Loader className="size-4 mr-2 animate-spin" />
+                        {editingBoardId ? "Updating..." : "Creating..."}
+                      </>
+                    ) : editingBoardId ? (
+                      "Update Project Board"
+                    ) : (
+                      "Create Project Board"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 

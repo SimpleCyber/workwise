@@ -50,7 +50,6 @@ export default function ProjectBoardPage({
       return;
 
     if (type === "task") {
-
       const taskId = draggableId as Id<"projectTasks">;
       if (source.droppableId !== destination.droppableId) {
         const newListId = destination.droppableId as Id<"projectLists">;

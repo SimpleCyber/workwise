@@ -190,10 +190,13 @@ export const ProjectKanbanBoard = ({
       if (endIndex === 0) {
         newPosition = sortedListsArray[0].position - 1000;
       } else if (endIndex === sortedListsArray.length - 1) {
-        newPosition = sortedListsArray[sortedListsArray.length - 1].position + 1000;
+        newPosition =
+          sortedListsArray[sortedListsArray.length - 1].position + 1000;
       } else {
-        const itemBefore = sortedListsArray[endIndex < startIndex ? endIndex - 1 : endIndex];
-        const itemAfter = sortedListsArray[endIndex < startIndex ? endIndex : endIndex + 1];
+        const itemBefore =
+          sortedListsArray[endIndex < startIndex ? endIndex - 1 : endIndex];
+        const itemAfter =
+          sortedListsArray[endIndex < startIndex ? endIndex : endIndex + 1];
         newPosition = (itemBefore.position + itemAfter.position) / 2;
       }
 
@@ -206,7 +209,7 @@ export const ProjectKanbanBoard = ({
           onError: (error) => {
             toast.error(error.message || "Failed to reorder list");
           },
-        }
+        },
       );
       return;
     }
@@ -353,8 +356,6 @@ export const ProjectKanbanBoard = ({
               />
             ))}
             {provided.placeholder}
-            
-
           </div>
         )}
       </Droppable>
@@ -477,7 +478,7 @@ const ProjectKanbanList = ({
         >
           <Card className="bg-muted/50 border-border">
             <CardHeader className="pb-2">
-              <div 
+              <div
                 className="flex items-center justify-between cursor-grab active:cursor-grabbing"
                 {...provided.dragHandleProps}
               >
@@ -506,7 +507,7 @@ const ProjectKanbanList = ({
                       autoFocus
                     />
                   ) : (
-                    <h3 
+                    <h3
                       className="font-medium text-sm flex justify-center cursor-pointer hover:bg-muted p-1 rounded transition-colors"
                       onClick={() => {
                         setEditingListId(list._id);
@@ -540,8 +541,8 @@ const ProjectKanbanList = ({
                   ) : (
                     <>
                       {/* Task form placed strictly at the top of the first list (index === 0) */}
-                      {index === 0 && (
-                        isAddingTask ? (
+                      {index === 0 &&
+                        (isAddingTask ? (
                           <div className="space-y-2 mb-3">
                             <Input
                               value={newTaskTitle}
@@ -569,12 +570,16 @@ const ProjectKanbanList = ({
                                 </SelectTrigger>
                                 <SelectContent>
                                   {members.map((member) => (
-                                    <SelectItem key={member._id} value={member._id}>
+                                    <SelectItem
+                                      key={member._id}
+                                      value={member._id}
+                                    >
                                       <div className="flex items-center gap-2">
                                         <Avatar className="w-5 h-5">
                                           <AvatarImage
                                             src={
-                                              member.user?.image || "/placeholder.svg"
+                                              member.user?.image ||
+                                              "/placeholder.svg"
                                             }
                                           />
                                           <AvatarFallback className="text-xs">
@@ -594,7 +599,9 @@ const ProjectKanbanList = ({
                               <Button
                                 size="sm"
                                 onClick={onCreateTask}
-                                disabled={!newTaskTitle.trim() || isCreatingTask}
+                                disabled={
+                                  !newTaskTitle.trim() || isCreatingTask
+                                }
                               >
                                 Add task
                               </Button>
@@ -618,102 +625,110 @@ const ProjectKanbanList = ({
                             <Plus className="size-4 mr-2" />
                             Add a task
                           </Button>
-                        )
-                      )}
-                      
+                        ))}
+
                       {sortedTasks.map((task, taskIndex) => (
-                      <Draggable
-                        key={task._id}
-                        draggableId={task._id}
-                        index={taskIndex}
-                      >
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            className={snapshot.isDragging ? "rotate-2" : ""}
-                            onDragStart={(e) => {
-                              try {
-                                const payload = {
-                                  type: "project-task",
-                                  task: {
-                                    taskId: String(task._id),
-                                    taskCode: task.taskCode,
-                                    title: task.title,
-                                    description: task.description,
-                                    priority: task.priority,
-                                    dueDate: task.dueDate || null,
-                                    labels: Array.isArray(task.labels)
-                                      ? task.labels
-                                      : [],
-                                    boardId: String(task.boardId),
-                                    listId: String(task.listId),
-                                    assignedTo: task.assignedTo?.user
-                                      ? {
-                                          id: String(task.assignedTo.user._id),
-                                          name:
-                                            task.assignedTo.user.name || null,
-                                          email:
-                                            task.assignedTo.user.email || null,
-                                          image:
-                                            task.assignedTo.user.image || null,
-                                        }
-                                      : null,
-                                    assignedBy: task.assignedBy?.user
-                                      ? {
-                                          id: String(task.assignedBy.user._id),
-                                          name:
-                                            task.assignedBy.user.name || null,
-                                          email:
-                                            task.assignedBy.user.email || null,
-                                          image:
-                                            task.assignedBy.user.image || null,
-                                        }
-                                      : null,
-                                    createdBy: task.createdBy?.user
-                                      ? {
-                                          id: String(task.createdBy.user._id),
-                                          name:
-                                            task.createdBy.user.name || null,
-                                          email:
-                                            task.createdBy.user.email || null,
-                                          image:
-                                            task.createdBy.user.image || null,
-                                        }
-                                      : null,
-                                  },
-                                };
-                                const json = JSON.stringify(payload);
-                                // Provide both MIME types for broad browser support
-                                e.dataTransfer?.setData(
-                                  "application/json",
-                                  json,
-                                );
-                                e.dataTransfer?.setData("text/plain", json);
-                                e.dataTransfer!.effectAllowed = "copy";
-                                // Emit a global event so page-level onDragEnd can access full payload
-                                (window as any).__lastTaskDragPayload = payload;
-                                window.dispatchEvent(
-                                  new CustomEvent("kanban:task-drag-start", {
-                                    detail: payload,
-                                  }),
-                                );
-                              } catch {
-                                // ignore
-                              }
-                            }}
-                          >
-                            <ProjectTaskCard
-                              task={task}
-                              onEdit={() => onTaskEdit(task)}
-                              onArchive={() => onTaskArchive(task._id)}
-                              onDelete={() => onTaskDelete(task._id)}
-                            />
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
+                        <Draggable
+                          key={task._id}
+                          draggableId={task._id}
+                          index={taskIndex}
+                        >
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className={snapshot.isDragging ? "rotate-2" : ""}
+                              onDragStart={(e) => {
+                                try {
+                                  const payload = {
+                                    type: "project-task",
+                                    task: {
+                                      taskId: String(task._id),
+                                      taskCode: task.taskCode,
+                                      title: task.title,
+                                      description: task.description,
+                                      priority: task.priority,
+                                      dueDate: task.dueDate || null,
+                                      labels: Array.isArray(task.labels)
+                                        ? task.labels
+                                        : [],
+                                      boardId: String(task.boardId),
+                                      listId: String(task.listId),
+                                      assignedTo: task.assignedTo?.user
+                                        ? {
+                                            id: String(
+                                              task.assignedTo.user._id,
+                                            ),
+                                            name:
+                                              task.assignedTo.user.name || null,
+                                            email:
+                                              task.assignedTo.user.email ||
+                                              null,
+                                            image:
+                                              task.assignedTo.user.image ||
+                                              null,
+                                          }
+                                        : null,
+                                      assignedBy: task.assignedBy?.user
+                                        ? {
+                                            id: String(
+                                              task.assignedBy.user._id,
+                                            ),
+                                            name:
+                                              task.assignedBy.user.name || null,
+                                            email:
+                                              task.assignedBy.user.email ||
+                                              null,
+                                            image:
+                                              task.assignedBy.user.image ||
+                                              null,
+                                          }
+                                        : null,
+                                      createdBy: task.createdBy?.user
+                                        ? {
+                                            id: String(task.createdBy.user._id),
+                                            name:
+                                              task.createdBy.user.name || null,
+                                            email:
+                                              task.createdBy.user.email || null,
+                                            image:
+                                              task.createdBy.user.image || null,
+                                          }
+                                        : null,
+                                    },
+                                  };
+                                  const json = JSON.stringify(payload);
+                                  // Provide both MIME types for broad browser support
+                                  e.dataTransfer?.setData(
+                                    "application/json",
+                                    json,
+                                  );
+                                  e.dataTransfer?.setData("text/plain", json);
+                                  e.dataTransfer!.effectAllowed = "copy";
+                                  // Emit a global event so page-level onDragEnd can access full payload
+                                  (window as any).__lastTaskDragPayload =
+                                    payload;
+                                  window.dispatchEvent(
+                                    new CustomEvent("kanban:task-drag-start", {
+                                      detail: payload,
+                                    }),
+                                  );
+                                } catch {
+                                  // ignore
+                                }
+                              }}
+                            >
+                              <ProjectTaskCard
+                                task={task}
+                                onEdit={() => onTaskEdit(task)}
+                                onArchive={() => onTaskArchive(task._id)}
+                                onDelete={() => onTaskDelete(task._id)}
+                              />
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
                     </>
                   )}
                   {provided.placeholder}

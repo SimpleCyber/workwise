@@ -288,7 +288,9 @@ const schema = defineSchema({
     name: v.string(),
     description: v.optional(v.string()),
     background: v.optional(v.string()),
-    projectType: v.optional(v.union(v.literal("development"), v.literal("sales"))),
+    projectType: v.optional(
+      v.union(v.literal("development"), v.literal("sales")),
+    ),
     boardCode: v.string(), // B01, B02, etc.
     memberId: v.id("members"),
     workspaceId: v.id("workspaces"),

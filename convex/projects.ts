@@ -43,9 +43,10 @@ export const createProjectBoard = mutation({
       updatedAt: Date.now(),
     });
     // Create default lists
-    const listNames = args.columns && args.columns.length > 0
-      ? args.columns
-      : ["To Do", "In Progress", "On Hold", "Done"];
+    const listNames =
+      args.columns && args.columns.length > 0
+        ? args.columns
+        : ["To Do", "In Progress", "On Hold", "Done"];
 
     for (let i = 0; i < listNames.length; i++) {
       await ctx.db.insert("projectLists", {
@@ -216,9 +217,8 @@ export const createProjectTask = mutation({
       .query("projectTasks")
       .withIndex("by_list_id", (q) => q.eq("listId", args.listId))
       .collect();
-    const minPosition = tasks.length > 0 
-      ? Math.min(...tasks.map((t) => t.position)) 
-      : 0;
+    const minPosition =
+      tasks.length > 0 ? Math.min(...tasks.map((t) => t.position)) : 0;
 
     const taskId = await ctx.db.insert("projectTasks", {
       title: args.title,
