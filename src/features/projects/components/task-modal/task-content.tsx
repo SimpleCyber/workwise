@@ -3,6 +3,8 @@ import { TaskDetails } from "./task-details";
 import { TaskDescription } from "./task-description";
 import { TaskComments } from "./task-comments";
 import type { Id } from "../../../../../convex/_generated/dataModel";
+import { useQuery } from "convex/react";
+import { api } from "../../../../../convex/_generated/api";
 
 interface TaskContentProps {
   task: {
@@ -48,6 +50,12 @@ export const TaskContent = ({
   lists,
   onImagePreview,
 }: TaskContentProps) => {
+  const flags = useQuery(api.admin.getFeatureFlags);
+  
+  // By default, if flags aren't loaded or not set, assume enabled
+  const commentsFlag = flags?.find(f => f.key === "task_comments");
+  const showComments = commentsFlag ? commentsFlag.enabled : true;
+
   return (
     <div className="flex h-full bg-background">
       {/* Main Content Area - Left Side */}
@@ -58,9 +66,11 @@ export const TaskContent = ({
         </div>
 
         {/* Activity/Comments Section */}
-        <div className="px-6 py-4 border-t">
-          <TaskComments task={task} onImagePreview={onImagePreview} />
-        </div>
+        {showComments && (
+          <div className="px-6 py-4 border-t">
+            <TaskComments task={task} onImagePreview={onImagePreview} />
+          </div>
+        )}
       </div>
 
       {/* Details Sidebar - Right Side */}

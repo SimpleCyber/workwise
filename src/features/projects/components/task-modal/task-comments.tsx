@@ -190,35 +190,25 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
     <div className="flex flex-col space-y-6">
       <ConfirmDialog />
       {/* Activity Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-semibold text-foreground/80">
-          <MessageSquare className="w-4 h-4" />
-          <h3>Activity</h3>
-          <span className="text-xs font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
-            {comments?.length || 0}
-          </span>
+      <div className="flex items-center justify-between pointer-events-none">
+        <div className="text-sm text-muted-foreground ml-1">
+          Activity · {comments?.length || 0}
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-          className="h-7 px-2 text-[11px] font-medium hover:bg-muted"
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+          }}
+          className="text-[11px] text-muted-foreground font-medium pointer-events-auto hover:underline"
         >
-          <ArrowUpDown className="w-3 h-3 mr-1.5" />
-          {sortOrder === "asc" ? "Oldest first" : "Newest first"}
-        </Button>
+          {sortOrder === "asc" ? "↑ Oldest first" : "↓ Newest first"}
+        </button>
       </div>
 
-      {/* New Comment Input - At the top, like Jira */}
+      {/* New Comment Input */}
       <div className="flex gap-3 group/editor">
-        <Avatar className="w-8 h-8 rounded-full border shadow-sm shrink-0">
-          {/* Use current user's avatar if possible, but here we just show a placeholder or fixed avatar shell */}
-          <AvatarFallback className="text-[10px] bg-secondary">
-            ME
-          </AvatarFallback>
-        </Avatar>
         <div className="flex-1 min-w-0">
-          <div className="rounded-lg border bg-background hover:border-border/80 transition-all shadow-sm ring-1 ring-border/50 focus-within:ring-primary/20 focus-within:border-primary/30">
+          <div className="rounded-lg border bg-muted/10 ring-1 ring-border/50">
             <Editor
               key={editorKey}
               onSubmit={handleSubmitComment}
@@ -270,6 +260,11 @@ export const TaskComments = ({ task, onImagePreview }: TaskCommentsProps) => {
                     <span className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded uppercase tracking-tighter font-semibold">
                       {comment.member?.role}
                     </span>
+                    {comment.member?.user?.email && (
+                      <span className="text-[11px] text-muted-foreground hidden sm:inline-block">
+                        • {comment.member.user.email}
+                      </span>
+                    )}
                     <span className="text-[11px] text-muted-foreground">
                       {formatDistanceToNow(new Date(comment.createdAt), {
                         addSuffix: true,

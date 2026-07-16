@@ -16,12 +16,15 @@ interface TaskHeaderProps {
     _id: Id<"projectTasks">;
     title: string;
     taskCode: string;
-    priority: "low" | "medium" | "high" | "urgent";
   };
+  lists: Array<{
+    _id: Id<"projectLists">;
+    name: string;
+  }>;
   onClose: () => void;
 }
 
-export const TaskHeader = ({ task, onClose }: TaskHeaderProps) => {
+export const TaskHeader = ({ task, lists, onClose }: TaskHeaderProps) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(task.title);
   const [showSaved, setShowSaved] = useState(false);
@@ -95,11 +98,14 @@ export const TaskHeader = ({ task, onClose }: TaskHeaderProps) => {
             />
           ) : (
             <h1
-              className="text-2xl font-bold cursor-pointer hover:bg-muted/50 px-2 py-1 -ml-2 rounded-md transition-all flex items-center gap-2 truncate group"
+              className="text-xl md:text-2xl font-bold cursor-pointer hover:bg-muted/50 px-2 py-1 -ml-2 rounded-md transition-all flex items-start gap-2 group leading-tight"
               onClick={() => setIsEditingTitle(true)}
               title={task.title}
             >
-              <span className="truncate">{task.title}</span>
+              <span className="flex-1 whitespace-pre-wrap">{title}</span>
+              <Badge variant="secondary" className="shrink-0 mt-0.5 pointer-events-none capitalize">
+                {lists.find((l) => l._id === (task as any).listId)?.name || "Task"}
+              </Badge>
               {showSaved && (
                 <Check className="w-5 h-5 text-emerald-500 shrink-0 animate-in fade-in zoom-in duration-300" />
               )}

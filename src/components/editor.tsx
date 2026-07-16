@@ -578,20 +578,6 @@ const Editor = ({
           )}
         </div>
       </div>
-
-      {variant === "create" && (
-        <div
-          className={cn(
-            "flex justify-end p-2 text-[10px] text-muted-foreground opacity-0 transition",
-            !isEmpty && "opacity-100",
-          )}
-        >
-          <p>
-            <strong>Shift + {isIOS ? "Return" : "Enter"}</strong> to add a new
-            line.
-          </p>
-        </div>
-      )}
     </div>
   );
 };

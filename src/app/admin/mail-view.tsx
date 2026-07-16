@@ -243,78 +243,57 @@ export default function AdminNotificationsPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Admin - All Notifications
-          </h1>
-          <p className="text-muted-foreground">
-            Manage and monitor all system notifications
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={exportToCSV} variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export CSV
-          </Button>
-        </div>
+    <div className="space-y-6">
+      {/* Header Info */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-2">
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Monitor platform notifications across your workspace. You can filter by category or <br className="hidden sm:block"/>
+          status and optionally trigger emails manually for any pending events.
+        </p>
+        <Button onClick={exportToCSV} variant="outline" size="sm" className="h-8 gap-1.5 text-xs bg-card shrink-0 shadow-sm">
+          <Download className="w-3.5 h-3.5" />
+          Export CSV
+        </Button>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats */}
       {stats && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Notifications
-              </CardTitle>
-              <Bell className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Unread</CardTitle>
-              <Circle className="h-4 w-4 text-orange-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.unread}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Emails Sent</CardTitle>
-              <Mail className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.emailsSent}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Recent Activity (24h)
-              </CardTitle>
-              <Activity className="h-4 w-4 text-purple-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.recentActivity}</div>
-            </CardContent>
-          </Card>
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+          <div className="bg-card border rounded-xl p-5 flex flex-col gap-3 shadow-sm">
+            <div className="flex items-center justify-between">
+              <Bell className="h-5 w-5 text-blue-500" />
+              <span className="text-3xl font-bold tabular-nums">{stats.total}</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Total Actions</p>
+          </div>
+          <div className="bg-card border rounded-xl p-5 flex flex-col gap-3 shadow-sm">
+            <div className="flex items-center justify-between">
+              <Circle className="h-5 w-5 text-orange-500" />
+              <span className="text-3xl font-bold tabular-nums">{stats.unread}</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Unread</p>
+          </div>
+          <div className="bg-card border rounded-xl p-5 flex flex-col gap-3 shadow-sm">
+            <div className="flex items-center justify-between">
+              <Mail className="h-5 w-5 text-emerald-500" />
+              <span className="text-3xl font-bold tabular-nums">{stats.emailsSent}</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Emails Sent</p>
+          </div>
+          <div className="bg-card border rounded-xl p-5 flex flex-col gap-3 shadow-sm">
+            <div className="flex items-center justify-between">
+              <Activity className="h-5 w-5 text-purple-500" />
+              <span className="text-3xl font-bold tabular-nums">{stats.recentActivity}</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Recent (24h)</p>
+          </div>
         </div>
       )}
 
       {/* Advanced Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Advanced Filters</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="bg-card border rounded-xl p-5 shadow-sm space-y-4">
+        <h3 className="font-semibold text-sm">Filter & Search</h3>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-2">
               <Label>Search</Label>
               <div className="relative">
@@ -406,12 +385,12 @@ export default function AdminNotificationsPage() {
 
           <div className="flex items-center justify-between mt-4">
             <div className="flex items-center space-x-2">
-              <Label htmlFor="limit">Results per page:</Label>
+              <Label htmlFor="limit" className="text-xs text-muted-foreground mr-1">Results per page:</Label>
               <Select
                 value={limit.toString()}
                 onValueChange={(value) => setLimit(Number.parseInt(value))}
               >
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-24 h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -422,21 +401,16 @@ export default function AdminNotificationsPage() {
                 </SelectContent>
               </Select>
             </div>
+            
+            <p className="text-xs text-muted-foreground font-medium">
+              {filteredNotifications.length} matched
+            </p>
           </div>
-        </CardContent>
-      </Card>
+      </div>
 
       {/* Notifications Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All System Notifications</CardTitle>
-          <CardDescription>
-            {filteredNotifications.length} notification
-            {filteredNotifications.length !== 1 ? "s" : ""} found
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border overflow-x-auto">
+      <div className="bg-card border rounded-xl overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -582,9 +556,8 @@ export default function AdminNotificationsPage() {
                 )}
               </TableBody>
             </Table>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

@@ -118,37 +118,16 @@ export const TaskDescription = ({
   };
 
   return (
-    <div className="flex flex-col space-y-4">
+    <div className="flex flex-col space-y-3">
       {/* Description Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-semibold text-foreground/80">
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="flex items-center gap-2 hover:text-primary transition-colors"
-          >
-            {isCollapsed ? (
-              <ChevronRight className="w-4 h-4" />
-            ) : (
-              <ChevronDown className="w-4 h-4" />
-            )}
-            Description
-          </button>
+      <div className="flex items-center justify-between pointer-events-none">
+        <div className="text-sm text-muted-foreground ml-1">
+          Description
         </div>
-        {!isEditing && task.description && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsEditing(true)}
-            className="text-xs h-7 px-2 hover:bg-muted font-medium"
-          >
-            Edit
-          </Button>
-        )}
       </div>
 
       {/* Content Area */}
-      {!isCollapsed && (
-        <div className="space-y-4">
+      <div className="space-y-4">
           {isEditing ? (
             <div className="rounded-lg border bg-muted/30 ring-1 ring-border/50">
               <Editor
@@ -241,14 +220,24 @@ export const TaskDescription = ({
                     )}
                 </div>
               ) : (
-                <div className="py-8 text-center text-muted-foreground bg-muted/10 rounded-lg border-2 border-dashed border-muted-foreground/10 hover:border-muted-foreground/30 transition-all">
-                  <p className="text-sm font-medium">Add a description...</p>
+                <div onClick={() => setIsEditing(true)}>
+                   <div className="rounded-lg border bg-muted/10 ring-1 ring-border/50">
+                     <Editor
+                       key={editorKey}
+                       onSubmit={handleUpdate}
+                       onCancel={() => {}}
+                       defaultValue={[]}
+                       placeholder="Add a more detailed description..."
+                       variant="create"
+                       disabled={isPending}
+                       members={members}
+                     />
+                   </div>
                 </div>
               )}
             </div>
           )}
         </div>
-      )}
     </div>
   );
 };

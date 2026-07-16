@@ -59,10 +59,12 @@ import { useRemoveProjectBoard } from "@/features/projects/api/use-remove-projec
 import { useUpdateProjectBoard } from "@/features/projects/api/use-update-project-board";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { useConfirm } from "@/hooks/use-confirm";
+import { useRouter } from "next/navigation";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { WorkspaceOnlyTree } from "./workspace-tree";
 
 const ProjectsWorkspacePage = () => {
+  const router = useRouter();
   const workspaceId = useWorkspaceId();
   const workspaceIdTree = useWorkspaceId();
   const { data: workspace, isLoading: workspaceLoading } = useGetWorkspaceInfo({
@@ -507,11 +509,11 @@ const ProjectsWorkspacePage = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {boards.map((board) => (
-                  <div key={board._id} className="group relative">
-                    <Link
-                      href={`/projects/${workspaceId}/board/${board._id}`}
-                      className="block"
-                    >
+                  <div 
+                    key={board._id} 
+                    className="group relative cursor-pointer"
+                    onClick={() => router.push(`/projects/${workspaceId}/board/${board._id}`)}
+                  >
                       <Card className="h-full transition-all duration-200 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 border-border bg-card">
                         <CardHeader className="relative pb-3 -mt-3">
                           <div className="flex items-start justify-between gap-3">
@@ -597,7 +599,6 @@ const ProjectsWorkspacePage = () => {
                           </div>
                         </CardContent>
                       </Card>
-                    </Link>
                   </div>
                 ))}
               </div>

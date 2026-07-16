@@ -350,10 +350,49 @@ export const getProjectTasks = query({
       }),
     );
 
-    return tasksWithMembers
+    const sortedTasks = tasksWithMembers
       .filter(Boolean)
       .filter((task) => (args.includeArchived ? true : !task.isArchived))
       .sort((a, b) => a.position - b.position);
+
+    return sortedTasks;
+  },
+});
+
+export const getProjectTask = query({
+  args: { taskId: v.id("projectTasks") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+
+    const task = await ctx.db.get(args.taskId);
+    if (!task) return null;
+
+    // Fetch relations
+    const [assignedToMember, assignedByMember, createdByMember] = await Promise.all([
+      task.assignedToId ? ctx.db.get(task.assignedToId) : null,
+      task.assignedById ? ctx.db.get(task.assignedById) : null,
+      task.createdById ? ctx.db.get(task.createdById) : null,
+    ]);
+
+    const [assignedToUser, assignedByUser, createdByUser] = await Promise.all([
+      assignedToMember?.userId ? ctx.db.get(assignedToMember.userId) : null,
+      assignedByMember?.userId ? ctx.db.get(assignedByMember.userId) : null,
+      createdByMember?.userId ? ctx.db.get(createdByMember.userId) : null,
+    ]);
+
+    return {
+      ...task,
+      assignedTo: assignedToMember
+        ? { ...assignedToMember, user: assignedToUser }
+        : null,
+      assignedBy: assignedByMember
+        ? { ...assignedByMember, user: assignedByUser }
+        : null,
+      createdBy: createdByMember
+        ? { ...createdByMember, user: createdByUser }
+        : null,
+    };
   },
 });
 

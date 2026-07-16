@@ -147,6 +147,18 @@ const DEFAULT_FLAGS = [
     description: "Workspace channels, direct messages, and threads",
     enabled: true,
   },
+  {
+    key: "task_comments",
+    label: "Task Comments",
+    description: "Enable activity and comment feeds on task cards",
+    enabled: true,
+  },
+  {
+    key: "mail",
+    label: "Email Client",
+    description: "In-platform email inbox and client",
+    enabled: true,
+  },
 ];
 
 export const seedFeatureFlags = mutation({
