@@ -51,9 +51,9 @@ export const TaskContent = ({
   onImagePreview,
 }: TaskContentProps) => {
   const flags = useQuery(api.admin.getFeatureFlags);
-  
+
   // By default, if flags aren't loaded or not set, assume enabled
-  const commentsFlag = flags?.find(f => f.key === "task_comments");
+  const commentsFlag = flags?.find((f) => f.key === "task_comments");
   const showComments = commentsFlag ? commentsFlag.enabled : true;
 
   return (

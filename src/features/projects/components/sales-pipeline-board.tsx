@@ -33,7 +33,7 @@ import {
   Calendar,
   CheckCircle2,
   XCircle,
-  Sparkles
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCurrentMember } from "@/features/members/api/use-current-member";
@@ -52,7 +52,9 @@ export function SalesPipelineBoard({
   boardId,
   workspaceId,
 }: SalesPipelineBoardProps) {
-  const [selectedLeadId, setSelectedLeadId] = useState<Id<"salesLeads"> | null>(null);
+  const [selectedLeadId, setSelectedLeadId] = useState<Id<"salesLeads"> | null>(
+    null,
+  );
   const { data: currentMember } = useCurrentMember({ workspaceId });
 
   const leads = useQuery(api.sales.getLeads, { boardId });
@@ -169,10 +171,10 @@ export function SalesPipelineBoard({
           </TableBody>
         </Table>
       </div>
-      
-      <LeadDetailDrawer 
-        leadId={selectedLeadId} 
-        onClose={() => setSelectedLeadId(null)} 
+
+      <LeadDetailDrawer
+        leadId={selectedLeadId}
+        onClose={() => setSelectedLeadId(null)}
       />
     </div>
   );
@@ -264,17 +266,22 @@ function LeadRow({
         {(() => {
           let icon = <Sparkles className="size-4 text-blue-500" />;
           let label = "New";
-          
+
           if (lead.stage === "retry") {
-            icon = <Clock className="size-4 text-amber-500" />; label = "Retry";
+            icon = <Clock className="size-4 text-amber-500" />;
+            label = "Retry";
           } else if (lead.stage === "scheduled") {
-            icon = <Calendar className="size-4 text-blue-500" />; label = "Scheduled";
+            icon = <Calendar className="size-4 text-blue-500" />;
+            label = "Scheduled";
           } else if (lead.stage === "won") {
-            icon = <CheckCircle2 className="size-4 text-emerald-500" />; label = "Won";
+            icon = <CheckCircle2 className="size-4 text-emerald-500" />;
+            label = "Won";
           } else if (lead.stage === "rejected" || lead.stage === "lost") {
-            icon = <XCircle className="size-4 text-red-500" />; label = "Rejected";
+            icon = <XCircle className="size-4 text-red-500" />;
+            label = "Rejected";
           } else if (lead.stage === "contacted") {
-            icon = <Check className="size-4 text-muted-foreground" />; label = "Contacted";
+            icon = <Check className="size-4 text-muted-foreground" />;
+            label = "Contacted";
           }
 
           return (
@@ -419,7 +426,9 @@ function LeadRow({
               </Button>
             </Hint>
           ) : (
-            <Hint label={`Assigned to ${lead.assignedUser?.name || "User"} - Click to unassign`}>
+            <Hint
+              label={`Assigned to ${lead.assignedUser?.name || "User"} - Click to unassign`}
+            >
               <Button
                 variant="ghost"
                 size="icon"

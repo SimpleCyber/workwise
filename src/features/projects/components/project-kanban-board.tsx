@@ -540,92 +540,89 @@ const ProjectKanbanList = ({
                     </div>
                   ) : (
                     <>
-                      {/* Task form placed strictly at the top of the first list (index === 0) */}
-                      {index === 0 &&
-                        (isAddingTask ? (
-                          <div className="space-y-2 mb-3">
-                            <Input
-                              value={newTaskTitle}
-                              onChange={(e) => setNewTaskTitle(e.target.value)}
-                              placeholder="Enter task title..."
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  onCreateTask();
-                                } else if (e.key === "Escape") {
-                                  onCancelAddTask();
-                                }
-                              }}
-                              autoFocus
-                              disabled={isCreatingTask}
-                            />
-                            <div className="flex items-center gap-2">
-                              <Select
-                                value={selectedAssignee ?? ""}
-                                onValueChange={(value) =>
-                                  setSelectedAssignee(value as Id<"members">)
-                                }
-                              >
-                                <SelectTrigger className="w-full">
-                                  <SelectValue placeholder="Assign to..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {members.map((member) => (
-                                    <SelectItem
-                                      key={member._id}
-                                      value={member._id}
-                                    >
-                                      <div className="flex items-center gap-2">
-                                        <Avatar className="w-5 h-5">
-                                          <AvatarImage
-                                            src={
-                                              member.user?.image ||
-                                              "/placeholder.svg"
-                                            }
-                                          />
-                                          <AvatarFallback className="text-xs">
-                                            {member.user?.name
-                                              ?.charAt(0)
-                                              .toUpperCase()}
-                                          </AvatarFallback>
-                                        </Avatar>
-                                        <span>{member.user?.name}</span>
-                                      </div>
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                onClick={onCreateTask}
-                                disabled={
-                                  !newTaskTitle.trim() || isCreatingTask
-                                }
-                              >
-                                Add task
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={onCancelAddTask}
-                                disabled={isCreatingTask}
-                              >
-                                <X className="size-4" />
-                              </Button>
-                            </div>
+                      {/* Task form placed at the top of every list */}
+                      {isAddingTask ? (
+                        <div className="space-y-2 mb-3">
+                          <Input
+                            value={newTaskTitle}
+                            onChange={(e) => setNewTaskTitle(e.target.value)}
+                            placeholder="Enter task title..."
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                onCreateTask();
+                              } else if (e.key === "Escape") {
+                                onCancelAddTask();
+                              }
+                            }}
+                            autoFocus
+                            disabled={isCreatingTask}
+                          />
+                          <div className="flex items-center gap-2">
+                            <Select
+                              value={selectedAssignee ?? ""}
+                              onValueChange={(value) =>
+                                setSelectedAssignee(value as Id<"members">)
+                              }
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Assign to..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {members.map((member) => (
+                                  <SelectItem
+                                    key={member._id}
+                                    value={member._id}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <Avatar className="w-5 h-5">
+                                        <AvatarImage
+                                          src={
+                                            member.user?.image ||
+                                            "/placeholder.svg"
+                                          }
+                                        />
+                                        <AvatarFallback className="text-xs">
+                                          {member.user?.name
+                                            ?.charAt(0)
+                                            .toUpperCase()}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <span>{member.user?.name}</span>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-start text-muted-foreground hover:text-foreground mb-2"
-                            onClick={onAddTask}
-                          >
-                            <Plus className="size-4 mr-2" />
-                            Add a task
-                          </Button>
-                        ))}
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={onCreateTask}
+                              disabled={!newTaskTitle.trim() || isCreatingTask}
+                            >
+                              Add task
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={onCancelAddTask}
+                              disabled={isCreatingTask}
+                            >
+                              <X className="size-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-start text-muted-foreground hover:text-foreground mb-2"
+                          onClick={onAddTask}
+                        >
+                          <Plus className="size-4 mr-2" />
+                          Add a task
+                        </Button>
+                      )}
 
                       {sortedTasks.map((task, taskIndex) => (
                         <Draggable

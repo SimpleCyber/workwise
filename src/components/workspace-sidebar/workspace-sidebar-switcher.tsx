@@ -50,6 +50,7 @@ export const WorkspaceSwitcher = () => {
         open={preferencesOpen}
         setOpen={setPreferencesOpen}
         initialValue={workspace?.name || ""}
+        initialColor={workspace?.color}
       />
       <InviteModal
         open={inviteOpen}
@@ -60,7 +61,10 @@ export const WorkspaceSwitcher = () => {
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button className="relative size-9 overflow-hidden bg-[#ABABAD] text-slate-800 hover:bg-[#ABABAD]/80 font-semibold text-xl">
+          <Button
+            className="relative size-9 overflow-hidden text-white font-semibold text-xl hover:opacity-80 transition-opacity flex items-center justify-center p-0"
+            style={{ backgroundColor: workspace?.color || "#616061" }}
+          >
             {workspaceLoading ? (
               <Loader className="size-5 animate-spin shrink-0" />
             ) : (
@@ -77,7 +81,10 @@ export const WorkspaceSwitcher = () => {
           >
             <div className="flex w-full items-center justify-between">
               <div className="flex items-center space-x-2">
-                <div className="shrink-0 size-9 relative overflow-hidden bg-[#616061] text-white font-semibold text-lg rounded-md flex items-center justify-center">
+                <div
+                  className="shrink-0 size-9 relative overflow-hidden text-white font-semibold text-lg rounded-md flex items-center justify-center"
+                  style={{ backgroundColor: workspace?.color || "#616061" }}
+                >
                   {workspace?.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex flex-col">
@@ -130,7 +137,10 @@ export const WorkspaceSwitcher = () => {
               className="cursor-pointer capitalize overflow-hidden"
               onClick={() => handleWorkspaceSwitch(workspace._id)}
             >
-              <div className="shrink-0 size-9 relative overflow-hidden bg-[#616061] text-white font-semibold text-lg rounded-md flex items-center justify-center mr-2">
+              <div
+                className="shrink-0 size-9 relative overflow-hidden text-white font-semibold text-lg rounded-md flex items-center justify-center mr-2"
+                style={{ backgroundColor: workspace.color || "#616061" }}
+              >
                 {workspace.name.charAt(0).toUpperCase()}
               </div>
               <p className="truncate">{workspace.name}</p>

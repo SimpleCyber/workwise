@@ -135,6 +135,7 @@ export const update = mutation({
   args: {
     id: v.id("workspaces"),
     name: v.string(),
+    color: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -156,6 +157,7 @@ export const update = mutation({
 
     await ctx.db.patch(args.id, {
       name: args.name,
+      ...(args.color !== undefined ? { color: args.color } : {}),
     });
 
     return args.id;

@@ -50,7 +50,7 @@ export const getLead = query({
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Unauthorized");
     return await ctx.db.get(args.leadId);
-  }
+  },
 });
 
 export const addLead = mutation({
@@ -93,7 +93,7 @@ export const addBulkLeads = mutation({
         phone: v.string(),
         email: v.optional(v.string()),
         description: v.optional(v.string()),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
@@ -191,7 +191,7 @@ export const discardLead = mutation({
 
 export const getCallLogs = query({
   args: {
-    leadId: v.id("salesLeads")
+    leadId: v.id("salesLeads"),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -210,11 +210,11 @@ export const getCallLogs = query({
         return {
           ...log,
           agentName: user?.name || "Unknown",
-          agentAvatar: user?.image || null
+          agentAvatar: user?.image || null,
         };
-      })
+      }),
     );
-  }
+  },
 });
 
 export const logCall = mutation({
@@ -226,7 +226,7 @@ export const logCall = mutation({
       v.literal("retry_scheduled"),
       v.literal("meeting_scheduled"),
       v.literal("won"),
-      v.literal("lost")
+      v.literal("lost"),
     ),
     notes: v.optional(v.string()),
     nextActionAt: v.optional(v.number()),
@@ -241,7 +241,7 @@ export const logCall = mutation({
     const member = await ctx.db
       .query("members")
       .withIndex("by_workspace_id_user_id", (q) =>
-        q.eq("workspaceId", lead.workspaceId).eq("userId", userId)
+        q.eq("workspaceId", lead.workspaceId).eq("userId", userId),
       )
       .unique();
 
@@ -258,7 +258,8 @@ export const logCall = mutation({
     });
 
     let nextStage: any = lead.stage;
-    if (args.disposition === "rejected" || args.disposition === "lost") nextStage = "rejected";
+    if (args.disposition === "rejected" || args.disposition === "lost")
+      nextStage = "rejected";
     else if (args.disposition === "retry_scheduled") nextStage = "retry";
     else if (args.disposition === "meeting_scheduled") nextStage = "scheduled";
     else if (args.disposition === "won") nextStage = "won";
@@ -268,5 +269,5 @@ export const logCall = mutation({
       stage: nextStage,
       updatedAt: now,
     });
-  }
+  },
 });

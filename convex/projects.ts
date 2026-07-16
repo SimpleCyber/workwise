@@ -369,11 +369,12 @@ export const getProjectTask = query({
     if (!task) return null;
 
     // Fetch relations
-    const [assignedToMember, assignedByMember, createdByMember] = await Promise.all([
-      task.assignedToId ? ctx.db.get(task.assignedToId) : null,
-      task.assignedById ? ctx.db.get(task.assignedById) : null,
-      task.createdById ? ctx.db.get(task.createdById) : null,
-    ]);
+    const [assignedToMember, assignedByMember, createdByMember] =
+      await Promise.all([
+        task.assignedToId ? ctx.db.get(task.assignedToId) : null,
+        task.assignedById ? ctx.db.get(task.assignedById) : null,
+        task.createdById ? ctx.db.get(task.createdById) : null,
+      ]);
 
     const [assignedToUser, assignedByUser, createdByUser] = await Promise.all([
       assignedToMember?.userId ? ctx.db.get(assignedToMember.userId) : null,

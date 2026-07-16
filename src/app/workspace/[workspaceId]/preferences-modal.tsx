@@ -18,12 +18,25 @@ interface PreferencesModalProps {
   open: boolean;
   setOpen: (open: boolean) => void;
   initialValue: string;
+  initialColor?: string;
 }
+
+const WORKSPACE_COLORS = [
+  { label: "Slate", value: "#616061" },
+  { label: "Blue", value: "#3b82f6" },
+  { label: "Green", value: "#22c55e" },
+  { label: "Orange", value: "#f97316" },
+  { label: "Red", value: "#ef4444" },
+  { label: "Pink", value: "#ec4899" },
+  { label: "Yellow", value: "#eab308" },
+  { label: "Indigo", value: "#6366f1" },
+];
 
 export const PreferencesModal = ({
   open,
   setOpen,
   initialValue,
+  initialColor,
 }: PreferencesModalProps) => {
   const router = useRouter();
   const workspaceId = useWorkspaceId();
@@ -33,9 +46,12 @@ export const PreferencesModal = ({
   );
 
   const [value, setValue] = useState(initialValue);
+  const [color, setColor] = useState(initialColor || "#616061");
+
   useEffect(() => {
     setValue(initialValue);
-  }, [initialValue]);
+    setColor(initialColor || "#616061");
+  }, [initialValue, initialColor]);
 
   const [editOpen, setEditOpen] = useState(false);
 
@@ -74,6 +90,7 @@ export const PreferencesModal = ({
       {
         id: workspaceId,
         name: value,
+        color: color,
       },
       {
         onSuccess: () => {
@@ -115,21 +132,46 @@ export const PreferencesModal = ({
           <ResponsiveModal
             open={editOpen}
             onOpenChange={setEditOpen}
-            title="Rename this workspace"
-            description="Rename your workspace to match your case."
+            title="Edit workspace"
+            description="Change the name and color of your workspace."
           >
             <form className="space-y-4" onSubmit={handleEdit}>
-              <Input
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                disabled={isUpdatingWorkspace}
-                required
-                autoFocus
-                minLength={3}
-                maxLength={20}
-                placeholder="Workspace name e.g 'Work', 'Personal', 'Home'"
-              />
-              <div className="flex justify-end gap-x-2">
+              <div>
+                <p className="text-sm font-semibold mb-2">Workspace name</p>
+                <Input
+                  value={value}
+                  onChange={(e) => setValue(e.target.value)}
+                  disabled={isUpdatingWorkspace}
+                  required
+                  autoFocus
+                  minLength={3}
+                  maxLength={20}
+                  placeholder="Workspace name e.g 'Work', 'Personal', 'Home'"
+                />
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold mb-2">Workspace color</p>
+                <div className="flex flex-wrap gap-2">
+                  {WORKSPACE_COLORS.map((c) => (
+                    <button
+                      key={c.value}
+                      type="button"
+                      disabled={isUpdatingWorkspace}
+                      onClick={() => setColor(c.value)}
+                      className={`size-8 rounded-full border-2 transition-all ${
+                        color === c.value
+                          ? "border-primary scale-110"
+                          : "border-transparent hover:scale-105"
+                      }`}
+                      style={{ backgroundColor: c.value }}
+                      title={c.label}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-x-2 pt-2">
                 <ModalClose>
                   <Button variant="outline" disabled={isUpdatingWorkspace}>
                     Cancel

@@ -103,8 +103,12 @@ export const TaskHeader = ({ task, lists, onClose }: TaskHeaderProps) => {
               title={task.title}
             >
               <span className="flex-1 whitespace-pre-wrap">{title}</span>
-              <Badge variant="secondary" className="shrink-0 mt-0.5 pointer-events-none capitalize">
-                {lists.find((l) => l._id === (task as any).listId)?.name || "Task"}
+              <Badge
+                variant="secondary"
+                className="shrink-0 mt-0.5 pointer-events-none capitalize"
+              >
+                {lists.find((l) => l._id === (task as any).listId)?.name ||
+                  "Task"}
               </Badge>
               {showSaved && (
                 <Check className="w-5 h-5 text-emerald-500 shrink-0 animate-in fade-in zoom-in duration-300" />

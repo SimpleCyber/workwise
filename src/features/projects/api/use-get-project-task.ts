@@ -9,7 +9,7 @@ interface UseGetProjectTaskProps {
 export const useGetProjectTask = ({ taskId }: UseGetProjectTaskProps) => {
   const data = useQuery(
     api.projects.getProjectTask,
-    taskId ? { taskId } : "skip"
+    taskId ? { taskId } : "skip",
   );
   const isLoading = data === undefined;
 

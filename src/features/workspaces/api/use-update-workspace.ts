@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { api } from "@/../convex/_generated/api";
 import type { Id } from "@/../convex/_generated/dataModel";
 
-type RequestType = { id: Id<"workspaces">; name: string };
+type RequestType = { id: Id<"workspaces">; name: string; color?: string };
 type ResponseType = Id<"workspaces"> | null;
 
 type Options = {

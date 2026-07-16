@@ -509,96 +509,98 @@ const ProjectsWorkspacePage = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {boards.map((board) => (
-                  <div 
-                    key={board._id} 
+                  <div
+                    key={board._id}
                     className="group relative cursor-pointer"
-                    onClick={() => router.push(`/projects/${workspaceId}/board/${board._id}`)}
+                    onClick={() =>
+                      router.push(`/projects/${workspaceId}/board/${board._id}`)
+                    }
                   >
-                      <Card className="h-full transition-all duration-200 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 border-border bg-card">
-                        <CardHeader className="relative pb-3 -mt-3">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex flex-col">
-                              <div className="flex items-center gap-2 mt-2">
-                                <Badge
-                                  variant="secondary"
-                                  className="text-xs font-mono bg-slate-100 text-slate-600 hover:bg-slate-200"
-                                >
-                                  {board.boardCode}
-                                </Badge>
+                    <Card className="h-full transition-all duration-200 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 border-border bg-card">
+                      <CardHeader className="relative pb-3 -mt-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2 mt-2">
+                              <Badge
+                                variant="secondary"
+                                className="text-xs font-mono bg-slate-100 text-slate-600 hover:bg-slate-200"
+                              >
+                                {board.boardCode}
+                              </Badge>
 
-                                {board.isStarred && (
-                                  <Star className="size-4 fill-yellow-400 text-yellow-400" />
-                                )}
-                              </div>
-
-                              <CardTitle className="mt-2 text-lg font-semibold text-slate-800 truncate">
-                                {board.name}
-                              </CardTitle>
+                              {board.isStarred && (
+                                <Star className="size-4 fill-yellow-400 text-yellow-400" />
+                              )}
                             </div>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0"
-                                  onClick={(e) => e.preventDefault()}
-                                >
-                                  <MoreHorizontal className="size-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem asChild>
-                                  <Link
-                                    href={`/projects/${workspaceId}/board/${board._id}`}
-                                  >
-                                    Open Board
-                                  </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    setEditingBoardId(board._id);
-                                    setName(board.name);
-                                    setDescription(board.description || "");
-                                    setOpen(true);
-                                  }}
-                                >
-                                  <Pencil className="size-4 mr-2" />
-                                  Edit Board
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    handleDeleteBoard(board._id);
-                                  }}
-                                  className="text-destructive focus:text-destructive"
-                                  disabled={isRemovingBoard}
-                                >
-                                  <Trash2 className="size-4 mr-2" />
-                                  Delete Board
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+
+                            <CardTitle className="mt-2 text-lg font-semibold text-slate-800 truncate">
+                              {board.name}
+                            </CardTitle>
                           </div>
-                          {board.description && (
-                            <CardDescription className="line-clamp-2 text-slate-600 mt-3 leading-relaxed">
-                              {board.description}
-                            </CardDescription>
-                          )}
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                          <div className="flex items-center gap-2 text-xs text-slate-500">
-                            <Calendar className="size-3" />
-                            <span>
-                              Created{" "}
-                              {formatDistanceToNow(board.createdAt, {
-                                addSuffix: true,
-                              })}
-                            </span>
-                          </div>
-                        </CardContent>
-                      </Card>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={(e) => e.preventDefault()}
+                              >
+                                <MoreHorizontal className="size-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem asChild>
+                                <Link
+                                  href={`/projects/${workspaceId}/board/${board._id}`}
+                                >
+                                  Open Board
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setEditingBoardId(board._id);
+                                  setName(board.name);
+                                  setDescription(board.description || "");
+                                  setOpen(true);
+                                }}
+                              >
+                                <Pencil className="size-4 mr-2" />
+                                Edit Board
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleDeleteBoard(board._id);
+                                }}
+                                className="text-destructive focus:text-destructive"
+                                disabled={isRemovingBoard}
+                              >
+                                <Trash2 className="size-4 mr-2" />
+                                Delete Board
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                        {board.description && (
+                          <CardDescription className="line-clamp-2 text-slate-600 mt-3 leading-relaxed">
+                            {board.description}
+                          </CardDescription>
+                        )}
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="flex items-center gap-2 text-xs text-slate-500">
+                          <Calendar className="size-3" />
+                          <span>
+                            Created{" "}
+                            {formatDistanceToNow(board.createdAt, {
+                              addSuffix: true,
+                            })}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
                 ))}
               </div>

@@ -247,10 +247,16 @@ export default function AdminNotificationsPage() {
       {/* Header Info */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-2">
         <p className="text-sm text-muted-foreground leading-relaxed">
-          Monitor platform notifications across your workspace. You can filter by category or <br className="hidden sm:block"/>
+          Monitor platform notifications across your workspace. You can filter
+          by category or <br className="hidden sm:block" />
           status and optionally trigger emails manually for any pending events.
         </p>
-        <Button onClick={exportToCSV} variant="outline" size="sm" className="h-8 gap-1.5 text-xs bg-card shrink-0 shadow-sm">
+        <Button
+          onClick={exportToCSV}
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5 text-xs bg-card shrink-0 shadow-sm"
+        >
           <Download className="w-3.5 h-3.5" />
           Export CSV
         </Button>
@@ -262,30 +268,46 @@ export default function AdminNotificationsPage() {
           <div className="bg-card border rounded-xl p-5 flex flex-col gap-3 shadow-sm">
             <div className="flex items-center justify-between">
               <Bell className="h-5 w-5 text-blue-500" />
-              <span className="text-3xl font-bold tabular-nums">{stats.total}</span>
+              <span className="text-3xl font-bold tabular-nums">
+                {stats.total}
+              </span>
             </div>
-            <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Total Actions</p>
+            <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">
+              Total Actions
+            </p>
           </div>
           <div className="bg-card border rounded-xl p-5 flex flex-col gap-3 shadow-sm">
             <div className="flex items-center justify-between">
               <Circle className="h-5 w-5 text-orange-500" />
-              <span className="text-3xl font-bold tabular-nums">{stats.unread}</span>
+              <span className="text-3xl font-bold tabular-nums">
+                {stats.unread}
+              </span>
             </div>
-            <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Unread</p>
+            <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">
+              Unread
+            </p>
           </div>
           <div className="bg-card border rounded-xl p-5 flex flex-col gap-3 shadow-sm">
             <div className="flex items-center justify-between">
               <Mail className="h-5 w-5 text-emerald-500" />
-              <span className="text-3xl font-bold tabular-nums">{stats.emailsSent}</span>
+              <span className="text-3xl font-bold tabular-nums">
+                {stats.emailsSent}
+              </span>
             </div>
-            <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Emails Sent</p>
+            <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">
+              Emails Sent
+            </p>
           </div>
           <div className="bg-card border rounded-xl p-5 flex flex-col gap-3 shadow-sm">
             <div className="flex items-center justify-between">
               <Activity className="h-5 w-5 text-purple-500" />
-              <span className="text-3xl font-bold tabular-nums">{stats.recentActivity}</span>
+              <span className="text-3xl font-bold tabular-nums">
+                {stats.recentActivity}
+              </span>
             </div>
-            <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Recent (24h)</p>
+            <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">
+              Recent (24h)
+            </p>
           </div>
         </div>
       )}
@@ -294,268 +316,269 @@ export default function AdminNotificationsPage() {
       <div className="bg-card border rounded-xl p-5 shadow-sm space-y-4">
         <h3 className="font-semibold text-sm">Filter & Search</h3>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <div className="space-y-2">
-              <Label>Search</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search notifications, users, workspaces..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Category</Label>
-              <Select
-                value={category}
-                onValueChange={(value: NotificationCategory) =>
-                  setCategory(value)
-                }
-              >
-                <SelectTrigger>
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="attendance">Attendance</SelectItem>
-                  <SelectItem value="projects">Projects</SelectItem>
-                  <SelectItem value="dataroom">Data Room</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Read Status</Label>
-              <Select
-                value={
-                  isReadFilter === undefined
-                    ? "all"
-                    : isReadFilter
-                      ? "read"
-                      : "unread"
-                }
-                onValueChange={(value) =>
-                  setIsReadFilter(
-                    value === "all" ? undefined : value === "read",
-                  )
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Read Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="read">Read Only</SelectItem>
-                  <SelectItem value="unread">Unread Only</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Email Status</Label>
-              <Select
-                value={
-                  emailSentFilter === undefined
-                    ? "all"
-                    : emailSentFilter
-                      ? "sent"
-                      : "not-sent"
-                }
-                onValueChange={(value) =>
-                  setEmailSentFilter(
-                    value === "all" ? undefined : value === "sent",
-                  )
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Email Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="sent">Email Sent</SelectItem>
-                  <SelectItem value="not-sent">Email Not Sent</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="space-y-2">
+            <Label>Search</Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search notifications, users, workspaces..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
           </div>
 
-          <div className="flex items-center justify-between mt-4">
-            <div className="flex items-center space-x-2">
-              <Label htmlFor="limit" className="text-xs text-muted-foreground mr-1">Results per page:</Label>
-              <Select
-                value={limit.toString()}
-                onValueChange={(value) => setLimit(Number.parseInt(value))}
-              >
-                <SelectTrigger className="w-24 h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
-                  <SelectItem value="200">200</SelectItem>
-                  <SelectItem value="500">500</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <p className="text-xs text-muted-foreground font-medium">
-              {filteredNotifications.length} matched
-            </p>
+          <div className="space-y-2">
+            <Label>Category</Label>
+            <Select
+              value={category}
+              onValueChange={(value: NotificationCategory) =>
+                setCategory(value)
+              }
+            >
+              <SelectTrigger>
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="attendance">Attendance</SelectItem>
+                <SelectItem value="projects">Projects</SelectItem>
+                <SelectItem value="dataroom">Data Room</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+
+          <div className="space-y-2">
+            <Label>Read Status</Label>
+            <Select
+              value={
+                isReadFilter === undefined
+                  ? "all"
+                  : isReadFilter
+                    ? "read"
+                    : "unread"
+              }
+              onValueChange={(value) =>
+                setIsReadFilter(value === "all" ? undefined : value === "read")
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Read Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="read">Read Only</SelectItem>
+                <SelectItem value="unread">Unread Only</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Email Status</Label>
+            <Select
+              value={
+                emailSentFilter === undefined
+                  ? "all"
+                  : emailSentFilter
+                    ? "sent"
+                    : "not-sent"
+              }
+              onValueChange={(value) =>
+                setEmailSentFilter(
+                  value === "all" ? undefined : value === "sent",
+                )
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Email Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="sent">Email Sent</SelectItem>
+                <SelectItem value="not-sent">Email Not Sent</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center space-x-2">
+            <Label
+              htmlFor="limit"
+              className="text-xs text-muted-foreground mr-1"
+            >
+              Results per page:
+            </Label>
+            <Select
+              value={limit.toString()}
+              onValueChange={(value) => setLimit(Number.parseInt(value))}
+            >
+              <SelectTrigger className="w-24 h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+                <SelectItem value="200">200</SelectItem>
+                <SelectItem value="500">500</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <p className="text-xs text-muted-foreground font-medium">
+            {filteredNotifications.length} matched
+          </p>
+        </div>
       </div>
 
       {/* Notifications Table */}
       <div className="bg-card border rounded-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12">Status</TableHead>
+                <TableHead>User</TableHead>
+                <TableHead>Workspace</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead>Message</TableHead>
+                <TableHead>Action By</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredNotifications.length === 0 ? (
                 <TableRow>
-                  <TableHead className="w-12">Status</TableHead>
-                  <TableHead>User</TableHead>
-                  <TableHead>Workspace</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Message</TableHead>
-                  <TableHead>Action By</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableCell
+                    colSpan={10}
+                    className="text-center py-8 text-muted-foreground"
+                  >
+                    No notifications found
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredNotifications.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={10}
-                      className="text-center py-8 text-muted-foreground"
-                    >
-                      No notifications found
+              ) : (
+                filteredNotifications.map((notification) => (
+                  <TableRow
+                    key={notification._id}
+                    className={!notification.isRead ? "bg-blue-50/50" : ""}
+                  >
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {notification.isRead ? (
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <Circle className="h-4 w-4 text-blue-600" />
+                        )}
+                        {notification.hasBeenProcessed && (
+                          <Badge
+                            variant="outline"
+                            className="text-xs bg-green-50 text-green-700"
+                          >
+                            Processed
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="font-medium text-sm">
+                          {notification.user?.name || "Unknown User"}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {notification.user?.email}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm font-medium">
+                        {notification.workspace?.name || "Unknown"}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={getTypeColor(notification.type)}
+                      >
+                        {NOTIFICATION_TYPE_LABELS[notification.type] ||
+                          notification.type}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="max-w-48">
+                      <div
+                        className="truncate font-medium"
+                        title={notification.title}
+                      >
+                        {notification.title}
+                      </div>
+                    </TableCell>
+                    <TableCell className="max-w-64">
+                      <div
+                        className="truncate text-sm text-muted-foreground"
+                        title={notification.message}
+                      >
+                        {notification.message}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        {notification.actionUser?.name ||
+                          notification.actionUser?.email ||
+                          "System"}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        {notification.emailSent ? (
+                          <MailOpen className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <Mail className="h-4 w-4 text-gray-400" />
+                        )}
+                        <span className="text-xs text-muted-foreground">
+                          {notification.emailSent ? "Sent" : "Not sent"}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm text-muted-foreground">
+                        {format(
+                          new Date(notification.createdAt),
+                          "MMM dd, yyyy",
+                        )}
+                        <div className="text-xs">
+                          {format(new Date(notification.createdAt), "HH:mm")}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        size="sm"
+                        variant={notification.emailSent ? "outline" : "default"}
+                        onClick={() => handleSendEmail(notification)}
+                        disabled={
+                          notification.emailSent ||
+                          sendingEmails.has(notification._id) ||
+                          !notification.user?.email
+                        }
+                        className="flex items-center gap-2"
+                      >
+                        {sendingEmails.has(notification._id) ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4" />
+                        )}
+                        {notification.emailSent ? "Sent" : "Send Email"}
+                      </Button>
                     </TableCell>
                   </TableRow>
-                ) : (
-                  filteredNotifications.map((notification) => (
-                    <TableRow
-                      key={notification._id}
-                      className={!notification.isRead ? "bg-blue-50/50" : ""}
-                    >
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {notification.isRead ? (
-                            <CheckCircle className="h-4 w-4 text-green-600" />
-                          ) : (
-                            <Circle className="h-4 w-4 text-blue-600" />
-                          )}
-                          {notification.hasBeenProcessed && (
-                            <Badge
-                              variant="outline"
-                              className="text-xs bg-green-50 text-green-700"
-                            >
-                              Processed
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <div className="font-medium text-sm">
-                            {notification.user?.name || "Unknown User"}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {notification.user?.email}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm font-medium">
-                          {notification.workspace?.name || "Unknown"}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={getTypeColor(notification.type)}
-                        >
-                          {NOTIFICATION_TYPE_LABELS[notification.type] ||
-                            notification.type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="max-w-48">
-                        <div
-                          className="truncate font-medium"
-                          title={notification.title}
-                        >
-                          {notification.title}
-                        </div>
-                      </TableCell>
-                      <TableCell className="max-w-64">
-                        <div
-                          className="truncate text-sm text-muted-foreground"
-                          title={notification.message}
-                        >
-                          {notification.message}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          {notification.actionUser?.name ||
-                            notification.actionUser?.email ||
-                            "System"}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          {notification.emailSent ? (
-                            <MailOpen className="h-4 w-4 text-green-600" />
-                          ) : (
-                            <Mail className="h-4 w-4 text-gray-400" />
-                          )}
-                          <span className="text-xs text-muted-foreground">
-                            {notification.emailSent ? "Sent" : "Not sent"}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm text-muted-foreground">
-                          {format(
-                            new Date(notification.createdAt),
-                            "MMM dd, yyyy",
-                          )}
-                          <div className="text-xs">
-                            {format(new Date(notification.createdAt), "HH:mm")}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          variant={
-                            notification.emailSent ? "outline" : "default"
-                          }
-                          onClick={() => handleSendEmail(notification)}
-                          disabled={
-                            notification.emailSent ||
-                            sendingEmails.has(notification._id) ||
-                            !notification.user?.email
-                          }
-                          className="flex items-center gap-2"
-                        >
-                          {sendingEmails.has(notification._id) ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Send className="h-4 w-4" />
-                          )}
-                          {notification.emailSent ? "Sent" : "Send Email"}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </div>
       </div>
     </div>

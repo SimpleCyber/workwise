@@ -8,6 +8,7 @@ const schema = defineSchema({
     name: v.string(),
     userId: v.id("users"),
     joinCode: v.string(),
+    color: v.optional(v.string()),
   }),
   members: defineTable({
     userId: v.id("users"),
@@ -367,35 +368,39 @@ const schema = defineSchema({
       filterFields: ["workspaceId", "boardId"],
     }),
   salesLeads: defineTable({
-    name: v.optional(v.string()),         // New field, made optional for backward compatibility
-    contactName: v.optional(v.string()),  // Legacy field
-    company: v.optional(v.string()),      // Legacy field
+    name: v.optional(v.string()), // New field, made optional for backward compatibility
+    contactName: v.optional(v.string()), // Legacy field
+    company: v.optional(v.string()), // Legacy field
     phone: v.string(),
     email: v.optional(v.string()),
     description: v.optional(v.string()),
     boardId: v.id("projectBoards"),
     workspaceId: v.id("workspaces"),
     assignedToId: v.optional(v.id("members")),
-    assignmentStatus: v.optional(v.union(v.literal("assigned"), v.literal("unassigned"))),
-    stage: v.optional(v.union(
-      v.literal("new"),
-      v.literal("contacted"),
-      v.literal("rejected"),
-      v.literal("retry"),
-      v.literal("scheduled"),
-      v.literal("won"),
-      v.literal("lost")
-    )),
-    status: v.optional(v.string()),       // Legacy field
+    assignmentStatus: v.optional(
+      v.union(v.literal("assigned"), v.literal("unassigned")),
+    ),
+    stage: v.optional(
+      v.union(
+        v.literal("new"),
+        v.literal("contacted"),
+        v.literal("rejected"),
+        v.literal("retry"),
+        v.literal("scheduled"),
+        v.literal("won"),
+        v.literal("lost"),
+      ),
+    ),
+    status: v.optional(v.string()), // Legacy field
     isDiscarded: v.optional(v.boolean()),
-    isArchived: v.optional(v.boolean()),  // Legacy field
+    isArchived: v.optional(v.boolean()), // Legacy field
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_board_id", ["boardId"])
     .index("by_workspace_id", ["workspaceId"])
     .index("by_assigned_to", ["assignedToId"]),
-    
+
   callLogs: defineTable({
     leadId: v.id("salesLeads"),
     agentId: v.id("members"),
@@ -405,7 +410,7 @@ const schema = defineSchema({
       v.literal("retry_scheduled"),
       v.literal("meeting_scheduled"),
       v.literal("won"),
-      v.literal("lost")
+      v.literal("lost"),
     ),
     notes: v.optional(v.string()),
     nextActionAt: v.optional(v.number()),

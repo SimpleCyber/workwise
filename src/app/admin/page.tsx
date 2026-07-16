@@ -24,7 +24,7 @@ import {
   MessageSquare,
   Settings,
   LayoutDashboard,
-  Mail
+  Mail,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -46,16 +46,24 @@ const ICON_MAP: Record<string, any> = {
 };
 
 const FLAG_CATEGORIES = {
-  core: { label: "Core Workspace", keys: ["attendance", "calendar", "messaging", "mail"] },
-  projects: { label: "Projects & Tasks", keys: ["projects", "todos", "task_comments"] },
+  core: {
+    label: "Core Workspace",
+    keys: ["attendance", "calendar", "messaging", "mail"],
+  },
+  projects: {
+    label: "Projects & Tasks",
+    keys: ["projects", "todos", "task_comments"],
+  },
   data_room: { label: "Data Room", keys: ["data_room", "data_room_tools"] },
-  tools: { label: "Additional Tools", keys: ["tree_planning"] }
+  tools: { label: "Additional Tools", keys: ["tree_planning"] },
 };
 
 export default function AdminPage() {
   const router = useRouter();
-  const [activeView, setActiveView] = useState<"overview" | "flags" | "notifications" | "settings">("overview");
-  
+  const [activeView, setActiveView] = useState<
+    "overview" | "flags" | "notifications" | "settings"
+  >("overview");
+
   const flags = useQuery(api.admin.getFeatureFlags);
   const stats = useQuery(api.admin.getAdminStats);
   const setFlag = useMutation(api.admin.setFeatureFlag);
@@ -82,12 +90,42 @@ export default function AdminPage() {
 
   const statCards = stats
     ? [
-        { label: "Workspaces", value: stats.workspaces, icon: Building2, color: "text-blue-500" },
-        { label: "Members", value: stats.members, icon: Users, color: "text-emerald-500" },
-        { label: "Files", value: stats.files, icon: FileText, color: "text-amber-500" },
-        { label: "Projects", value: stats.projects, icon: FolderKanban, color: "text-purple-500" },
-        { label: "Todo Boards", value: stats.todoBoards, icon: ListChecks, color: "text-rose-500" },
-        { label: "Attendance", value: stats.attendanceRecords, icon: CalendarDays, color: "text-cyan-500" },
+        {
+          label: "Workspaces",
+          value: stats.workspaces,
+          icon: Building2,
+          color: "text-blue-500",
+        },
+        {
+          label: "Members",
+          value: stats.members,
+          icon: Users,
+          color: "text-emerald-500",
+        },
+        {
+          label: "Files",
+          value: stats.files,
+          icon: FileText,
+          color: "text-amber-500",
+        },
+        {
+          label: "Projects",
+          value: stats.projects,
+          icon: FolderKanban,
+          color: "text-purple-500",
+        },
+        {
+          label: "Todo Boards",
+          value: stats.todoBoards,
+          icon: ListChecks,
+          color: "text-rose-500",
+        },
+        {
+          label: "Attendance",
+          value: stats.attendanceRecords,
+          icon: CalendarDays,
+          color: "text-cyan-500",
+        },
       ]
     : [];
 
@@ -101,12 +139,16 @@ export default function AdminPage() {
           </div>
           <div>
             <h1 className="font-bold text-sm">Admin Console</h1>
-            <p className="text-[10px] text-muted-foreground">Platform Management</p>
+            <p className="text-[10px] text-muted-foreground">
+              Platform Management
+            </p>
           </div>
         </div>
-        
+
         <div className="p-4 space-y-1">
-          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-4 px-2">Menu</div>
+          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-4 px-2">
+            Menu
+          </div>
           <Button
             variant={activeView === "overview" ? "secondary" : "ghost"}
             className="w-full justify-start h-9 text-sm"
@@ -143,8 +185,8 @@ export default function AdminPage() {
         </div>
 
         <div className="mt-auto p-4 border-t">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="w-full justify-start text-xs h-9"
             onClick={() => router.push("/")}
           >
@@ -180,7 +222,6 @@ export default function AdminPage() {
 
         {/* Dynamic Content */}
         <div className="p-6 max-w-5xl">
-          
           {/* OVERVIEW */}
           {activeView === "overview" && (
             <section className="animate-in fade-in zoom-in-95 duration-200">
@@ -193,10 +234,15 @@ export default function AdminPage() {
                   {statCards.map((stat) => {
                     const Icon = stat.icon;
                     return (
-                      <div key={stat.label} className="bg-card border rounded-xl p-5 flex flex-col gap-3 shadow-sm">
+                      <div
+                        key={stat.label}
+                        className="bg-card border rounded-xl p-5 flex flex-col gap-3 shadow-sm"
+                      >
                         <div className="flex items-center justify-between">
                           <Icon className={cn("w-5 h-5", stat.color)} />
-                          <span className="text-3xl font-bold tabular-nums">{stat.value}</span>
+                          <span className="text-3xl font-bold tabular-nums">
+                            {stat.value}
+                          </span>
                         </div>
                         <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
                           {stat.label}
@@ -208,7 +254,10 @@ export default function AdminPage() {
               ) : (
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                   {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="bg-card border rounded-xl p-5 h-[104px] animate-pulse" />
+                    <div
+                      key={i}
+                      className="bg-card border rounded-xl p-5 h-[104px] animate-pulse"
+                    />
                   ))}
                 </div>
               )}
@@ -220,7 +269,8 @@ export default function AdminPage() {
             <section className="animate-in fade-in zoom-in-95 duration-200">
               <div className="mb-6">
                 <p className="text-sm text-muted-foreground">
-                  Toggle platform features on or off for your entire workspace. Changes take effect instantly.
+                  Toggle platform features on or off for your entire workspace.
+                  Changes take effect instantly.
                 </p>
               </div>
 
@@ -228,56 +278,88 @@ export default function AdminPage() {
                 <Tabs defaultValue="core" className="w-full">
                   <TabsList className="mb-6 bg-muted/50 p-1 flex-wrap h-auto inline-flex">
                     {Object.entries(FLAG_CATEGORIES).map(([catKey, cat]) => (
-                      <TabsTrigger key={catKey} value={catKey} className="text-xs px-4 py-2">
+                      <TabsTrigger
+                        key={catKey}
+                        value={catKey}
+                        className="text-xs px-4 py-2"
+                      >
                         {cat.label}
                       </TabsTrigger>
                     ))}
-                    <TabsTrigger value="other" className="text-xs px-4 py-2">Uncategorized</TabsTrigger>
+                    <TabsTrigger value="other" className="text-xs px-4 py-2">
+                      Uncategorized
+                    </TabsTrigger>
                   </TabsList>
 
                   {/* Render Tab Contents */}
                   {Object.entries(FLAG_CATEGORIES).map(([catKey, cat]) => {
-                    const categoryFlags = flags.filter(f => cat.keys.includes(f.key));
+                    const categoryFlags = flags.filter((f) =>
+                      cat.keys.includes(f.key),
+                    );
                     return (
-                      <TabsContent key={catKey} value={catKey} className="mt-0 outline-none">
+                      <TabsContent
+                        key={catKey}
+                        value={catKey}
+                        className="mt-0 outline-none"
+                      >
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                          {categoryFlags.length > 0 ? categoryFlags.map((flag) => {
-                            const Icon = ICON_MAP[flag.key] || Zap;
-                            return (
-                              <div
-                                key={flag._id}
-                                className={cn(
-                                  "bg-card border rounded-xl p-5 flex items-start gap-4 transition-all hover:shadow-md",
-                                  flag.enabled ? "border-emerald-500/20 bg-emerald-500/[0.02]" : "border-border opacity-70"
-                                )}
-                              >
-                                <div className={cn(
-                                  "w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors",
-                                  flag.enabled ? "bg-emerald-500/10 text-emerald-600" : "bg-muted text-muted-foreground"
-                                )}>
-                                  <Icon className="w-5 h-5" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2">
-                                    <h3 className="font-semibold text-sm">{flag.label}</h3>
-                                    <span className={cn(
-                                      "text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-sm",
-                                      flag.enabled ? "bg-emerald-500/10 text-emerald-600" : "bg-muted text-muted-foreground"
-                                    )}>
-                                      {flag.enabled ? "ON" : "OFF"}
-                                    </span>
+                          {categoryFlags.length > 0 ? (
+                            categoryFlags.map((flag) => {
+                              const Icon = ICON_MAP[flag.key] || Zap;
+                              return (
+                                <div
+                                  key={flag._id}
+                                  className={cn(
+                                    "bg-card border rounded-xl p-5 flex items-start gap-4 transition-all hover:shadow-md",
+                                    flag.enabled
+                                      ? "border-emerald-500/20 bg-emerald-500/[0.02]"
+                                      : "border-border opacity-70",
+                                  )}
+                                >
+                                  <div
+                                    className={cn(
+                                      "w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                                      flag.enabled
+                                        ? "bg-emerald-500/10 text-emerald-600"
+                                        : "bg-muted text-muted-foreground",
+                                    )}
+                                  >
+                                    <Icon className="w-5 h-5" />
                                   </div>
-                                  <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{flag.description}</p>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <h3 className="font-semibold text-sm">
+                                        {flag.label}
+                                      </h3>
+                                      <span
+                                        className={cn(
+                                          "text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-sm",
+                                          flag.enabled
+                                            ? "bg-emerald-500/10 text-emerald-600"
+                                            : "bg-muted text-muted-foreground",
+                                        )}
+                                      >
+                                        {flag.enabled ? "ON" : "OFF"}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                                      {flag.description}
+                                    </p>
+                                  </div>
+                                  <Switch
+                                    checked={flag.enabled}
+                                    onCheckedChange={() =>
+                                      handleToggle(flag.key, flag.enabled)
+                                    }
+                                    className="shrink-0 mt-2"
+                                  />
                                 </div>
-                                <Switch
-                                  checked={flag.enabled}
-                                  onCheckedChange={() => handleToggle(flag.key, flag.enabled)}
-                                  className="shrink-0 mt-2"
-                                />
-                              </div>
-                            );
-                          }) : (
-                            <p className="text-sm text-muted-foreground py-8">No flags in this category.</p>
+                              );
+                            })
+                          ) : (
+                            <p className="text-sm text-muted-foreground py-8">
+                              No flags in this category.
+                            </p>
                           )}
                         </div>
                       </TabsContent>
@@ -286,39 +368,57 @@ export default function AdminPage() {
 
                   <TabsContent value="other" className="mt-0 outline-none">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {flags.filter(f => !Object.values(FLAG_CATEGORIES).some(cat => cat.keys.includes(f.key))).map((flag) => {
-                        const Icon = ICON_MAP[flag.key] || Zap;
-                        return (
-                          <div
-                            key={flag._id}
-                            className={cn(
-                              "bg-card border rounded-xl p-5 flex items-start gap-4 transition-all hover:shadow-md",
-                              flag.enabled ? "border-emerald-500/20 bg-emerald-500/[0.02]" : "border-border opacity-70"
-                            )}
-                          >
-                            <div className={cn(
-                              "w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors",
-                              flag.enabled ? "bg-emerald-500/10 text-emerald-600" : "bg-muted text-muted-foreground"
-                            )}>
-                              <Icon className="w-5 h-5" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <h3 className="font-semibold text-sm">{flag.label}</h3>
+                      {flags
+                        .filter(
+                          (f) =>
+                            !Object.values(FLAG_CATEGORIES).some((cat) =>
+                              cat.keys.includes(f.key),
+                            ),
+                        )
+                        .map((flag) => {
+                          const Icon = ICON_MAP[flag.key] || Zap;
+                          return (
+                            <div
+                              key={flag._id}
+                              className={cn(
+                                "bg-card border rounded-xl p-5 flex items-start gap-4 transition-all hover:shadow-md",
+                                flag.enabled
+                                  ? "border-emerald-500/20 bg-emerald-500/[0.02]"
+                                  : "border-border opacity-70",
+                              )}
+                            >
+                              <div
+                                className={cn(
+                                  "w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                                  flag.enabled
+                                    ? "bg-emerald-500/10 text-emerald-600"
+                                    : "bg-muted text-muted-foreground",
+                                )}
+                              >
+                                <Icon className="w-5 h-5" />
                               </div>
-                              <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{flag.description}</p>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <h3 className="font-semibold text-sm">
+                                    {flag.label}
+                                  </h3>
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                                  {flag.description}
+                                </p>
+                              </div>
+                              <Switch
+                                checked={flag.enabled}
+                                onCheckedChange={() =>
+                                  handleToggle(flag.key, flag.enabled)
+                                }
+                                className="shrink-0 mt-2"
+                              />
                             </div>
-                            <Switch
-                              checked={flag.enabled}
-                              onCheckedChange={() => handleToggle(flag.key, flag.enabled)}
-                              className="shrink-0 mt-2"
-                            />
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
                     </div>
                   </TabsContent>
-
                 </Tabs>
               ) : (
                 <div className="flex items-center justify-center py-24 text-muted-foreground">
@@ -336,7 +436,8 @@ export default function AdminPage() {
                 <Settings className="w-12 h-12 text-muted-foreground opacity-20" />
                 <h3 className="font-semibold text-lg">System Settings</h3>
                 <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                  Advanced platform configurations, billing, and system metrics will appear here in a future update.
+                  Advanced platform configurations, billing, and system metrics
+                  will appear here in a future update.
                 </p>
               </div>
             </section>
@@ -348,7 +449,6 @@ export default function AdminPage() {
               <AdminNotificationsPage />
             </section>
           )}
-
         </div>
       </main>
     </div>

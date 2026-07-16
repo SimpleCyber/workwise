@@ -93,10 +93,10 @@ export const ProjectTaskDetailModal = ({
 }: ProjectTaskDetailModalProps) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const { data: realtimeTask } = useGetProjectTask({ 
-    taskId: initialTask?._id || null 
+  const { data: realtimeTask } = useGetProjectTask({
+    taskId: initialTask?._id || null,
   });
-  
+
   const task = (realtimeTask as any) || initialTask;
 
   if (!task) return null;
@@ -105,7 +105,11 @@ export const ProjectTaskDetailModal = ({
     <TooltipProvider>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-7xl h-[92vh] p-0 flex flex-col overflow-hidden border-none shadow-2xl rounded-xl ring-1 ring-border/50">
-          <TaskHeader task={task} lists={lists} onClose={() => onOpenChange(false)} />
+          <TaskHeader
+            task={task}
+            lists={lists}
+            onClose={() => onOpenChange(false)}
+          />
           <div className="flex-1 min-h-0 bg-background">
             <TaskContent
               task={task}
