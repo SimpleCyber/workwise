@@ -74,7 +74,9 @@ export const WorkspaceOnlyVisualization = ({
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const savedViewport = localStorage.getItem(`workspace-tree-viewport-${workspaceId}`);
+      const savedViewport = localStorage.getItem(
+        `workspace-tree-viewport-${workspaceId}`,
+      );
       if (savedViewport) {
         try {
           setInitialViewport(JSON.parse(savedViewport));
@@ -86,11 +88,17 @@ export const WorkspaceOnlyVisualization = ({
     setIsMounted(true);
   }, [workspaceId]);
 
-  const handleMoveEnd = useCallback((event: any, viewport: any) => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(`workspace-tree-viewport-${workspaceId}`, JSON.stringify(viewport));
-    }
-  }, [workspaceId]);
+  const handleMoveEnd = useCallback(
+    (event: any, viewport: any) => {
+      if (typeof window !== "undefined") {
+        localStorage.setItem(
+          `workspace-tree-viewport-${workspaceId}`,
+          JSON.stringify(viewport),
+        );
+      }
+    },
+    [workspaceId],
+  );
 
   useEffect(() => {
     const nodesWithTransition = nodes.map((node) => ({

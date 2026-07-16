@@ -15,11 +15,19 @@ export const getPriorityColor = (priority: string) => {
 
 export const getListIcon = (listName: string) => {
   const name = listName.toLowerCase();
-  if (name.includes("todo") || name.includes("to do") || name.includes("remaining")) {
+  if (
+    name.includes("todo") ||
+    name.includes("to do") ||
+    name.includes("remaining")
+  ) {
     return "list";
   } else if (name.includes("progress") || name.includes("doing")) {
     return "clock";
-  } else if (name.includes("hold") || name.includes("blocked") || name.includes("unassigned")) {
+  } else if (
+    name.includes("hold") ||
+    name.includes("blocked") ||
+    name.includes("unassigned")
+  ) {
     return "alert-circle";
   } else if (name.includes("review") || name.includes("testing")) {
     return "eye";
@@ -33,11 +41,19 @@ export const getListIcon = (listName: string) => {
 
 export const getListColor = (listName: string) => {
   const name = listName.toLowerCase();
-  if (name.includes("todo") || name.includes("to do") || name.includes("remaining")) {
+  if (
+    name.includes("todo") ||
+    name.includes("to do") ||
+    name.includes("remaining")
+  ) {
     return "border-blue-200 bg-blue-50";
   } else if (name.includes("progress") || name.includes("doing")) {
     return "border-yellow-200 bg-yellow-50";
-  } else if (name.includes("hold") || name.includes("blocked") || name.includes("unassigned")) {
+  } else if (
+    name.includes("hold") ||
+    name.includes("blocked") ||
+    name.includes("unassigned")
+  ) {
     return "border-orange-200 bg-orange-50";
   } else if (name.includes("review") || name.includes("testing")) {
     return "border-purple-200 bg-purple-50";

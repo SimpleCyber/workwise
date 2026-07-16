@@ -184,7 +184,8 @@ export const useWorkspaceTreeData = ({
           let displayListName = list.name;
           if (project.projectType === "sales") {
             if (displayListName === "To Do") displayListName = "Remaining";
-            else if (displayListName === "On Hold") displayListName = "Unassigned";
+            else if (displayListName === "On Hold")
+              displayListName = "Unassigned";
             else if (displayListName === "Done") displayListName = "Rejected";
           }
 

@@ -15,6 +15,7 @@ import {
   type Connection,
   BackgroundVariant,
   useReactFlow,
+  type Viewport,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { TreeNode } from "./tree-node";
@@ -72,7 +73,31 @@ export function TreeFlow({
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [activePopup, setActivePopup] = useState<string | null>(null);
   const [isAIDialogOpen, setIsAIDialogOpen] = useState(false);
+  const [initialViewport, setInitialViewport] = useState<Viewport | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
   const isMobile = useMobile();
+
+  useEffect(() => {
+    setIsMounted(true);
+    const saved = localStorage.getItem(`test-tree-viewport-${workspaceId}`);
+    if (saved) {
+      try {
+        setInitialViewport(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to load viewport", e);
+      }
+    }
+  }, [workspaceId]);
+
+  const onMoveEnd = useCallback(
+    (event: any, viewport: Viewport) => {
+      localStorage.setItem(
+        `test-tree-viewport-${workspaceId}`,
+        JSON.stringify(viewport),
+      );
+    },
+    [workspaceId],
+  );
 
   const { data: treeNodes, isLoading: nodesLoading } = useGetTreeNodes({
     workspaceId,
@@ -413,6 +438,8 @@ export function TreeFlow({
     setActivePopup((prev) => (prev === nodeId ? null : nodeId));
   }, []);
 
+  if (!isMounted) return null;
+
   if (nodesLoading || membersLoading) {
     return (
       <div className="w-full h-full flex items-center justify-center">
@@ -496,7 +523,9 @@ export function TreeFlow({
         key={`flow-${workspaceId}-${nodes.length}`}
         nodes={nodesWithCallbacks}
         edges={styledEdges}
-        fitView
+        fitView={!initialViewport}
+        defaultViewport={initialViewport || undefined}
+        onMoveEnd={onMoveEnd}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}

@@ -167,7 +167,10 @@ const ProjectsWorkspacePage = () => {
           description: description.trim() || undefined,
           workspaceId,
           projectType,
-          columns: projectType === "development" ? columns : ["Remaining", "In Progress", "Unassigned", "Rejected"],
+          columns:
+            projectType === "development"
+              ? columns
+              : ["Remaining", "In Progress", "Unassigned", "Rejected"],
         },
         {
           onSuccess: () => {

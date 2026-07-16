@@ -52,13 +52,28 @@ export const getTreeData = query({
               .filter((q) => q.eq(q.field("isDiscarded"), false))
               .collect();
 
-            const unassignedLeads = leads.filter(l => l.assignmentStatus === "unassigned");
-            const rejectedLeads = leads.filter(l => l.stage === "rejected" || l.stage === "lost");
-            const wonLeads = leads.filter(l => l.stage === "won");
-            const inProgressLeads = leads.filter(l => l.assignmentStatus === "assigned" && l.stage !== "rejected" && l.stage !== "lost" && l.stage !== "won");
-            
+            const unassignedLeads = leads.filter(
+              (l) => l.assignmentStatus === "unassigned",
+            );
+            const rejectedLeads = leads.filter(
+              (l) => l.stage === "rejected" || l.stage === "lost",
+            );
+            const wonLeads = leads.filter((l) => l.stage === "won");
+            const inProgressLeads = leads.filter(
+              (l) =>
+                l.assignmentStatus === "assigned" &&
+                l.stage !== "rejected" &&
+                l.stage !== "lost" &&
+                l.stage !== "won",
+            );
+
             // "Remaining" could be considered unassigned + those needing contact/retry
-            const remainingLeads = leads.filter(l => l.assignmentStatus === "unassigned" || !l.stage || l.stage === "retry");
+            const remainingLeads = leads.filter(
+              (l) =>
+                l.assignmentStatus === "unassigned" ||
+                !l.stage ||
+                l.stage === "retry",
+            );
 
             listsWithTasks = [
               {
@@ -92,7 +107,7 @@ export const getTreeData = query({
                 tasks: [],
                 taskCount: rejectedLeads.length,
                 position: 3,
-              }
+              },
             ];
           } else {
             // Get all lists in this project
@@ -232,11 +247,18 @@ export const getTreeData = query({
           }
 
           let totalTaskCount = 0;
-          if (project.projectType === 'sales') {
-             const allLeads = await ctx.db.query("salesLeads").withIndex("by_board_id", (q) => q.eq("boardId", project._id)).filter((q) => q.eq(q.field("isDiscarded"), false)).collect();
-             totalTaskCount = allLeads.length;
+          if (project.projectType === "sales") {
+            const allLeads = await ctx.db
+              .query("salesLeads")
+              .withIndex("by_board_id", (q) => q.eq("boardId", project._id))
+              .filter((q) => q.eq(q.field("isDiscarded"), false))
+              .collect();
+            totalTaskCount = allLeads.length;
           } else {
-             totalTaskCount = listsWithTasks.reduce((acc, list) => acc + list.taskCount, 0);
+            totalTaskCount = listsWithTasks.reduce(
+              (acc, list) => acc + list.taskCount,
+              0,
+            );
           }
 
           projectsWithDetails.push({
