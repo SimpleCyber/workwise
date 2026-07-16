@@ -4,7 +4,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../../../convex/_generated/api";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
-import { Loader2, Plus, Upload } from "lucide-react";
+import { Loader2, Plus, Upload, Copy, Check } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProjectKanbanBoard } from "@/features/projects/components/project-kanban-board";
@@ -17,6 +17,12 @@ import { toast } from "sonner";
 import { useGetWorkspaceProjects } from "@/features/test/api/all-data-hook";
 
 import { useCurrentUser } from "../../../../../features/auth/api/use-current-user";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function ProjectBoardPage({
   params,
@@ -49,6 +55,18 @@ export default function ProjectBoardPage({
   const mutateBulkAddLeads = useMutation(api.sales.addBulkLeads);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [isCopied, setIsCopied] = useState(false);
+  const csvFormat = `name,phone,email,description
+"John Doe",+1234567890,john@example.com,Notes`;
+
+  const handleCopyFormat = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(csvFormat);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
 
   const handleAddLead = async () => {
     try {
@@ -210,15 +228,51 @@ export default function ProjectBoardPage({
                   </span>
                 </h2>
                 <div className="h-4 w-px bg-border" />
-                <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  size="icon"
-                  variant="outline"
-                  className="size-7 rounded-full shadow-sm hover:border-primary transition-colors cursor-pointer group"
-                  title="Upload CSV"
-                >
-                  <Upload className="size-3 group-hover:text-primary transition-colors" />
-                </Button>
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        onClick={() => fileInputRef.current?.click()}
+                        size="icon"
+                        variant="outline"
+                        className="size-7 rounded-full shadow-sm hover:border-primary transition-colors cursor-pointer group"
+                      >
+                        <Upload className="size-3 group-hover:text-primary transition-colors" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="bottom"
+                      align="end"
+                      className="w-[280px] p-0 z-50"
+                    >
+                      <div className="flex flex-col bg-popover rounded-md">
+                        <div className="px-3 py-2 border-b flex items-center justify-between">
+                          <span className="font-semibold text-xs text-foreground mt-0">
+                            CSV Format Required
+                          </span>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="size-5 hover:bg-muted"
+                            onClick={handleCopyFormat}
+                            title="Copy format"
+                          >
+                            {isCopied ? (
+                              <Check className="size-3 text-emerald-500" />
+                            ) : (
+                              <Copy className="size-3 text-muted-foreground" />
+                            )}
+                          </Button>
+                        </div>
+                        <div className="p-3 bg-muted/30 text-left">
+                          <pre className="text-[10px] font-mono text-muted-foreground whitespace-pre-wrap select-all">
+                            {csvFormat}
+                          </pre>
+                        </div>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <input
                   type="file"
                   accept=".csv"
