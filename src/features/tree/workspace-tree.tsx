@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 import ReactFlow, {
   Controls,
   Background,
@@ -69,6 +69,29 @@ export const WorkspaceOnlyVisualization = ({
   const [flowNodes, setNodes, onNodesChange] = useNodesState([]);
   const [flowEdges, setEdges, onEdgesChange] = useEdgesState([]);
 
+  const [initialViewport, setInitialViewport] = useState<any>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedViewport = localStorage.getItem(`workspace-tree-viewport-${workspaceId}`);
+      if (savedViewport) {
+        try {
+          setInitialViewport(JSON.parse(savedViewport));
+        } catch (e) {
+          console.error("Failed to parse saved viewport", e);
+        }
+      }
+    }
+    setIsMounted(true);
+  }, [workspaceId]);
+
+  const handleMoveEnd = useCallback((event: any, viewport: any) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(`workspace-tree-viewport-${workspaceId}`, JSON.stringify(viewport));
+    }
+  }, [workspaceId]);
+
   useEffect(() => {
     const nodesWithTransition = nodes.map((node) => ({
       ...node,
@@ -77,6 +100,8 @@ export const WorkspaceOnlyVisualization = ({
     setNodes(nodesWithTransition);
     setEdges(edges);
   }, [nodes, edges, setNodes, setEdges]);
+
+  if (!isMounted) return null;
 
   return (
     <div className="w-full h-full flex flex-col">
@@ -95,7 +120,9 @@ export const WorkspaceOnlyVisualization = ({
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           nodeTypes={nodeTypes}
-          fitView
+          fitView={!initialViewport}
+          defaultViewport={initialViewport || undefined}
+          onMoveEnd={handleMoveEnd}
           // fitViewOptions={{ padding: 10 }}
           defaultEdgeOptions={{
             type: "default",

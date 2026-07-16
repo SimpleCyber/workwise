@@ -50,6 +50,7 @@ export interface Project {
   _id: Id<"projectBoards">;
   name: string;
   boardCode: string;
+  projectType?: "development" | "sales" | string;
   totalTasks: number;
   lists: ProjectList[];
   members: Member[];

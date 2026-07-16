@@ -99,7 +99,7 @@ export const ChatInput = ({ placeholder }: ChatInputProps) => {
   };
 
   return (
-    <div className="w-full px-5">
+    <div className="w-full px-5 pb-3">
       <Editor
         placeholder={placeholder}
         key={editorKey}

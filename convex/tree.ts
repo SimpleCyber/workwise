@@ -43,70 +43,122 @@ export const getTreeData = query({
 
         const projectsWithDetails = [];
         for (const project of projects) {
-          // Get all lists in this project
-          const lists = await ctx.db
-            .query("projectLists")
-            .withIndex("by_board_id", (q) => q.eq("boardId", project._id))
-            .filter((q) => q.eq(q.field("isArchived"), false))
-            .collect();
+          let listsWithTasks: any[] = [];
 
-          const listsWithTasks = [];
-          for (const list of lists) {
-            // Get all tasks in this list
-            const tasks = await ctx.db
-              .query("projectTasks")
-              .withIndex("by_list_id", (q) => q.eq("listId", list._id))
+          if (project.projectType === "sales") {
+            const leads = await ctx.db
+              .query("salesLeads")
+              .withIndex("by_board_id", (q) => q.eq("boardId", project._id))
+              .filter((q) => q.eq(q.field("isDiscarded"), false))
+              .collect();
+
+            const unassignedLeads = leads.filter(l => l.assignmentStatus === "unassigned");
+            const rejectedLeads = leads.filter(l => l.stage === "rejected" || l.stage === "lost");
+            const wonLeads = leads.filter(l => l.stage === "won");
+            const inProgressLeads = leads.filter(l => l.assignmentStatus === "assigned" && l.stage !== "rejected" && l.stage !== "lost" && l.stage !== "won");
+            
+            // "Remaining" could be considered unassigned + those needing contact/retry
+            const remainingLeads = leads.filter(l => l.assignmentStatus === "unassigned" || !l.stage || l.stage === "retry");
+
+            listsWithTasks = [
+              {
+                _id: `${project._id}-remaining`,
+                name: "Remaining",
+                boardId: project._id,
+                tasks: [],
+                taskCount: remainingLeads.length,
+                position: 0,
+              },
+              {
+                _id: `${project._id}-inprogress`,
+                name: "In Progress",
+                boardId: project._id,
+                tasks: [],
+                taskCount: inProgressLeads.length,
+                position: 1,
+              },
+              {
+                _id: `${project._id}-unassigned`,
+                name: "Unassigned",
+                boardId: project._id,
+                tasks: [],
+                taskCount: unassignedLeads.length,
+                position: 2,
+              },
+              {
+                _id: `${project._id}-rejected`,
+                name: "Rejected",
+                boardId: project._id,
+                tasks: [],
+                taskCount: rejectedLeads.length,
+                position: 3,
+              }
+            ];
+          } else {
+            // Get all lists in this project
+            const lists = await ctx.db
+              .query("projectLists")
+              .withIndex("by_board_id", (q) => q.eq("boardId", project._id))
               .filter((q) => q.eq(q.field("isArchived"), false))
               .collect();
 
-            const tasksWithDetails = [];
-            for (const task of tasks) {
-              // Get task assignee details
-              const assignedTo = task.assignedToId
-                ? await ctx.db.get(task.assignedToId)
-                : null;
-              const assignedBy = task.assignedById
-                ? await ctx.db.get(task.assignedById)
-                : null;
-              const createdBy = await ctx.db.get(task.createdById);
-
-              // Get user details
-              const assignedToUser = assignedTo
-                ? await ctx.db.get(assignedTo.userId)
-                : null;
-              const assignedByUser = assignedBy
-                ? await ctx.db.get(assignedBy.userId)
-                : null;
-              const createdByUser = createdBy
-                ? await ctx.db.get(createdBy.userId)
-                : null;
-
-              // Get task comments count
-              const commentsCount = await ctx.db
-                .query("taskComments")
-                .withIndex("by_task_id", (q) => q.eq("taskId", task._id))
+            for (const list of lists) {
+              // Get all tasks in this list
+              const tasks = await ctx.db
+                .query("projectTasks")
+                .withIndex("by_list_id", (q) => q.eq("listId", list._id))
+                .filter((q) => q.eq(q.field("isArchived"), false))
                 .collect();
 
-              tasksWithDetails.push({
-                ...task,
-                assignedTo: assignedTo
-                  ? { ...assignedTo, user: assignedToUser }
-                  : null,
-                assignedBy: assignedBy
-                  ? { ...assignedBy, user: assignedByUser }
-                  : null,
-                createdBy: createdBy
-                  ? { ...createdBy, user: createdByUser }
-                  : null,
-                commentsCount: commentsCount.length,
+              const tasksWithDetails = [];
+              for (const task of tasks) {
+                // Get task assignee details
+                const assignedTo = task.assignedToId
+                  ? await ctx.db.get(task.assignedToId)
+                  : null;
+                const assignedBy = task.assignedById
+                  ? await ctx.db.get(task.assignedById)
+                  : null;
+                const createdBy = await ctx.db.get(task.createdById);
+
+                // Get user details
+                const assignedToUser = assignedTo
+                  ? await ctx.db.get(assignedTo.userId)
+                  : null;
+                const assignedByUser = assignedBy
+                  ? await ctx.db.get(assignedBy.userId)
+                  : null;
+                const createdByUser = createdBy
+                  ? await ctx.db.get(createdBy.userId)
+                  : null;
+
+                // Get task comments count
+                const commentsCount = await ctx.db
+                  .query("taskComments")
+                  .withIndex("by_task_id", (q) => q.eq("taskId", task._id))
+                  .collect();
+
+                tasksWithDetails.push({
+                  ...task,
+                  assignedTo: assignedTo
+                    ? { ...assignedTo, user: assignedToUser }
+                    : null,
+                  assignedBy: assignedBy
+                    ? { ...assignedBy, user: assignedByUser }
+                    : null,
+                  createdBy: createdBy
+                    ? { ...createdBy, user: createdByUser }
+                    : null,
+                  commentsCount: commentsCount.length,
+                });
+              }
+
+              listsWithTasks.push({
+                ...list,
+                tasks: tasksWithDetails.sort((a, b) => a.position - b.position),
+                taskCount: tasksWithDetails.length,
               });
             }
-
-            listsWithTasks.push({
-              ...list,
-              tasks: tasksWithDetails.sort((a, b) => a.position - b.position),
-              taskCount: tasksWithDetails.length,
-            });
           }
 
           // Get all workspace members for this project
@@ -179,14 +231,19 @@ export const getTreeData = query({
             }
           }
 
+          let totalTaskCount = 0;
+          if (project.projectType === 'sales') {
+             const allLeads = await ctx.db.query("salesLeads").withIndex("by_board_id", (q) => q.eq("boardId", project._id)).filter((q) => q.eq(q.field("isDiscarded"), false)).collect();
+             totalTaskCount = allLeads.length;
+          } else {
+             totalTaskCount = listsWithTasks.reduce((acc, list) => acc + list.taskCount, 0);
+          }
+
           projectsWithDetails.push({
             ...project,
             lists: listsWithTasks.sort((a, b) => a.position - b.position),
             members: membersWithTasks,
-            totalTasks: listsWithTasks.reduce(
-              (acc, list) => acc + list.taskCount,
-              0,
-            ),
+            totalTasks: totalTaskCount,
           });
         }
 

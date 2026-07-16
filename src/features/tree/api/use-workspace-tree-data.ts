@@ -181,6 +181,13 @@ export const useWorkspaceTreeData = ({
           const listNodeId = `list-${list._id}`;
           const isListExpanded = expandedLists.has(list._id) || showAll;
 
+          let displayListName = list.name;
+          if (project.projectType === "sales") {
+            if (displayListName === "To Do") displayListName = "Remaining";
+            else if (displayListName === "On Hold") displayListName = "Unassigned";
+            else if (displayListName === "Done") displayListName = "Rejected";
+          }
+
           // Skip siblings of active list unless in "all" mode
           if (activeList && activeList !== list._id && !showAll) {
             return;
@@ -205,7 +212,7 @@ export const useWorkspaceTreeData = ({
                 : spacing.vertical * 2,
             },
             data: {
-              name: list.name,
+              name: displayListName,
               listId: list._id,
               taskCount: list.taskCount,
               onToggleTasks: toggleList,

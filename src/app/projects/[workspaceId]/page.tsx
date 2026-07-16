@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -90,6 +90,24 @@ const ProjectsWorkspacePage = () => {
   const [editingBoardId, setEditingBoardId] =
     useState<Id<"projectBoards"> | null>(null);
   const [view, setView] = useState<"graph" | "list">("graph");
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    if (typeof window !== "undefined") {
+      const savedView = localStorage.getItem(`workspace-view-${workspaceId}`);
+      if (savedView === "list" || savedView === "graph") {
+        setView(savedView);
+      }
+    }
+  }, [workspaceId]);
+
+  const handleViewChange = (newView: "graph" | "list") => {
+    setView(newView);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(`workspace-view-${workspaceId}`, newView);
+    }
+  };
   const [projectType, setProjectType] = useState<"development" | "sales">(
     "development",
   );
@@ -149,7 +167,7 @@ const ProjectsWorkspacePage = () => {
           description: description.trim() || undefined,
           workspaceId,
           projectType,
-          columns: projectType === "development" ? columns : undefined,
+          columns: projectType === "development" ? columns : ["Remaining", "In Progress", "Unassigned", "Rejected"],
         },
         {
           onSuccess: () => {
@@ -187,7 +205,7 @@ const ProjectsWorkspacePage = () => {
     }
   };
 
-  if (workspaceLoading || boardsLoading) {
+  if (workspaceLoading || boardsLoading || !isMounted) {
     return (
       <div className="flex h-full flex-1 flex-col items-center justify-center gap-2">
         <Loader className="size-5 animate-spin text-muted-foreground" />
@@ -217,7 +235,7 @@ const ProjectsWorkspacePage = () => {
             <Button
               variant={view === "list" ? "secondary" : "ghost"}
               size="icon"
-              onClick={() => setView("list")}
+              onClick={() => handleViewChange("list")}
               className="h-7 w-7"
             >
               <List className="w-4 h-4" />
@@ -225,7 +243,7 @@ const ProjectsWorkspacePage = () => {
             <Button
               variant={view === "graph" ? "secondary" : "ghost"}
               size="icon"
-              onClick={() => setView("graph")}
+              onClick={() => handleViewChange("graph")}
               className="h-7 w-7"
             >
               <Grid className="w-4 h-4" />
