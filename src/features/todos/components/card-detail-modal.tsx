@@ -181,7 +181,7 @@ export const CardDetailModal = ({
         open={open}
         onOpenChange={onOpenChange}
         title="Card Details"
-        className="sm:max-w-xl"
+        className="sm:max-w-3xl xl:max-w-3xl"
       >
         <div className="space-y-4">
           {/* Title */}
