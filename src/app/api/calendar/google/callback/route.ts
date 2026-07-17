@@ -24,13 +24,15 @@ export async function GET(req: NextRequest) {
     const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
     // Call the exchangeCode action
-    await convex.action(api.googleCalendarActions.exchangeCode, {
+    const result = await convex.action(api.googleCalendarActions.exchangeCode, {
       code,
       state,
     });
 
-    // Success! Redirect back to home/dashboard
-    return NextResponse.redirect(`${baseUrl}/`);
+    const returnTo = result?.returnTo || "/";
+
+    // Success! Redirect back to previous URL or home
+    return NextResponse.redirect(`${baseUrl}${returnTo === "/" ? "" : returnTo}`);
   } catch (err: any) {
     console.error("Failed to exchange code in API route:", err);
     return NextResponse.redirect(`${baseUrl}/?error=exchange_failed`);

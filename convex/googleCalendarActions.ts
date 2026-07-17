@@ -20,6 +20,7 @@ const CALENDAR_API_URL = "https://www.googleapis.com/calendar/v3";
 export const generateAuthUrl = action({
   args: {
     redirectUri: v.string(),
+    returnTo: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -51,6 +52,8 @@ export const generateAuthUrl = action({
       state,
       userId,
       redirectUri: args.redirectUri,
+      // @ts-ignore
+      returnTo: args.returnTo,
     });
 
     const url = `${GOOGLE_AUTH_URL}?${params.toString()}`;
@@ -116,7 +119,7 @@ export const exchangeCode = action({
       userId: userId,
     });
 
-    return { success: true };
+    return { success: true, returnTo: authRecord.returnTo };
   },
 });
 
@@ -236,5 +239,153 @@ export const createMeeting = action({
     });
 
     return googleEvent;
+  },
+});
+
+// ---- Sync Google Calendar Events ----
+
+export const syncGoogleCalendar = action({
+  args: {
+    workspaceId: v.id("workspaces"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    // Get tokens
+    const tokens: any = await ctx.runQuery(api.googleAuth.getGoogleTokens);
+    if (!tokens) {
+      throw new Error("Google Calendar not connected");
+    }
+
+    let accessToken: string = tokens.accessToken;
+
+    // Refresh token if expired
+    if (tokens.expiresAt < Date.now() + 60000) {
+      if (!tokens.refreshToken) {
+        throw new Error(
+          "Token expired and no refresh token available. Please reconnect Google Calendar.",
+        );
+      }
+
+      const clientId = process.env.GOOGLE_CALENDAR_CLIENT_ID;
+      const clientSecret = process.env.GOOGLE_CALENDAR_CLIENT_SECRET;
+
+      const refreshResponse = await fetch(GOOGLE_TOKEN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          client_id: clientId!,
+          client_secret: clientSecret!,
+          refresh_token: tokens.refreshToken,
+          grant_type: "refresh_token",
+        }),
+      });
+
+      if (!refreshResponse.ok) {
+        throw new Error("Failed to refresh token");
+      }
+
+      const newTokens: any = await refreshResponse.json();
+      accessToken = newTokens.access_token;
+
+      await ctx.runMutation(internal.googleAuth.storeGoogleTokens, {
+        accessToken: newTokens.access_token,
+        refreshToken: newTokens.refresh_token || tokens.refreshToken,
+        expiresAt: Date.now() + newTokens.expires_in * 1000,
+        scope: newTokens.scope || tokens.scope,
+      });
+    }
+
+    // Fetch events from Google Calendar (next 90 days + past 30 days)
+    const timeMin = new Date(
+      Date.now() - 30 * 24 * 60 * 60 * 1000,
+    ).toISOString();
+    const timeMax = new Date(
+      Date.now() + 90 * 24 * 60 * 60 * 1000,
+    ).toISOString();
+
+    const calendarResponse = await fetch(
+      `${CALENDAR_API_URL}/calendars/primary/events?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}&maxResults=250&singleEvents=true&orderBy=startTime`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      },
+    );
+
+    if (!calendarResponse.ok) {
+      const errorText = await calendarResponse.text();
+      throw new Error(`Failed to fetch Google Calendar events: ${errorText}`);
+    }
+
+    const data: any = await calendarResponse.json();
+    const googleEvents = data.items || [];
+
+    let synced = 0;
+    let skipped = 0;
+
+    for (const gEvent of googleEvents) {
+      // Skip cancelled events
+      if (gEvent.status === "cancelled") continue;
+
+      const title = gEvent.summary || "(No title)";
+      const description = gEvent.description || undefined;
+      const location = gEvent.location || undefined;
+      const meetLink = gEvent.hangoutLink || undefined;
+      const googleEventId = gEvent.id;
+
+      // Parse start/end times — handle both dateTime and date (all-day events)
+      let startTime: number;
+      let endTime: number;
+
+      if (gEvent.start?.dateTime) {
+        startTime = new Date(gEvent.start.dateTime).getTime();
+      } else if (gEvent.start?.date) {
+        startTime = new Date(gEvent.start.date).getTime();
+      } else {
+        continue; // Skip events without valid time
+      }
+
+      if (gEvent.end?.dateTime) {
+        endTime = new Date(gEvent.end.dateTime).getTime();
+      } else if (gEvent.end?.date) {
+        endTime = new Date(gEvent.end.date).getTime();
+      } else {
+        endTime = startTime + 60 * 60 * 1000; // Default 1 hour
+      }
+
+      // Extract attendees
+      const attendees = gEvent.attendees
+        ? gEvent.attendees.map((a: any) => a.email).filter(Boolean)
+        : undefined;
+
+      // Upsert: check if this googleEventId already exists
+      const upsertResult = await ctx.runMutation(
+        internal.calendarEvents.upsertGoogleEvent,
+        {
+          googleEventId,
+          title,
+          description,
+          startTime,
+          endTime,
+          location,
+          meetLink,
+          attendees,
+          userId,
+          workspaceId: args.workspaceId,
+        },
+      );
+
+      if (upsertResult.created) {
+        synced++;
+      } else {
+        skipped++;
+      }
+    }
+
+    return { synced, skipped, total: googleEvents.length };
   },
 });

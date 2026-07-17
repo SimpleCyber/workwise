@@ -13,7 +13,7 @@ const isPublicPage = createRouteMatcher([
   "/calendar-callback(.*)",
 ]);
 
-export default convexAuthNextjsMiddleware(
+const convexMiddleware = convexAuthNextjsMiddleware(
   async (req) => {
     const isPublic = isPublicPage(req);
     const isAuthenticated = await isAuthenticatedNextjs();
@@ -34,6 +34,17 @@ export default convexAuthNextjsMiddleware(
     } as any,
   },
 );
+
+import { NextResponse, type NextRequest } from "next/server";
+
+export default function middleware(req: NextRequest, ev: any) {
+  // Explicitly ignore our custom Google Calendar OAuth callback
+  // so Convex Auth doesn't incorrectly intercept the code=... param
+  if (req.nextUrl.pathname.startsWith("/api/calendar")) {
+    return NextResponse.next();
+  }
+  return convexMiddleware(req, ev);
+}
 
 export const config = {
   // The following matcher runs middleware on all routes

@@ -586,6 +586,7 @@ const schema = defineSchema({
     state: v.string(),
     userId: v.id("users"),
     redirectUri: v.optional(v.string()),
+    returnTo: v.optional(v.string()),
     createdAt: v.number(),
   }).index("by_state", ["state"]),
 

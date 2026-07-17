@@ -195,3 +195,65 @@ export const deleteEvent = mutation({
     return { success: true };
   },
 });
+
+// Upsert a Google Calendar event (used during sync)
+export const upsertGoogleEvent = internalMutation({
+  args: {
+    googleEventId: v.string(),
+    title: v.string(),
+    description: v.optional(v.string()),
+    startTime: v.number(),
+    endTime: v.number(),
+    location: v.optional(v.string()),
+    meetLink: v.optional(v.string()),
+    attendees: v.optional(v.array(v.string())),
+    userId: v.id("users"),
+    workspaceId: v.id("workspaces"),
+  },
+  handler: async (ctx, args) => {
+    // Check if this Google event already exists in our DB
+    const existing = await ctx.db
+      .query("calendarEvents")
+      .withIndex("by_google_event_id", (q) =>
+        q.eq("googleEventId", args.googleEventId),
+      )
+      .first();
+
+    const now = Date.now();
+
+    if (existing) {
+      // Update existing event with latest data from Google
+      await ctx.db.patch(existing._id, {
+        title: args.title,
+        description: args.description,
+        startTime: args.startTime,
+        endTime: args.endTime,
+        location: args.location,
+        meetLink: args.meetLink,
+        attendees: args.attendees,
+        isGoogleSynced: true,
+        updatedAt: now,
+      });
+      return { created: false, eventId: existing._id };
+    } else {
+      // Insert new event
+      const eventId = await ctx.db.insert("calendarEvents", {
+        title: args.title,
+        description: args.description,
+        startTime: args.startTime,
+        endTime: args.endTime,
+        location: args.location,
+        meetLink: args.meetLink,
+        attendees: args.attendees,
+        userId: args.userId,
+        workspaceId: args.workspaceId,
+        googleEventId: args.googleEventId,
+        isGoogleSynced: true,
+        createdAt: now,
+        updatedAt: now,
+      });
+      return { created: true, eventId };
+    }
+  },
+});
+
