@@ -34,6 +34,9 @@ import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { useRouter } from "next/navigation";
 import type { Id } from "../../convex/_generated/dataModel";
 
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+
 const MentionHoverCard = ({
   memberId,
   position,
@@ -93,6 +96,8 @@ const Renderer = ({ value }: RendererProps) => {
     null,
   );
   const [hoverPos, setHoverPos] = useState({ top: 0, left: 0 });
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  
   const router = useRouter();
 
   const workspaceId = useWorkspaceId();
@@ -149,6 +154,11 @@ const Renderer = ({ value }: RendererProps) => {
 
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
+      if (target.tagName.toUpperCase() === "IMG") {
+         setLightboxUrl((target as HTMLImageElement).src);
+         return;
+      }
+      
       if (target.classList.contains("mention")) {
         const id = target.getAttribute("data-id") as Id<"members">;
         if (id && id !== "all" && workspaceId) {
@@ -175,10 +185,21 @@ const Renderer = ({ value }: RendererProps) => {
 
   return (
     <>
+      <Dialog open={!!lightboxUrl} onOpenChange={(open) => !open && setLightboxUrl(null)}>
+        <DialogContent className="max-w-[800px] border-none bg-transparent p-0 shadow-none">
+          {lightboxUrl && (
+            <TransformWrapper>
+              <TransformComponent wrapperStyle={{ width: "100%", maxHeight: "80vh" }}>
+                <img src={lightboxUrl} alt="Enlarged" className="object-contain w-full h-full rounded-md" />
+              </TransformComponent>
+            </TransformWrapper>
+          )}
+        </DialogContent>
+      </Dialog>
       {hoveredMemberId && (
         <MentionHoverCard memberId={hoveredMemberId} position={hoverPos} />
       )}
-      <div ref={rendererRef} className="ql-editor ql-renderer" />
+      <div ref={rendererRef} className="ql-editor ql-renderer max-w-full overflow-hidden [&_img]:cursor-zoom-in [&_img]:rounded-md [&_img]:border" />
     </>
   );
 };

@@ -20,6 +20,11 @@ import { cn } from "@/lib/utils";
 import { EmojiPopover } from "./emoji-popover";
 import { Hint } from "./hint";
 
+import { useGenerateUploadUrl } from "@/features/upload/api/use-generate-upload-url";
+import { useGetUrl } from "@/features/upload/api/use-get-url";
+
+import BlotFormatter from "quill-blot-formatter";
+
 const Embed = Quill.import("blots/embed") as any;
 
 class MentionBlot extends Embed {
@@ -46,6 +51,7 @@ MentionBlot.blotName = "mention";
 MentionBlot.tagName = "span";
 
 Quill.register(MentionBlot, true);
+Quill.register("modules/blotFormatter", BlotFormatter);
 
 type EditorValue = {
   image: File | null;
@@ -83,6 +89,17 @@ const Editor = ({
   const [text, setText] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [isToolbarVisible, setIsToolbarVisible] = useState(true);
+
+  const { mutate: generateUploadUrl } = useGenerateUploadUrl();
+  const { mutate: getUrl } = useGetUrl();
+
+  const generateUploadUrlRef = useRef(generateUploadUrl);
+  const getUrlRef = useRef(getUrl);
+
+  useLayoutEffect(() => {
+    generateUploadUrlRef.current = generateUploadUrl;
+    getUrlRef.current = getUrl;
+  }, [generateUploadUrl, getUrl]);
 
   // Mention State
   const [mentionState, setMentionState] = useState({
@@ -174,6 +191,14 @@ const Editor = ({
 
     const options: QuillOptions = {
       modules: {
+        blotFormatter: {
+          overlay: {
+            style: {
+              border: "2px solid #2563eb",
+              backgroundColor: "transparent",
+            },
+          },
+        },
         toolbar: [
           ["bold", "italic", "strike"],
           [{ list: "ordered" }, { list: "bullet" }],
@@ -276,6 +301,79 @@ const Editor = ({
     quillRef.current = quill;
     quillRef.current.focus();
 
+    const handleImageFile = async (file: File) => {
+      try {
+        const postUrl = await generateUploadUrlRef.current({}, { throwError: true });
+        if (!postUrl) return;
+
+        const result = await fetch(postUrl, {
+          method: "POST",
+          headers: { "Content-Type": file.type },
+          body: file,
+        });
+
+        if (!result.ok) throw new Error("Upload failed");
+
+        const { storageId } = await result.json();
+        const imageUrl = await getUrlRef.current({ storageId }, { throwError: true });
+        if (!imageUrl) return;
+
+        const range = quill.getSelection(true);
+        const index = range ? range.index : quill.getLength();
+
+        quill.insertEmbed(index, "image", imageUrl, "user");
+
+        setTimeout(() => {
+          const img = container.querySelector(`img[src="${imageUrl}"]`) as HTMLImageElement;
+          if (img) {
+            img.width = 300; 
+          }
+          
+          if (quillRef.current) {
+            const currentSelection = quillRef.current.getSelection();
+            if (currentSelection && currentSelection.index === index + 1 && currentSelection.length === 0) {
+              quillRef.current.setSelection(index, 1);
+            }
+          }
+        }, 50);
+      } catch (error) {
+        console.error("Failed to handle image", error);
+      }
+    };
+
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith("image/")) {
+          e.preventDefault();
+          e.stopPropagation();
+          const file = items[i].getAsFile();
+          if (file) handleImageFile(file);
+          return;
+        }
+      }
+    };
+
+    const handleDrop = (e: DragEvent) => {
+      const items = e.dataTransfer?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith("image/")) {
+          e.preventDefault();
+          e.stopPropagation();
+          const file = items[i].getAsFile();
+          if (file) handleImageFile(file);
+          return;
+        }
+      }
+    };
+
+    quill.root.addEventListener("paste", handlePaste, true);
+    quill.root.addEventListener("drop", handleDrop, true);
+
     if (innerRef) innerRef.current = quill;
 
     quill.setContents(defaultValueRef.current);
@@ -345,6 +443,9 @@ const Editor = ({
 
       quill.off(Quill.events.TEXT_CHANGE);
       quill.off(Quill.events.SELECTION_CHANGE);
+      
+      quill.root.removeEventListener("paste", handlePaste, true);
+      quill.root.removeEventListener("drop", handleDrop, true);
 
       if (quillRef) quillRef.current = null;
       if (innerRef) innerRef.current = null;
@@ -389,7 +490,7 @@ const Editor = ({
       >
         <div
           ref={containerRef}
-          className="h-full ql-container-wrapper relative"
+          className="h-full ql-container-wrapper relative [&_img]:rounded-md [&_img]:border"
         >
           {mentionState.isOpen && (
             <div

@@ -1,5 +1,6 @@
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import Image from "next/image";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 interface ThumbnailProps {
   url: string | null | undefined;
@@ -26,13 +27,17 @@ export const Thumbnail = ({ url }: ThumbnailProps) => {
         isThumbnail
         className="max-w-[800px] border-none bg-transparent p-0 shadow-none"
       >
-        <Image
-          src={url}
-          width={800}
-          height={600}
-          alt="Message image"
-          className="size-full rounded-md object-cover"
-        />
+        <TransformWrapper>
+          <TransformComponent wrapperStyle={{ width: "100%", maxHeight: "80vh" }}>
+            <Image
+              src={url}
+              width={800}
+              height={600}
+              alt="Message image"
+              className="size-full rounded-md object-contain"
+            />
+          </TransformComponent>
+        </TransformWrapper>
       </DialogContent>
     </Dialog>
   );
