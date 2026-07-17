@@ -28,7 +28,9 @@ export const Thumbnail = ({ url }: ThumbnailProps) => {
         className="max-w-[800px] border-none bg-transparent p-0 shadow-none"
       >
         <TransformWrapper>
-          <TransformComponent wrapperStyle={{ width: "100%", maxHeight: "80vh" }}>
+          <TransformComponent
+            wrapperStyle={{ width: "100%", maxHeight: "80vh" }}
+          >
             <Image
               src={url}
               width={800}

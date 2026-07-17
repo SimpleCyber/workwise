@@ -303,7 +303,10 @@ const Editor = ({
 
     const handleImageFile = async (file: File) => {
       try {
-        const postUrl = await generateUploadUrlRef.current({}, { throwError: true });
+        const postUrl = await generateUploadUrlRef.current(
+          {},
+          { throwError: true },
+        );
         if (!postUrl) return;
 
         const result = await fetch(postUrl, {
@@ -315,7 +318,10 @@ const Editor = ({
         if (!result.ok) throw new Error("Upload failed");
 
         const { storageId } = await result.json();
-        const imageUrl = await getUrlRef.current({ storageId }, { throwError: true });
+        const imageUrl = await getUrlRef.current(
+          { storageId },
+          { throwError: true },
+        );
         if (!imageUrl) return;
 
         const range = quill.getSelection(true);
@@ -324,14 +330,20 @@ const Editor = ({
         quill.insertEmbed(index, "image", imageUrl, "user");
 
         setTimeout(() => {
-          const img = container.querySelector(`img[src="${imageUrl}"]`) as HTMLImageElement;
+          const img = container.querySelector(
+            `img[src="${imageUrl}"]`,
+          ) as HTMLImageElement;
           if (img) {
-            img.width = 300; 
+            img.width = 300;
           }
-          
+
           if (quillRef.current) {
             const currentSelection = quillRef.current.getSelection();
-            if (currentSelection && currentSelection.index === index + 1 && currentSelection.length === 0) {
+            if (
+              currentSelection &&
+              currentSelection.index === index + 1 &&
+              currentSelection.length === 0
+            ) {
               quillRef.current.setSelection(index, 1);
             }
           }
@@ -443,7 +455,7 @@ const Editor = ({
 
       quill.off(Quill.events.TEXT_CHANGE);
       quill.off(Quill.events.SELECTION_CHANGE);
-      
+
       quill.root.removeEventListener("paste", handlePaste, true);
       quill.root.removeEventListener("drop", handleDrop, true);
 
