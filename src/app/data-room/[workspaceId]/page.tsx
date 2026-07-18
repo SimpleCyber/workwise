@@ -350,8 +350,8 @@ const DataRoomWorkspacePage = () => {
   };
 
   const handleUpload = async () => {
-    if (selectedFiles.length === 0 || !uploadData.comment?.trim()) {
-      toast.error("Please select files and add a description");
+    if (selectedFiles.length === 0) {
+      toast.error("Please select files to upload");
       return;
     }
 
@@ -379,7 +379,7 @@ const DataRoomWorkspacePage = () => {
           fileName: file.name,
           fileType: file.type,
           fileSize: file.size,
-          comment: uploadData.comment!,
+          comment: uploadData.comment || "",
           visibility: uploadData.visibility!,
           allowedMembers: uploadData.allowedMembers!,
           folderId: (currentFolderId as Id<"dataRoomFolders">) || undefined,
