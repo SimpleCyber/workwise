@@ -274,7 +274,9 @@ export const CardDetailModal = ({
                       <X className="w-5 h-5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom"><p>Close</p></TooltipContent>
+                  <TooltipContent side="bottom">
+                    <p>Close</p>
+                  </TooltipContent>
                 </Tooltip>
               </div>
             </TooltipProvider>

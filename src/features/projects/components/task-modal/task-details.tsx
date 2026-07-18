@@ -60,11 +60,11 @@ interface TaskDetailsProps {
     workspaceId: Id<"workspaces">;
     isArchived?: boolean;
     createdAt: number;
-    updatedAt: number;
   }>;
+  hideMeta?: boolean;
 }
 
-export const TaskDetails = ({ task, lists }: TaskDetailsProps) => {
+export const TaskDetails = ({ task, lists, hideMeta }: TaskDetailsProps) => {
   const [showSaved, setShowSaved] = useState<string | null>(null);
 
   const { data: members } = useGetWorkspaceMembers({
@@ -266,6 +266,7 @@ export const TaskDetails = ({ task, lists }: TaskDetailsProps) => {
                 type="date"
                 value={task.dueDate ? format(task.dueDate, "yyyy-MM-dd") : ""}
                 onChange={handleDueDateChange}
+                onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
                 className="absolute inset-0 opacity-0 cursor-pointer w-full h-full p-0 m-0"
               />
             </div>
@@ -273,32 +274,36 @@ export const TaskDetails = ({ task, lists }: TaskDetailsProps) => {
         </div>
       </div>
 
-      <hr className="my-6 border-muted-foreground/15" />
+      {!hideMeta && (
+        <>
+          <hr className="my-6 border-muted-foreground/15" />
 
-      {/* Reporter Info (Read-only) */}
-      <div className="grid grid-cols-[100px_1fr] items-center text-sm gap-2 mb-8">
-        <div className="text-muted-foreground flex items-center gap-1.5 ml-1">
-          <User className="w-3.5 h-3.5 opacity-70" />
-          <span>Reporter</span>
-        </div>
-        <div className="flex items-center gap-2 p-1 text-muted-foreground ml-1">
-          {task.createdBy?.user && (
-            <Avatar className="w-5 h-5 opacity-90 border shadow-sm">
-              <AvatarImage src={task.createdBy.user.image || ""} />
-              <AvatarFallback className="text-[9px] uppercase">
-                {task.createdBy.user.name?.charAt(0) || "U"}
-              </AvatarFallback>
-            </Avatar>
-          )}
-          <span>{task.createdBy?.user?.name || "System"}</span>
-        </div>
-      </div>
+          {/* Reporter Info (Read-only) */}
+          <div className="grid grid-cols-[100px_1fr] items-center text-sm gap-2 mb-8">
+            <div className="text-muted-foreground flex items-center gap-1.5 ml-1">
+              <User className="w-3.5 h-3.5 opacity-70" />
+              <span>Reporter</span>
+            </div>
+            <div className="flex items-center gap-2 p-1 text-muted-foreground ml-1">
+              {task.createdBy?.user && (
+                <Avatar className="w-5 h-5 opacity-90 border shadow-sm">
+                  <AvatarImage src={task.createdBy.user.image || ""} />
+                  <AvatarFallback className="text-[9px] uppercase">
+                    {task.createdBy.user.name?.charAt(0) || "U"}
+                  </AvatarFallback>
+                </Avatar>
+              )}
+              <span>{task.createdBy?.user?.name || "System"}</span>
+            </div>
+          </div>
 
-      <hr className="border-muted-foreground/15" />
+          <hr className="border-muted-foreground/15" />
 
-      <div className="mt-4 text-[10px] text-muted-foreground opacity-70 ml-1">
-        Created {format(task.createdAt, "MMM d, yyyy")}
-      </div>
+          <div className="mt-4 text-[10px] text-muted-foreground opacity-70 ml-1">
+            Created {format(task.createdAt, "MMM d, yyyy")}
+          </div>
+        </>
+      )}
     </div>
   );
 };

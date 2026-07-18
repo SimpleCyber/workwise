@@ -72,7 +72,14 @@ const CardDetailPanelInner = ({ card, onClose }: CardDetailPanelInnerProps) => {
     setDueDate(card.dueDate ? format(card.dueDate, "yyyy-MM-dd") : "");
     setIsCompleted(card.isCompleted || false);
     setLabels(card.labels || []);
-  }, [card._id, card.title, card.description, card.dueDate, card.isCompleted, card.labels]);
+  }, [
+    card._id,
+    card.title,
+    card.description,
+    card.dueDate,
+    card.isCompleted,
+    card.labels,
+  ]);
 
   const { mutate: updateCard, isPending } = useUpdateCard();
   const { mutate: deleteCard, isPending: isDeleting } = useDeleteCard();
@@ -120,7 +127,7 @@ const CardDetailPanelInner = ({ card, onClose }: CardDetailPanelInnerProps) => {
   const handleToggleComplete = () => {
     const newIsCompleted = !isCompleted;
     setIsCompleted(newIsCompleted); // optimistic UI update
-    
+
     updateCard(
       {
         cardId: card._id,
@@ -202,7 +209,9 @@ const CardDetailPanelInner = ({ card, onClose }: CardDetailPanelInnerProps) => {
                     <ExternalLink className="w-4 h-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="bottom"><p>Open as pop-up</p></TooltipContent>
+                <TooltipContent side="bottom">
+                  <p>Open as pop-up</p>
+                </TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -216,7 +225,9 @@ const CardDetailPanelInner = ({ card, onClose }: CardDetailPanelInnerProps) => {
                     <Archive className="w-4 h-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="bottom"><p>Archive</p></TooltipContent>
+                <TooltipContent side="bottom">
+                  <p>Archive</p>
+                </TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -230,7 +241,9 @@ const CardDetailPanelInner = ({ card, onClose }: CardDetailPanelInnerProps) => {
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="bottom"><p>Delete</p></TooltipContent>
+                <TooltipContent side="bottom">
+                  <p>Delete</p>
+                </TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -243,7 +256,9 @@ const CardDetailPanelInner = ({ card, onClose }: CardDetailPanelInnerProps) => {
                     <X className="w-5 h-5" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="bottom"><p>Close</p></TooltipContent>
+                <TooltipContent side="bottom">
+                  <p>Close</p>
+                </TooltipContent>
               </Tooltip>
             </div>
           </TooltipProvider>
@@ -252,7 +267,6 @@ const CardDetailPanelInner = ({ card, onClose }: CardDetailPanelInnerProps) => {
         <CardContent className="p-0 flex-1 overflow-hidden flex flex-col">
           <ScrollArea className="flex-1">
             <div className="px-6 space-y-6 pb-20">
-              
               {/* Title Section */}
               <div className="pt-2">
                 <Input
@@ -270,7 +284,7 @@ const CardDetailPanelInner = ({ card, onClose }: CardDetailPanelInnerProps) => {
                 <h3 className="text-[11px] font-semibold text-muted-foreground tracking-widest uppercase mb-4">
                   Properties
                 </h3>
-                
+
                 <div className="grid grid-cols-[100px_1fr] items-center gap-y-5">
                   {/* Status row */}
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -278,13 +292,13 @@ const CardDetailPanelInner = ({ card, onClose }: CardDetailPanelInnerProps) => {
                     <span>Status</span>
                   </div>
                   <div>
-                    <Button 
-                      variant="ghost" 
+                    <Button
+                      variant="ghost"
                       onClick={handleToggleComplete}
                       disabled={isPending}
                       className={`h-7 px-3 py-1 text-xs font-normal border-0 rounded-full flex items-center gap-1.5 hover:opacity-80 transition-opacity ${
-                        isCompleted 
-                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400" 
+                        isCompleted
+                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400"
                           : "bg-muted text-muted-foreground"
                       }`}
                     >
@@ -322,7 +336,10 @@ const CardDetailPanelInner = ({ card, onClose }: CardDetailPanelInnerProps) => {
                       >
                         {label}
                         <button
-                          onClick={(e) => { e.stopPropagation(); handleRemoveLabel(label); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveLabel(label);
+                          }}
                           className="hover:bg-emerald-300 dark:hover:bg-emerald-800 rounded-full p-0.5 transition-colors"
                         >
                           <X className="h-3 w-3" />
@@ -333,13 +350,15 @@ const CardDetailPanelInner = ({ card, onClose }: CardDetailPanelInnerProps) => {
                       <input
                         value={newLabel}
                         onChange={(e) => setNewLabel(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === "Enter") handleAddLabel(); }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleAddLabel();
+                        }}
                         placeholder="Add label..."
                         className="bg-transparent border-b border-transparent hover:border-muted-foreground/30 focus:border-ring outline-none text-sm w-[90px] p-1 transition-colors"
                       />
-                      <button 
-                        onClick={handleAddLabel} 
-                        disabled={!newLabel.trim()} 
+                      <button
+                        onClick={handleAddLabel}
+                        disabled={!newLabel.trim()}
                         className="text-muted-foreground hover:text-foreground disabled:opacity-40 p-1"
                       >
                         <Plus className="h-3 w-3" />
@@ -377,11 +396,19 @@ const CardDetailPanelInner = ({ card, onClose }: CardDetailPanelInnerProps) => {
                 <div className="space-y-2 pt-4">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <span className="font-semibold">Checklists</span>
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{checklists.length}</Badge>
+                    <Badge
+                      variant="secondary"
+                      className="text-[10px] px-1.5 py-0"
+                    >
+                      {checklists.length}
+                    </Badge>
                   </div>
                   <div className="space-y-1.5">
                     {checklists.map((checklist) => (
-                      <div key={checklist._id} className="border rounded-lg p-3 text-sm">
+                      <div
+                        key={checklist._id}
+                        className="border rounded-lg p-3 text-sm"
+                      >
                         {checklist.title}
                       </div>
                     ))}
@@ -394,7 +421,12 @@ const CardDetailPanelInner = ({ card, onClose }: CardDetailPanelInnerProps) => {
                 <div className="space-y-2 pt-4">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <span className="font-semibold">Comments</span>
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{comments.length}</Badge>
+                    <Badge
+                      variant="secondary"
+                      className="text-[10px] px-1.5 py-0"
+                    >
+                      {comments.length}
+                    </Badge>
                   </div>
                   <div className="space-y-1.5">
                     {comments.map((comment) => (
@@ -407,7 +439,9 @@ const CardDetailPanelInner = ({ card, onClose }: CardDetailPanelInnerProps) => {
                             {format(comment.createdAt, "MMM d, yyyy")}
                           </span>
                         </div>
-                        <p className="text-xs text-foreground/80">{comment.content}</p>
+                        <p className="text-xs text-foreground/80">
+                          {comment.content}
+                        </p>
                       </div>
                     ))}
                   </div>

@@ -8,3 +8,8 @@ export const todoViewModeAtom = atomWithStorage<"panel" | "modal">(
   "todoViewMode",
   "panel",
 );
+export const selectedProjectTaskAtom = atom<any | null>(null);
+export const projectTaskViewModeAtom = atomWithStorage<"panel" | "modal">(
+  "projectTaskViewMode",
+  "panel",
+);

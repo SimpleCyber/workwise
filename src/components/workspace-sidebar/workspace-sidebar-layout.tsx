@@ -1,6 +1,6 @@
 "use client";
 
-import type { PropsWithChildren } from "react";
+import React, { useEffect, type PropsWithChildren } from "react";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import {
   ResizableHandle,
@@ -67,6 +67,13 @@ const WorkspaceLayout = ({
   const [notificationOpen, setNotificationOpen] = useAtom(notificationOpenAtom);
   const [, setSelectedTodoCard] = useAtom(selectedTodoCardAtom);
   const workspaceId = useWorkspaceId();
+
+  useEffect(() => {
+    if (rightPanel) {
+      setCalendarOpen(false);
+      setNotificationOpen(false);
+    }
+  }, [rightPanel, setCalendarOpen, setNotificationOpen]);
 
   const activeRightPanel =
     rightPanel ||

@@ -3,7 +3,12 @@
 import type React from "react";
 import { Bell, CalendarClock } from "lucide-react";
 import { useAtom } from "jotai";
-import { calendarOpenAtom, notificationOpenAtom } from "@/lib/panel-atoms";
+import {
+  calendarOpenAtom,
+  notificationOpenAtom,
+  selectedProjectTaskAtom,
+  selectedTodoCardAtom,
+} from "@/lib/panel-atoms";
 import { SidebarButton } from "./sidebar-button";
 import { DraggableNotificationPanel } from "../notification/NotificationPanel";
 import { DraggableCalendarPanel } from "../calender/CalendarPanel";
@@ -20,6 +25,8 @@ export const PanelButtons: React.FC<PanelButtonProps> = ({
 }) => {
   const [calendarOpen, setCalendarOpen] = useAtom(calendarOpenAtom);
   const [notificationOpen, setNotificationOpen] = useAtom(notificationOpenAtom);
+  const [, setProjectTask] = useAtom(selectedProjectTaskAtom);
+  const [, setTodoCard] = useAtom(selectedTodoCardAtom);
   const unreadCount = useGetUnreadCount();
 
   const workspaceId = useWorkspaceId();
@@ -37,7 +44,11 @@ export const PanelButtons: React.FC<PanelButtonProps> = ({
           onClick={() => {
             setNotificationOpen((prev) => {
               const next = !prev;
-              if (next) setCalendarOpen(false);
+              if (next) {
+                setCalendarOpen(false);
+                setProjectTask(null);
+                setTodoCard(null);
+              }
               return next;
             });
           }}
@@ -50,7 +61,11 @@ export const PanelButtons: React.FC<PanelButtonProps> = ({
           onClick={() => {
             setCalendarOpen((prev) => {
               const next = !prev;
-              if (next) setNotificationOpen(false);
+              if (next) {
+                setNotificationOpen(false);
+                setProjectTask(null);
+                setTodoCard(null);
+              }
               return next;
             });
           }}

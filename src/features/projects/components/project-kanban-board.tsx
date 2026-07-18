@@ -4,6 +4,8 @@ import { Draggable, Droppable, type DropResult } from "@hello-pangea/dnd";
 import { Loader, Plus, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { useSetAtom } from "jotai";
+import { selectedProjectTaskAtom } from "@/lib/panel-atoms";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -30,7 +32,6 @@ import { useUpdateProjectTask } from "@/features/projects/api/use-update-project
 import { useConfirm } from "@/hooks/use-confirm";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { ProjectTaskCard } from "./project-task-card";
-import { ProjectTaskDetailModal } from "./project-task-detail-modal";
 
 interface ProjectKanbanBoardProps {
   boardId: Id<"projectBoards">;
@@ -63,8 +64,8 @@ export const ProjectKanbanBoard = ({
   const [selectedAssignee, setSelectedAssignee] = useState<
     Id<"members"> | undefined
   >(undefined);
-  const [selectedTask, setSelectedTask] = useState<any>(null);
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+
+  const setSelectedTask = useSetAtom(selectedProjectTaskAtom);
   const [editingListId, setEditingListId] = useState<Id<"projectLists"> | null>(
     null,
   );
@@ -305,7 +306,6 @@ export const ProjectKanbanBoard = ({
 
   const handleTaskEdit = (task: any) => {
     setSelectedTask(task);
-    setIsTaskModalOpen(true);
   };
 
   const sortedLists = [...lists]
@@ -359,12 +359,6 @@ export const ProjectKanbanBoard = ({
           </div>
         )}
       </Droppable>
-      <ProjectTaskDetailModal
-        task={selectedTask}
-        open={isTaskModalOpen}
-        onOpenChange={setIsTaskModalOpen}
-        lists={lists || []}
-      />
     </>
   );
 };

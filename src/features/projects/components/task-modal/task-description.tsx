@@ -147,7 +147,7 @@ export const TaskDescription = ({
           </div>
         ) : (
           <div
-            className="group relative min-h-[60px] cursor-pointer rounded-lg hover:bg-muted/30 p-3 -m-3 transition-all border border-transparent hover:border-border/50"
+            className="group relative min-h-[70px] cursor-pointer rounded-lg bg-muted/10 hover:bg-muted/20 p-3 sm:p-4 transition-all border border-border/40 hover:border-border/80 shadow-sm"
             onClick={() => setIsEditing(true)}
           >
             {task.description ? (
