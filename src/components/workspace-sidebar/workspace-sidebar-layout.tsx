@@ -11,7 +11,11 @@ import { WorkspaceSidebar } from "@/components/workspace-sidebar/workspace-sideb
 import { useWorkspacePanel } from "./use-workspace-sidebar-panel-context";
 import { BottomNav } from "@/components/sidebar/bottom-nav";
 import { useAtom } from "jotai";
-import { calendarOpenAtom, notificationOpenAtom } from "@/lib/panel-atoms";
+import {
+  calendarOpenAtom,
+  notificationOpenAtom,
+  selectedTodoCardAtom,
+} from "@/lib/panel-atoms";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { DraggableNotificationPanel } from "@/components/notification/NotificationPanel";
 import { DraggableCalendarPanel } from "@/components/calender/CalendarPanel";
@@ -61,6 +65,7 @@ const WorkspaceLayout = ({
 
   const [calendarOpen, setCalendarOpen] = useAtom(calendarOpenAtom);
   const [notificationOpen, setNotificationOpen] = useAtom(notificationOpenAtom);
+  const [, setSelectedTodoCard] = useAtom(selectedTodoCardAtom);
   const workspaceId = useWorkspaceId();
 
   const activeRightPanel =
@@ -135,6 +140,7 @@ const WorkspaceLayout = ({
                       if (onClose) onClose();
                       setCalendarOpen(false);
                       setNotificationOpen(false);
+                      setSelectedTodoCard(null);
                     }
                   }}
                 >

@@ -2,12 +2,13 @@
 
 import { useState, useRef } from "react";
 import { toast } from "sonner";
+import { useSetAtom } from "jotai";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { useUpdateCard } from "@/features/todos/api/use-update-card";
+import { selectedTodoCardAtom } from "@/lib/panel-atoms";
 
 import type { Id } from "../../../../../convex/_generated/dataModel";
-import { CardDetailModal } from "../card-detail-modal";
 import { TodoTaskCheckbox } from "./todo-task-checkbox";
 import { TodoTaskDeleteButton } from "./todo-task-delete-button";
 import { TodoTaskDueDate } from "./todo-task-due-date";
@@ -34,7 +35,7 @@ interface TodoTaskProps {
 }
 
 export const TodoTask = ({ card }: TodoTaskProps) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const setSelectedCard = useSetAtom(selectedTodoCardAtom);
   const [isHovered, setIsHovered] = useState(false);
   const { mutate: updateCard } = useUpdateCard();
 
@@ -58,7 +59,7 @@ export const TodoTask = ({ card }: TodoTaskProps) => {
     } else {
       // It's a single tap/click, wait to see if it becomes a double tap
       tapTimeoutRef.current = setTimeout(() => {
-        setIsModalOpen(true);
+        setSelectedCard(card);
         tapTimeoutRef.current = null;
       }, 250);
     }
@@ -135,23 +136,22 @@ export const TodoTask = ({ card }: TodoTaskProps) => {
   const showCheckCircle = card.isCompleted || isHovered;
 
   return (
-    <>
-      <Card
-        className="cursor-pointer hover:bg-accent transition-all duration-200 ease-in-out bg-card border-0 shadow-sm hover:shadow-md rounded-lg mb-2"
-        onClick={triggerInteraction}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <CardContent className="p-3">
-          {/* Check Circle and Header */}
-          <div className="flex items-start gap-2 mb-1">
-            <TodoTaskCheckbox card={card} showCheckCircle={showCheckCircle} />
+    <Card
+      className="cursor-pointer hover:bg-accent transition-all duration-200 ease-in-out bg-card border-0 shadow-sm hover:shadow-md rounded-lg mb-2"
+      onClick={triggerInteraction}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <CardContent className="p-3">
+        {/* Check Circle and Header */}
+        <div className="flex items-start gap-2 mb-1">
+          <TodoTaskCheckbox card={card} showCheckCircle={showCheckCircle} />
 
-            {/* Title */}
-            <h4
-              className={`
+          {/* Title */}
+          <h4
+            className={`
         text-sm 
         font-medium 
         leading-5 
@@ -162,30 +162,30 @@ export const TodoTask = ({ card }: TodoTaskProps) => {
         ease-in-out
         ${showCheckCircle ? "ml-0" : "-ml-7"}
       `}
-            >
-              {linkifyText(card.title)}
-            </h4>
-          </div>
+          >
+            {linkifyText(card.title)}
+          </h4>
+        </div>
 
-          {/* Description */}
-          {card.description && (
-            <div
-              className={`
+        {/* Description */}
+        {card.description && (
+          <div
+            className={`
         transition-all 
         duration-300 
         ease-in-out
         ${showCheckCircle ? "ml-7" : "ml-0"}
       `}
-            >
-              <p className="text-xs text-muted-foreground leading-4 line-clamp-3 mb-3">
-                {linkifyText(card.description)}
-              </p>
-            </div>
-          )}
+          >
+            <p className="text-xs text-muted-foreground leading-4 line-clamp-3 mb-3">
+              {linkifyText(card.description)}
+            </p>
+          </div>
+        )}
 
-          {/* Bottom Row */}
-          <div
-            className={`
+        {/* Bottom Row */}
+        <div
+          className={`
       flex 
       items-center 
       justify-between 
@@ -195,22 +195,15 @@ export const TodoTask = ({ card }: TodoTaskProps) => {
       ease-in-out
       ${showCheckCircle ? "ml-7" : "ml-0"}
     `}
-          >
-            <TodoTaskLabels labels={card.labels} />
+        >
+          <TodoTaskLabels labels={card.labels} />
 
-            <div className="flex items-center gap-2">
-              <TodoTaskDueDate dueDate={card.dueDate} />
-              {isHovered && <TodoTaskDeleteButton cardId={card._id} />}
-            </div>
+          <div className="flex items-center gap-2">
+            <TodoTaskDueDate dueDate={card.dueDate} />
+            {isHovered && <TodoTaskDeleteButton cardId={card._id} />}
           </div>
-        </CardContent>
-      </Card>
-
-      <CardDetailModal
-        card={card}
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-      />
-    </>
+        </div>
+      </CardContent>
+    </Card>
   );
 };

@@ -24,6 +24,7 @@ interface ResponsiveModalProps {
   title?: string;
   description?: string;
   className?: string;
+  hideClose?: boolean;
 }
 
 export const ModalClose = ({ children }: { children: React.ReactNode }) => {
@@ -43,6 +44,7 @@ export const ResponsiveModal = ({
   title,
   description,
   className,
+  hideClose,
 }: ResponsiveModalProps) => {
   const isMobile = useMobile();
 
@@ -66,7 +68,7 @@ export const ResponsiveModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={className}>
+      <DialogContent className={className} hideClose={hideClose}>
         <DialogHeader>
           {title && <DialogTitle>{title}</DialogTitle>}
           {description && <DialogDescription>{description}</DialogDescription>}

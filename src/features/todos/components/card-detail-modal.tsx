@@ -7,12 +7,19 @@ import {
   CheckSquare,
   ChevronDown,
   ChevronRight,
-  Tag,
+  PanelRight,
+  FileText,
+  AlignLeft,
   Trash2,
+  Plus,
+  Tag,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { useAtom } from "jotai";
+
+import { todoViewModeAtom } from "@/lib/panel-atoms";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,8 +31,14 @@ import {
 import { ResponsiveModal, ModalClose } from "@/components/responsive-modal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+// import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useDeleteCard } from "@/features/todos/api/use-delete-card";
 import { useGetChecklists } from "@/features/todos/api/use-get-checklists";
 import { useGetComments } from "@/features/todos/api/use-get-comments";
@@ -68,6 +81,16 @@ export const CardDetailModal = ({
   );
   const [newLabel, setNewLabel] = useState("");
   const [labels, setLabels] = useState(card.labels || []);
+
+  const [, setViewMode] = useAtom(todoViewModeAtom);
+
+  // Sync state if card prop changes
+  useEffect(() => {
+    setTitle(card.title);
+    setDescription(card.description || "");
+    setDueDate(card.dueDate ? format(card.dueDate, "yyyy-MM-dd") : "");
+    setLabels(card.labels || []);
+  }, [card]);
 
   // Collapsible states
   const [isDetailsOpen, setIsDetailsOpen] = useState(true);
@@ -180,261 +203,174 @@ export const CardDetailModal = ({
       <ResponsiveModal
         open={open}
         onOpenChange={onOpenChange}
-        title="Card Details"
-        className="sm:max-w-3xl xl:max-w-3xl"
+        hideClose
+        className="sm:max-w-2xl xl:max-w-2xl px-6 py-2 border-0 shadow-xl rounded-2xl"
       >
-        <div className="space-y-4">
-          {/* Title */}
+        <div className="flex flex-col h-full space-y-5 pt-1">
+          {/* Header Row */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-bold text-foreground">
+                Card details
+              </h2>
+            </div>
+            <TooltipProvider delayDuration={200}>
+              <div className="flex items-center border rounded-lg overflow-hidden divide-x">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 rounded-none text-muted-foreground hover:text-foreground hover:bg-muted"
+                      onClick={() => setViewMode("panel")}
+                    >
+                      <PanelRight className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>Dock to sidebar</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 rounded-none text-muted-foreground hover:text-foreground hover:bg-muted"
+                      onClick={handleArchive}
+                      disabled={isPending}
+                    >
+                      <Archive className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>Archive</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 rounded-none text-destructive/70 hover:text-destructive hover:bg-destructive/10"
+                      onClick={handleDelete}
+                      disabled={isDeleting}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>Delete</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </TooltipProvider>
+          </div>
+
+          {/* Title Section */}
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <FileText className="h-4 w-4" />
+              <span className="font-medium">Title</span>
+            </div>
             <Input
-              id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              className="h-10 text-sm border-muted-foreground/20 shadow-sm bg-transparent rounded-lg"
               placeholder="Card title..."
             />
           </div>
 
-          {/* Basic Details - Collapsible */}
-          <Collapsible open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-            <CollapsibleTrigger asChild>
-              <Button
-                variant="ghost"
-                className="flex items-center gap-2 p-0 h-auto"
-              >
-                {isDetailsOpen ? (
-                  <ChevronDown className="size-4" />
-                ) : (
-                  <ChevronRight className="size-4" />
-                )}
-                <span className="font-medium">Details</span>
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-4 mt-2">
-              {/* Description */}
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Add a description..."
-                  rows={4}
-                />
+          {/* Description Section */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <AlignLeft className="h-4 w-4" />
+              <span className="font-medium">Description</span>
+            </div>
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Add a description..."
+              className="min-h-[120px] text-sm resize-none border-muted-foreground/20 focus-visible:ring-1 focus-visible:ring-ring shadow-sm bg-transparent rounded-lg"
+            />
+          </div>
+
+          {/* <Separator className="opacity-40" /> */}
+
+          {/* Due Date & Labels */}
+          <div className="flex flex-col sm:flex-row gap-5">
+            {/* Due Date */}
+            <div className="space-y-2 flex-1">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Calendar className="h-4 w-4" />
+                <span className="font-medium">Due date</span>
               </div>
+              <Input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="h-10 text-sm border-muted-foreground/20 shadow-sm bg-transparent rounded-lg"
+              />
+            </div>
 
-              {/* Due Date */}
-              <div className="space-y-2">
-                <Label htmlFor="dueDate">Due Date</Label>
-                <div className="flex items-center gap-2">
-                  <Calendar className="size-4 text-muted-foreground" />
-                  <Input
-                    id="dueDate"
-                    type="date"
-                    value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
-                    className="w-auto"
-                  />
-                </div>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-
-          <Separator />
-
-          {/* Labels - Collapsible */}
-          <Collapsible open={isLabelsOpen} onOpenChange={setIsLabelsOpen}>
-            <CollapsibleTrigger asChild>
-              <Button
-                variant="ghost"
-                className="flex items-center gap-2 p-0 h-auto"
-              >
-                {isLabelsOpen ? (
-                  <ChevronDown className="size-4" />
-                ) : (
-                  <ChevronRight className="size-4" />
-                )}
+            {/* Labels */}
+            <div className="space-y-2 flex-1 min-w-0">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Tag className="h-4 w-4" />
                 <span className="font-medium">Labels</span>
-                {labels.length > 0 && (
-                  <Badge variant="secondary" className="ml-2">
-                    {labels.length}
-                  </Badge>
-                )}
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-2 mt-2">
-              <div className="flex flex-wrap gap-2 mb-2">
-                {labels.map((label) => (
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5 min-h-[40px] border border-muted-foreground/20 rounded-lg px-3 py-1.5 shadow-sm bg-transparent">
+                {labels.map((label: string) => (
                   <Badge
                     key={label}
                     variant="secondary"
-                    className="flex items-center gap-1"
+                    className="px-2.5 py-0.5 text-xs font-normal gap-1.5 bg-green-100 text-green-800 hover:bg-green-200 border-0 rounded-md dark:bg-green-900/40 dark:text-green-400"
                   >
-                    <Tag className="size-3" />
                     {label}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
-                      onClick={() => handleRemoveLabel(label)}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveLabel(label);
+                      }}
+                      className="hover:bg-green-300 dark:hover:bg-green-800 rounded-full p-0.5 transition-colors"
                     >
-                      <X className="size-3" />
-                    </Button>
+                      <X className="h-3 w-3" />
+                    </button>
                   </Badge>
                 ))}
-              </div>
-              <div className="flex gap-2">
-                <Input
+                <input
                   value={newLabel}
                   onChange={(e) => setNewLabel(e.target.value)}
-                  placeholder="Add a label..."
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleAddLabel();
-                    }
+                    if (e.key === "Enter") handleAddLabel();
                   }}
+                  placeholder={
+                    labels.length === 0 ? "Add a label..." : "Add..."
+                  }
+                  className="bg-transparent border-0 outline-none text-sm flex-1 min-w-[60px] p-0 h-6 focus:ring-0 focus:outline-none"
                 />
-                <Button
-                  variant="outline"
-                  onClick={handleAddLabel}
-                  disabled={!newLabel.trim()}
-                >
-                  Add
-                </Button>
               </div>
-            </CollapsibleContent>
-          </Collapsible>
-
-          <Separator />
-
-          {/* Checklists - Collapsible */}
-          {checklists && checklists.length > 0 && (
-            <>
-              <Collapsible
-                open={isChecklistsOpen}
-                onOpenChange={setIsChecklistsOpen}
-              >
-                <CollapsibleTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="flex items-center gap-2 p-0 h-auto"
-                  >
-                    {isChecklistsOpen ? (
-                      <ChevronDown className="size-4" />
-                    ) : (
-                      <ChevronRight className="size-4" />
-                    )}
-                    <span className="font-medium">Checklists</span>
-                    <Badge variant="secondary" className="ml-2">
-                      {checklists.length}
-                    </Badge>
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-2 mt-2">
-                  {checklists.map((checklist) => (
-                    <div key={checklist._id} className="border rounded p-3">
-                      <h4 className="font-medium text-sm">{checklist.title}</h4>
-                      {/* Add checklist items here if needed */}
-                    </div>
-                  ))}
-                </CollapsibleContent>
-              </Collapsible>
-              <Separator />
-            </>
-          )}
-
-          {/* Comments - Collapsible */}
-          {comments && comments.length > 0 && (
-            <>
-              <Collapsible
-                open={isCommentsOpen}
-                onOpenChange={setIsCommentsOpen}
-              >
-                <CollapsibleTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="flex items-center gap-2 p-0 h-auto"
-                  >
-                    {isCommentsOpen ? (
-                      <ChevronDown className="size-4" />
-                    ) : (
-                      <ChevronRight className="size-4" />
-                    )}
-                    <span className="font-medium">Comments</span>
-                    <Badge variant="secondary" className="ml-2">
-                      {comments.length}
-                    </Badge>
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-2 mt-2">
-                  {comments.map((comment) => (
-                    <div key={comment._id} className="border rounded p-3">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-medium">
-                          {comment.user?.name || "Unknown User"}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {format(comment.createdAt, "MMM d, yyyy")}
-                        </span>
-                      </div>
-                      <p className="text-sm">{comment.content}</p>
-                    </div>
-                  ))}
-                </CollapsibleContent>
-              </Collapsible>
-              <Separator />
-            </>
-          )}
-
-          {/* Actions */}
-          <div className="flex flex-col-reverse md:flex-row gap-4 pt-4 md:justify-between">
-            <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-              <Button
-                variant={card.isCompleted ? "outline" : "default"}
-                onClick={handleToggleComplete}
-                disabled={isPending}
-                className="w-full sm:w-auto"
-              >
-                <CheckSquare className="size-4 mr-2" />
-                {card.isCompleted ? "Mark Incomplete" : "Mark Complete"}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleArchive}
-                disabled={isPending}
-                className="w-full sm:w-auto flex-1 sm:flex-none"
-              >
-                <Archive className="size-4 mr-2" />
-                Archive
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="text-destructive hover:text-destructive bg-transparent w-full sm:w-auto flex-1 sm:flex-none"
-              >
-                <Trash2 className="size-4 mr-2" />
-                Delete
-              </Button>
             </div>
-            <div className="flex flex-wrap gap-2 justify-center md:justify-end">
-              <ModalClose>
-                <Button
-                  variant="outline"
-                  disabled={isPending}
-                  className="w-full sm:w-auto flex-1 sm:flex-none"
-                >
-                  Cancel
-                </Button>
-              </ModalClose>
-              <Button
-                onClick={handleSave}
-                disabled={isPending || !title.trim()}
-                className="w-full sm:w-auto flex-1 sm:flex-none"
-              >
-                {isPending ? "Saving..." : "Save Changes"}
-              </Button>
-            </div>
+          </div>
+
+          {/* <Separator className="opacity-40" /> */}
+
+          {/* Footer Actions */}
+          <div className="flex justify-end gap-3 pt-1">
+            <Button
+              variant="outline"
+              className="px-6 rounded-lg"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="px-6 rounded-lg bg-foreground text-background hover:bg-foreground/90"
+              onClick={handleSave}
+              disabled={isPending || !title.trim()}
+            >
+              {isPending ? "Saving..." : "Save changes"}
+            </Button>
           </div>
         </div>
       </ResponsiveModal>
