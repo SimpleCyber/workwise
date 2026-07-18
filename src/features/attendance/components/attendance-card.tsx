@@ -92,38 +92,27 @@ export const AttendanceCard = ({
     >
       <CardContent className={`${compact ? "p-4" : "p-6"}`}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <Avatar className={compact ? "w-8 h-8" : "w-10 h-10"}>
+        <div className="flex items-center justify-between mb-3 gap-2">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <Avatar className={compact ? "w-8 h-8 shrink-0" : "w-10 h-10 shrink-0"}>
               <AvatarImage src={record.user?.image || "/placeholder.svg"} />
               <AvatarFallback className="bg-primary/10 text-primary font-medium">
                 {record.user?.name?.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <p className={`font-medium ${compact ? "text-sm" : "text-base"}`}>
+            <div className="min-w-0 flex-1">
+              <p className={`font-medium truncate ${compact ? "text-sm" : "text-base"}`} title={record.user?.name}>
                 {record.user?.name}
               </p>
               {!compact && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground truncate" title={record.user?.email}>
                   {record.user?.email}
                 </p>
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {getStatusBadge()}
-            {/* <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation()
-                onViewDetails(record)
-              }}
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <MessageSquare className="w-4 h-4" />
-            </Button> */}
           </div>
         </div>
 
@@ -140,16 +129,16 @@ export const AttendanceCard = ({
             <>
               {/* Check In */}
               <div className="flex items-center justify-between py-2 px-3 bg-muted/30 rounded-lg">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                   <div
-                    className={`w-2 h-2 rounded-full ${getStatusColor().replace("text-", "bg-")}`}
+                    className={`w-2 h-2 rounded-full shrink-0 ${getStatusColor().replace("text-", "bg-")}`}
                   />
-                  <span className="text-sm">
+                  <span className={`truncate ${compact ? "text-xs font-medium" : "text-sm"}`}>
                     In: {formatTime(record.checkInTime)}
                   </span>
                 </div>
                 {!compact && record.workLocation && (
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 shrink-0">
                     <MapPin className="w-3 h-3 text-muted-foreground" />
                     <span className="text-xs text-muted-foreground">
                       {record.workLocation === "home" ? "WFH" : "Office"}
@@ -160,11 +149,11 @@ export const AttendanceCard = ({
 
               {/* Check Out */}
               <div className="flex items-center justify-between py-2 px-3 bg-muted/30 rounded-lg">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                   <div
-                    className={`w-2 h-2 rounded-full ${record.checkOutTime ? getStatusColor().replace("text-", "bg-") : "bg-muted"}`}
+                    className={`w-2 h-2 rounded-full shrink-0 ${record.checkOutTime ? getStatusColor().replace("text-", "bg-") : "bg-muted"}`}
                   />
-                  <span className="text-sm">
+                  <span className={`truncate ${compact ? "text-xs font-medium" : "text-sm"}`}>
                     Out:{" "}
                     {record.checkOutTime
                       ? formatTime(record.checkOutTime)

@@ -86,7 +86,10 @@ const WorkspaceLayout = ({
           onToggleWorkspacePanel={togglePanel}
         />
 
-        <ResizablePanelGroup direction="horizontal" autoSaveId={autoSaveId}>
+        <ResizablePanelGroup
+          direction="horizontal"
+          autoSaveId={`${autoSaveId}${activeRightPanel ? "-with-right" : ""}`}
+        >
           <ResizablePanel
             ref={leftPanelRef}
             defaultSize={defaultPanelSize}

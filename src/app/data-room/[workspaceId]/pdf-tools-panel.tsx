@@ -23,6 +23,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import {
   useGetDataRoomFiles,
@@ -188,162 +189,179 @@ export const PdfToolsPanel = ({
   if (!isOpen) return null;
 
   return (
-    <div className="w-[350px] border-l bg-card flex flex-col h-full animate-in slide-in-from-right duration-300">
-      <div className="p-4 border-b flex items-center justify-between bg-muted/30">
-        <div className="flex items-center gap-2">
+    <Card className="h-full w-full bg-card border-l border-y-0 border-r-0 border-border flex flex-col rounded-none shadow-none overflow-hidden animate-in slide-in-from-right duration-300">
+      <CardHeader className="flex flex-row items-center justify-between p-1.5 border-b border-border bg-gradient-to-r from-muted/50 to-card">
+        <div className="flex items-center gap-3 pl-2.5">
           {tool === "merge" ? (
-            <FileStack className="w-5 h-5 text-primary" />
+            <FileStack className="w-5 h-5 text-foreground/80" />
           ) : (
-            <Plus className="w-5 h-5 text-primary" />
+            <Plus className="w-5 h-5 text-foreground/80" />
           )}
-          <h2 className="font-semibold capitalize">
-            {tool === "merge" ? "Merge PDFs" : "Create PDF"}
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-foreground capitalize">
+              {tool === "merge" ? "Merge PDFs" : "Create PDF"}
+            </h2>
+          </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onClose}
-          className="h-8 w-8"
-        >
-          <X className="w-4 h-4" />
-        </Button>
-      </div>
-
-      <div className="p-3 bg-muted/10">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
-          <Input
-            placeholder="Search files to add..."
-            className="h-9 pl-8 text-sm"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+        <div className="flex items-center gap-2 no-drag">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="w-8 h-8 p-0 rounded-full hover:bg-muted"
+          >
+            <X className="w-4 h-4" />
+          </Button>
         </div>
-      </div>
+      </CardHeader>
 
-      <ScrollArea className="flex-1">
-        <div className="p-4 space-y-4">
-          <div className="space-y-1">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">
-              Data Room Files
-            </p>
-            {pickableFiles.length === 0 ? (
-              <p className="text-sm text-muted-foreground p-4 text-center">
-                No compatible files found
+      <CardContent className="p-0 flex-1 overflow-hidden flex flex-col">
+        <div className="p-3 bg-muted/10 shrink-0">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
+            <Input
+              placeholder="Search files to add..."
+              className="h-9 pl-8 text-sm"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <ScrollArea className="flex-1">
+          <div className="p-4 space-y-4">
+            <div className="space-y-1">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">
+                Data Room Files
               </p>
-            ) : (
-              pickableFiles.map((file) => (
-                <div
-                  key={file._id}
-                  onClick={() => toggleFile(file._id)}
-                  className={cn(
-                    "flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors group",
-                    selectedFileIds.has(file._id)
-                      ? "bg-primary/10"
-                      : "hover:bg-muted",
-                  )}
-                >
+              {pickableFiles.length === 0 ? (
+                <p className="text-sm text-muted-foreground p-4 text-center">
+                  No compatible files found
+                </p>
+              ) : (
+                pickableFiles.map((file) => (
                   <div
+                    key={file._id}
+                    onClick={() => toggleFile(file._id)}
                     className={cn(
-                      "w-8 h-8 rounded border flex items-center justify-center bg-white",
+                      "flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors group",
                       selectedFileIds.has(file._id)
-                        ? "border-primary"
-                        : "border-muted-foreground/20",
+                        ? "bg-primary/10"
+                        : "hover:bg-muted",
                     )}
                   >
-                    {selectedFileIds.has(file._id) ? (
-                      <Check className="w-4 h-4 text-primary" />
-                    ) : file.fileType.startsWith("image/") ? (
-                      <ImageIcon className="w-4 h-4 text-muted-foreground" />
-                    ) : (
-                      <FileIcon className="w-4 h-4 text-muted-foreground" />
-                    )}
+                    <div
+                      className={cn(
+                        "w-8 h-8 rounded border flex items-center justify-center bg-white overflow-hidden relative shrink-0",
+                        selectedFileIds.has(file._id)
+                          ? "border-primary ring-1 ring-primary"
+                          : "border-muted-foreground/20",
+                      )}
+                    >
+                      {file.fileType.startsWith("image/") && file.fileUrl ? (
+                        <>
+                          <img
+                            src={file.fileUrl}
+                            alt={file.fileName}
+                            className="w-full h-full object-cover"
+                          />
+                          {selectedFileIds.has(file._id) && (
+                            <div className="absolute inset-0 bg-primary/20 flex items-center justify-center backdrop-blur-[1px]">
+                              <Check className="w-5 h-5 text-primary drop-shadow-md font-bold" />
+                            </div>
+                          )}
+                        </>
+                      ) : selectedFileIds.has(file._id) ? (
+                        <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                      ) : (
+                        <FileIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {file.fileName}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground uppercase">
+                        {file.fileType.split("/")[1]}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {file.fileName}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground uppercase">
-                      {file.fileType.split("/")[1]}
-                    </p>
+                ))
+              )}
+            </div>
+
+            {selectedFiles.length > 0 && (
+              <>
+                <Separator />
+                <div className="space-y-2">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">
+                    Selected ({selectedFiles.length})
+                  </p>
+                  <div className="space-y-2">
+                    {selectedFiles.map((file, idx) => (
+                      <div
+                        key={file._id}
+                        className="flex items-center gap-2 p-2 bg-muted/40 rounded-md text-xs"
+                      >
+                        <Badge
+                          variant="outline"
+                          className="h-5 w-5 p-0 flex items-center justify-center rounded-full shrink-0"
+                        >
+                          {idx + 1}
+                        </Badge>
+                        <span className="truncate flex-1">{file.fileName}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-5 w-5"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFile(file._id);
+                          }}
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ))
+              </>
             )}
           </div>
+        </ScrollArea>
 
-          {selectedFiles.length > 0 && (
-            <>
-              <Separator />
-              <div className="space-y-2">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">
-                  Selected ({selectedFiles.length})
-                </p>
-                <div className="space-y-2">
-                  {selectedFiles.map((file, idx) => (
-                    <div
-                      key={file._id}
-                      className="flex items-center gap-2 p-2 bg-muted/40 rounded-md text-xs"
-                    >
-                      <Badge
-                        variant="outline"
-                        className="h-5 w-5 p-0 flex items-center justify-center rounded-full shrink-0"
-                      >
-                        {idx + 1}
-                      </Badge>
-                      <span className="truncate flex-1">{file.fileName}</span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-5 w-5"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleFile(file._id);
-                        }}
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
+        <div className="p-4 border-t bg-muted/20 space-y-2 mt-auto">
+          <Button
+            className="w-full h-10 gap-2"
+            disabled={selectedFiles.length === 0 || isProcessing}
+            onClick={() => handleProcess("download")}
+          >
+            {isProcessing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4" />
+            )}
+            Download Result
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full h-10 gap-2"
+            disabled={selectedFiles.length === 0 || isProcessing}
+            onClick={() => handleProcess("save")}
+          >
+            {isProcessing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
+            Save to Data Room
+          </Button>
+          <p className="text-[10px] text-center text-muted-foreground px-2">
+            Processing takes place entirely in your browser. Files never leave
+            the platform.
+          </p>
         </div>
-      </ScrollArea>
-
-      <div className="p-4 border-t bg-muted/20 space-y-2 mt-auto">
-        <Button
-          className="w-full h-10 gap-2"
-          disabled={selectedFiles.length === 0 || isProcessing}
-          onClick={() => handleProcess("download")}
-        >
-          {isProcessing ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Download className="w-4 h-4" />
-          )}
-          Download Result
-        </Button>
-        <Button
-          variant="outline"
-          className="w-full h-10 gap-2"
-          disabled={selectedFiles.length === 0 || isProcessing}
-          onClick={() => handleProcess("save")}
-        >
-          {isProcessing ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Save className="w-4 h-4" />
-          )}
-          Save to Data Room
-        </Button>
-        <p className="text-[10px] text-center text-muted-foreground px-2">
-          Processing takes place entirely in your browser. Files never leave the
-          platform.
-        </p>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

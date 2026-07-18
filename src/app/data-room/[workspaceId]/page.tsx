@@ -1692,17 +1692,6 @@ const DataRoomWorkspacePage = () => {
             </div>
           )}
         </div>
-
-        {/* Right PDF Tools Panel */}
-        {process.env.NODE_ENV !== "production" && (
-          <PdfToolsPanel
-            isOpen={!!tool}
-            tool={tool}
-            onClose={() => setTool(null)}
-            workspaceId={workspaceId}
-            currentFolderId={currentFolderId as Id<"dataRoomFolders"> | null}
-          />
-        )}
       </div>
 
       {/* Pagination Fix if needed */}

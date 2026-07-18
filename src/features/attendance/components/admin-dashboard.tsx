@@ -90,11 +90,15 @@ export const CleanAdminDashboard = ({ workspaceId }: CleanAdminDashboardProps) =
   const presentRecords = allAttendanceRecords.filter((record) => record.status !== "absent" && record.checkInTime > 0)
 
   const StatCard = ({ icon: Icon, title, value, color = "default" }: any) => (
-    <Card className="border-0 hover:shadow-sm shadow-md transition-all duration-200 bg-gradient-to-br from-card to-muted/50 dark:from-card dark:to-muted/10">
-      <CardContent className="p-6">
-        <div className="flex items-center gap-4">
+    <Card className="border-0 hover:shadow-sm shadow-md transition-all duration-200 bg-gradient-to-br from-card to-muted/50 dark:from-card dark:to-muted/10 overflow-hidden">
+      <CardContent className="p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate" title={title}>{title}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1.5">{value}</p>
+          </div>
           <div
-            className={`p-3 rounded-xl shadow-sm ${
+            className={`p-2.5 rounded-xl shadow-sm shrink-0 ${
               color === "blue"
                 ? "bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200/50 dark:from-blue-900/20 dark:to-blue-800/20 dark:border-blue-700/50"
                 : color === "green"
@@ -107,7 +111,7 @@ export const CleanAdminDashboard = ({ workspaceId }: CleanAdminDashboardProps) =
             }`}
           >
             <Icon
-              className={`w-6 h-6 ${
+              className={`w-5 h-5 sm:w-6 sm:h-6 ${
                 color === "blue"
                   ? "text-blue-600 dark:text-blue-400"
                   : color === "green"
@@ -119,10 +123,6 @@ export const CleanAdminDashboard = ({ workspaceId }: CleanAdminDashboardProps) =
                         : "text-gray-600 dark:text-gray-400"
               }`}
             />
-          </div>
-          <div className="flex-1">
-            <p className="text-3xl font-bold text-foreground mb-1">{value}</p>
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
           </div>
         </div>
       </CardContent>
@@ -169,7 +169,7 @@ export const CleanAdminDashboard = ({ workspaceId }: CleanAdminDashboardProps) =
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-6">
           <StatCard icon={Building} title="Total Employees" value={allMembers?.length || 0} />
           <StatCard icon={UserCheck} title="Present Today" value={presentRecords.length} color="blue" />
           <StatCard icon={CheckCircle} title="Approved" value={approvedRecords.length} color="green" />
