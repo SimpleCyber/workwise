@@ -10,6 +10,11 @@ import {
 import { WorkspaceSidebar } from "@/components/workspace-sidebar/workspace-sidebar";
 import { useWorkspacePanel } from "./use-workspace-sidebar-panel-context";
 import { BottomNav } from "@/components/sidebar/bottom-nav";
+import { useAtom } from "jotai";
+import { calendarOpenAtom, notificationOpenAtom } from "@/lib/panel-atoms";
+import { useWorkspaceId } from "@/hooks/use-workspace-id";
+import { DraggableNotificationPanel } from "@/components/notification/NotificationPanel";
+import { DraggableCalendarPanel } from "@/components/calender/CalendarPanel";
 
 interface WorkspaceLayoutProps extends PropsWithChildren {
   autoSaveId: string;
@@ -54,9 +59,23 @@ const WorkspaceLayout = ({
   const { leftPanelRef, isCollapsed, togglePanel, handlePanelResize } =
     useWorkspacePanel(defaultPanelSize);
 
+  const [calendarOpen, setCalendarOpen] = useAtom(calendarOpenAtom);
+  const [notificationOpen, setNotificationOpen] = useAtom(notificationOpenAtom);
+  const workspaceId = useWorkspaceId();
+
+  const activeRightPanel =
+    rightPanel ||
+    (calendarOpen ? (
+      workspaceId ? (
+        <DraggableCalendarPanel workspaceId={workspaceId as any} />
+      ) : null
+    ) : notificationOpen ? (
+      <DraggableNotificationPanel />
+    ) : null);
+
   // Calculate main panel default size
   const calculatedMainPanelSize =
-    mainPanelDefaultSize || (rightPanel ? 51 : 100 - defaultPanelSize);
+    mainPanelDefaultSize || (activeRightPanel ? 51 : 100 - defaultPanelSize);
 
   return (
     <div className="h-full">
@@ -93,7 +112,7 @@ const WorkspaceLayout = ({
             </div>
           </ResizablePanel>
 
-          {rightPanel && (
+          {activeRightPanel && (
             <>
               <ResizableHandle withHandle className="hidden md:flex" />
               <ResizablePanel
@@ -101,16 +120,18 @@ const WorkspaceLayout = ({
                 defaultSize={rightPanelDefaultSize}
                 className="hidden md:block"
               >
-                {rightPanel}
+                {activeRightPanel}
               </ResizablePanel>
 
               {/* Mobile Drawer for Right Panel (Threads/Profiles) */}
               {isMobile && (
                 <Drawer
-                  open={!!rightPanel}
+                  open={!!activeRightPanel}
                   onOpenChange={(open) => {
-                    if (!open && onClose) {
-                      onClose();
+                    if (!open) {
+                      if (onClose) onClose();
+                      setCalendarOpen(false);
+                      setNotificationOpen(false);
                     }
                   }}
                 >
@@ -118,7 +139,7 @@ const WorkspaceLayout = ({
                     <div className="h-full overflow-y-auto pt-2">
                       {/* Handle for visual indicator (drawer style) */}
                       <div className="mx-auto w-12 h-1.5 rounded-full bg-muted mb-4 shrink-0" />
-                      {rightPanel}
+                      {activeRightPanel}
                     </div>
                   </DrawerContent>
                 </Drawer>

@@ -195,11 +195,11 @@ export const getUserByState = internalMutation({
     // Optional: Delete state after use (one-time use)
     await ctx.db.delete(authState._id);
 
-    return { 
-      userId: authState.userId, 
+    return {
+      userId: authState.userId,
       redirectUri: authState.redirectUri,
       // @ts-ignore
-      returnTo: authState.returnTo
+      returnTo: authState.returnTo,
     };
   },
 });

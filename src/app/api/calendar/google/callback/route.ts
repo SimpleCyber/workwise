@@ -32,7 +32,9 @@ export async function GET(req: NextRequest) {
     const returnTo = result?.returnTo || "/";
 
     // Success! Redirect back to previous URL or home
-    return NextResponse.redirect(`${baseUrl}${returnTo === "/" ? "" : returnTo}`);
+    return NextResponse.redirect(
+      `${baseUrl}${returnTo === "/" ? "" : returnTo}`,
+    );
   } catch (err: any) {
     console.error("Failed to exchange code in API route:", err);
     return NextResponse.redirect(`${baseUrl}/?error=exchange_failed`);

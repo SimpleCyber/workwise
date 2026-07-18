@@ -486,32 +486,22 @@ export const DraggableNotificationPanel = () => {
   }
 
   return (
-    <Card
-      ref={cardRef}
-      className="fixed z-50 w-96 bg-card shadow-2xl border border-border max-h-[80vh] flex flex-col"
-      style={{
-        left: position.x,
-        top: position.y,
-        cursor: isDragging ? "grabbing" : "default",
-      }}
-    >
-      {/* Draggable Header */}
-      <CardHeader
-        className="flex flex-row items-center justify-between p-4 border-b border-border cursor-grab active:cursor-grabbing bg-gradient-to-r from-muted/50 to-card"
-        onMouseDown={handleMouseDown}
-      >
+    <Card className="h-full w-full bg-card border-l border-y-0 border-r-0 border-border flex flex-col rounded-none shadow-none overflow-hidden">
+      {/* Drawer Header */}
+      <CardHeader className="flex flex-row items-center justify-between p-1.5 border-b border-border bg-gradient-to-r from-muted/50 to-card">
         <div className="flex items-center gap-3">
-          <GripVertical className="w-4 h-4 text-muted-foreground" />
-          <Bell className="w-5 h-5 text-foreground/80" />
-          <div>
+          <div className="relative">
+            <Bell className="w-5 h-5 text-foreground/80" />
+            {unreadCount! > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 h-4 min-w-[16px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center z-20 border border-background">
+                {unreadCount! > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
             <h2 className="text-lg font-semibold text-foreground">
               Notifications
             </h2>
-            {unreadCount! > 0 && (
-              <Badge className="text-xs bg-blue-500 hover:bg-blue-600">
-                {unreadCount} new
-              </Badge>
-            )}
           </div>
         </div>
         <div className="flex items-center gap-2 no-drag">

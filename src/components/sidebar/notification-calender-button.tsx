@@ -56,10 +56,6 @@ export const PanelButtons: React.FC<PanelButtonProps> = ({
           }}
         />
       </div>
-
-      {/* Render the draggable panels */}
-      <DraggableNotificationPanel />
-      {workspaceId && <DraggableCalendarPanel workspaceId={workspaceId} />}
     </>
   );
 };
