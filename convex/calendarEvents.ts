@@ -14,6 +14,7 @@ export const createEvent = mutation({
     attendees: v.optional(v.array(v.string())),
     workspaceId: v.id("workspaces"),
     googleEventId: v.optional(v.string()),
+    googleAccountEmail: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -44,6 +45,7 @@ export const createEvent = mutation({
       userId: userId,
       workspaceId: args.workspaceId,
       googleEventId: args.googleEventId,
+      googleAccountEmail: args.googleAccountEmail,
       isGoogleSynced: !!args.googleEventId,
       createdAt: now,
       updatedAt: now,
@@ -209,6 +211,7 @@ export const upsertGoogleEvent = internalMutation({
     attendees: v.optional(v.array(v.string())),
     userId: v.id("users"),
     workspaceId: v.id("workspaces"),
+    googleAccountEmail: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     // Check if this Google event already exists in our DB
@@ -232,6 +235,7 @@ export const upsertGoogleEvent = internalMutation({
         meetLink: args.meetLink,
         attendees: args.attendees,
         isGoogleSynced: true,
+        googleAccountEmail: args.googleAccountEmail,
         updatedAt: now,
       });
       return { created: false, eventId: existing._id };
@@ -248,6 +252,7 @@ export const upsertGoogleEvent = internalMutation({
         userId: args.userId,
         workspaceId: args.workspaceId,
         googleEventId: args.googleEventId,
+        googleAccountEmail: args.googleAccountEmail,
         isGoogleSynced: true,
         createdAt: now,
         updatedAt: now,

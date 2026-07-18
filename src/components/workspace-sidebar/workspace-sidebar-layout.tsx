@@ -53,8 +53,8 @@ const WorkspaceLayout = ({
   showToolbar = false,
   toolbarComponent,
   rightPanel,
-  rightPanelMinSize = 20,
-  rightPanelDefaultSize = 29,
+  rightPanelMinSize = 25,
+  rightPanelDefaultSize = 33,
   heightOffset = "0px",
   hideMobileNav = false,
   onClose,
@@ -87,7 +87,7 @@ const WorkspaceLayout = ({
 
   // Calculate main panel default size
   const calculatedMainPanelSize =
-    mainPanelDefaultSize || (activeRightPanel ? 51 : 100 - defaultPanelSize);
+    mainPanelDefaultSize || (activeRightPanel ? 47 : 100 - defaultPanelSize);
 
   return (
     <div className="h-full">

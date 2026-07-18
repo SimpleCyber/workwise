@@ -1,31 +1,51 @@
 "use client";
 
-import type React from "react";
-
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import { useAtom } from "jotai";
 import { calendarOpenAtom } from "@/lib/panel-atoms";
-import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
-  Calendar,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Clock,
-  Users,
   Video,
-  Plus,
   X,
   ChevronLeft,
   ChevronRight,
-  MapPin,
-  Sparkles,
-  CalendarDays,
+  ChevronDown,
+  Plus,
   ArrowLeft,
-  GripVertical,
-  TriangleAlert,
+  Users,
   RefreshCw,
+  CalendarDays,
+  MapPin,
+  AlignLeft,
+  MoreVertical,
+  ExternalLink,
+  Check,
+  Pencil,
+  Gift,
+  PartyPopper,
+  Sparkles,
 } from "lucide-react";
 import {
   format,
@@ -36,16 +56,20 @@ import {
   isSameDay,
   addMonths,
   subMonths,
+  addDays,
+  subDays,
   startOfWeek,
   endOfWeek,
+  isToday,
+  isBefore,
+  startOfDay,
 } from "date-fns";
 import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
-
 import { toast } from "sonner";
-import { useAuthActions } from "@convex-dev/auth/react";
 
+// ─── Types ──────────────────────────────────────────────
 interface CalendarEvent {
   _id: Id<"calendarEvents">;
   title: string;
@@ -57,118 +81,121 @@ interface CalendarEvent {
   location?: string;
   googleEventId?: string;
   isGoogleSynced?: boolean;
+  googleAccountEmail?: string;
 }
 
-interface Position {
-  x: number;
-  y: number;
+type ViewMode = "day" | "week" | "month" | "schedule";
+type PanelView = "calendar" | "create" | "edit" | "accounts";
+
+// ─── Helpers ────────────────────────────────────────────
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const HOUR_HEIGHT = 60; // px per hour slot
+
+function formatHour(hour: number): string {
+  if (hour === 0) return "12 AM";
+  if (hour < 12) return `${hour} AM`;
+  if (hour === 12) return "12 PM";
+  return `${hour - 12} PM`;
 }
 
-type AuthView = "signIn" | "signUp" | "calendar";
+function getEventTopAndHeight(startTime: number, endTime: number) {
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  const startMinutes = start.getHours() * 60 + start.getMinutes();
+  const endMinutes = end.getHours() * 60 + end.getMinutes();
+  const duration = Math.max(endMinutes - startMinutes, 15);
+  return {
+    top: (startMinutes / 60) * HOUR_HEIGHT,
+    height: (duration / 60) * HOUR_HEIGHT,
+  };
+}
 
+// ─── Main Component ─────────────────────────────────────
 export const DraggableCalendarPanel = ({
   workspaceId,
 }: {
   workspaceId: Id<"workspaces">;
 }) => {
-  const [open] = useAtom(calendarOpenAtom);
-  const [view, setView] = useState<"daily" | "monthly" | "all" | "create">(
-    "monthly",
+  const [, setOpen] = useAtom(calendarOpenAtom);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [viewMode, setViewMode] = useState<ViewMode>("schedule");
+  const [panelView, setPanelView] = useState<PanelView>("calendar");
+  const [showMiniCal, setShowMiniCal] = useState(false);
+  const [miniCalMonth, setMiniCalMonth] = useState(new Date());
+  const [showMenu, setShowMenu] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [hiddenCalendars, setHiddenCalendars] = useState<Set<string>>(
+    new Set(),
   );
-  const [authView, setAuthView] = useState<AuthView>("calendar");
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState<Position>({ x: 0, y: 0 });
-  const cardRef = useRef<HTMLDivElement>(null);
 
-  // Authentication state
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [authError, setAuthError] = useState("");
-  const [authPending, setAuthPending] = useState(false);
-
-  const { signIn } = useAuthActions();
-
-  const events = useQuery(api.calendarEvents.getEventsByWorkspace, {
-    workspaceId,
-  });
-  const hasGoogleAuth = useQuery(api.googleAuth.hasGoogleAuth);
-  const googleTokens = useQuery(api.googleAuth.getGoogleTokens);
-  /* googleTokens already declared above */
-  const createEvent = useMutation(api.calendarEvents.createEvent);
-  const deleteEventMutation = useMutation(api.calendarEvents.deleteEvent);
-
-  const [newEvent, setNewEvent] = useState({
-    title: "",
-    description: "",
-    startDate: "",
-    startTime: "",
-    endDate: "",
-    endTime: "",
-    attendees: "",
-    includeMeet: false,
-    location: "",
-  });
-
-  // Load saved position from localStorage
+  // Initialize hidden calendars from local storage
   useEffect(() => {
-    const savedPosition = localStorage.getItem("calendar-panel-position");
-    if (savedPosition) {
-      setPosition(JSON.parse(savedPosition));
-    } else {
-      setPosition({ x: window.innerWidth / 2 - 200, y: 80 });
+    try {
+      const stored = localStorage.getItem("workwise_hidden_calendars");
+      if (stored) {
+        setHiddenCalendars(new Set(JSON.parse(stored)));
+      }
+    } catch (e) {
+      console.error("Failed to load hidden calendars", e);
     }
   }, []);
 
-  // Save position to localStorage
-  useEffect(() => {
-    localStorage.setItem("calendar-panel-position", JSON.stringify(position));
-  }, [position]);
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest(".no-drag")) return;
-
-    setIsDragging(true);
-    setDragStart({
-      x: e.clientX - position.x,
-      y: e.clientY - position.y,
+  const toggleCalendarVisibility = (id: string) => {
+    setHiddenCalendars((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      try {
+        localStorage.setItem(
+          "workwise_hidden_calendars",
+          JSON.stringify(Array.from(next)),
+        );
+      } catch (e) {
+        console.error("Failed to save hidden calendars", e);
+      }
+      return next;
     });
   };
 
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
-      if (!isDragging) return;
+  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editStartTime, setEditStartTime] = useState("09:00");
+  const [editEndTime, setEditEndTime] = useState("10:00");
+  const [editDescription, setEditDescription] = useState("");
+  const [editLocation, setEditLocation] = useState("");
+  const [editAttendees, setEditAttendees] = useState("");
 
-      const newX = e.clientX - dragStart.x;
-      const newY = e.clientY - dragStart.y;
+  // Event creation state
+  const [newTitle, setNewTitle] = useState("");
+  const [newStartTime, setNewStartTime] = useState("09:00");
+  const [newEndTime, setNewEndTime] = useState("10:00");
+  const [newGuestQuery, setNewGuestQuery] = useState("");
+  const [selectedGuests, setSelectedGuests] = useState<
+    { name: string; email: string }[]
+  >([]);
+  const [showGuestSuggestions, setShowGuestSuggestions] = useState(false);
+  const [newLocation, setNewLocation] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+  const [newIncludeMeet, setNewIncludeMeet] = useState(false);
+  const [newSelectedAccount, setNewSelectedAccount] = useState("local");
 
-      const maxX = window.innerWidth - 400;
-      const maxY = window.innerHeight - 100;
+  // Refs
+  const timelineRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const datePickerRef = useRef<HTMLDivElement>(null);
+  const guestRef = useRef<HTMLDivElement>(null);
 
-      setPosition({
-        x: Math.max(0, Math.min(newX, maxX)),
-        y: Math.max(0, Math.min(newY, maxY)),
-      });
-    },
-    [isDragging, dragStart],
-  );
+  // Data
+  const events = (useQuery(api.calendarEvents.getEventsByWorkspace, {
+    workspaceId,
+  }) || []) as CalendarEvent[];
 
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false);
-  }, []);
-
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-      return () => {
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", handleMouseUp);
-      };
-    }
-  }, [isDragging, handleMouseMove, handleMouseUp]);
-
+  const googleTokens = useQuery(api.googleAuth.getGoogleTokens) || [];
+  const workspaceMembers =
+    useQuery(api.projects.getWorkspaceMembers, { workspaceId }) || [];
+  const createEvent = useMutation(api.calendarEvents.createEvent);
+  const deleteEventMutation = useMutation(api.calendarEvents.deleteEvent);
+  const updateEventMutation = useMutation(api.calendarEvents.updateEvent);
   const generateCalendarAuthUrl = useAction(
     api.googleCalendarActions.generateAuthUrl,
   );
@@ -176,255 +203,702 @@ export const DraggableCalendarPanel = ({
   const syncGoogleCalendar = useAction(
     api.googleCalendarActions.syncGoogleCalendar,
   );
+  const disconnectGoogle = useMutation(api.googleAuth.deleteGoogleTokens);
 
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [hasSyncedOnce, setHasSyncedOnce] = useState(false);
+  // Filtered member suggestions
+  const filteredMembers = useMemo(() => {
+    const selectedEmails = new Set(selectedGuests.map((g) => g.email));
+    return (workspaceMembers as any[])
+      .filter((m: any) => {
+        if (!m?.user) return false;
+        const email = m.user.email || "";
+        const name = m.user.name || "";
+        if (selectedEmails.has(email)) return false;
+        if (!newGuestQuery) return true;
+        const q = newGuestQuery.toLowerCase();
+        return (
+          name.toLowerCase().includes(q) || email.toLowerCase().includes(q)
+        );
+      })
+      .slice(0, 6);
+  }, [workspaceMembers, newGuestQuery, selectedGuests]);
 
+  // Close dropdown menus on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+      if (
+        datePickerRef.current &&
+        !datePickerRef.current.contains(e.target as Node)
+      ) {
+        setShowMiniCal(false);
+      }
+      if (guestRef.current && !guestRef.current.contains(e.target as Node)) {
+        setShowGuestSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Scroll timeline to current hour on mount
+  useEffect(() => {
+    if (viewMode === "day" && timelineRef.current) {
+      const now = new Date();
+      const scrollTo = Math.max(0, (now.getHours() - 1) * HOUR_HEIGHT);
+      timelineRef.current.scrollTop = scrollTo;
+    }
+  }, [viewMode, selectedDate]);
+
+  // ─── Handlers ───────────────────────────────────────────
   const handleSyncCalendar = async () => {
     setIsSyncing(true);
     try {
       const result = await syncGoogleCalendar({ workspaceId });
-      toast.success(`Calendar synced!`, {
-        description: `${result.synced} new events imported, ${result.skipped} already up to date.`,
-      });
-    } catch (error: any) {
-      toast.error("Failed to sync calendar", {
-        description: error.message,
-      });
+      toast.success(`Synced ${result.synced} events`);
+    } catch (err: any) {
+      toast.error("Sync failed", { description: err.message });
     } finally {
       setIsSyncing(false);
     }
   };
 
-  // Auto-sync when Google Calendar is first connected
-  useEffect(() => {
-    if (hasGoogleAuth && !hasSyncedOnce && open) {
-      setHasSyncedOnce(true);
-      handleSyncCalendar();
-    }
-  }, [hasGoogleAuth, hasSyncedOnce, open]);
-
-  const handleConnectGoogleCalendar = async () => {
+  const handleConnectGoogle = async () => {
     try {
       const redirectUri = `${window.location.origin}/api/calendar/google/callback`;
-      const returnTo = window.location.pathname; // Gets /workspaces/... etc
+      const returnTo = window.location.pathname;
       const authUrl = await generateCalendarAuthUrl({ redirectUri, returnTo });
       window.location.href = authUrl;
-    } catch (error: any) {
-      toast.error("Failed to start Google Calendar connection", {
-        description: error.message,
-      });
+    } catch (err: any) {
+      toast.error("Connection failed", { description: err.message });
     }
   };
 
-  // Authentication handlers
-  const handleOAuthSignIn = (provider: "github" | "google") => {
-    setAuthPending(true);
-    signIn(provider)
-      .then(() => {
-        setAuthView("calendar");
-        toast.success(`Signed in with ${provider}`);
-      })
-      .catch((error) => {
-        setAuthError(`Failed to sign in with ${provider}`);
-        console.error("OAuth error:", error);
-      })
-      .finally(() => setAuthPending(false));
-  };
-
-  const handleSignIn = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setAuthPending(true);
-    setAuthError("");
-
-    signIn("password", { email, password, flow: "signIn" })
-      .then(() => {
-        setAuthView("calendar");
-        toast.success("Successfully signed in!");
-      })
-      .catch((error) => {
-        setAuthError("Invalid email or password!");
-        console.error("Sign in error:", error);
-      })
-      .finally(() => setAuthPending(false));
-  };
-
-  const handleSignUp = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setAuthPending(true);
-    setAuthError("");
-
-    signIn("password", { email, password, flow: "signUp" })
-      .then(() => {
-        setAuthView("calendar");
-        toast.success("Account created successfully!");
-      })
-      .catch((error) => {
-        setAuthError("Failed to create account. Please try again.");
-        console.error("Sign up error:", error);
-      })
-      .finally(() => setAuthPending(false));
+  const handleDisconnect = async (tokenId: Id<"googleTokens">) => {
+    try {
+      await disconnectGoogle({ tokenId });
+      toast.success("Account disconnected");
+    } catch (err: any) {
+      toast.error("Failed to disconnect", { description: err.message });
+    }
   };
 
   const handleCreateEvent = async () => {
-    if (!newEvent.title || !newEvent.startDate || !newEvent.startTime) {
-      toast.error("Missing information", {
-        description: "Please fill in the required fields.",
-      });
+    if (!newTitle.trim()) {
+      toast.error("Please add a title");
       return;
     }
 
     try {
-      const startDateTime = new Date(
-        `${newEvent.startDate}T${newEvent.startTime}`,
-      );
-      const endDateTime =
-        newEvent.endDate && newEvent.endTime
-          ? new Date(`${newEvent.endDate}T${newEvent.endTime}`)
-          : new Date(startDateTime.getTime() + 60 * 60 * 1000);
+      const dateStr = format(selectedDate, "yyyy-MM-dd");
+      const startDateTime = new Date(`${dateStr}T${newStartTime}`);
+      const endDateTime = new Date(`${dateStr}T${newEndTime}`);
 
-      const attendeesList = newEvent.attendees
-        ? newEvent.attendees.split(",").map((email) => email.trim())
-        : undefined;
+      const attendees =
+        selectedGuests.length > 0
+          ? selectedGuests.map((g) => g.email)
+          : undefined;
 
-      if (newEvent.includeMeet) {
-        // Use the secure action that talks to Google API
+      if (newSelectedAccount !== "local") {
         await createMeeting({
-          title: newEvent.title,
-          description: newEvent.description,
+          title: newTitle,
+          description: newDescription || undefined,
           startTime: startDateTime.getTime(),
           endTime: endDateTime.getTime(),
           workspaceId,
-          attendees: attendeesList,
+          attendees,
+          email: newSelectedAccount,
         });
       } else {
-        // Use local mutation
         await createEvent({
-          title: newEvent.title,
-          description: newEvent.description,
+          title: newTitle,
+          description: newDescription || undefined,
           startTime: startDateTime.getTime(),
           endTime: endDateTime.getTime(),
-          location: newEvent.location,
-          attendees: attendeesList,
+          location: newLocation || undefined,
+          attendees,
           workspaceId,
         });
       }
 
-      toast.success("Event created", {
-        description: "Your calendar event has been created successfully.",
-      });
-
-      setNewEvent({
-        title: "",
-        description: "",
-        startDate: "",
-        startTime: "",
-        endDate: "",
-        endTime: "",
-        attendees: "",
-        includeMeet: false,
-        location: "",
-      });
-      setView("monthly");
-    } catch (error: any) {
-      toast.error("Failed to create event", {
-        description: error.message,
-      });
+      toast.success("Event created");
+      resetCreateForm();
+      setPanelView("calendar");
+    } catch (err: any) {
+      toast.error("Failed to create event", { description: err.message });
     }
+  };
+
+  const resetCreateForm = () => {
+    setNewTitle("");
+    setNewStartTime("09:00");
+    setNewEndTime("10:00");
+    setNewGuestQuery("");
+    setSelectedGuests([]);
+    setShowGuestSuggestions(false);
+    setNewLocation("");
+    setNewDescription("");
+    setNewIncludeMeet(false);
+    setNewSelectedAccount("local");
   };
 
   const handleDeleteEvent = async (event: CalendarEvent) => {
     try {
       await deleteEventMutation({ eventId: event._id });
-      toast.success("Event deleted", {
-        description: "Your calendar event has been deleted.",
-      });
-    } catch (error: any) {
-      toast.error("Failed to delete event", {
-        description: error.message,
-      });
+      toast.success("Event deleted");
+    } catch (err: any) {
+      toast.error("Failed to delete event", { description: err.message });
     }
   };
 
-  const getEventsForView = () => {
-    if (!events) return [];
+  const openEditEvent = (event: CalendarEvent) => {
+    setEditingEvent(event);
+    setEditTitle(event.title);
+    setEditStartTime(format(new Date(event.startTime), "HH:mm"));
+    setEditEndTime(format(new Date(event.endTime), "HH:mm"));
+    setEditDescription(event.description || "");
+    setEditLocation(event.location || "");
+    setEditAttendees(event.attendees?.join(", ") || "");
+    setPanelView("edit");
+  };
 
-    switch (view) {
-      case "daily":
-        return events.filter((event) =>
-          isSameDay(new Date(event.startTime), currentDate),
-        );
-      case "monthly":
-        return events.filter((event) => {
-          const eventDate = new Date(event.startTime);
-          return (
-            eventDate.getMonth() === currentDate.getMonth() &&
-            eventDate.getFullYear() === currentDate.getFullYear()
-          );
-        });
-      case "all":
-        return events;
-      default:
-        return events;
+  const handleUpdateEvent = async () => {
+    if (!editingEvent || !editTitle.trim()) {
+      toast.error("Please add a title");
+      return;
+    }
+    try {
+      const dateStr = format(new Date(editingEvent.startTime), "yyyy-MM-dd");
+      const startDateTime = new Date(`${dateStr}T${editStartTime}`);
+      const endDateTime = new Date(`${dateStr}T${editEndTime}`);
+      const attendees = editAttendees
+        ? editAttendees
+            .split(",")
+            .map((e) => e.trim())
+            .filter(Boolean)
+        : undefined;
+
+      await updateEventMutation({
+        eventId: editingEvent._id,
+        title: editTitle,
+        description: editDescription || undefined,
+        startTime: startDateTime.getTime(),
+        endTime: endDateTime.getTime(),
+        location: editLocation || undefined,
+        attendees,
+      });
+      toast.success("Event updated");
+      setEditingEvent(null);
+      setPanelView("calendar");
+    } catch (err: any) {
+      toast.error("Failed to update event", { description: err.message });
     }
   };
 
-  const renderCalendarGrid = () => {
-    const monthStart = startOfMonth(currentDate);
-    const monthEnd = endOfMonth(currentDate);
-    const calendarStart = startOfWeek(monthStart);
-    const calendarEnd = endOfWeek(monthEnd);
-    const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+  const getEventCategory = (
+    event: CalendarEvent,
+  ): "local" | "birthday" | "holiday" | "google" => {
+    if (!event.googleEventId) return "local";
+    const t = (event.title || "").toLowerCase();
+
+    if (
+      t.includes("birthday") ||
+      t.includes("bday") ||
+      t.includes("b'day") ||
+      t.includes("anniversary")
+    )
+      return "birthday";
+
+    const holidays = [
+      "holiday",
+      "bank holiday",
+      "national",
+      "day off",
+      "observance",
+      "republic",
+      "independence",
+      "jayanti",
+      "martyrdom",
+      "diwali",
+      "deepavali",
+      "holi",
+      "navratri",
+      "durga",
+      "maha",
+      "saptami",
+      "ashtami",
+      "navami",
+      "dashami",
+      "dussehra",
+      "ganesh",
+      "chaturthi",
+      "chaturdasi",
+      "janmashtami",
+      "krishna",
+      "raksha bandhan",
+      "rakhi",
+      "makar",
+      "sankranti",
+      "pongal",
+      "onam",
+      "baisakhi",
+      "ram navami",
+      "shivaratri",
+      "ugadi",
+      "gudi padwa",
+      "karva chauth",
+      "puja",
+      "pooja",
+      "vishwakarma",
+      "bhai duj",
+      "bhai dooj",
+      "chhat",
+      "govardhan",
+      "rath yatra",
+      "eid",
+      "milad",
+      "muharram",
+      "bakrid",
+      "ramzan",
+      "jamat",
+      "christmas",
+      "good friday",
+      "easter",
+      "buddha purnima",
+      "mahavir",
+      "guru nanak",
+      "guru tegh",
+      "lohri",
+    ];
+    if (holidays.some((h) => t.includes(h))) return "holiday";
+
+    return "google";
+  };
+
+  const getEventColor = (event: CalendarEvent) => {
+    const category = getEventCategory(event);
+    if (category === "local") return "#1e293b"; // Slate-800 for dark creative schedule
+
+    // For google events (and birthdays/holidays fallback), we fetch their calendar color:
+    if (event.googleAccountEmail) {
+      const token = googleTokens.find(
+        (t: any) => t.email === event.googleAccountEmail,
+      );
+      return token?.color || "#4285F4";
+    }
+    return "#4285F4";
+  };
+
+  // ─── Filter Events ───
+  const visibleEvents = useMemo(() => {
+    return events.filter((e) => {
+      const isLocal = !e.googleAccountEmail;
+      if (isLocal && hiddenCalendars.has("local")) return false;
+      if (!isLocal && hiddenCalendars.has(e.googleAccountEmail!)) return false;
+
+      const category = getEventCategory(e);
+      if (hiddenCalendars.has(`category-${category}`)) return false;
+
+      return true;
+    });
+  }, [events, hiddenCalendars]);
+
+  // ─── Mini Calendar ────────────────────────────────────
+  const renderMiniCalendar = () => {
+    const monthStart = startOfMonth(miniCalMonth);
+    const monthEnd = endOfMonth(miniCalMonth);
+    const calStart = startOfWeek(monthStart);
+    const calEnd = endOfWeek(monthEnd);
+    const days = eachDayOfInterval({ start: calStart, end: calEnd });
 
     return (
-      <div className="bg-background rounded-xl border border-border overflow-hidden shadow-sm">
-        <div className="grid grid-cols-7 bg-muted border-b border-border">
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-            <div
-              key={day}
-              className="p-3 text-center font-semibold text-sm text-muted-foreground"
+      <div
+        ref={datePickerRef}
+        className="absolute top-[68px] left-3 right-3 z-50 bg-popover border border-border rounded-lg shadow-lg p-3 animate-in fade-in zoom-in-95 duration-150"
+      >
+        {/* Month header */}
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-sm font-medium text-foreground">
+            {format(miniCalMonth, "MMMM yyyy")}
+          </span>
+          <div className="flex items-center gap-0.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setMiniCalMonth(subMonths(miniCalMonth, 1))}
             >
-              {day}
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setMiniCalMonth(addMonths(miniCalMonth, 1))}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Day-of-week headers */}
+        <div className="grid grid-cols-7 mb-1">
+          {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+            <div
+              key={i}
+              className="h-7 flex items-center justify-center text-[11px] font-medium text-muted-foreground"
+            >
+              {d}
             </div>
           ))}
         </div>
+
+        {/* Day grid */}
         <div className="grid grid-cols-7">
-          {days.map((day, index) => {
-            const dayEvents =
-              events?.filter((event) =>
-                isSameDay(new Date(event.startTime), day),
-              ) || [];
-            const isCurrentMonth = isSameMonth(day, currentDate);
-            const isToday = isSameDay(day, new Date());
+          {days.map((day) => {
+            const inMonth = isSameMonth(day, miniCalMonth);
+            const selected = isSameDay(day, selectedDate);
+            const today = isToday(day);
+
             return (
               <div
                 key={day.toISOString()}
-                className={`p-2 min-h-[90px] border-r border-b border-border transition-colors hover:bg-muted/50 ${
-                  isCurrentMonth ? "bg-background" : "bg-muted/30"
-                } ${isToday ? "bg-blue-500/10 border-blue-500/30" : ""} ${index % 7 === 6 ? "border-r-0" : ""}`}
+                onClick={() => {
+                  setSelectedDate(day);
+                  setShowMiniCal(false);
+                }}
+                className={`h-7 w-7 mx-auto flex items-center justify-center rounded-full text-xs cursor-pointer transition-colors
+                  ${!inMonth ? "text-muted-foreground/30" : ""}
+                  ${selected ? "bg-blue-600 text-white font-semibold" : ""}
+                  ${today && !selected ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-semibold" : ""}
+                  ${inMonth && !selected && !today ? "hover:bg-muted text-foreground" : ""}
+                `}
               >
+                {format(day, "d")}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  // ─── Day View (Hourly Timeline) ───────────────────────
+  const renderDayView = () => {
+    const dayEvents = visibleEvents.filter((e) =>
+      isSameDay(new Date(e.startTime), selectedDate),
+    );
+
+    // Current time indicator
+    const now = new Date();
+    const isViewingToday = isSameDay(selectedDate, now);
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const currentLineTop = (currentMinutes / 60) * HOUR_HEIGHT;
+
+    return (
+      <div
+        ref={timelineRef}
+        className="flex-1 overflow-y-auto relative"
+        style={{ scrollbarWidth: "thin" }}
+      >
+        {/* Timezone label */}
+        <div className="sticky top-0 z-10 px-3 py-1">
+          <span className="text-[10px] text-muted-foreground font-medium">
+            GMT{format(now, "xxx")}
+          </span>
+        </div>
+
+        {/* Timeline grid */}
+        <div
+          className="relative"
+          style={{ height: HOURS.length * HOUR_HEIGHT }}
+        >
+          {/* Hour lines */}
+          {HOURS.map((hour) => (
+            <div
+              key={hour}
+              className="absolute w-full flex items-start"
+              style={{ top: hour * HOUR_HEIGHT }}
+            >
+              <div className="w-16 flex justify-end pr-2.5 shrink-0">
+                <span className="text-xs text-muted-foreground leading-none relative -top-[6px]">
+                  {hour === 0 ? "" : formatHour(hour)}
+                </span>
+              </div>
+              <div className="flex-1 border-t border-border/60" />
+            </div>
+          ))}
+
+          {/* Current time red line */}
+          {isViewingToday && (
+            <div
+              className="absolute left-12 right-0 z-20 pointer-events-none flex items-center"
+              style={{ top: currentLineTop }}
+            >
+              <div className="w-2.5 h-2.5 rounded-full bg-red-500 -ml-[5px] shrink-0" />
+              <div className="flex-1 h-[2px] bg-red-500" />
+            </div>
+          )}
+
+          {/* Events */}
+          {dayEvents.map((event) => {
+            const { top, height } = getEventTopAndHeight(
+              event.startTime,
+              event.endTime,
+            );
+            const color = getEventColor(event);
+
+            return (
+              <div
+                key={event._id}
+                className="absolute left-14 right-2 z-10 rounded-md px-2.5 py-1.5 cursor-pointer group overflow-hidden transition-shadow hover:shadow-md"
+                style={{
+                  top,
+                  height: Math.max(height, 22),
+                  backgroundColor: `${color}22`,
+                  borderLeft: `3px solid ${color}`,
+                }}
+                title={event.title}
+                onClick={() => openEditEvent(event)}
+              >
+                <div className="flex items-start justify-between gap-1">
+                  <div className="overflow-hidden min-w-0">
+                    <p
+                      className="text-[13px] font-semibold truncate"
+                      style={{ color }}
+                    >
+                      {event.title}
+                    </p>
+                    {height > 30 && (
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        {format(new Date(event.startTime), "h:mm")} –{" "}
+                        {format(new Date(event.endTime), "h:mma")}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteEvent(event);
+                    }}
+                    className="shrink-0 opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-opacity"
+                  >
+                    <X className="w-3 h-3 text-muted-foreground" />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  // ─── Week View ────────────────────────────────────────
+  const renderWeekView = () => {
+    const start = startOfWeek(selectedDate);
+    const weekDays = eachDayOfInterval({ start, end: endOfWeek(start) });
+    const now = new Date();
+
+    return (
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Sticky Week Header */}
+        <div className="flex  border-border z-20 bg-background pt-2 pb-1">
+          <div className="w-12 shrink-0">
+            <span className="text-[9px] text-muted-foreground font-medium pl-1">
+              GMT{format(now, "xxx")}
+            </span>
+          </div>
+          <div className="flex-1 flex overflow-hidden">
+            {weekDays.map((day) => (
+              <div
+                key={day.toISOString()}
+                className="flex-1 flex flex-col items-center border-l border-border/40 pb-1"
+              >
+                <span className="text-xs text-muted-foreground font-medium uppercase">
+                  {format(day, "EEE")}
+                </span>
+                <button
+                  onClick={() => {
+                    setSelectedDate(day);
+                    setViewMode("day");
+                  }}
+                  className={`mt-0.5 text-sm font-semibold w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted ${isToday(day) ? "bg-blue-600 text-white hover:bg-blue-700" : isSameDay(day, selectedDate) ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300" : ""}`}
+                >
+                  {format(day, "d")}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Timeline Grid */}
+        <div
+          className="flex-1 overflow-y-auto overflow-x-hidden flex relative"
+          ref={timelineRef}
+          style={{ scrollbarWidth: "thin" }}
+        >
+          {/* Times axis */}
+          <div
+            className="w-14 shrink-0 relative"
+            style={{ height: HOURS.length * HOUR_HEIGHT }}
+          >
+            {HOURS.map((hour) => (
+              <div
+                key={hour}
+                className="absolute w-full pt-1 pr-1.5 text-right"
+                style={{ top: hour * HOUR_HEIGHT }}
+              >
+                <span className="text-xs text-muted-foreground leading-none relative -top-[6px]">
+                  {hour === 0 ? "" : formatHour(hour)}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* 7 Days Columns */}
+          <div
+            className="flex-1 flex relative"
+            style={{ height: HOURS.length * HOUR_HEIGHT }}
+          >
+            {/* Hour Lines (Background) */}
+            <div className="absolute inset-0 pointer-events-none flex flex-col">
+              {HOURS.map((hour) => (
                 <div
-                  className={`text-sm font-medium mb-1 ${
-                    isCurrentMonth
-                      ? "text-foreground"
-                      : "text-muted-foreground/50"
-                  } ${isToday ? "text-blue-500 font-semibold" : ""}`}
+                  key={`line-${hour}`}
+                  className="w-full flex-none border-t border-border/60"
+                  style={{ height: HOUR_HEIGHT }}
+                />
+              ))}
+            </div>
+
+            {/* Day Columns */}
+            {weekDays.map((day) => {
+              const dayEvents = visibleEvents.filter((e) =>
+                isSameDay(new Date(e.startTime), day),
+              );
+              return (
+                <div
+                  key={day.toISOString()}
+                  className="flex-1 relative border-l border-border/40 min-w-0"
+                >
+                  {dayEvents.map((event) => {
+                    const { top, height } = getEventTopAndHeight(
+                      event.startTime,
+                      event.endTime,
+                    );
+                    const color = getEventColor(event);
+                    return (
+                      <div
+                        key={event._id}
+                        className="absolute left-0 right-0 z-10 mx-0.5 rounded p-0.5 cursor-pointer overflow-hidden transition-shadow hover:shadow-md"
+                        style={{
+                          top,
+                          height: Math.max(height, 16),
+                          backgroundColor: `${color}22`,
+                          borderLeft: `2px solid ${color}`,
+                        }}
+                        title={event.title}
+                        onClick={() => openEditEvent(event)}
+                      >
+                        <p
+                          className="text-[9px] font-semibold truncate leading-tight"
+                          style={{ color }}
+                        >
+                          {event.title}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+
+            {/* Current time red line across week */}
+            {weekDays.some((d) => isToday(d)) && (
+              <div
+                className="absolute left-0 right-0 z-20 pointer-events-none h-[2px] bg-red-400 opacity-60"
+                style={{
+                  top:
+                    ((now.getHours() * 60 + now.getMinutes()) / 60) *
+                    HOUR_HEIGHT,
+                }}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ─── Month View ─────────────────────────────────────────
+  const renderMonthView = () => {
+    const monthStart = startOfMonth(selectedDate);
+    const monthEnd = endOfMonth(monthStart);
+    const startDate = startOfWeek(monthStart);
+    const endDate = endOfWeek(monthEnd);
+
+    const days = eachDayOfInterval({ start: startDate, end: endDate });
+
+    return (
+      <div className="flex-1 flex flex-col px-2 pb-2 overflow-hidden">
+        {/* Days of week header */}
+        <div className="grid grid-cols-7 mb-1 mt-1">
+          {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+            <div
+              key={i}
+              className="text-center text-xs font-semibold text-muted-foreground"
+            >
+              {d}
+            </div>
+          ))}
+        </div>
+
+        {/* Month grid */}
+        <div className="flex-1 grid grid-cols-7 gap-[1px] bg-border/40 border border-border/40 rounded-md overflow-hidden min-h-0">
+          {days.map((day, i) => {
+            const dayEvents = visibleEvents.filter((e) =>
+              isSameDay(new Date(e.startTime), day),
+            );
+            const isSel = isSameDay(day, selectedDate);
+            const isTod = isToday(day);
+            const isCurrMonth = isSameMonth(day, selectedDate);
+
+            return (
+              <div
+                key={day.toISOString()}
+                className={`bg-background p-1 flex flex-col cursor-pointer transition-colors hover:bg-muted/30 overflow-hidden ${!isCurrMonth ? "opacity-50" : ""} ${isSel ? "bg-blue-50/50 dark:bg-blue-900/10" : ""}`}
+                onClick={() => {
+                  setSelectedDate(day);
+                  setViewMode("day");
+                }}
+              >
+                {/* Day number */}
+                <div
+                  className={`text-xs font-medium text-center w-6 h-6 mx-auto rounded-full flex items-center justify-center mb-0.5 ${isTod ? "bg-blue-600 text-white" : ""}`}
                 >
                   {format(day, "d")}
                 </div>
-                <div className="space-y-1">
-                  {dayEvents.slice(0, 2).map((event) => (
+
+                {/* Event indicators */}
+                <div className="flex-1 flex flex-col gap-[2px] overflow-hidden">
+                  {dayEvents.slice(0, 4).map((e) => (
                     <div
-                      key={event._id}
-                      className="text-xs p-1.5 bg-blue-500/10 text-blue-500 dark:text-blue-400 rounded-md truncate cursor-pointer hover:bg-blue-500/20 transition-colors border border-blue-500/30"
-                      title={event.title}
+                      key={e._id}
+                      className="text-[9px] truncate px-1 rounded-[2px] leading-tight"
+                      style={{
+                        backgroundColor: `${getEventColor(e)}33`,
+                        color: getEventColor(e),
+                      }}
                     >
-                      {event.title}
+                      {e.title}
                     </div>
                   ))}
-                  {dayEvents.length > 2 && (
-                    <div className="text-xs text-muted-foreground font-medium">
-                      +{dayEvents.length - 2} more
+                  {dayEvents.length > 4 && (
+                    <div className="text-[9px] text-muted-foreground font-medium pl-0.5">
+                      +{dayEvents.length - 4}
                     </div>
                   )}
                 </div>
@@ -436,607 +910,941 @@ export const DraggableCalendarPanel = ({
     );
   };
 
-  const renderEventsList = () => {
-    const filteredEvents = getEventsForView();
+  // ─── Schedule View (Upcoming List) ────────────────────
+  const renderScheduleView = () => {
+    // Group events by date, from today onward
+    const futureEvents = visibleEvents
+      .filter((e) => {
+        const eventDate = startOfDay(new Date(e.startTime));
+        const today = startOfDay(new Date());
+        return !isBefore(eventDate, today);
+      })
+      .sort((a, b) => a.startTime - b.startTime);
+
+    const grouped: Record<string, CalendarEvent[]> = {};
+    futureEvents.forEach((e) => {
+      const key = format(new Date(e.startTime), "yyyy-MM-dd");
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(e);
+    });
+
+    const dateKeys = Object.keys(grouped).sort();
+
     return (
-      <div className="space-y-3 max-h-[400px] overflow-y-auto">
-        {filteredEvents.map((event, index) => (
-          <Card
-            key={event._id}
-            className="group border border-border shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-200 bg-card"
-            style={{
-              animationDelay: `${index * 50}ms`,
-            }}
-          >
-            <div className="p-4">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20 mt-0.5">
-                      <CalendarDays className="w-4 h-4 text-blue-500" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-foreground mb-1 flex items-center gap-2">
-                        {event.title}
-                        {event.isGoogleSynced && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full border border-emerald-500/20">
-                            <svg className="w-2.5 h-2.5" viewBox="0 0 24 24">
-                              <path
-                                fill="#4285F4"
-                                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                              />
-                              <path
-                                fill="#34A853"
-                                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                              />
-                              <path
-                                fill="#FBBC05"
-                                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                              />
-                              <path
-                                fill="#EA4335"
-                                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                              />
-                            </svg>
-                            Google
-                          </span>
-                        )}
-                      </h4>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                        <Clock className="w-4 h-4 text-muted-foreground/60" />
-                        <span className="font-medium text-foreground/80">
-                          {format(new Date(event.startTime), "MMM d, h:mm a")} -{" "}
-                          {format(new Date(event.endTime), "h:mm a")}
-                        </span>
-                      </div>
-                      {event.description && (
-                        <p className="text-sm text-muted-foreground mb-3 bg-muted/50 p-2 rounded-lg">
-                          {event.description}
-                        </p>
-                      )}
-                      <div className="flex flex-col gap-2">
-                        {event.attendees && event.attendees.length > 0 && (
-                          <div className="flex items-center gap-2">
-                            <Users className="w-4 h-4 text-muted-foreground/60" />
-                            <span className="text-sm text-muted-foreground">
-                              {event.attendees.length} attendee
-                              {event.attendees.length > 1 ? "s" : ""}
-                            </span>
+      <div
+        className="flex-1 overflow-y-auto"
+        style={{ scrollbarWidth: "thin" }}
+      >
+        {dateKeys.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+            <CalendarDays className="w-10 h-10 text-muted-foreground/25 mb-3" />
+            <p className="text-sm font-medium text-muted-foreground/70">
+              No upcoming events
+            </p>
+            <p className="text-xs text-muted-foreground/50 mt-1">
+              Your schedule is clear
+            </p>
+          </div>
+        ) : (
+          <div className="pb-4">
+            {dateKeys.map((dateKey) => {
+              const date = new Date(dateKey + "T00:00:00");
+              const dayEvents = grouped[dateKey];
+
+              return (
+                <div key={dateKey}>
+                  {/* Date header */}
+                  <div className="px-4 pt-4 pb-2">
+                    <h3 className="text-[14px] font-medium text-foreground/80">
+                      {isToday(date)
+                        ? "Today"
+                        : format(date, "EEE, d MMM yyyy")}
+                    </h3>
+                  </div>
+
+                  {/* Events for this date */}
+                  <div className="space-y-1.5 px-3">
+                    {dayEvents.map((event) => {
+                      const color = getEventColor(event);
+                      const isAllDay =
+                        new Date(event.endTime).getTime() -
+                          new Date(event.startTime).getTime() >=
+                        23 * 60 * 60 * 1000;
+                      const category = getEventCategory(event);
+
+                      let BackgroundStyle: React.CSSProperties = {
+                        backgroundColor: color,
+                      };
+                      let IconComponent = CalendarDays;
+                      if (category === "birthday") {
+                        BackgroundStyle = { backgroundColor: "#f43f5e" }; // Rose color for birthdays
+                        IconComponent = Gift;
+                      } else if (category === "holiday") {
+                        BackgroundStyle = {
+                          background: `linear-gradient(135deg, ${color} 0%, #8b5cf6 100%)`,
+                        }; // Gradient for holidays
+                        IconComponent = Sparkles;
+                      } else if (category === "local") {
+                        IconComponent = Pencil;
+                      }
+
+                      return (
+                        <div
+                          key={event._id}
+                          className="group relative rounded-md cursor-pointer transition-opacity hover:opacity-90 shadow-sm"
+                          onClick={() => openEditEvent(event)}
+                          style={BackgroundStyle}
+                        >
+                          <div className="px-3 py-2 flex flex-col justify-center min-h-[50px]">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 mb-0.5">
+                                  <IconComponent className="w-4 h-4 text-white/90 shrink-0" />
+                                  <p className="text-sm font-medium text-white tracking-tight truncate leading-tight">
+                                    {event.title}
+                                  </p>
+                                </div>
+                                <p className="text-xs text-white/90 truncate mt-0.5 leading-tight ml-6">
+                                  {isAllDay
+                                    ? "All day"
+                                    : `${format(new Date(event.startTime), "h")} – ${format(new Date(event.endTime), "h:mma").toLowerCase()}`}
+                                  {event.location ? `, ${event.location}` : ""}
+                                </p>
+                              </div>
+
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Avatar className="w-5 h-5 border border-white/20 shadow-sm transition-transform hover:scale-110">
+                                      <AvatarFallback className="bg-black/20 text-[9px] font-medium text-white">
+                                        {category === "local"
+                                          ? "L"
+                                          : event.googleAccountEmail
+                                              ?.charAt(0)
+                                              .toUpperCase() || "G"}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                  </TooltipTrigger>
+                                  <TooltipContent
+                                    side="top"
+                                    className="text-xs"
+                                  >
+                                    {category === "local"
+                                      ? "Workwise (Local)"
+                                      : event.googleAccountEmail ||
+                                        "Google Account"}
+                                  </TooltipContent>
+                                </Tooltip>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteEvent(event);
+                                  }}
+                                  className="opacity-0 group-hover:opacity-100 p-1 rounded-sm hover:bg-black/20 transition-colors"
+                                >
+                                  <X className="w-3.5 h-3.5 text-white" />
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Meet link */}
+                            {event.meetLink && (
+                              <a
+                                href={event.meetLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 mt-1 text-[10px] font-medium text-white/90 hover:text-white hover:underline w-fit"
+                              >
+                                <Video className="w-3 h-3" /> Join Meet
+                              </a>
+                            )}
                           </div>
-                        )}
-                        {event.location && (
-                          <div className="flex items-center gap-2">
-                            <MapPin className="w-4 h-4 text-muted-foreground/60" />
-                            <span className="text-sm text-muted-foreground">
-                              {event.location}
-                            </span>
-                          </div>
-                        )}
-                        {event.meetLink && (
-                          <div className="flex items-center gap-2">
-                            <Video className="w-4 h-4 text-emerald-500" />
-                            <a
-                              href={event.meetLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm font-medium text-emerald-600 hover:text-emerald-700 hover:underline transition-colors"
-                            >
-                              Join Google Meet
-                            </a>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDeleteEvent(event)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-full w-8 h-8 p-0"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </Card>
-        ))}
-        {filteredEvents.length === 0 && (
-          <div className="text-center text-muted-foreground py-12">
-            <div className="p-4 rounded-full bg-muted w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <Calendar className="w-8 h-8 text-muted-foreground/40" />
-            </div>
-            <p className="text-lg font-medium text-foreground mb-1">
-              No events found
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Your calendar is clear for this period
-            </p>
+              );
+            })}
           </div>
         )}
+
+        {/* Bottom "Create an event" link */}
+        <div className="px-4 pb-4">
+          <button
+            onClick={() => setPanelView("create")}
+            className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-[13px] font-medium hover:underline"
+          >
+            <Plus className="w-4 h-4" />
+            Create an event
+          </button>
+        </div>
       </div>
     );
   };
 
-  const renderCreateEventForm = () => {
+  // ─── Create Event View ────────────────────────────────
+  const renderCreateView = () => {
     return (
-      <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-        <div className="flex items-center gap-3 pb-4 border-b border-border">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Create header */}
+        <div className="flex items-center justify-between px-3 py-2 border-b border-border/60">
           <Button
             variant="ghost"
-            size="sm"
-            onClick={() => setView("monthly")}
-            className="rounded-lg hover:bg-muted"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => {
+              resetCreateForm();
+              setPanelView("calendar");
+            }}
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
+            <ChevronDown className="w-4 h-4" />
           </Button>
-          <h3 className="text-lg font-semibold text-foreground">
-            Create New Event
-          </h3>
-        </div>
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="title" className="text-foreground/80 font-medium">
-              Event Title
-            </Label>
-            <Input
-              id="title"
-              value={newEvent.title}
-              onChange={(e) =>
-                setNewEvent((prev) => ({
-                  ...prev,
-                  title: e.target.value,
-                }))
-              }
-              placeholder="Enter event title"
-              className="mt-1"
-            />
-          </div>
-          <div>
-            <Label
-              htmlFor="description"
-              className="text-foreground/80 font-medium"
-            >
-              Description
-            </Label>
-            <Textarea
-              id="description"
-              value={newEvent.description}
-              onChange={(e) =>
-                setNewEvent((prev) => ({
-                  ...prev,
-                  description: e.target.value,
-                }))
-              }
-              placeholder="Event description (optional)"
-              rows={3}
-              className="mt-1"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label
-                htmlFor="startDate"
-                className="text-foreground/80 font-medium"
-              >
-                Start Date
-              </Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={newEvent.startDate}
-                onChange={(e) =>
-                  setNewEvent((prev) => ({
-                    ...prev,
-                    startDate: e.target.value,
-                  }))
-                }
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label
-                htmlFor="startTime"
-                className="text-foreground/80 font-medium"
-              >
-                Start Time
-              </Label>
-              <Input
-                id="startTime"
-                type="time"
-                value={newEvent.startTime}
-                onChange={(e) =>
-                  setNewEvent((prev) => ({
-                    ...prev,
-                    startTime: e.target.value,
-                  }))
-                }
-                className="mt-1"
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label
-                htmlFor="endDate"
-                className="text-foreground/80 font-medium"
-              >
-                End Date
-              </Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={newEvent.endDate}
-                onChange={(e) =>
-                  setNewEvent((prev) => ({
-                    ...prev,
-                    endDate: e.target.value,
-                  }))
-                }
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label
-                htmlFor="endTime"
-                className="text-foreground/80 font-medium"
-              >
-                End Time
-              </Label>
-              <Input
-                id="endTime"
-                type="time"
-                value={newEvent.endTime}
-                onChange={(e) =>
-                  setNewEvent((prev) => ({
-                    ...prev,
-                    endTime: e.target.value,
-                  }))
-                }
-                className="mt-1"
-              />
-            </div>
-          </div>
-          <div>
-            <Label
-              htmlFor="attendees"
-              className="text-foreground/80 font-medium"
-            >
-              Attendees
-            </Label>
-            <Input
-              id="attendees"
-              value={newEvent.attendees}
-              onChange={(e) =>
-                setNewEvent((prev) => ({
-                  ...prev,
-                  attendees: e.target.value,
-                }))
-              }
-              placeholder="Enter email addresses, separated by commas"
-              className="mt-1"
-            />
-          </div>
-          <div>
-            <Label
-              htmlFor="location"
-              className="text-foreground/80 font-medium"
-            >
-              Location
-            </Label>
-            <Input
-              id="location"
-              value={newEvent.location}
-              onChange={(e) =>
-                setNewEvent((prev) => ({
-                  ...prev,
-                  location: e.target.value,
-                }))
-              }
-              placeholder="Meeting location (optional)"
-              className="mt-1"
-            />
-          </div>
-          <div className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg border border-border">
-            <input
-              type="checkbox"
-              id="includeMeet"
-              checked={newEvent.includeMeet}
-              onChange={(e) =>
-                setNewEvent((prev) => ({
-                  ...prev,
-                  includeMeet: e.target.checked,
-                }))
-              }
-              className="w-4 h-4 text-emerald-600 bg-muted border-border rounded focus:ring-emerald-500"
-            />
-            <Label
-              htmlFor="includeMeet"
-              className="flex items-center gap-2 text-foreground font-medium cursor-pointer"
-            >
-              <Video className="w-4 h-4 text-emerald-600" />
-              Add Google Meet link
-            </Label>
-          </div>
-          <div className="flex gap-3 pt-4">
-            <Button
-              variant="outline"
-              onClick={() => setView("monthly")}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleCreateEvent}
-              className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-            >
-              Create Event
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderSignInView = () => {
-    return (
-      <div className="p-6 space-y-6">
-        <div className="text-center">
-          <div className="p-4 rounded-full bg-gradient-to-br from-blue-500/10 to-purple-500/10 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-            <Calendar className="w-8 h-8 text-purple-600 dark:text-purple-400" />
-          </div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">
-            {authView === "signIn"
-              ? "Login to continue"
-              : "Create your account"}
-          </h3>
-          <p className="text-muted-foreground text-sm">
-            {authView === "signIn"
-              ? "Use your email or another service to continue."
-              : "Sign up to start using the calendar."}
-          </p>
-        </div>
-
-        {!!authError && (
-          <div className="flex items-center gap-x-2 rounded-md bg-destructive/15 p-3 text-sm text-destructive">
-            <TriangleAlert className="size-4" />
-            <p>{authError}</p>
-          </div>
-        )}
-
-        <form
-          onSubmit={authView === "signIn" ? handleSignIn : handleSignUp}
-          className="space-y-3"
-        >
-          <Input
-            disabled={authPending}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            type="email"
-            required
-          />
-
-          <Input
-            disabled={authPending}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            type="password"
-            required
-          />
-
-          <Button
-            type="submit"
-            className="w-full"
-            size="lg"
-            disabled={authPending}
-          >
-            {authView === "signIn" ? "Continue" : "Sign Up"}
-          </Button>
-        </form>
-
-        <div className="flex gap-3">
-          <Button
-            disabled={authPending}
-            onClick={() => handleOAuthSignIn("google")}
-            variant="outline"
-            className="flex-1"
-          >
-            <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
-              <path
-                fill="#4285F4"
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-              />
-              <path
-                fill="#34A853"
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-              />
-              <path
-                fill="#EA4335"
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-              />
-            </svg>
-            Google
-          </Button>
-          <Button
-            disabled={authPending}
-            onClick={() => handleOAuthSignIn("github")}
-            variant="outline"
-            className="flex-1"
-          >
-            <svg
-              className="w-4 h-4 mr-2"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-            </svg>
-            GitHub
-          </Button>
-        </div>
-
-        <p className="text-center text-xs text-muted-foreground">
-          {authView === "signIn"
-            ? "Don't have an account? "
-            : "Already have an account? "}
-          <button
-            disabled={authPending}
-            onClick={() =>
-              setAuthView(authView === "signIn" ? "signUp" : "signIn")
-            }
-            className="cursor-pointer font-medium text-sky-700 hover:underline disabled:pointer-events-none disabled:opacity-50"
-          >
-            {authView === "signIn" ? "Sign up" : "Sign in"}
-          </button>
-        </p>
-      </div>
-    );
-  };
-
-  const [isOpen, setIsOpen] = useAtom(calendarOpenAtom);
-  const handleClose = () => {
-    setIsOpen(false);
-  };
-
-  if (!open) return null;
-
-  return (
-    <Card className="h-full w-full bg-background border-l border-y-0 border-r-0 border-border flex flex-col rounded-none shadow-none overflow-hidden">
-      <CardHeader className="p-2 border-b border-border bg-gradient-to-r from-muted/50 to-background">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Calendar className="w-5 h-5 text-foreground/80" />
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold text-foreground">
-                Calendar
-              </h2>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 no-drag">
+          <div className="flex items-center gap-1">
             <Button
               variant="ghost"
-              size="sm"
-              onClick={handleClose}
-              className="rounded-full hover:bg-muted text-muted-foreground hover:text-foreground w-8 h-8 p-0"
+              size="icon"
+              className="h-8 w-8"
+              title="Open in Google Calendar"
             >
-              <X className="w-4 h-4" />
+              <ExternalLink className="w-4 h-4 text-muted-foreground" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => {
+                resetCreateForm();
+                setPanelView("calendar");
+              }}
+            >
+              <X className="w-4 h-4 text-muted-foreground" />
             </Button>
           </div>
         </div>
-      </CardHeader>
 
-      <CardContent className="p-0 flex-1 overflow-hidden">
-        {authView !== "calendar" ? (
-          renderSignInView()
-        ) : (
-          <div className="p-6 no-drag">
-            <div className="bg-muted rounded-xl p-1 mb-6">
-              <div className="grid grid-cols-3 gap-1">
-                {(["daily", "monthly", "all"] as const).map((viewType) => (
-                  <Button
-                    key={viewType}
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setView(viewType)}
-                    className={`capitalize rounded-lg transition-all ${
-                      view === viewType
-                        ? "bg-background shadow-sm text-foreground font-medium"
-                        : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-                    }`}
-                  >
-                    {viewType}
-                  </Button>
-                ))}
-              </div>
-            </div>
+        {/* Form */}
+        <div
+          className="flex-1 overflow-y-auto px-4 py-4 space-y-5"
+          style={{ scrollbarWidth: "thin" }}
+        >
+          {/* Title */}
+          <div>
+            <Input
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              placeholder="Add title"
+              className="border-0 border-b-2 border-blue-500 rounded-none px-0 text-base font-medium placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:border-blue-600 bg-transparent h-10"
+              autoFocus
+            />
+          </div>
 
-            {view === "monthly" && (
-              <div className="flex items-center justify-between mb-6 bg-muted/30 rounded-xl p-3">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setCurrentDate(subMonths(currentDate, 1))}
-                  className="rounded-lg hover:bg-background"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <h3 className="font-semibold text-foreground">
-                  {format(currentDate, "MMMM yyyy")}
-                </h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setCurrentDate(addMonths(currentDate, 1))}
-                  className="rounded-lg hover:bg-background"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-            )}
-
-            <div className="mb-4 flex items-center justify-between bg-blue-500/10 p-2 rounded-lg border border-blue-500/20">
-              <div className="flex items-center gap-2">
-                <div
-                  className={`w-2 h-2 rounded-full ${hasGoogleAuth ? "bg-emerald-500" : "bg-muted-foreground/30"}`}
+          {/* Date & Time */}
+          <div className="flex items-start gap-3">
+            <Clock className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
+            <div className="flex-1 space-y-1">
+              <p className="text-sm text-foreground font-medium">
+                {format(selectedDate, "EEE, d MMM")}
+              </p>
+              <div className="flex items-center gap-2 text-sm">
+                <input
+                  type="time"
+                  value={newStartTime}
+                  onChange={(e) => setNewStartTime(e.target.value)}
+                  className="bg-transparent border border-border rounded px-2 py-1 text-sm font-medium w-[100px] focus:outline-none focus:border-blue-500"
                 />
-                <span className="text-xs font-medium text-muted-foreground">
-                  {hasGoogleAuth
-                    ? "Google Calendar Connected"
-                    : "Not connected to Google"}
-                </span>
+                <span className="text-muted-foreground">–</span>
+                <input
+                  type="time"
+                  value={newEndTime}
+                  onChange={(e) => setNewEndTime(e.target.value)}
+                  className="bg-transparent border border-border rounded px-2 py-1 text-sm font-medium w-[100px] focus:outline-none focus:border-blue-500"
+                />
               </div>
-              <div className="flex items-center gap-1">
-                {hasGoogleAuth && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleSyncCalendar}
-                    disabled={isSyncing}
-                    className="h-7 text-xs bg-background hover:bg-muted border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
-                  >
-                    <RefreshCw
-                      className={`w-3 h-3 mr-1 ${isSyncing ? "animate-spin" : ""}`}
-                    />
-                    {isSyncing ? "Syncing..." : "Sync"}
-                  </Button>
-                )}
-                {!hasGoogleAuth && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleConnectGoogleCalendar}
-                    className="h-7 text-xs bg-background hover:bg-muted border-blue-500/30 text-blue-500 dark:text-blue-400"
-                  >
-                    Connect
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            <Button
-              onClick={() => setView("create")}
-              className="w-full mb-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Create Event
-            </Button>
-
-            <div className="max-h-[400px] overflow-y-auto">
-              {view === "monthly"
-                ? renderCalendarGrid()
-                : view === "create"
-                  ? renderCreateEventForm()
-                  : renderEventsList()}
             </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          {/* Guests */}
+          <div className="flex items-start gap-3" ref={guestRef}>
+            <Users className="w-5 h-5 text-muted-foreground mt-1 shrink-0" />
+            <div className="flex-1 relative">
+              {/* Selected guest chips */}
+              {selectedGuests.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {selectedGuests.map((guest) => (
+                    <span
+                      key={guest.email}
+                      className="inline-flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full pl-2 pr-1 py-0.5 text-[11px] font-medium border border-blue-200 dark:border-blue-800"
+                    >
+                      {guest.name || guest.email}
+                      <button
+                        onClick={() =>
+                          setSelectedGuests(
+                            selectedGuests.filter(
+                              (g) => g.email !== guest.email,
+                            ),
+                          )
+                        }
+                        className="hover:bg-blue-200 dark:hover:bg-blue-800 rounded-full p-0.5 transition-colors"
+                      >
+                        <X className="w-2.5 h-2.5" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <Input
+                value={newGuestQuery}
+                onChange={(e) => {
+                  setNewGuestQuery(e.target.value);
+                  setShowGuestSuggestions(true);
+                }}
+                onFocus={() => setShowGuestSuggestions(true)}
+                placeholder={
+                  selectedGuests.length > 0
+                    ? "Add more guests..."
+                    : "Add guests"
+                }
+                className="border-0 border-b border-border/40 rounded-none px-0 text-sm placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:border-blue-500 bg-transparent h-8"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && newGuestQuery.includes("@")) {
+                    e.preventDefault();
+                    setSelectedGuests([
+                      ...selectedGuests,
+                      { name: "", email: newGuestQuery.trim() },
+                    ]);
+                    setNewGuestQuery("");
+                    setShowGuestSuggestions(false);
+                  }
+                }}
+              />
+              {/* Suggestion dropdown */}
+              {showGuestSuggestions && filteredMembers.length > 0 && (
+                <div className="absolute left-0 right-0 top-full mt-1 z-50 bg-popover border border-border rounded-lg shadow-lg py-1 max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-100">
+                  {filteredMembers.map((member: any) => (
+                    <button
+                      key={member._id}
+                      className="flex items-center gap-3 w-full px-3 py-2 hover:bg-muted/60 transition-colors text-left"
+                      onClick={() => {
+                        const email = member.user?.email || "";
+                        const name = member.user?.name || "";
+                        if (email) {
+                          setSelectedGuests([
+                            ...selectedGuests,
+                            { name, email },
+                          ]);
+                        }
+                        setNewGuestQuery("");
+                        setShowGuestSuggestions(false);
+                      }}
+                    >
+                      {/* Avatar */}
+                      <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs font-semibold text-foreground/70 shrink-0 uppercase">
+                        {(
+                          member.user?.name ||
+                          member.user?.email ||
+                          "?"
+                        ).charAt(0)}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[13px] font-medium text-foreground truncate">
+                          {member.user?.name || "Unknown"}
+                        </p>
+                        {member.user?.email && (
+                          <p className="text-[11px] text-muted-foreground truncate">
+                            {member.user.email}
+                          </p>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Meet */}
+          <div
+            className="flex items-center gap-3 cursor-pointer hover:bg-muted/50 -mx-1 px-1 py-1.5 rounded-md transition-colors"
+            onClick={() => setNewIncludeMeet(!newIncludeMeet)}
+          >
+            <Video
+              className={`w-5 h-5 shrink-0 ${newIncludeMeet ? "text-blue-600" : "text-muted-foreground"}`}
+            />
+            <span className="text-sm text-foreground">
+              {newIncludeMeet
+                ? "Google Meet added"
+                : "Add Google Meet video conferencing"}
+            </span>
+            {newIncludeMeet && (
+              <Check className="w-4 h-4 text-blue-600 ml-auto" />
+            )}
+          </div>
+
+          {/* Location */}
+          <div className="flex items-start gap-3">
+            <MapPin className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
+            <Input
+              value={newLocation}
+              onChange={(e) => setNewLocation(e.target.value)}
+              placeholder="Add location"
+              className="border-0 border-b border-border/40 rounded-none px-0 text-sm placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:border-blue-500 bg-transparent h-8"
+            />
+          </div>
+
+          {/* Description */}
+          <div className="flex items-start gap-3">
+            <AlignLeft className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
+            <Input
+              value={newDescription}
+              onChange={(e) => setNewDescription(e.target.value)}
+              placeholder="Add description"
+              className="border-0 border-b border-border/40 rounded-none px-0 text-sm placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:border-blue-500 bg-transparent h-8"
+            />
+          </div>
+
+          {/* Account selector */}
+          <div className="flex items-start gap-3">
+            <CalendarDays className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <Select
+                value={newSelectedAccount}
+                onValueChange={setNewSelectedAccount}
+              >
+                <SelectTrigger className="h-8 border-0 border-b border-border/40 rounded-none px-0 text-sm font-medium shadow-none focus:ring-0 bg-transparent">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="local">
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="w-2 h-2 rounded-full bg-blue-500" />
+                      Workwise
+                    </div>
+                  </SelectItem>
+                  {googleTokens.map((t: any) => (
+                    <SelectItem key={t._id} value={t.email || t._id}>
+                      <div className="flex items-center gap-2 text-sm">
+                        <div
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: t.color || "#4285F4" }}
+                        />
+                        <span className="truncate">{t.email || "Google"}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        {/* Save button fixed at bottom */}
+        <div className="px-4 py-3 border-t border-border/60 flex justify-end">
+          <Button
+            onClick={handleCreateEvent}
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 h-9 text-sm font-semibold shadow-sm"
+          >
+            Save
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  // ─── Edit Event View ──────────────────────────────────
+  const renderEditView = () => {
+    return (
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-border/60">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => {
+              setEditingEvent(null);
+              setPanelView("calendar");
+            }}
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => {
+              setEditingEvent(null);
+              setPanelView("calendar");
+            }}
+          >
+            <X className="w-4 h-4 text-muted-foreground" />
+          </Button>
+        </div>
+        <div
+          className="flex-1 overflow-y-auto px-4 py-4 space-y-5"
+          style={{ scrollbarWidth: "thin" }}
+        >
+          <div>
+            <Input
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              placeholder="Add title"
+              className="border-0 border-b-2 border-blue-500 rounded-none px-0 text-base font-medium placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:border-blue-600 bg-transparent h-10"
+              autoFocus
+            />
+          </div>
+          <div className="flex items-start gap-3">
+            <Clock className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
+            <div className="flex-1 space-y-1">
+              {editingEvent && (
+                <p className="text-sm text-foreground font-medium">
+                  {format(new Date(editingEvent.startTime), "EEE, d MMM")}
+                </p>
+              )}
+              <div className="flex items-center gap-2 text-sm">
+                <input
+                  type="time"
+                  value={editStartTime}
+                  onChange={(e) => setEditStartTime(e.target.value)}
+                  className="bg-transparent border border-border rounded px-2 py-1 text-sm font-medium w-[100px] focus:outline-none focus:border-blue-500"
+                />
+                <span className="text-muted-foreground">–</span>
+                <input
+                  type="time"
+                  value={editEndTime}
+                  onChange={(e) => setEditEndTime(e.target.value)}
+                  className="bg-transparent border border-border rounded px-2 py-1 text-sm font-medium w-[100px] focus:outline-none focus:border-blue-500"
+                />
+              </div>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Users className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
+            <Input
+              value={editAttendees}
+              onChange={(e) => setEditAttendees(e.target.value)}
+              placeholder="Add guests (comma separated emails)"
+              className="border-0 border-b border-border/40 rounded-none px-0 text-sm placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:border-blue-500 bg-transparent h-8"
+            />
+          </div>
+          <div className="flex items-start gap-3">
+            <MapPin className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
+            <Input
+              value={editLocation}
+              onChange={(e) => setEditLocation(e.target.value)}
+              placeholder="Add location"
+              className="border-0 border-b border-border/40 rounded-none px-0 text-sm placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:border-blue-500 bg-transparent h-8"
+            />
+          </div>
+          <div className="flex items-start gap-3">
+            <AlignLeft className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
+            <Input
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              placeholder="Add description"
+              className="border-0 border-b border-border/40 rounded-none px-0 text-sm placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:border-blue-500 bg-transparent h-8"
+            />
+          </div>
+        </div>
+        <div className="px-4 py-3 border-t border-border/60 flex justify-end">
+          <Button
+            onClick={handleUpdateEvent}
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 h-9 text-sm font-semibold shadow-sm"
+          >
+            Save
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  // ─── Accounts View ────────────────────────────────────
+  const renderAccountsView = () => {
+    return (
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center gap-2 px-3 py-3 border-b border-border/60">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setPanelView("calendar")}
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <div className="flex-1">
+            <p className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-widest">
+              Calendar
+            </p>
+            <p className="text-sm font-semibold text-foreground">
+              Select calendars
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            title="Open in Google Calendar"
+          >
+            <ExternalLink className="w-4 h-4 text-muted-foreground" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setPanelView("calendar")}
+          >
+            <X className="w-4 h-4 text-muted-foreground" />
+          </Button>
+        </div>
+
+        {/* List */}
+        <div
+          className="flex-1 overflow-y-auto px-4 py-4"
+          style={{ scrollbarWidth: "thin" }}
+        >
+          {/* Connected accounts */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                My calendars
+              </h4>
+            </div>
+
+            {/* Local workwise calendar */}
+            <div
+              className="flex items-center gap-3 py-2.5 group cursor-pointer"
+              onClick={() => toggleCalendarVisibility("local")}
+            >
+              <div
+                className={`w-[18px] h-[18px] rounded-[3px] flex items-center justify-center border transition-colors ${
+                  hiddenCalendars.has("local")
+                    ? "border-muted-foreground/30 bg-transparent"
+                    : "bg-blue-500 border-blue-500"
+                }`}
+              >
+                {!hiddenCalendars.has("local") && (
+                  <Check className="w-3 h-3 text-white" />
+                )}
+              </div>
+              <span className="text-[13px] text-foreground">
+                Workwise (Local)
+              </span>
+            </div>
+
+            {googleTokens.map((token: any) => {
+              const id = token.email || token._id;
+              const isHidden = hiddenCalendars.has(id);
+              const name = token.email
+                ? token.email
+                : "Google Account (No Email)";
+
+              return (
+                <div
+                  key={token._id}
+                  className="flex items-center gap-3 py-2.5 group cursor-pointer"
+                  onClick={() => toggleCalendarVisibility(id)}
+                >
+                  <div
+                    className="w-[18px] h-[18px] rounded-[3px] flex items-center justify-center border transition-colors"
+                    style={{
+                      backgroundColor: isHidden
+                        ? "transparent"
+                        : token.color || "#4285F4",
+                      borderColor: isHidden
+                        ? "hsl(var(--muted-foreground)/0.3)"
+                        : token.color || "#4285F4",
+                    }}
+                  >
+                    {!isHidden && <Check className="w-3 h-3 text-white" />}
+                  </div>
+                  <span className="text-[13px] text-foreground flex-1 truncate">
+                    {name}
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDisconnect(token._id);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 p-1 rounded-full hover:bg-destructive/10 transition-opacity"
+                    title="Disconnect"
+                  >
+                    <X className="w-3 h-3 text-muted-foreground hover:text-destructive" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mb-6 mt-6 border-t border-border/40 pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                Event types
+              </h4>
+            </div>
+            {[
+              {
+                id: "category-google",
+                label: "Meetings & Reminders",
+                color: "#4285F4",
+              },
+              { id: "category-birthday", label: "Birthdays", color: "#f43f5e" },
+              {
+                id: "category-holiday",
+                label: "Holidays & Festivals",
+                color: "#8b5cf6",
+              },
+              {
+                id: "category-local",
+                label: "Creative Schedule",
+                color: "#1e293b",
+              },
+            ].map((type) => {
+              const isHidden = hiddenCalendars.has(type.id);
+              return (
+                <div
+                  key={type.id}
+                  className="flex items-center gap-3 py-2.5 group cursor-pointer"
+                  onClick={() => toggleCalendarVisibility(type.id)}
+                >
+                  <div
+                    className={`w-[18px] h-[18px] rounded-[3px] flex items-center justify-center border transition-colors ${
+                      isHidden
+                        ? "border-muted-foreground/30 bg-transparent"
+                        : "border-transparent"
+                    }`}
+                    style={{
+                      backgroundColor: isHidden ? "transparent" : type.color,
+                    }}
+                  >
+                    {!isHidden && <Check className="w-3 h-3 text-white" />}
+                  </div>
+                  <span className="text-[13px] text-foreground flex-1 truncate">
+                    {type.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Add account */}
+          <button
+            onClick={handleConnectGoogle}
+            className="flex items-center gap-3 text-[13px] font-medium text-blue-600 dark:text-blue-400 hover:underline py-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add Google Calendar
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // ─── Main Calendar View ───────────────────────────────
+  const renderCalendarView = () => {
+    return (
+      <>
+        {/* ── Header ── */}
+        <div className="px-3 pt-3 pb-0">
+          {/* Top bar: CALENDAR label + icons */}
+          <div className="flex items-center justify-between mb-1.5">
+            <p className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-widest select-none">
+              Calendar
+            </p>
+            <div className="flex items-center gap-0.5">
+              {googleTokens.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  title="Sync calendars"
+                  disabled={isSyncing}
+                  onClick={handleSyncCalendar}
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 text-muted-foreground ${isSyncing ? "animate-spin" : ""}`}
+                  />
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                title="Create event"
+                onClick={() => setPanelView("create")}
+              >
+                <Pencil className="w-4 h-4 text-muted-foreground" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setOpen(false)}
+              >
+                <X className="w-4 h-4 text-muted-foreground" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Date selector row */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                setMiniCalMonth(selectedDate);
+                setShowMiniCal(!showMiniCal);
+              }}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground hover:bg-muted px-2.5 py-1.5 rounded-full transition-colors"
+            >
+              {format(selectedDate, "EEE, d MMM")}
+              <ChevronDown
+                className={`w-4 h-4 text-muted-foreground transition-transform ${showMiniCal ? "rotate-180" : ""}`}
+              />
+            </button>
+          </div>
+
+          {/* Today + nav + menu row */}
+          <div className="flex items-center gap-1 mt-2 pb-2 border-b border-border/50">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-3 text-xs font-medium rounded-full border-border shadow-none"
+              onClick={() => setSelectedDate(new Date())}
+            >
+              Today
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => {
+                if (viewMode === "month")
+                  setSelectedDate(subMonths(selectedDate, 1));
+                else if (viewMode === "week")
+                  setSelectedDate(subDays(selectedDate, 7));
+                else setSelectedDate(subDays(selectedDate, 1));
+              }}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => {
+                if (viewMode === "month")
+                  setSelectedDate(addMonths(selectedDate, 1));
+                else if (viewMode === "week")
+                  setSelectedDate(addDays(selectedDate, 7));
+                else setSelectedDate(addDays(selectedDate, 1));
+              }}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+
+            <div className="flex-1" />
+
+            {/* 3-dot menu */}
+            <div className="relative" ref={menuRef}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => setShowMenu(!showMenu)}
+              >
+                <MoreVertical className="w-4 h-4 text-muted-foreground" />
+              </Button>
+
+              {showMenu && (
+                <div className="absolute right-0 top-8 z-50 bg-popover border border-border rounded-lg shadow-lg py-1 w-40 animate-in fade-in zoom-in-95 duration-100">
+                  <button
+                    onClick={() => {
+                      setViewMode("day");
+                      setShowMenu(false);
+                    }}
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    {viewMode === "day" && (
+                      <Check className="w-4 h-4 text-foreground" />
+                    )}
+                    {viewMode !== "day" && <div className="w-4" />}
+                    Day
+                  </button>
+                  <button
+                    onClick={() => {
+                      setViewMode("week");
+                      setShowMenu(false);
+                    }}
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    {viewMode === "week" && (
+                      <Check className="w-4 h-4 text-foreground" />
+                    )}
+                    {viewMode !== "week" && <div className="w-4" />}
+                    Week
+                  </button>
+                  <button
+                    onClick={() => {
+                      setViewMode("month");
+                      setShowMenu(false);
+                    }}
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    {viewMode === "month" && (
+                      <Check className="w-4 h-4 text-foreground" />
+                    )}
+                    {viewMode !== "month" && <div className="w-4" />}
+                    Month
+                  </button>
+                  <button
+                    onClick={() => {
+                      setViewMode("schedule");
+                      setShowMenu(false);
+                    }}
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    {viewMode === "schedule" && (
+                      <Check className="w-4 h-4 text-foreground" />
+                    )}
+                    {viewMode !== "schedule" && <div className="w-4" />}
+                    Schedule
+                  </button>
+                  <div className="h-px bg-border my-1" />
+                  <button
+                    onClick={() => {
+                      setPanelView("accounts");
+                      setShowMenu(false);
+                    }}
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    <div className="w-4" />
+                    Select calendars
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Mini calendar dropdown */}
+        {showMiniCal && renderMiniCalendar()}
+
+        {/* ── Content ── */}
+        {viewMode === "day" && renderDayView()}
+        {viewMode === "week" && renderWeekView()}
+        {viewMode === "month" && renderMonthView()}
+        {viewMode === "schedule" && renderScheduleView()}
+      </>
+    );
+  };
+
+  // ─── Root Return ──────────────────────────────────────
+  return (
+    <TooltipProvider delayDuration={300}>
+      <div className="h-full flex flex-col bg-background relative">
+        {panelView === "calendar" && renderCalendarView()}
+        {panelView === "create" && renderCreateView()}
+        {panelView === "edit" && renderEditView()}
+        {panelView === "accounts" && renderAccountsView()}
+      </div>
+    </TooltipProvider>
   );
 };

@@ -48,7 +48,7 @@ export const ProjectTaskDetailModal = () => {
       >
         <DialogContent
           hideClose
-          className="max-w-7xl h-[92vh] p-0 flex flex-col overflow-hidden border-none shadow-2xl rounded-xl ring-1 ring-border/50"
+          className="max-w-5xl h-[92vh] p-0 flex flex-col overflow-hidden border-none shadow-2xl rounded-xl ring-1 ring-border/50"
         >
           <TaskHeader task={task} lists={lists} onClose={() => setTask(null)} />
           <div className="flex-1 min-h-0 bg-background">

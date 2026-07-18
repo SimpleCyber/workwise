@@ -41,7 +41,7 @@ export const generateAuthUrl = action({
       redirect_uri: args.redirectUri,
       response_type: "code",
       scope:
-        "https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events",
+        "https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/userinfo.email",
       access_type: "offline",
       prompt: "consent",
       state: state, // Secure random state
@@ -110,6 +110,33 @@ export const exchangeCode = action({
     const tokens = await response.json();
     const now = Date.now();
 
+    // Fetch user profile to get email
+    const profileResponse = await fetch(
+      "https://www.googleapis.com/oauth2/v2/userinfo",
+      {
+        headers: { Authorization: `Bearer ${tokens.access_token}` },
+      },
+    );
+
+    let email = undefined;
+    let color = undefined;
+
+    if (profileResponse.ok) {
+      const profile = await profileResponse.json();
+      email = profile.email;
+      const colors = [
+        "#4285F4",
+        "#EA4335",
+        "#FBBC05",
+        "#34A853",
+        "#8E24AA",
+        "#F6BF26",
+        "#039BE5",
+        "#3F51B5",
+      ];
+      color = colors[Math.floor(Math.random() * colors.length)];
+    }
+
     // Use secure internal mutation that accepts userId
     await ctx.runMutation(internal.googleAuth.storeGoogleTokensInternal, {
       accessToken: tokens.access_token,
@@ -117,6 +144,8 @@ export const exchangeCode = action({
       expiresAt: now + tokens.expires_in * 1000,
       scope: tokens.scope,
       userId: userId,
+      email: email,
+      color: color,
     });
 
     return { success: true, returnTo: authRecord.returnTo };
@@ -131,6 +160,7 @@ export const createMeeting = action({
     endTime: v.number(),
     attendees: v.optional(v.array(v.string())),
     workspaceId: v.id("workspaces"),
+    email: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -138,10 +168,16 @@ export const createMeeting = action({
       throw new Error("Not authenticated");
     }
 
-    // Get tokens
-    const tokens: any = await ctx.runQuery(api.googleAuth.getGoogleTokens);
-    if (!tokens) {
+    // Get tokens array
+    const tokensArray: any = await ctx.runQuery(api.googleAuth.getGoogleTokens);
+    if (!tokensArray || tokensArray.length === 0) {
       throw new Error("Google Calendar not connected");
+    }
+
+    let tokens = tokensArray[0];
+    if (args.email) {
+      const match = tokensArray.find((t: any) => t.email === args.email);
+      if (match) tokens = match;
     }
 
     let accessToken: string = tokens.accessToken;
@@ -182,6 +218,8 @@ export const createMeeting = action({
         refreshToken: newTokens.refresh_token || tokens.refreshToken, // Keep old refresh token if not rotated
         expiresAt: Date.now() + newTokens.expires_in * 1000,
         scope: newTokens.scope || tokens.scope,
+        email: tokens.email,
+        color: tokens.color,
       });
     }
 
@@ -254,138 +292,173 @@ export const syncGoogleCalendar = action({
       throw new Error("Not authenticated");
     }
 
-    // Get tokens
-    const tokens: any = await ctx.runQuery(api.googleAuth.getGoogleTokens);
-    if (!tokens) {
+    // Get tokens array
+    const tokensArray: any = await ctx.runQuery(api.googleAuth.getGoogleTokens);
+    if (!tokensArray || tokensArray.length === 0) {
       throw new Error("Google Calendar not connected");
     }
 
-    let accessToken: string = tokens.accessToken;
+    let totalSynced = 0;
+    let totalSkipped = 0;
+    let totalEvents = 0;
 
-    // Refresh token if expired
-    if (tokens.expiresAt < Date.now() + 60000) {
-      if (!tokens.refreshToken) {
-        throw new Error(
-          "Token expired and no refresh token available. Please reconnect Google Calendar.",
-        );
+    for (const tokens of tokensArray) {
+      let accessToken: string = tokens.accessToken;
+
+      // Refresh token if expired
+      if (tokens.expiresAt < Date.now() + 60000) {
+        if (!tokens.refreshToken) {
+          console.warn(
+            `Token expired for ${tokens.email} but no refresh token available. Skipping.`,
+          );
+          continue;
+        }
+
+        const clientId = process.env.GOOGLE_CALENDAR_CLIENT_ID;
+        const clientSecret = process.env.GOOGLE_CALENDAR_CLIENT_SECRET;
+
+        const refreshResponse = await fetch(GOOGLE_TOKEN_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            client_id: clientId!,
+            client_secret: clientSecret!,
+            refresh_token: tokens.refreshToken,
+            grant_type: "refresh_token",
+          }),
+        });
+
+        if (!refreshResponse.ok) {
+          console.error(`Failed to refresh token for ${tokens.email}.`);
+          continue;
+        }
+
+        const newTokens: any = await refreshResponse.json();
+        accessToken = newTokens.access_token;
+
+        await ctx.runMutation(internal.googleAuth.storeGoogleTokens, {
+          accessToken: newTokens.access_token,
+          refreshToken: newTokens.refresh_token || tokens.refreshToken,
+          expiresAt: Date.now() + newTokens.expires_in * 1000,
+          scope: newTokens.scope || tokens.scope,
+          email: tokens.email,
+          color: tokens.color,
+        });
       }
 
-      const clientId = process.env.GOOGLE_CALENDAR_CLIENT_ID;
-      const clientSecret = process.env.GOOGLE_CALENDAR_CLIENT_SECRET;
-
-      const refreshResponse = await fetch(GOOGLE_TOKEN_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          client_id: clientId!,
-          client_secret: clientSecret!,
-          refresh_token: tokens.refreshToken,
-          grant_type: "refresh_token",
-        }),
-      });
-
-      if (!refreshResponse.ok) {
-        throw new Error("Failed to refresh token");
-      }
-
-      const newTokens: any = await refreshResponse.json();
-      accessToken = newTokens.access_token;
-
-      await ctx.runMutation(internal.googleAuth.storeGoogleTokens, {
-        accessToken: newTokens.access_token,
-        refreshToken: newTokens.refresh_token || tokens.refreshToken,
-        expiresAt: Date.now() + newTokens.expires_in * 1000,
-        scope: newTokens.scope || tokens.scope,
-      });
-    }
-
-    // Fetch events from Google Calendar (next 90 days + past 30 days)
-    const timeMin = new Date(
-      Date.now() - 30 * 24 * 60 * 60 * 1000,
-    ).toISOString();
-    const timeMax = new Date(
-      Date.now() + 90 * 24 * 60 * 60 * 1000,
-    ).toISOString();
-
-    const calendarResponse = await fetch(
-      `${CALENDAR_API_URL}/calendars/primary/events?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}&maxResults=250&singleEvents=true&orderBy=startTime`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      },
-    );
-
-    if (!calendarResponse.ok) {
-      const errorText = await calendarResponse.text();
-      throw new Error(`Failed to fetch Google Calendar events: ${errorText}`);
-    }
-
-    const data: any = await calendarResponse.json();
-    const googleEvents = data.items || [];
-
-    let synced = 0;
-    let skipped = 0;
-
-    for (const gEvent of googleEvents) {
-      // Skip cancelled events
-      if (gEvent.status === "cancelled") continue;
-
-      const title = gEvent.summary || "(No title)";
-      const description = gEvent.description || undefined;
-      const location = gEvent.location || undefined;
-      const meetLink = gEvent.hangoutLink || undefined;
-      const googleEventId = gEvent.id;
-
-      // Parse start/end times — handle both dateTime and date (all-day events)
-      let startTime: number;
-      let endTime: number;
-
-      if (gEvent.start?.dateTime) {
-        startTime = new Date(gEvent.start.dateTime).getTime();
-      } else if (gEvent.start?.date) {
-        startTime = new Date(gEvent.start.date).getTime();
-      } else {
-        continue; // Skip events without valid time
-      }
-
-      if (gEvent.end?.dateTime) {
-        endTime = new Date(gEvent.end.dateTime).getTime();
-      } else if (gEvent.end?.date) {
-        endTime = new Date(gEvent.end.date).getTime();
-      } else {
-        endTime = startTime + 60 * 60 * 1000; // Default 1 hour
-      }
-
-      // Extract attendees
-      const attendees = gEvent.attendees
-        ? gEvent.attendees.map((a: any) => a.email).filter(Boolean)
-        : undefined;
-
-      // Upsert: check if this googleEventId already exists
-      const upsertResult = await ctx.runMutation(
-        internal.calendarEvents.upsertGoogleEvent,
+      // Fetch calendar list to get all active calendars (Birthdays, etc.)
+      const calListResponse = await fetch(
+        `${CALENDAR_API_URL}/users/me/calendarList`,
         {
-          googleEventId,
-          title,
-          description,
-          startTime,
-          endTime,
-          location,
-          meetLink,
-          attendees,
-          userId,
-          workspaceId: args.workspaceId,
+          headers: { Authorization: `Bearer ${accessToken}` },
         },
       );
 
-      if (upsertResult.created) {
-        synced++;
-      } else {
-        skipped++;
+      let calendarsToSync = ["primary"];
+
+      if (calListResponse.ok) {
+        const calData: any = await calListResponse.json();
+        if (calData.items && Array.isArray(calData.items)) {
+          // Sync only calendars the user has actively selected/checked in Google UI
+          calendarsToSync = calData.items
+            .filter((c: any) => c.selected)
+            .map((c: any) => c.id);
+
+          // Fallback to primary if empty
+          if (calendarsToSync.length === 0) calendarsToSync = ["primary"];
+        }
+      }
+
+      const timeMin = new Date(
+        Date.now() - 30 * 24 * 60 * 60 * 1000,
+      ).toISOString(); // Past 30 days
+      const timeMax = new Date(
+        Date.now() + 400 * 24 * 60 * 60 * 1000,
+      ).toISOString(); // Future 400 days (1+ yr for birthdays)
+
+      for (const calendarId of calendarsToSync) {
+        const calendarResponse = await fetch(
+          `${CALENDAR_API_URL}/calendars/${encodeURIComponent(calendarId)}/events?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}&maxResults=2500&singleEvents=true&orderBy=startTime`,
+          {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          },
+        );
+
+        if (!calendarResponse.ok) {
+          console.error(
+            `Failed to fetch Google Calendar events for ${tokens.email} from calendar ${calendarId}`,
+          );
+          continue;
+        }
+
+        const data: any = await calendarResponse.json();
+        const googleEvents = data.items || [];
+        totalEvents += googleEvents.length;
+
+        for (const gEvent of googleEvents) {
+          // Skip cancelled events
+          if (gEvent.status === "cancelled") continue;
+
+          const title = gEvent.summary || "(No title)";
+          const description = gEvent.description || undefined;
+          const location = gEvent.location || undefined;
+          const meetLink = gEvent.hangoutLink || undefined;
+          const googleEventId = gEvent.id;
+
+          let startTime: number;
+          let endTime: number;
+
+          if (gEvent.start?.dateTime) {
+            startTime = new Date(gEvent.start.dateTime).getTime();
+          } else if (gEvent.start?.date) {
+            startTime = new Date(gEvent.start.date).getTime();
+          } else {
+            continue;
+          }
+
+          if (gEvent.end?.dateTime) {
+            endTime = new Date(gEvent.end.dateTime).getTime();
+          } else if (gEvent.end?.date) {
+            endTime = new Date(gEvent.end.date).getTime();
+          } else {
+            endTime = startTime + 60 * 60 * 1000;
+          }
+
+          const attendees = gEvent.attendees
+            ? gEvent.attendees.map((a: any) => a.email).filter(Boolean)
+            : undefined;
+
+          const upsertResult = await ctx.runMutation(
+            internal.calendarEvents.upsertGoogleEvent,
+            {
+              googleEventId,
+              title,
+              description,
+              startTime,
+              endTime,
+              location,
+              meetLink,
+              attendees,
+              userId,
+              workspaceId: args.workspaceId,
+              googleAccountEmail: tokens.email,
+            },
+          );
+
+          if (upsertResult.created) {
+            totalSynced++;
+          } else {
+            totalSkipped++;
+          }
+        }
       }
     }
 
-    return { synced, skipped, total: googleEvents.length };
+    return {
+      synced: totalEvents,
+      newlyCreated: totalSynced,
+      skipped: totalSkipped,
+      total: totalEvents,
+    };
   },
 });

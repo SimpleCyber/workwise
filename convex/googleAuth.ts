@@ -9,6 +9,8 @@ export const storeGoogleTokens = internalMutation({
     refreshToken: v.string(),
     expiresAt: v.number(),
     scope: v.string(),
+    email: v.optional(v.string()),
+    color: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -17,10 +19,22 @@ export const storeGoogleTokens = internalMutation({
     }
 
     // Check if tokens already exist
-    const existingTokens = await ctx.db
-      .query("googleTokens")
-      .withIndex("by_user_id", (q) => q.eq("userId", userId))
-      .unique();
+    let existingTokens = null;
+
+    if (args.email) {
+      existingTokens = await ctx.db
+        .query("googleTokens")
+        .withIndex("by_user_email", (q) =>
+          q.eq("userId", userId).eq("email", args.email),
+        )
+        .unique();
+    } else {
+      const tokens = await ctx.db
+        .query("googleTokens")
+        .withIndex("by_user_id", (q) => q.eq("userId", userId))
+        .collect();
+      if (tokens.length > 0) existingTokens = tokens[0];
+    }
 
     const now = Date.now();
 
@@ -42,6 +56,8 @@ export const storeGoogleTokens = internalMutation({
         refreshToken: args.refreshToken,
         expiresAt: args.expiresAt,
         scope: args.scope,
+        email: args.email,
+        color: args.color,
         createdAt: now,
         updatedAt: now,
       });
@@ -57,13 +73,27 @@ export const storeGoogleTokensInternal = internalMutation({
     expiresAt: v.number(),
     scope: v.string(),
     userId: v.id("users"),
+    email: v.optional(v.string()),
+    color: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     // Check if tokens already exist
-    const existingTokens = await ctx.db
-      .query("googleTokens")
-      .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
-      .unique();
+    let existingTokens = null;
+
+    if (args.email) {
+      existingTokens = await ctx.db
+        .query("googleTokens")
+        .withIndex("by_user_email", (q) =>
+          q.eq("userId", args.userId).eq("email", args.email),
+        )
+        .unique();
+    } else {
+      const tokens = await ctx.db
+        .query("googleTokens")
+        .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+        .collect();
+      if (tokens.length > 0) existingTokens = tokens[0];
+    }
 
     const now = Date.now();
 
@@ -85,6 +115,8 @@ export const storeGoogleTokensInternal = internalMutation({
         refreshToken: args.refreshToken,
         expiresAt: args.expiresAt,
         scope: args.scope,
+        email: args.email,
+        color: args.color,
         createdAt: now,
         updatedAt: now,
       });
@@ -104,7 +136,7 @@ export const getGoogleTokens = query({
     const tokens = await ctx.db
       .query("googleTokens")
       .withIndex("by_user_id", (q) => q.eq("userId", userId))
-      .unique();
+      .collect();
 
     return tokens;
   },
@@ -121,9 +153,9 @@ export const hasGoogleAuth = query({
     const tokens = await ctx.db
       .query("googleTokens")
       .withIndex("by_user_id", (q) => q.eq("userId", userId))
-      .unique();
+      .collect();
 
-    return !!tokens && tokens.expiresAt > Date.now();
+    return tokens.some((t) => t.expiresAt > Date.now() || !!t.refreshToken);
   },
 });
 
@@ -138,19 +170,29 @@ export const createEvent = internalMutation({
 
 // Delete Google OAuth tokens (disconnect)
 export const deleteGoogleTokens = mutation({
-  handler: async (ctx) => {
+  args: {
+    tokenId: v.optional(v.id("googleTokens")),
+  },
+  handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
       throw new Error("Not authenticated");
     }
 
-    const tokens = await ctx.db
-      .query("googleTokens")
-      .withIndex("by_user_id", (q) => q.eq("userId", userId))
-      .unique();
+    if (args.tokenId) {
+      const token = await ctx.db.get(args.tokenId);
+      if (token && token.userId === userId) {
+        await ctx.db.delete(args.tokenId);
+      }
+    } else {
+      const tokens = await ctx.db
+        .query("googleTokens")
+        .withIndex("by_user_id", (q) => q.eq("userId", userId))
+        .collect();
 
-    if (tokens) {
-      await ctx.db.delete(tokens._id);
+      for (const t of tokens) {
+        await ctx.db.delete(t._id);
+      }
     }
 
     return { success: true };

@@ -564,6 +564,7 @@ const schema = defineSchema({
     workspaceId: v.id("workspaces"),
     googleEventId: v.optional(v.string()), // Google Calendar event ID for syncing
     isGoogleSynced: v.optional(v.boolean()),
+    googleAccountEmail: v.optional(v.string()), // Which account this event belongs to
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -579,9 +580,13 @@ const schema = defineSchema({
     refreshToken: v.string(),
     expiresAt: v.number(), // Unix timestamp
     scope: v.string(),
+    email: v.optional(v.string()),
+    color: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
-  }).index("by_user_id", ["userId"]),
+  })
+    .index("by_user_id", ["userId"])
+    .index("by_user_email", ["userId", "email"]),
   authStates: defineTable({
     state: v.string(),
     userId: v.id("users"),
