@@ -215,13 +215,13 @@ export const CardDetailModal = ({
               </h2>
             </div>
             <TooltipProvider delayDuration={200}>
-              <div className="flex items-center border rounded-lg overflow-hidden divide-x">
+              <div className="flex items-center gap-2">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="icon"
-                      className="h-8 w-8 rounded-none text-muted-foreground hover:text-foreground hover:bg-muted"
+                      className="h-8 w-8 rounded-md text-muted-foreground shadow-sm"
                       onClick={() => setViewMode("panel")}
                     >
                       <PanelRight className="w-4 h-4" />
@@ -234,9 +234,9 @@ export const CardDetailModal = ({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="icon"
-                      className="h-8 w-8 rounded-none text-muted-foreground hover:text-foreground hover:bg-muted"
+                      className="h-8 w-8 rounded-md text-muted-foreground shadow-sm"
                       onClick={handleArchive}
                       disabled={isPending}
                     >
@@ -250,9 +250,9 @@ export const CardDetailModal = ({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="icon"
-                      className="h-8 w-8 rounded-none text-destructive/70 hover:text-destructive hover:bg-destructive/10"
+                      className="h-8 w-8 rounded-md text-destructive/70 hover:text-destructive hover:bg-destructive/10 shadow-sm"
                       onClick={handleDelete}
                       disabled={isDeleting}
                     >
@@ -262,6 +262,19 @@ export const CardDetailModal = ({
                   <TooltipContent side="bottom">
                     <p>Delete</p>
                   </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground ml-1"
+                      onClick={() => onOpenChange(false)}
+                    >
+                      <X className="w-5 h-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom"><p>Close</p></TooltipContent>
                 </Tooltip>
               </div>
             </TooltipProvider>
