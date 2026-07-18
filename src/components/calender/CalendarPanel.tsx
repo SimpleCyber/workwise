@@ -89,7 +89,7 @@ type PanelView = "calendar" | "create" | "edit" | "accounts";
 
 // ─── Helpers ────────────────────────────────────────────
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
-const HOUR_HEIGHT = 60; // px per hour slot
+const HOUR_HEIGHT = 80; // px per hour slot
 
 function formatHour(hour: number): string {
   if (hour === 0) return "12 AM";
@@ -600,7 +600,7 @@ export const DraggableCalendarPanel = ({
     return (
       <div
         ref={timelineRef}
-        className="flex-1 overflow-y-auto relative"
+        className="flex-1 overflow-y-auto bg-gradient-to-r from-muted/50 to-card relative"
         style={{ scrollbarWidth: "thin" }}
       >
         {/* Timezone label */}
@@ -666,13 +666,16 @@ export const DraggableCalendarPanel = ({
                 <div className="flex items-start justify-between gap-1">
                   <div className="overflow-hidden min-w-0">
                     <p
-                      className="text-[13px] font-semibold truncate"
+                      className="text-[15px] font-semibold truncate"
                       style={{ color }}
                     >
                       {event.title}
                     </p>
-                    {height > 30 && (
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {height > 35 && (
+                      <p
+                        className="text-[13px] font-medium opacity-80 mt-1"
+                        style={{ color }}
+                      >
                         {format(new Date(event.startTime), "h:mm")} –{" "}
                         {format(new Date(event.endTime), "h:mma")}
                       </p>
@@ -703,7 +706,7 @@ export const DraggableCalendarPanel = ({
     const now = new Date();
 
     return (
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-r from-muted/50 to-card">
         {/* Sticky Week Header */}
         <div className="flex  border-border z-20 bg-background pt-2 pb-1">
           <div className="w-12 shrink-0">
@@ -736,7 +739,7 @@ export const DraggableCalendarPanel = ({
 
         {/* Timeline Grid */}
         <div
-          className="flex-1 overflow-y-auto overflow-x-hidden flex relative"
+          className="flex-1 overflow-y-auto bg-gradient-to-r from-muted/50 to-card"
           ref={timelineRef}
           style={{ scrollbarWidth: "thin" }}
         >
@@ -804,7 +807,7 @@ export const DraggableCalendarPanel = ({
                         onClick={() => openEditEvent(event)}
                       >
                         <p
-                          className="text-[9px] font-semibold truncate leading-tight"
+                          className="text-[11px] font-semibold truncate leading-tight"
                           style={{ color }}
                         >
                           {event.title}
@@ -883,11 +886,11 @@ export const DraggableCalendarPanel = ({
                 </div>
 
                 {/* Event indicators */}
-                <div className="flex-1 flex flex-col gap-[2px] overflow-hidden">
+                <div className="flex-1 flex flex-col gap-[3px] overflow-hidden">
                   {dayEvents.slice(0, 4).map((e) => (
                     <div
                       key={e._id}
-                      className="text-[9px] truncate px-1 rounded-[2px] leading-tight"
+                      className="text-[11px] font-medium truncate px-1.5 py-[1px] rounded-[3px] leading-tight"
                       style={{
                         backgroundColor: `${getEventColor(e)}33`,
                         color: getEventColor(e),
@@ -897,7 +900,7 @@ export const DraggableCalendarPanel = ({
                     </div>
                   ))}
                   {dayEvents.length > 4 && (
-                    <div className="text-[9px] text-muted-foreground font-medium pl-0.5">
+                    <div className="text-[10px] text-muted-foreground font-semibold pl-1 pt-0.5">
                       +{dayEvents.length - 4}
                     </div>
                   )}
@@ -932,7 +935,7 @@ export const DraggableCalendarPanel = ({
 
     return (
       <div
-        className="flex-1 overflow-y-auto"
+        className="flex-1 overflow-y-auto bg-gradient-to-r from-muted/50 to-card"
         style={{ scrollbarWidth: "thin" }}
       >
         {dateKeys.length === 0 ? (
@@ -995,16 +998,16 @@ export const DraggableCalendarPanel = ({
                           onClick={() => openEditEvent(event)}
                           style={BackgroundStyle}
                         >
-                          <div className="px-3 py-2 flex flex-col justify-center min-h-[50px]">
-                            <div className="flex items-start justify-between gap-2">
+                          <div className="px-4 py-3 flex flex-col justify-center min-h-[58px]">
+                            <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2 mb-0.5">
-                                  <IconComponent className="w-4 h-4 text-white/90 shrink-0" />
-                                  <p className="text-sm font-medium text-white tracking-tight truncate leading-tight">
+                                <div className="flex items-center gap-2.5 mb-1.5">
+                                  <IconComponent className="w-5 h-5 text-white/90 shrink-0" />
+                                  <p className="text-[16px] font-semibold text-white tracking-tight truncate leading-tight">
                                     {event.title}
                                   </p>
                                 </div>
-                                <p className="text-xs text-white/90 truncate mt-0.5 leading-tight ml-6">
+                                <p className="text-sm font-medium text-white/95 truncate mt-1 leading-tight ml-[30px]">
                                   {isAllDay
                                     ? "All day"
                                     : `${format(new Date(event.startTime), "h")} – ${format(new Date(event.endTime), "h:mma").toLowerCase()}`}
@@ -1012,11 +1015,11 @@ export const DraggableCalendarPanel = ({
                                 </p>
                               </div>
 
-                              <div className="flex items-center gap-1.5 shrink-0">
+                              <div className="flex items-center gap-2 shrink-0 self-center">
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Avatar className="w-5 h-5 border border-white/20 shadow-sm transition-transform hover:scale-110">
-                                      <AvatarFallback className="bg-black/20 text-[9px] font-medium text-white">
+                                    <Avatar className="w-7 h-7 border-[1.5px] border-white/25 shadow-md transition-transform hover:scale-110">
+                                      <AvatarFallback className="bg-black/25 text-xs font-semibold text-white">
                                         {category === "local"
                                           ? "L"
                                           : event.googleAccountEmail
@@ -1040,9 +1043,9 @@ export const DraggableCalendarPanel = ({
                                     e.stopPropagation();
                                     handleDeleteEvent(event);
                                   }}
-                                  className="opacity-0 group-hover:opacity-100 p-1 rounded-sm hover:bg-black/20 transition-colors"
+                                  className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md hover:bg-black/20 transition-colors"
                                 >
-                                  <X className="w-3.5 h-3.5 text-white" />
+                                  <X className="w-4 h-4 text-white" />
                                 </button>
                               </div>
                             </div>
@@ -1053,9 +1056,9 @@ export const DraggableCalendarPanel = ({
                                 href={event.meetLink}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 mt-1 text-[10px] font-medium text-white/90 hover:text-white hover:underline w-fit"
+                                className="inline-flex items-center gap-1.5 mt-2 ml-[30px] text-xs font-semibold text-white/90 hover:text-white hover:underline w-fit"
                               >
-                                <Video className="w-3 h-3" /> Join Meet
+                                <Video className="w-4 h-4" /> Join Meet
                               </a>
                             )}
                           </div>
@@ -1125,7 +1128,7 @@ export const DraggableCalendarPanel = ({
 
         {/* Form */}
         <div
-          className="flex-1 overflow-y-auto px-4 py-4 space-y-5"
+          className="flex-1 overflow-y-auto bg-gradient-to-r from-muted/50 to-card px-4 py-4 space-y-5"
           style={{ scrollbarWidth: "thin" }}
         >
           {/* Title */}
@@ -1380,7 +1383,7 @@ export const DraggableCalendarPanel = ({
           </Button>
         </div>
         <div
-          className="flex-1 overflow-y-auto px-4 py-4 space-y-5"
+          className="flex-1 overflow-y-auto bg-gradient-to-r from-muted/50 to-card px-4 py-4 space-y-5"
           style={{ scrollbarWidth: "thin" }}
         >
           <div>
@@ -1499,7 +1502,7 @@ export const DraggableCalendarPanel = ({
 
         {/* List */}
         <div
-          className="flex-1 overflow-y-auto px-4 py-4"
+          className="flex-1 overflow-y-auto bg-gradient-to-r from-muted/50 to-card px-4 py-4"
           style={{ scrollbarWidth: "thin" }}
         >
           {/* Connected accounts */}
@@ -1644,10 +1647,10 @@ export const DraggableCalendarPanel = ({
     return (
       <>
         {/* ── Header ── */}
-        <div className="px-3 pt-3 pb-0">
+        <div className="px-3 pt-3 pb-0 bg-gradient-to-r from-muted/50 to-card">
           {/* Top bar: CALENDAR label + icons */}
           <div className="flex items-center justify-between mb-1.5">
-            <p className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-widest select-none">
+            <p className="text-[12px] font-semibold text-gray-600 dark:text-blue-400 uppercase tracking-wider select-none">
               Calendar
             </p>
             <div className="flex items-center gap-0.5">

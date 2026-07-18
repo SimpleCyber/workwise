@@ -1,6 +1,10 @@
 "use client";
-
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSetAtom } from "jotai";
+import {
+  selectedProjectTaskAtom,
+  projectTaskViewModeAtom,
+} from "@/lib/panel-atoms";
 import {
   Plus,
   Search,
@@ -97,8 +101,8 @@ export default function CompactAIAssistantUI({
 
   const { mutate: createTask, isPending: isCreatingTask } =
     useCreateProjectTask();
-  const [selectedTask, setSelectedTask] = useState<any | null>(null);
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const setSelectedTask = useSetAtom(selectedProjectTaskAtom);
+  const setTaskViewMode = useSetAtom(projectTaskViewModeAtom);
   const [addingTaskToList, setAddingTaskToList] =
     useState<Id<"projectLists"> | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState("");
@@ -535,8 +539,8 @@ export default function CompactAIAssistantUI({
                               key={task._id}
                               className="p-2 text-xs bg-muted/30 rounded-md border border-border cursor-pointer hover:bg-muted/50 transition-all"
                               onClick={() => {
-                                setSelectedTask(task);
-                                setIsTaskModalOpen(true);
+                                setSelectedTask(task as any);
+                                setTaskViewMode("modal");
                               }}
                               draggable
                               onDragStart={(e) => {
@@ -671,8 +675,8 @@ export default function CompactAIAssistantUI({
                               key={task._id}
                               className="p-2 text-xs bg-blue-500/10 rounded-md border border-blue-500/20 cursor-pointer hover:bg-blue-500/20 hover:border-blue-500/30 transition-all"
                               onClick={() => {
-                                setSelectedTask(task);
-                                setIsTaskModalOpen(true);
+                                setSelectedTask(task as any);
+                                setTaskViewMode("modal");
                               }}
                               draggable
                               onDragStart={(e) => {
@@ -764,7 +768,6 @@ export default function CompactAIAssistantUI({
               // }}
             />
 
-            {/* Search Modal */}
             <SearchModal
               isOpen={showSearchModal}
               onClose={() => setShowSearchModal(false)}
@@ -774,12 +777,7 @@ export default function CompactAIAssistantUI({
               togglePin={(id: string) => togglePin(id as any)}
               createNewChat={createNewChat}
             />
-            <ProjectTaskDetailModal
-              task={selectedTask}
-              open={isTaskModalOpen}
-              onOpenChange={setIsTaskModalOpen}
-              lists={lists || []}
-            />
+            <ProjectTaskDetailModal />
           </main>
         )}
       </div>

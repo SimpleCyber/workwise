@@ -249,7 +249,7 @@ export const DraggableNotificationPanel = () => {
     <Tabs
       value={activeCategory}
       onValueChange={(value) => setActiveCategory(value as any)}
-      className="w-full h-full flex flex-col"
+      className="w-full h-full flex flex-col bg-gradient-to-r from-muted/50 to-card"
     >
       <div className="p-4 border-b border-border no-drag">
         <TabsList className="grid w-full grid-cols-4">
@@ -465,7 +465,7 @@ export const DraggableNotificationPanel = () => {
       <Drawer open={open} onOpenChange={setOpen}>
         <DrawerContent className="max-h-[85vh]">
           <DrawerHeader className="border-b bg-muted/5">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between ">
               <DrawerTitle>Notifications</DrawerTitle>
               {unreadCount! > 0 && (
                 <Button
@@ -488,10 +488,10 @@ export const DraggableNotificationPanel = () => {
   return (
     <Card className="h-full w-full bg-card border-l border-y-0 border-r-0 border-border flex flex-col rounded-none shadow-none overflow-hidden">
       {/* Drawer Header */}
-      <CardHeader className="flex flex-row items-center justify-between p-1.5 border-b border-border bg-gradient-to-r from-muted/50 to-card">
+      <CardHeader className="flex flex-row items-center justify-between p-1.5 border-border bg-gradient-to-r from-muted/50 to-card">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Bell className="w-5 h-5 text-foreground/80" />
+            <Bell className="w-4 h-4 text-foreground/80 mt-1" />
             {unreadCount! > 0 && (
               <span className="absolute -top-1.5 -right-1.5 h-4 min-w-[16px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center z-20 border border-background">
                 {unreadCount! > 99 ? "99+" : unreadCount}
@@ -499,7 +499,7 @@ export const DraggableNotificationPanel = () => {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-foreground">
+            <h2 className="text-sm text-gray-600 font-semibold text-foreground">
               Notifications
             </h2>
           </div>
