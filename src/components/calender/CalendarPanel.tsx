@@ -739,7 +739,7 @@ export const DraggableCalendarPanel = ({
 
         {/* Timeline Grid */}
         <div
-          className="flex-1 overflow-y-auto bg-gradient-to-r from-muted/50 to-card"
+          className="flex-1 flex flex-row overflow-y-auto bg-gradient-to-r from-muted/50 to-card"
           ref={timelineRef}
           style={{ scrollbarWidth: "thin" }}
         >
