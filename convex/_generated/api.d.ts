@@ -29,6 +29,7 @@ import type * as members from "../members.js";
 import type * as messages from "../messages.js";
 import type * as migration from "../migration.js";
 import type * as notifications from "../notifications.js";
+import type * as personalNotes from "../personalNotes.js";
 import type * as projectChats from "../projectChats.js";
 import type * as projects from "../projects.js";
 import type * as reactions from "../reactions.js";
@@ -65,6 +66,7 @@ declare const fullApi: ApiFromModules<{
   messages: typeof messages;
   migration: typeof migration;
   notifications: typeof notifications;
+  personalNotes: typeof personalNotes;
   projectChats: typeof projectChats;
   projects: typeof projects;
   reactions: typeof reactions;

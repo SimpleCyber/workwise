@@ -14,11 +14,13 @@ import { useAtom } from "jotai";
 import {
   calendarOpenAtom,
   notificationOpenAtom,
+  notesOpenAtom,
   selectedTodoCardAtom,
 } from "@/lib/panel-atoms";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { DraggableNotificationPanel } from "@/components/notification/NotificationPanel";
 import { DraggableCalendarPanel } from "@/components/calender/CalendarPanel";
+import { DraggableNotesPanel } from "@/components/notes/NotesPanel";
 
 interface WorkspaceLayoutProps extends PropsWithChildren {
   autoSaveId: string;
@@ -65,6 +67,7 @@ const WorkspaceLayout = ({
 
   const [calendarOpen, setCalendarOpen] = useAtom(calendarOpenAtom);
   const [notificationOpen, setNotificationOpen] = useAtom(notificationOpenAtom);
+  const [notesOpen, setNotesOpen] = useAtom(notesOpenAtom);
   const [, setSelectedTodoCard] = useAtom(selectedTodoCardAtom);
   const workspaceId = useWorkspaceId();
 
@@ -72,8 +75,9 @@ const WorkspaceLayout = ({
     if (rightPanel) {
       setCalendarOpen(false);
       setNotificationOpen(false);
+      setNotesOpen(false);
     }
-  }, [rightPanel, setCalendarOpen, setNotificationOpen]);
+  }, [rightPanel, setCalendarOpen, setNotificationOpen, setNotesOpen]);
 
   const activeRightPanel =
     rightPanel ||
@@ -83,6 +87,8 @@ const WorkspaceLayout = ({
       ) : null
     ) : notificationOpen ? (
       <DraggableNotificationPanel />
+    ) : notesOpen ? (
+      <DraggableNotesPanel />
     ) : null);
 
   // Calculate main panel default size
@@ -100,6 +106,7 @@ const WorkspaceLayout = ({
 
         <ResizablePanelGroup
           direction="horizontal"
+          key={activeRightPanel ? "with-right-panel" : "without-right-panel"}
           autoSaveId={`${autoSaveId}${activeRightPanel ? "-with-right" : ""}`}
         >
           <ResizablePanel
@@ -147,6 +154,7 @@ const WorkspaceLayout = ({
                       if (onClose) onClose();
                       setCalendarOpen(false);
                       setNotificationOpen(false);
+                      setNotesOpen(false);
                       setSelectedTodoCard(null);
                     }
                   }}

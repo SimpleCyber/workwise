@@ -1,6 +1,7 @@
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 
+export const notesOpenAtom = atom(false);
 export const notificationOpenAtom = atom(false);
 export const calendarOpenAtom = atom(false);
 export const selectedTodoCardAtom = atom<any | null>(null);

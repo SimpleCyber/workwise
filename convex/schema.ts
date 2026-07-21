@@ -595,6 +595,30 @@ const schema = defineSchema({
     createdAt: v.number(),
   }).index("by_state", ["state"]),
 
+  personalTaskLists: defineTable({
+    userId: v.id("users"),
+    name: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_user_id", ["userId"]),
+
+  personalNotes: defineTable({
+    userId: v.id("users"),
+    listId: v.optional(v.id("personalTaskLists")),
+    title: v.optional(v.string()),
+    content: v.optional(v.string()), // Made optional since a task might just have a title
+    isTask: v.optional(v.boolean()), // Made optional
+    isStarred: v.optional(v.boolean()),
+    dueDate: v.optional(v.number()),
+    hasTime: v.optional(v.boolean()), // whether due date includes a specific time
+    isCompleted: v.optional(v.boolean()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user_id", ["userId"])
+    .index("by_list_id", ["listId"])
+    .index("by_user_completed", ["userId", "isCompleted"]),
+
   featureFlags: defineTable({
     key: v.string(),
     label: v.string(),

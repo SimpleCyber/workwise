@@ -1,11 +1,12 @@
 "use client";
 
 import type React from "react";
-import { Bell, CalendarClock } from "lucide-react";
+import { Bell, CalendarClock, NotebookTabs } from "lucide-react";
 import { useAtom } from "jotai";
 import {
   calendarOpenAtom,
   notificationOpenAtom,
+  notesOpenAtom,
   selectedProjectTaskAtom,
   selectedTodoCardAtom,
 } from "@/lib/panel-atoms";
@@ -25,6 +26,7 @@ export const PanelButtons: React.FC<PanelButtonProps> = ({
 }) => {
   const [calendarOpen, setCalendarOpen] = useAtom(calendarOpenAtom);
   const [notificationOpen, setNotificationOpen] = useAtom(notificationOpenAtom);
+  const [notesOpen, setNotesOpen] = useAtom(notesOpenAtom);
   const [, setProjectTask] = useAtom(selectedProjectTaskAtom);
   const [, setTodoCard] = useAtom(selectedTodoCardAtom);
   const unreadCount = useGetUnreadCount();
@@ -46,6 +48,7 @@ export const PanelButtons: React.FC<PanelButtonProps> = ({
               const next = !prev;
               if (next) {
                 setCalendarOpen(false);
+                setNotesOpen(false);
                 setProjectTask(null);
                 setTodoCard(null);
               }
@@ -63,6 +66,24 @@ export const PanelButtons: React.FC<PanelButtonProps> = ({
               const next = !prev;
               if (next) {
                 setNotificationOpen(false);
+                setNotesOpen(false);
+                setProjectTask(null);
+                setTodoCard(null);
+              }
+              return next;
+            });
+          }}
+        />
+        <SidebarButton
+          icon={NotebookTabs}
+          label="Notes"
+          isActive={notesOpen}
+          onClick={() => {
+            setNotesOpen((prev) => {
+              const next = !prev;
+              if (next) {
+                setNotificationOpen(false);
+                setCalendarOpen(false);
                 setProjectTask(null);
                 setTodoCard(null);
               }
