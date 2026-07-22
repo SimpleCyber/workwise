@@ -2,9 +2,11 @@
 
 import { BarChart3, Calendar, Clock, Users } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import { WorkspaceSection } from "@/app/workspace/[workspaceId]/workspace-section";
 import { Button } from "@/components/ui/button";
 import { useCurrentMember } from "@/features/members/api/use-current-member";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
+import { cn } from "@/lib/utils";
 
 export const WorkspaceSidebarContent = () => {
   const router = useRouter();
@@ -22,10 +24,6 @@ export const WorkspaceSidebarContent = () => {
 
   const isActive = (path: string) => {
     const currentPath = pathname;
-    const targetPath =
-      path === ""
-        ? `/attendance/${workspaceId}`
-        : `/attendance/${workspaceId}${path}`;
     if (path === "" && currentPath === `/attendance/${workspaceId}`)
       return true;
     if (path !== "" && currentPath.includes(path)) return true;
@@ -33,88 +31,130 @@ export const WorkspaceSidebarContent = () => {
   };
 
   return (
-    <>
-      <div className="mt-3 flex flex-col px-2">
+    <div className="flex flex-col gap-y-2 mt-3">
+      <WorkspaceSection label="Attendance Navigation">
         {member?.role === "admin" ? (
           <>
             <Button
               variant="transparent"
-              className={`h-7 justify-start px-[18px] text-sm ${
+              size="sm"
+              className={cn(
+                "h-7 justify-start px-[18px] text-sm font-normal w-full",
                 isActive("")
-                  ? "bg-accent/50 text-foreground"
-                  : "text-sidebar-foreground/80 hover:bg-accent/30"
-              }`}
+                  ? "bg-[#f9EDFF]/20 text-white font-semibold"
+                  : "text-[#f9EDFFCC] hover:bg-[#f9EDFF]/10 transition",
+              )}
               onClick={() => navigateTo("")}
             >
-              <BarChart3 className="mr-1 size-3.5 shrink-0" />
-              <span className="truncate text-sm">Admin Dashboard</span>
+              <BarChart3
+                className={cn(
+                  "mr-2 size-3.5 shrink-0",
+                  isActive("") ? "text-white" : "text-[#f9EDFFCC]",
+                )}
+              />
+              <span className="truncate">Admin Dashboard</span>
             </Button>
             <Button
               variant="transparent"
-              className={`h-7 justify-start px-[18px] text-sm ${
+              size="sm"
+              className={cn(
+                "h-7 justify-start px-[18px] text-sm font-normal w-full",
                 isActive("/checkin")
-                  ? "bg-accent/50 text-foreground"
-                  : "text-sidebar-foreground/80 hover:bg-accent/30"
-              }`}
+                  ? "bg-[#f9EDFF]/20 text-white font-semibold"
+                  : "text-[#f9EDFFCC] hover:bg-[#f9EDFF]/10 transition",
+              )}
               onClick={() => navigateTo("/checkin")}
             >
-              <Clock className="mr-1 size-3.5 shrink-0" />
-              <span className="truncate text-sm">Check In/Out</span>
+              <Clock
+                className={cn(
+                  "mr-2 size-3.5 shrink-0",
+                  isActive("/checkin") ? "text-white" : "text-[#f9EDFFCC]",
+                )}
+              />
+              <span className="truncate">Check In/Out</span>
             </Button>
             <Button
               variant="transparent"
-              className={`h-7 justify-start px-[18px] text-sm ${
+              size="sm"
+              className={cn(
+                "h-7 justify-start px-[18px] text-sm font-normal w-full",
                 isActive("/members")
-                  ? "bg-accent/50 text-foreground"
-                  : "text-sidebar-foreground/80 hover:bg-accent/30"
-              }`}
+                  ? "bg-[#f9EDFF]/20 text-white font-semibold"
+                  : "text-[#f9EDFFCC] hover:bg-[#f9EDFF]/10 transition",
+              )}
               onClick={() => navigateTo("/members")}
             >
-              <Users className="mr-1 size-3.5 shrink-0" />
-              <span className="truncate text-sm">Members</span>
+              <Users
+                className={cn(
+                  "mr-2 size-3.5 shrink-0",
+                  isActive("/members") ? "text-white" : "text-[#f9EDFFCC]",
+                )}
+              />
+              <span className="truncate">Members</span>
             </Button>
             <Button
               variant="transparent"
-              className={`h-7 justify-start px-[18px] text-sm ${
+              size="sm"
+              className={cn(
+                "h-7 justify-start px-[18px] text-sm font-normal w-full",
                 isActive("/calendar")
-                  ? "bg-accent/50 text-foreground"
-                  : "text-sidebar-foreground/80 hover:bg-accent/30"
-              }`}
+                  ? "bg-[#f9EDFF]/20 text-white font-semibold"
+                  : "text-[#f9EDFFCC] hover:bg-[#f9EDFF]/10 transition",
+              )}
               onClick={() => navigateTo("/calendar")}
             >
-              <Calendar className="mr-1 size-3.5 shrink-0" />
-              <span className="truncate text-sm">My Calendar</span>
+              <Calendar
+                className={cn(
+                  "mr-2 size-3.5 shrink-0",
+                  isActive("/calendar") ? "text-white" : "text-[#f9EDFFCC]",
+                )}
+              />
+              <span className="truncate">My Calendar</span>
             </Button>
           </>
         ) : (
           <>
             <Button
               variant="transparent"
-              className={`h-7 justify-start px-[18px] text-sm ${
+              size="sm"
+              className={cn(
+                "h-7 justify-start px-[18px] text-sm font-normal w-full",
                 isActive("")
-                  ? "bg-accent/50 text-foreground"
-                  : "text-sidebar-foreground/80 hover:bg-accent/30"
-              }`}
+                  ? "bg-[#f9EDFF]/20 text-white font-semibold"
+                  : "text-[#f9EDFFCC] hover:bg-[#f9EDFF]/10 transition",
+              )}
               onClick={() => navigateTo("")}
             >
-              <Clock className="mr-1 size-3.5 shrink-0" />
-              <span className="truncate text-sm">Check In/Out</span>
+              <Clock
+                className={cn(
+                  "mr-2 size-3.5 shrink-0",
+                  isActive("") ? "text-white" : "text-[#f9EDFFCC]",
+                )}
+              />
+              <span className="truncate">Check In/Out</span>
             </Button>
             <Button
               variant="transparent"
-              className={`h-7 justify-start px-[18px] text-sm ${
+              size="sm"
+              className={cn(
+                "h-7 justify-start px-[18px] text-sm font-normal w-full",
                 isActive("/calendar")
-                  ? "bg-accent/50 text-foreground"
-                  : "text-sidebar-foreground/80 hover:bg-accent/30"
-              }`}
+                  ? "bg-[#f9EDFF]/20 text-white font-semibold"
+                  : "text-[#f9EDFFCC] hover:bg-[#f9EDFF]/10 transition",
+              )}
               onClick={() => navigateTo("/calendar")}
             >
-              <Calendar className="mr-1 size-3.5 shrink-0" />
-              <span className="truncate text-sm">My Calendar</span>
+              <Calendar
+                className={cn(
+                  "mr-2 size-3.5 shrink-0",
+                  isActive("/calendar") ? "text-white" : "text-[#f9EDFFCC]",
+                )}
+              />
+              <span className="truncate">My Calendar</span>
             </Button>
           </>
         )}
-      </div>
-    </>
+      </WorkspaceSection>
+    </div>
   );
 };

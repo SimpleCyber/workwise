@@ -22,15 +22,20 @@ import { useGetBoards } from "@/features/todos/api/use-get-boards";
 import { useGetRecentCards } from "@/features/todos/api/use-get-recent-cards";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 
+import {
+  useCreateTodoBoardModal,
+  useShowArchivedBoards,
+} from "@/features/todos/store/use-create-todo-board-modal";
+
 export const WorkspaceSidebarContent = () => {
   const MAX_NAME_WORDS = 10;
   const MAX_DESCRIPTION_WORDS = 30;
 
   const workspaceId = useWorkspaceId();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useCreateTodoBoardModal();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [showArchived, setShowArchived] = useState(false);
+  const [showArchived, setShowArchived] = useShowArchivedBoards();
 
   const { data: boards, isLoading: boardsLoading } = useGetBoards({
     workspaceId,

@@ -45,7 +45,7 @@ const AttendanceWorkspacePage = () => {
             Admin Dashboard - {workspace.name}
           </h1>
         </div>
-        <div className="flex-1 p-6 overflow-auto">
+        <div className="flex-1 p-4 sm:p-5 overflow-auto">
           <CleanAdminDashboard workspaceId={workspaceId} />
         </div>
       </div>
@@ -58,7 +58,7 @@ const AttendanceWorkspacePage = () => {
       <div className="flex h-[49px] items-center border-b bg-background px-4">
         <h1 className="text-lg font-semibold">Attendance - {workspace.name}</h1>
       </div>
-      <div className="flex-1 p-6 overflow-auto">
+      <div className="flex-1 p-4 sm:p-5 overflow-auto">
         <CheckInOut workspaceId={workspaceId} />
       </div>
     </div>

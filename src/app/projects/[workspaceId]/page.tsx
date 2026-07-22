@@ -63,6 +63,7 @@ import { useRouter } from "next/navigation";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { WorkspaceOnlyTree } from "./workspace-tree";
 import { useFeatureFlags } from "@/components/feature-flags";
+import { useCreateProjectBoardModal } from "@/features/projects/store/use-create-project-board-modal";
 
 const ProjectsWorkspacePage = () => {
   const { isEnabled } = useFeatureFlags();
@@ -86,7 +87,7 @@ const ProjectsWorkspacePage = () => {
     "Are you sure?",
     "This action cannot be undone.",
   );
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useCreateProjectBoardModal();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [editingBoardId, setEditingBoardId] =

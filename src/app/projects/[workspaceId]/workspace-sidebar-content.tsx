@@ -79,11 +79,7 @@ export const WorkspaceSidebarContent = () => {
       </div>
 
       {/* Active Project Boards */}
-      <WorkspaceSection
-        label="Project Boards"
-        hint="New Board"
-        onNew={() => setOpen(true)}
-      >
+      <WorkspaceSection label="Project Boards">
         {boardsLoading ? (
           <div className="px-[18px] py-2">
             <span className="text-xs text-[#f9EDFFCC]/60">Loading...</span>
@@ -108,10 +104,9 @@ export const WorkspaceSidebarContent = () => {
                 <span className="truncate text-sm flex-1 text-left">
                   {board.name}
                 </span>
-                <span className="text-xs text-[#f9EDFFCC]/60 ml-1">
+                <span className="text-xs text-[#f9EDFFCC]/60 font-mono">
                   {board.boardCode}
                 </span>
-                {board.isStarred && <Star className="size-3 text-yellow-400" />}
               </Button>
             </Link>
           ))
@@ -120,11 +115,7 @@ export const WorkspaceSidebarContent = () => {
 
       {/* Archived Project Boards */}
       {showArchived && archivedBoards.length > 0 && (
-        <WorkspaceSection
-          label="Archived Project Boards"
-          hint=""
-          onNew={() => {}}
-        >
+        <WorkspaceSection label="Archived Project Boards">
           {archivedBoards.map((board) => (
             <Link
               key={board._id}
@@ -144,80 +135,6 @@ export const WorkspaceSidebarContent = () => {
           ))}
         </WorkspaceSection>
       )}
-
-      {/* Create Project Board Modal */}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Project Board</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Project Name</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => {
-                  const input = e.target.value;
-                  const words = input.trim().split(/\s+/).filter(Boolean);
-                  if (words.length <= MAX_NAME_WORDS) {
-                    setName(input);
-                  } else {
-                    toast.error(
-                      `Project name can not exceed ${MAX_NAME_WORDS} words.`,
-                    );
-                  }
-                }}
-                placeholder="Enter project name..."
-                disabled={isPending}
-              />
-
-              <p className="text-xs text-muted-foreground">
-                {name.trim().split(/\s+/).filter(Boolean).length} /{" "}
-                {MAX_NAME_WORDS} words
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description (Optional)</Label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => {
-                  const input = e.target.value;
-                  const words = input.trim().split(/\s+/).filter(Boolean);
-                  if (words.length <= MAX_DESCRIPTION_WORDS) {
-                    setDescription(input);
-                  } else {
-                    toast.error(
-                      `Description cannot exceed ${MAX_DESCRIPTION_WORDS} words.`,
-                    );
-                  }
-                }}
-                placeholder="Enter project description..."
-                disabled={isPending}
-              />
-
-              <p className="text-xs text-muted-foreground">
-                {description.trim().split(/\s+/).filter(Boolean).length} /{" "}
-                {MAX_DESCRIPTION_WORDS} words
-              </p>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setOpen(false)}
-                disabled={isPending}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isPending || !name.trim()}>
-                {isPending ? "Creating..." : "Create Project Board"}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
     </>
   );
 };
