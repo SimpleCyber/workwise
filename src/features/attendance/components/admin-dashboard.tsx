@@ -89,7 +89,17 @@ export const CleanAdminDashboard = ({ workspaceId }: CleanAdminDashboardProps) =
   const absentRecords = allAttendanceRecords.filter((record) => record.status === "absent" || record.checkInTime === 0)
   const presentRecords = allAttendanceRecords.filter((record) => record.status !== "absent" && record.checkInTime > 0)
 
-  const StatCard = ({ icon: Icon, title, value, color = "default" }: any) => (
+  const StatCard = ({
+    icon: Icon,
+    title,
+    value,
+    color = "default",
+  }: {
+    icon: any;
+    title: string;
+    value: number | string;
+    color?: "blue" | "green" | "yellow" | "red" | "default";
+  }) => (
     <Card className="border-0 hover:shadow-sm shadow-md transition-all duration-200 bg-gradient-to-br from-card to-muted/50 dark:from-card dark:to-muted/10 overflow-hidden">
       <CardContent className="p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
