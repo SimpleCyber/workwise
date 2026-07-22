@@ -22,6 +22,7 @@ import { Hint } from "./hint";
 
 import { useGenerateUploadUrl } from "@/features/upload/api/use-generate-upload-url";
 import { useGetUrl } from "@/features/upload/api/use-get-url";
+import { useFeatureFlags } from "@/components/feature-flags";
 
 import BlotFormatter from "quill-blot-formatter";
 
@@ -86,6 +87,7 @@ const Editor = ({
   variant = "create",
   members = [],
 }: EditorProps) => {
+  const { isEnabled } = useFeatureFlags();
   const [text, setText] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [isToolbarVisible, setIsToolbarVisible] = useState(true);
@@ -618,7 +620,7 @@ const Editor = ({
             </Button>
           </Hint>
 
-          {variant === "create" && (
+          {variant === "create" && isEnabled("chat_file_attachments") && (
             <Hint label="Image">
               <Button
                 disabled={disabled}

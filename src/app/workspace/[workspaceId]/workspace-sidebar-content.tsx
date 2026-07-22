@@ -20,7 +20,11 @@ import { SidebarItem } from "@/app/workspace/[workspaceId]/sidebar-item";
 import { UserItem } from "@/app/workspace/[workspaceId]/user-item";
 import { WorkspaceSection } from "@/app/workspace/[workspaceId]/workspace-section";
 
+import { useFeatureFlags } from "@/components/feature-flags";
+
 export const WorkspaceSidebarContent = () => {
+  const { isEnabled } = useFeatureFlags();
+  const showDMs = isEnabled("chat_dms");
   const workspaceId = useWorkspaceId();
   const channelId = useChannelId();
   const memberId = useMemberId();
@@ -81,7 +85,7 @@ export const WorkspaceSidebarContent = () => {
         </WorkspaceSection>
       )}
 
-      {members && members.length !== 0 && (
+      {showDMs && members && members.length !== 0 && (
         <WorkspaceSection
           label="Direct Messages"
           hint="New Direct Message"

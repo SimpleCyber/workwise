@@ -18,30 +18,45 @@ import { useGetWorkspaces } from "@/features/workspaces/api/use-get-workspaces";
 import { useCreateWorkspaceModal } from "@/features/workspaces/store/use-create-workspace-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useFeatureFlag } from "@/components/feature-flags";
 
 export default function Home() {
   const router = useRouter();
   const [open, setOpen] = useCreateWorkspaceModal();
   const { data: workspaces, isLoading } = useGetWorkspaces();
+  const { enabled: treePlanningEnabled, isLoading: flagsLoading } =
+    useFeatureFlag("tree_planning");
   const { signOut } = useAuthActions();
 
   const workspaceId = useMemo(() => workspaces?.[0]?._id, [workspaces]);
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || flagsLoading) return;
 
     if (workspaces && workspaces.length > 0) {
       const lastActive = localStorage.getItem("lastActiveWorkspaceId");
       const targetWorkspace =
         workspaces.find((w) => w._id === lastActive) || workspaces[0];
 
-      router.replace(`/test/${targetWorkspace._id}`);
+      const defaultRoute = treePlanningEnabled
+        ? `/test/${targetWorkspace._id}`
+        : `/projects/${targetWorkspace._id}`;
+
+      router.replace(defaultRoute);
     } else if (!open) {
       // If no workspaces and modal not open, open it
       setOpen(true);
     }
-  }, [workspaces, isLoading, open, setOpen, router]);
-  if (isLoading || workspaceId) {
+  }, [
+    workspaces,
+    isLoading,
+    flagsLoading,
+    treePlanningEnabled,
+    open,
+    setOpen,
+    router,
+  ]);
+  if (isLoading || flagsLoading || workspaceId) {
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-black text-white">
         <Loader className="size-10 animate-spin text-purple-500" />
@@ -121,7 +136,13 @@ export default function Home() {
             {workspaces?.map((workspace) => (
               <div
                 key={workspace._id}
-                onClick={() => router.push(`/test/${workspace._id}`)}
+                onClick={() =>
+                  router.push(
+                    treePlanningEnabled
+                      ? `/test/${workspace._id}`
+                      : `/projects/${workspace._id}`,
+                  )
+                }
                 className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 transition-all hover:border-white/20 hover:bg-white/10 hover:shadow-2xl hover:shadow-purple-900/20 cursor-pointer"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />

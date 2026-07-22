@@ -25,6 +25,13 @@ import {
   Settings,
   LayoutDashboard,
   Mail,
+  Bell,
+  NotebookTabs,
+  PanelLeftOpen,
+  PanelRightOpen,
+  MousePointerClick,
+  Network,
+  MessagesSquare,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -33,29 +40,60 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 const ICON_MAP: Record<string, any> = {
+  header_notifications: Bell,
+  header_calendar: CalendarDays,
+  header_notes: NotebookTabs,
+  tree_planning: ToggleRight,
+  planning_left_column: PanelLeftOpen,
+  planning_side_panel: PanelRightOpen,
+  planning_side_panel_ai_chat: MessageSquare,
+  planning_double_click_actions: MousePointerClick,
+  projects: FolderKanban,
+  project_tree_view: Network,
+  todos: ListChecks,
+  task_comments: MessageSquare,
+  messaging: Users,
+  chat_dms: MessagesSquare,
+  chat_threads_reactions: Zap,
+  chat_file_attachments: FileText,
+  data_room: FileText,
   data_room_tools: Zap,
   attendance: CalendarDays,
-  calendar: CalendarDays,
-  projects: FolderKanban,
-  todos: ListChecks,
-  tree_planning: ToggleRight,
-  data_room: FileText,
-  messaging: Users,
-  task_comments: MessageSquare,
   mail: Mail,
 };
 
 const FLAG_CATEGORIES = {
-  core: {
-    label: "Core Workspace",
-    keys: ["attendance", "calendar", "messaging", "mail"],
+  header: {
+    label: "Header & Global",
+    keys: ["header_notifications", "header_calendar", "header_notes"],
+  },
+  planning: {
+    label: "Planning Page",
+    keys: [
+      "tree_planning",
+      "planning_left_column",
+      "planning_side_panel",
+      "planning_side_panel_ai_chat",
+      "planning_double_click_actions",
+    ],
   },
   projects: {
-    label: "Projects & Tasks",
-    keys: ["projects", "todos", "task_comments"],
+    label: "Project Section",
+    keys: ["projects", "project_tree_view", "todos", "task_comments"],
   },
-  data_room: { label: "Data Room", keys: ["data_room", "data_room_tools"] },
-  tools: { label: "Additional Tools", keys: ["tree_planning"] },
+  chats: {
+    label: "Chats Section",
+    keys: [
+      "messaging",
+      "chat_dms",
+      "chat_threads_reactions",
+      "chat_file_attachments",
+    ],
+  },
+  tools: {
+    label: "Workspace Tools",
+    keys: ["data_room", "data_room_tools", "attendance", "mail"],
+  },
 };
 
 export default function AdminPage() {
@@ -275,7 +313,7 @@ export default function AdminPage() {
               </div>
 
               {flags ? (
-                <Tabs defaultValue="core" className="w-full">
+                <Tabs defaultValue="header" className="w-full">
                   <TabsList className="mb-6 bg-muted/50 p-1 flex-wrap h-auto inline-flex">
                     {Object.entries(FLAG_CATEGORIES).map(([catKey, cat]) => (
                       <TabsTrigger

@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/tooltip";
 import { useMobile } from "@/hooks/use-mobile";
 
+import { useFeatureFlags } from "@/components/feature-flags";
+
 interface ProjectSidebarKanbanProps {
   workspaceId: Id<"workspaces">;
   boardId: Id<"projectBoards">;
@@ -43,6 +45,8 @@ export const ProjectSidebarKanban = ({
   initialTab = "tasks",
   onClose,
 }: ProjectSidebarKanbanProps) => {
+  const { isEnabled } = useFeatureFlags();
+  const showAIChat = isEnabled("planning_side_panel_ai_chat");
   const { data: currentUser, isLoading: userLoading } = useCurrentUser();
   const { data: projectDetails, isLoading } =
     useGetWorkspaceProjects(workspaceId);
@@ -58,12 +62,18 @@ export const ProjectSidebarKanban = ({
   );
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_WIDTH);
   const [isResizing, setIsResizing] = useState(false);
-  const [activeTab, setActiveTab] = useState<"tasks" | "chat">(initialTab);
+  const [activeTab, setActiveTab] = useState<"tasks" | "chat">(
+    showAIChat ? initialTab : "tasks",
+  );
   const isMobile = useMobile();
 
   useEffect(() => {
-    setActiveTab(initialTab);
-  }, [initialTab]);
+    if (showAIChat) {
+      setActiveTab(initialTab);
+    } else {
+      setActiveTab("tasks");
+    }
+  }, [initialTab, showAIChat]);
 
   const handleMemberToggle = (memberId: Id<"members">) => {
     setSelectedMemberIds((prev) =>
@@ -208,14 +218,16 @@ export const ProjectSidebarKanban = ({
                   >
                     Tasks
                   </Button>
-                  <Button
-                    variant={activeTab === "chat" ? "secondary" : "ghost"}
-                    size="sm"
-                    onClick={() => setActiveTab("chat")}
-                    className="h-8 px-3 text-xs"
-                  >
-                    AI Chat
-                  </Button>
+                  {showAIChat && (
+                    <Button
+                      variant={activeTab === "chat" ? "secondary" : "ghost"}
+                      size="sm"
+                      onClick={() => setActiveTab("chat")}
+                      className="h-8 px-3 text-xs"
+                    >
+                      AI Chat
+                    </Button>
+                  )}
                 </div>
               </div>
 

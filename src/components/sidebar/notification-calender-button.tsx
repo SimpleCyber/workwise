@@ -17,6 +17,8 @@ import { useGetUnreadCount } from "@/hooks/use-notifications";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
 import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info";
 
+import { useFeatureFlags } from "@/components/feature-flags";
+
 interface PanelButtonProps {
   className?: string;
 }
@@ -24,6 +26,7 @@ interface PanelButtonProps {
 export const PanelButtons: React.FC<PanelButtonProps> = ({
   className = "",
 }) => {
+  const { isEnabled } = useFeatureFlags();
   const [calendarOpen, setCalendarOpen] = useAtom(calendarOpenAtom);
   const [notificationOpen, setNotificationOpen] = useAtom(notificationOpenAtom);
   const [notesOpen, setNotesOpen] = useAtom(notesOpenAtom);
@@ -36,61 +39,75 @@ export const PanelButtons: React.FC<PanelButtonProps> = ({
     id: workspaceId,
   });
 
+  const showNotifications = isEnabled("header_notifications");
+  const showCalendar = isEnabled("header_calendar");
+  const showNotes = isEnabled("header_notes");
+
+  if (!showNotifications && !showCalendar && !showNotes) {
+    return null;
+  }
+
   return (
     <>
       <div className={`flex flex-col items-center gap-1 ${className}`}>
-        <SidebarButton
-          icon={Bell}
-          label="Notifications"
-          isActive={notificationOpen}
-          onClick={() => {
-            setNotificationOpen((prev) => {
-              const next = !prev;
-              if (next) {
-                setCalendarOpen(false);
-                setNotesOpen(false);
-                setProjectTask(null);
-                setTodoCard(null);
-              }
-              return next;
-            });
-          }}
-          badgeCount={unreadCount! > 0 ? unreadCount : undefined}
-        />
-        <SidebarButton
-          icon={CalendarClock}
-          label="Calendar"
-          isActive={calendarOpen}
-          onClick={() => {
-            setCalendarOpen((prev) => {
-              const next = !prev;
-              if (next) {
-                setNotificationOpen(false);
-                setNotesOpen(false);
-                setProjectTask(null);
-                setTodoCard(null);
-              }
-              return next;
-            });
-          }}
-        />
-        <SidebarButton
-          icon={NotebookTabs}
-          label="Notes"
-          isActive={notesOpen}
-          onClick={() => {
-            setNotesOpen((prev) => {
-              const next = !prev;
-              if (next) {
-                setNotificationOpen(false);
-                setCalendarOpen(false);
-                setProjectTask(null);
-                setTodoCard(null);
-              }
-              return next;
-            });
-          }}
-        />
+        {showNotifications && (
+          <SidebarButton
+            icon={Bell}
+            label="Notifications"
+            isActive={notificationOpen}
+            onClick={() => {
+              setNotificationOpen((prev) => {
+                const next = !prev;
+                if (next) {
+                  setCalendarOpen(false);
+                  setNotesOpen(false);
+                  setProjectTask(null);
+                  setTodoCard(null);
+                }
+                return next;
+              });
+            }}
+            badgeCount={unreadCount! > 0 ? unreadCount : undefined}
+          />
+        )}
+        {showCalendar && (
+          <SidebarButton
+            icon={CalendarClock}
+            label="Calendar"
+            isActive={calendarOpen}
+            onClick={() => {
+              setCalendarOpen((prev) => {
+                const next = !prev;
+                if (next) {
+                  setNotificationOpen(false);
+                  setNotesOpen(false);
+                  setProjectTask(null);
+                  setTodoCard(null);
+                }
+                return next;
+              });
+            }}
+          />
+        )}
+        {showNotes && (
+          <SidebarButton
+            icon={NotebookTabs}
+            label="Notes"
+            isActive={notesOpen}
+            onClick={() => {
+              setNotesOpen((prev) => {
+                const next = !prev;
+                if (next) {
+                  setNotificationOpen(false);
+                  setCalendarOpen(false);
+                  setProjectTask(null);
+                  setTodoCard(null);
+                }
+                return next;
+              });
+            }}
+          />
+        )}
       </div>
     </>
   );

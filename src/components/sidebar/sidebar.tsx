@@ -113,7 +113,7 @@ export const Sidebar = ({
           <WorkspaceSwitcher />
         </div>
         <div className="mt-auto flex flex-col items-center justify-center gap-y-1 animate-in fade-in-0 slide-in-from-bottom-5 duration-500 delay-300">
-          {isEnabled("calendar") && <PanelButtons />}
+          <PanelButtons />
           <UserButton />
         </div>
       </aside>
@@ -162,7 +162,7 @@ export const Sidebar = ({
         </div>
 
         <div className="mt-auto flex flex-col items-center justify-center gap-y-1">
-          {isEnabled("calendar") && <PanelButtons />}
+          <PanelButtons />
           <UserButton />
         </div>
       </div>

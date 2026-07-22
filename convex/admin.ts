@@ -99,6 +99,123 @@ export const setFeatureFlag = mutation({
 });
 
 const DEFAULT_FLAGS = [
+  // 1. Header & Global Buttons
+  {
+    key: "header_notifications",
+    label: "Header Notifications Button",
+    description: "Toggle the Notifications drawer button in the header/sidebar",
+    enabled: true,
+  },
+  {
+    key: "header_calendar",
+    label: "Header Calendar Button",
+    description: "Toggle the Calendar drawer button in the header/sidebar",
+    enabled: true,
+  },
+  {
+    key: "header_notes",
+    label: "Header Personal Notes Button",
+    description:
+      "Toggle the Personal Notes drawer button in the header/sidebar",
+    enabled: true,
+  },
+
+  // 2. Planning / Test Page Controls
+  {
+    key: "tree_planning",
+    label: "Planning Page Access",
+    description:
+      "Enable or disable access to the interactive Planning / Test page",
+    enabled: true,
+  },
+  {
+    key: "planning_left_column",
+    label: "Planning Minimap / Left Column",
+    description:
+      "Enable or disable the minimap / left overview column box on the planning page",
+    enabled: true,
+  },
+  {
+    key: "planning_side_panel",
+    label: "Planning Node Click Side Panel",
+    description: "Allow opening the side detail panel when clicking tree nodes",
+    enabled: true,
+  },
+  {
+    key: "planning_side_panel_ai_chat",
+    label: "Planning Side Panel AI Chat",
+    description:
+      "Enable the AI chat assistant inside the node detail side panel",
+    enabled: true,
+  },
+  {
+    key: "planning_double_click_actions",
+    label: "Planning Node Double-Click Actions",
+    description: "Enable double-click shortcuts to edit or expand nodes",
+    enabled: true,
+  },
+
+  // 3. Project Section Controls
+  {
+    key: "projects",
+    label: "Projects Section",
+    description: "Enable or disable the main Projects section",
+    enabled: true,
+  },
+  {
+    key: "project_tree_view",
+    label: "Project Tree View Format",
+    description:
+      "Allow tree visualization format in projects (disabling leaves list/grid format only)",
+    enabled: true,
+  },
+  {
+    key: "todos",
+    label: "Todo Boards",
+    description: "Personal and team kanban-style todo boards",
+    enabled: true,
+  },
+  {
+    key: "task_comments",
+    label: "Task Comments & Activity",
+    description: "Enable activity logs and comment feeds on task cards",
+    enabled: true,
+  },
+
+  // 4. Chats Section Controls
+  {
+    key: "messaging",
+    label: "Chats & Messaging Section",
+    description: "Enable or disable the Workspace Messaging & Channels section",
+    enabled: true,
+  },
+  {
+    key: "chat_dms",
+    label: "Direct Messages",
+    description: "Enable direct 1-on-1 messaging between team members",
+    enabled: true,
+  },
+  {
+    key: "chat_threads_reactions",
+    label: "Message Threads & Reactions",
+    description: "Enable message reply threads and emoji reactions",
+    enabled: true,
+  },
+  {
+    key: "chat_file_attachments",
+    label: "Chat File Attachments",
+    description:
+      "Allow uploading and sharing file attachments in chat messages",
+    enabled: true,
+  },
+
+  // 5. Additional Tools
+  {
+    key: "data_room",
+    label: "Data Room",
+    description: "File storage, folders, and document management",
+    enabled: true,
+  },
   {
     key: "data_room_tools",
     label: "Data Room PDF Tools",
@@ -109,48 +226,6 @@ const DEFAULT_FLAGS = [
     key: "attendance",
     label: "Attendance Tracking",
     description: "Employee check-in/check-out and attendance management",
-    enabled: true,
-  },
-  {
-    key: "calendar",
-    label: "Calendar & Events",
-    description: "Calendar events and Google Calendar integration",
-    enabled: true,
-  },
-  {
-    key: "projects",
-    label: "Project Management",
-    description: "Project boards, task lists, and task assignment",
-    enabled: true,
-  },
-  {
-    key: "todos",
-    label: "Todo Boards",
-    description: "Personal and team kanban-style todo boards",
-    enabled: true,
-  },
-  {
-    key: "tree_planning",
-    label: "Tree Planning",
-    description: "Hierarchical tree-based planning and mapping",
-    enabled: true,
-  },
-  {
-    key: "data_room",
-    label: "Data Room",
-    description: "File storage, folders, and document management",
-    enabled: true,
-  },
-  {
-    key: "messaging",
-    label: "Messaging & Channels",
-    description: "Workspace channels, direct messages, and threads",
-    enabled: true,
-  },
-  {
-    key: "task_comments",
-    label: "Task Comments",
-    description: "Enable activity and comment feeds on task cards",
     enabled: true,
   },
   {

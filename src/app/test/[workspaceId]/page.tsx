@@ -10,11 +10,15 @@ import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace
 import { TreeFlow } from "@/features/test/components/tree-flow";
 import { ProjectSidebarKanban } from "@/features/projects/components/project-sidebar-kanban";
 
+import { useFeatureFlags } from "@/components/feature-flags";
+
 export default function TreeWorkspacePage({
   params,
 }: {
   params: { workspaceId: Id<"workspaces"> };
 }) {
+  const { isEnabled } = useFeatureFlags();
+  const showSidePanel = isEnabled("planning_side_panel");
   const { workspaceId } = params;
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -40,7 +44,7 @@ export default function TreeWorkspacePage({
     const boardId = searchParams.get("boardId") as Id<"projectBoards"> | null;
     const tab = searchParams.get("tab") as "tasks" | "chat" | null;
 
-    if (boardId && shouldShowSidebar) {
+    if (boardId && shouldShowSidebar && showSidePanel) {
       setSelectedBoardId(boardId);
       setSidebarOpen(true);
       if (tab) setActiveTab(tab);
@@ -48,7 +52,7 @@ export default function TreeWorkspacePage({
       setSidebarOpen(false);
       setSelectedBoardId(null);
     }
-  }, [searchParams]);
+  }, [searchParams, showSidePanel]);
 
   const handleCloseSidebar = () => {
     setSidebarOpen(false);
@@ -86,18 +90,19 @@ export default function TreeWorkspacePage({
       <div
         className="flex-1 overflow-auto p-6 transition-all duration-300 ease-in-out"
         style={{
-          marginRight: sidebarOpen && !isMobile ? `600px` : "0px", // Dynamic margin for sidebar (matches default width)
+          marginRight:
+            showSidePanel && sidebarOpen && !isMobile ? `600px` : "0px", // Dynamic margin for sidebar (matches default width)
         }}
       >
         <TreeFlow
           workspaceId={workspaceId}
-          sidebarOpen={sidebarOpen}
+          sidebarOpen={showSidePanel && sidebarOpen}
           activeNodeId={selectedBoardId || undefined}
         />
       </div>
 
       {/* Project Sidebar */}
-      {selectedBoardId && (
+      {showSidePanel && selectedBoardId && (
         <ProjectSidebarKanban
           workspaceId={workspaceId}
           boardId={selectedBoardId}

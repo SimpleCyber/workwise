@@ -72,25 +72,37 @@ export const FeatureGate = ({
   return enabled ? <>{children}</> : <>{fallback}</>;
 };
 
-// Guard component that redirects to home if feature is disabled
-import { useRouter } from "next/navigation";
+// Guard component that redirects to project page (or custom fallback / home) if feature is disabled
+import { useRouter, useParams } from "next/navigation";
 import { useEffect } from "react";
 
 export const FeatureGuard = ({
   flag,
   children,
+  fallbackUrl,
 }: {
   flag: string;
   children: React.ReactNode;
+  fallbackUrl?: string;
 }) => {
   const { enabled, isLoading } = useFeatureFlag(flag);
   const router = useRouter();
+  const params = useParams();
 
   useEffect(() => {
     if (!isLoading && !enabled) {
-      router.push("/");
+      if (fallbackUrl) {
+        router.push(fallbackUrl);
+      } else {
+        const workspaceId = params?.workspaceId as string | undefined;
+        if (workspaceId) {
+          router.push(`/projects/${workspaceId}`);
+        } else {
+          router.push("/");
+        }
+      }
     }
-  }, [enabled, isLoading, router]);
+  }, [enabled, isLoading, router, fallbackUrl, params]);
 
   if (isLoading) {
     return (

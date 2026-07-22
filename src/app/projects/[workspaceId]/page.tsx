@@ -62,11 +62,13 @@ import { useConfirm } from "@/hooks/use-confirm";
 import { useRouter } from "next/navigation";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { WorkspaceOnlyTree } from "./workspace-tree";
+import { useFeatureFlags } from "@/components/feature-flags";
 
 const ProjectsWorkspacePage = () => {
+  const { isEnabled } = useFeatureFlags();
+  const showTreeView = isEnabled("project_tree_view");
   const router = useRouter();
   const workspaceId = useWorkspaceId();
-  const workspaceIdTree = useWorkspaceId();
   const { data: workspace, isLoading: workspaceLoading } = useGetWorkspaceInfo({
     id: workspaceId,
   });
@@ -96,13 +98,21 @@ const ProjectsWorkspacePage = () => {
     setIsMounted(true);
     if (typeof window !== "undefined") {
       const savedView = localStorage.getItem(`workspace-view-${workspaceId}`);
-      if (savedView === "list" || savedView === "graph") {
+      if (
+        (savedView === "list" || savedView === "graph") &&
+        (savedView !== "graph" || showTreeView)
+      ) {
         setView(savedView);
+      } else if (!showTreeView) {
+        setView("list");
       }
     }
-  }, [workspaceId]);
+  }, [workspaceId, showTreeView]);
+
+  const currentView = showTreeView ? view : "list";
 
   const handleViewChange = (newView: "graph" | "list") => {
+    if (newView === "graph" && !showTreeView) return;
     setView(newView);
     if (typeof window !== "undefined") {
       localStorage.setItem(`workspace-view-${workspaceId}`, newView);
@@ -234,24 +244,26 @@ const ProjectsWorkspacePage = () => {
         </h1>
         <div className="flex items-center gap-2">
           {/* View Mode Toggle */}
-          <div className="flex border rounded-md p-0.5 h-8 bg-muted/20 flex-shrink-0 mr-2">
-            <Button
-              variant={view === "list" ? "secondary" : "ghost"}
-              size="icon"
-              onClick={() => handleViewChange("list")}
-              className="h-7 w-7"
-            >
-              <List className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={view === "graph" ? "secondary" : "ghost"}
-              size="icon"
-              onClick={() => handleViewChange("graph")}
-              className="h-7 w-7"
-            >
-              <Grid className="w-4 h-4" />
-            </Button>
-          </div>
+          {showTreeView && (
+            <div className="flex border rounded-md p-0.5 h-8 bg-muted/20 flex-shrink-0 mr-2">
+              <Button
+                variant={currentView === "list" ? "secondary" : "ghost"}
+                size="icon"
+                onClick={() => handleViewChange("list")}
+                className="h-7 w-7"
+              >
+                <List className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={currentView === "graph" ? "secondary" : "ghost"}
+                size="icon"
+                onClick={() => handleViewChange("graph")}
+                className="h-7 w-7"
+              >
+                <Grid className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button
@@ -499,7 +511,7 @@ const ProjectsWorkspacePage = () => {
       </div>
 
       <div className="flex-1 flex flex-col p-4 gap-4 overflow-auto">
-        {view === "graph" ? (
+        {currentView === "graph" ? (
           <div className="w-full h-full bg-card rounded-lg shadow-sm">
             <WorkspaceOnlyTree />
           </div>
