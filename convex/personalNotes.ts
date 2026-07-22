@@ -15,12 +15,22 @@ export const getLists = query({
       .withIndex("by_user_id", (q) => q.eq("userId", userId))
       .collect();
 
-    if (lists.length === 0) {
-      // Return a default list in-memory if none exists, or just let frontend create it
-      // Actually we'll just handle default "My Tasks" in UI or create automatically
-    }
+    const allNotes = await ctx.db
+      .query("personalNotes")
+      .withIndex("by_user_id", (q) => q.eq("userId", userId))
+      .collect();
 
-    return lists.sort((a, b) => a.createdAt - b.createdAt);
+    const listsWithCount = lists.map((list) => {
+      const activeCount = allNotes.filter(
+        (n) => n.listId === list._id && !n.isCompleted,
+      ).length;
+      return {
+        ...list,
+        activeCount,
+      };
+    });
+
+    return listsWithCount.sort((a, b) => a.createdAt - b.createdAt);
   },
 });
 
@@ -40,6 +50,59 @@ export const createList = mutation({
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
+  },
+});
+
+export const renameList = mutation({
+  args: {
+    id: v.id("personalTaskLists"),
+    name: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Unauthorized");
+    }
+
+    const list = await ctx.db.get(args.id);
+    if (!list || list.userId !== userId) {
+      throw new Error("Not found or unauthorized");
+    }
+
+    await ctx.db.patch(args.id, {
+      name: args.name.trim(),
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+export const deleteList = mutation({
+  args: {
+    id: v.id("personalTaskLists"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Unauthorized");
+    }
+
+    const list = await ctx.db.get(args.id);
+    if (!list || list.userId !== userId) {
+      throw new Error("Not found or unauthorized");
+    }
+
+    await ctx.db.delete(args.id);
+
+    const notesInList = await ctx.db
+      .query("personalNotes")
+      .withIndex("by_list_id", (q) => q.eq("listId", args.id))
+      .collect();
+
+    for (const note of notesInList) {
+      if (note.userId === userId) {
+        await ctx.db.delete(note._id);
+      }
+    }
   },
 });
 
