@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { Upload, FileCode, CheckCircle2 } from "lucide-react";
+import { Upload, FileCode, CheckCircle2, GitCommit } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -42,7 +43,8 @@ export const ImportEnvModal = ({
     total: number;
   } | null>(null);
 
-  const setSecretMutation = useMutation(api.vault.setSecret);
+  const [commitMessage, setCommitMessage] = useState("");
+  const setBatchSecretsMutation = useMutation(api.vault.setBatchSecrets);
 
   const parseEnvString = (content: string) => {
     const lines = content.split("\n");
@@ -82,6 +84,11 @@ export const ImportEnvModal = ({
     reader.onload = (event) => {
       const text = event.target?.result as string;
       setRawText(text);
+      if (!commitMessage.trim()) {
+        setCommitMessage(
+          `Import ${file.name || ".env"} into ${currentEnvironment}`,
+        );
+      }
     };
     reader.readAsText(file);
   };
@@ -98,19 +105,24 @@ export const ImportEnvModal = ({
       return;
     }
 
+    if (!commitMessage.trim()) {
+      toast.error("Please provide a commit message describing this import");
+      return;
+    }
+
     try {
       setIsImporting(true);
       setProgress({ current: 0, total: secrets.length });
 
+      const encryptedSecrets = [];
       let count = 0;
+
       for (const item of secrets) {
         const encKey = await encryptSecretString(item.key, projectKey);
         const encVal = await encryptSecretString(item.value, projectKey);
         const secretKeyHash = await computeBlindHash(item.key);
 
-        await setSecretMutation({
-          workspaceId,
-          boardId,
+        encryptedSecrets.push({
           environment: currentEnvironment,
           secretKeyHash,
           encryptedKey: encKey.ciphertext,
@@ -124,10 +136,18 @@ export const ImportEnvModal = ({
         setProgress({ current: count, total: secrets.length });
       }
 
+      await setBatchSecretsMutation({
+        workspaceId,
+        boardId,
+        commitMessage: commitMessage.trim(),
+        secrets: encryptedSecrets,
+      });
+
       toast.success(
-        `Successfully encrypted and imported ${count} environment variables into ${currentEnvironment}!`,
+        `Successfully imported ${count} environment variables into ${currentEnvironment}!`,
       );
       setRawText("");
+      setCommitMessage("");
       setOpen(false);
     } catch (err: any) {
       console.error("Bulk import error:", err);
@@ -178,6 +198,20 @@ export const ImportEnvModal = ({
             />
           </div>
 
+          <div className="space-y-1.5">
+            <Label className="flex items-center gap-1.5 text-xs font-medium">
+              <GitCommit className="size-3.5 text-muted-foreground" />
+              Commit Message <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              placeholder={`e.g., feat: import initial ${currentEnvironment} configuration`}
+              value={commitMessage}
+              onChange={(e) => setCommitMessage(e.target.value)}
+              disabled={isImporting}
+              className="text-xs"
+            />
+          </div>
+
           {progress && (
             <div className="flex items-center gap-2 rounded-lg bg-primary/10 p-2.5 text-xs text-primary">
               <CheckCircle2 className="size-4 animate-pulse" />
@@ -199,7 +233,7 @@ export const ImportEnvModal = ({
           </Button>
           <Button
             onClick={handleImport}
-            disabled={isImporting || !rawText.trim()}
+            disabled={isImporting || !rawText.trim() || !commitMessage.trim()}
           >
             {isImporting ? "Importing..." : "Encrypt & Import All"}
           </Button>

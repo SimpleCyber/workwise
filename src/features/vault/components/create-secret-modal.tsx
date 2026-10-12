@@ -15,6 +15,7 @@ import {
   CheckSquare,
   Square,
   Loader,
+  GitCommit,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -93,6 +94,7 @@ export const CreateSecretModal = ({
   const [isSaving, setIsSaving] = useState(false);
   const [pasteContent, setPasteContent] = useState("");
   const [pasteEnvs, setPasteEnvs] = useState<string[]>([currentEnvironment]);
+  const [commitMessage, setCommitMessage] = useState("");
 
   // Initial rows like Vercel
   const [rows, setRows] = useState<EnvRowItem[]>([
@@ -233,6 +235,11 @@ export const CreateSecretModal = ({
       return;
     }
 
+    if (!commitMessage.trim()) {
+      toast.error("Please enter a commit message explaining this change");
+      return;
+    }
+
     try {
       setIsSaving(true);
       toast.info(`Encrypting ${validRows.length} variables client-side...`);
@@ -274,6 +281,7 @@ export const CreateSecretModal = ({
         workspaceId,
         boardId: boardId || undefined,
         secrets: secretsToInsert,
+        commitMessage: commitMessage.trim(),
       });
 
       toast.success(
@@ -290,6 +298,7 @@ export const CreateSecretModal = ({
           isMasked: false,
         },
       ]);
+      setCommitMessage("");
       setOpen(false);
     } catch (err: any) {
       console.error("Batch save error:", err);
@@ -482,6 +491,26 @@ export const CreateSecretModal = ({
                 {rows.filter((r) => r.key.trim()).length !== 1 ? "s" : ""} (
                 {totalTargets} targets)
               </span>
+            </div>
+
+            {/* Commit Message */}
+            <div className="space-y-1.5 p-3 rounded-lg border bg-muted/20">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-semibold flex items-center gap-1.5 text-foreground">
+                  <GitCommit className="size-3.5 text-primary" /> Commit Message
+                  <span className="text-destructive">*</span>
+                </Label>
+                <span className="text-[10px] text-muted-foreground">
+                  Required for audit logs
+                </span>
+              </div>
+              <Input
+                placeholder="e.g. feat: add Stripe and SendGrid API credentials"
+                value={commitMessage}
+                onChange={(e) => setCommitMessage(e.target.value)}
+                className="h-8 text-xs bg-background"
+                required
+              />
             </div>
 
             <DialogFooter className="pt-2">

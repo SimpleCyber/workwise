@@ -13,11 +13,23 @@ import {
   Sparkles,
   Plus,
   X,
+  Trash2,
+  GitCommit,
+  CheckSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { useQuery, useMutation } from "convex/react";
 import { toast } from "sonner";
 import { api } from "@/../convex/_generated/api";
@@ -81,6 +93,49 @@ export const SecretsPageContent = ({
   const deleteCustomEnvMutation = useMutation(
     api.vault.deleteCustomEnvironment,
   );
+  const deleteBatchSecretsMutation = useMutation(api.vault.deleteBatchSecrets);
+
+  const [selectedSecretIds, setSelectedSecretIds] = useState<string[]>([]);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [bulkDeleteCommitMessage, setBulkDeleteCommitMessage] = useState("");
+
+  // Clear selections when environment changes
+  useEffect(() => {
+    setSelectedSecretIds([]);
+  }, [environment]);
+
+  const handleToggleSelectSecret = (id: string) => {
+    setSelectedSecretIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
+    );
+  };
+
+  const handleSelectAll = (secretsList: any[]) => {
+    if (selectedSecretIds.length === secretsList.length) {
+      setSelectedSecretIds([]);
+    } else {
+      setSelectedSecretIds(secretsList.map((s) => s._id));
+    }
+  };
+
+  const handleConfirmBulkDelete = async () => {
+    if (!bulkDeleteCommitMessage.trim()) {
+      toast.error("Please provide a commit message explaining this change");
+      return;
+    }
+    try {
+      await deleteBatchSecretsMutation({
+        ids: selectedSecretIds as any,
+        commitMessage: bulkDeleteCommitMessage.trim(),
+      });
+      toast.success(`Deleted ${selectedSecretIds.length} variables`);
+      setSelectedSecretIds([]);
+      setIsBulkDeleting(false);
+      setBulkDeleteCommitMessage("");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete selected variables");
+    }
+  };
 
   const DEFAULT_ENVS = ["development", "production", "testing"];
   const customEnvNames = customEnvs?.map((c) => c.name) || [];
@@ -380,6 +435,68 @@ export const SecretsPageContent = ({
                 </div>
               </div>
 
+              {/* Bulk Actions Floating Bar */}
+              {selectedSecretIds.length > 0 && (
+                <div className="flex items-center justify-between p-2.5 px-3 rounded-lg bg-destructive/10 border border-destructive/20 animate-in fade-in slide-in-from-top-1 duration-150">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="destructive" className="font-mono text-xs">
+                      {selectedSecretIds.length}
+                    </Badge>
+                    <span className="text-xs font-semibold text-foreground">
+                      variable{selectedSecretIds.length > 1 ? "s" : ""} selected
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedSecretIds([])}
+                      className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      Deselect All
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        setBulkDeleteCommitMessage("");
+                        setIsBulkDeleting(true);
+                      }}
+                      className="h-7 text-xs gap-1.5 font-semibold"
+                    >
+                      <Trash2 className="size-3.5" /> Delete Selected (
+                      {selectedSecretIds.length})
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Secrets List Header & Select All */}
+              {secrets && secrets.length > 0 && (
+                <div className="flex items-center justify-between px-2 pt-1 text-xs text-muted-foreground font-medium">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={
+                        secrets.length > 0 &&
+                        selectedSecretIds.length === secrets.length
+                      }
+                      onCheckedChange={() => handleSelectAll(secrets)}
+                      className="size-3.5"
+                    />
+                    <span
+                      className="cursor-pointer select-none"
+                      onClick={() => handleSelectAll(secrets)}
+                    >
+                      Select all ({secrets.length})
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-mono">
+                    {secrets.length} variable{secrets.length !== 1 ? "s" : ""}{" "}
+                    in {environment}
+                  </span>
+                </div>
+              )}
+
               {/* Secrets List */}
               {secrets === undefined ? (
                 <div className="flex h-40 items-center justify-center">
@@ -414,12 +531,83 @@ export const SecretsPageContent = ({
                       workspaceId={workspaceId}
                       boardId={normalizedBoardId}
                       environment={environment}
+                      isSelected={selectedSecretIds.includes(secret._id)}
+                      onToggleSelect={() =>
+                        handleToggleSelectSecret(secret._id)
+                      }
                     />
                   ))}
                 </div>
               )}
             </div>
           )}
+
+          {/* Bulk Delete Confirmation Dialog */}
+          <Dialog open={isBulkDeleting} onOpenChange={setIsBulkDeleting}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-destructive">
+                  <Trash2 className="size-5" /> Delete{" "}
+                  {selectedSecretIds.length} Variables
+                </DialogTitle>
+              </DialogHeader>
+
+              <div className="space-y-4 py-2">
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  You are about to permanently delete{" "}
+                  <strong className="text-foreground">
+                    {selectedSecretIds.length}
+                  </strong>{" "}
+                  variables from the{" "}
+                  <Badge
+                    variant="outline"
+                    className="font-mono capitalize text-[10px] px-1.5 py-0"
+                  >
+                    {environment}
+                  </Badge>{" "}
+                  environment. These variables will be preserved in the audit
+                  log history and can be restored at any time.
+                </p>
+
+                <div className="space-y-1.5 p-3 rounded-lg border bg-muted/20">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-semibold flex items-center gap-1.5 text-foreground">
+                      <GitCommit className="size-3.5 text-primary" /> Commit
+                      Message / Reason
+                      <span className="text-destructive">*</span>
+                    </Label>
+                    <span className="text-[10px] text-muted-foreground">
+                      Required
+                    </span>
+                  </div>
+                  <Input
+                    placeholder="e.g. chore: remove legacy payment credentials"
+                    value={bulkDeleteCommitMessage}
+                    onChange={(e) => setBulkDeleteCommitMessage(e.target.value)}
+                    className="h-8 text-xs bg-background"
+                    autoFocus
+                    required
+                  />
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsBulkDeleting(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleConfirmBulkDelete}
+                  disabled={!bulkDeleteCommitMessage.trim()}
+                >
+                  Confirm & Delete ({selectedSecretIds.length})
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           {/* Tab Content: Secret Files */}
           {activeTab === "files" && (

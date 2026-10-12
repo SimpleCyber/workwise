@@ -11,10 +11,12 @@ import {
   Lock,
   MessageSquare,
   History,
+  GitCommit,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import {
   decryptSecretString,
@@ -40,6 +42,8 @@ interface SecretItemRowProps {
   workspaceId: any;
   boardId?: any;
   environment: string;
+  isSelected?: boolean;
+  onToggleSelect?: () => void;
 }
 
 export const SecretItemRow = ({
@@ -48,6 +52,8 @@ export const SecretItemRow = ({
   workspaceId,
   boardId,
   environment,
+  isSelected,
+  onToggleSelect,
 }: SecretItemRowProps) => {
   const [decryptedKey, setDecryptedKey] = useState<string>("Loading...");
   const [decryptedValue, setDecryptedValue] = useState<string>("");
@@ -55,9 +61,12 @@ export const SecretItemRow = ({
   const [isRevealed, setIsRevealed] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [editValue, setEditValue] = useState("");
   const [editComment, setEditComment] = useState("");
+  const [editCommitMessage, setEditCommitMessage] = useState("");
+  const [deleteCommitMessage, setDeleteCommitMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   const deleteSecretMutation = useMutation(api.vault.deleteSecret);
@@ -118,18 +127,34 @@ export const SecretItemRow = ({
     }
   };
 
-  const handleDelete = async () => {
-    if (confirm(`Are you sure you want to delete secret ${decryptedKey}?`)) {
-      try {
-        await deleteSecretMutation({ id: secret._id });
-        toast.success(`Deleted ${decryptedKey}`);
-      } catch (err: any) {
-        toast.error(err.message || "Failed to delete secret");
-      }
+  const handleOpenDelete = () => {
+    setDeleteCommitMessage("");
+    setIsDeleting(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteCommitMessage.trim()) {
+      toast.error("Please enter a commit message / reason for deleting");
+      return;
+    }
+    try {
+      await deleteSecretMutation({
+        id: secret._id,
+        commitMessage: deleteCommitMessage.trim(),
+      });
+      setIsDeleting(false);
+      toast.success(`Deleted ${decryptedKey}`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete secret");
     }
   };
 
   const handleSaveEdit = async () => {
+    if (!editCommitMessage.trim()) {
+      toast.error("Please enter a commit message explaining this change");
+      return;
+    }
+
     try {
       setIsSaving(true);
       const encVal = await encryptSecretString(editValue, projectKey);
@@ -150,11 +175,13 @@ export const SecretItemRow = ({
         encryptedComment: encComment?.ciphertext,
         commentIv: encComment?.iv,
         keyVersion: secret.keyVersion,
+        commitMessage: editCommitMessage.trim(),
       });
 
       setDecryptedValue(editValue);
       setDecryptedComment(editComment);
       setIsEditing(false);
+      setEditCommitMessage("");
       toast.success(`Updated ${decryptedKey}`);
     } catch (err: any) {
       toast.error(err.message || "Failed to update secret");
@@ -165,8 +192,22 @@ export const SecretItemRow = ({
 
   return (
     <>
-      <div className="group flex items-center justify-between gap-4 rounded-lg border border-border/60 bg-card/60 p-3.5 transition-all hover:border-primary/30 hover:bg-card">
+      <div
+        className={`group flex items-center justify-between gap-4 rounded-lg border p-3.5 transition-all ${
+          isSelected
+            ? "border-primary/50 bg-primary/[0.04]"
+            : "border-border/60 bg-card/60 hover:border-primary/30 hover:bg-card"
+        }`}
+      >
         <div className="flex flex-1 items-center gap-3 min-w-0">
+          {onToggleSelect && (
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={onToggleSelect}
+              className="mr-0.5 shrink-0 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+            />
+          )}
+
           <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
             <Lock className="size-4" />
           </div>
@@ -237,7 +278,10 @@ export const SecretItemRow = ({
             variant="ghost"
             size="icon"
             className="size-8 text-muted-foreground hover:text-foreground"
-            onClick={() => setIsEditing(true)}
+            onClick={() => {
+              setEditCommitMessage("");
+              setIsEditing(true);
+            }}
             title="Edit Secret"
           >
             <Edit2 className="size-3.5" />
@@ -247,7 +291,7 @@ export const SecretItemRow = ({
             variant="ghost"
             size="icon"
             className="size-8 text-muted-foreground hover:text-destructive"
-            onClick={handleDelete}
+            onClick={handleOpenDelete}
             title="Delete Secret"
           >
             <Trash2 className="size-4" />
@@ -281,6 +325,26 @@ export const SecretItemRow = ({
                 onChange={(e) => setEditComment(e.target.value)}
               />
             </div>
+
+            {/* Commit Message (Required) */}
+            <div className="space-y-1.5 p-3 rounded-lg border bg-muted/20">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-semibold flex items-center gap-1.5 text-foreground">
+                  <GitCommit className="size-3.5 text-primary" /> Commit Message
+                  <span className="text-destructive">*</span>
+                </Label>
+                <span className="text-[10px] text-muted-foreground">
+                  Required for audit logs
+                </span>
+              </div>
+              <Input
+                placeholder="e.g. chore: rotate API secret"
+                value={editCommitMessage}
+                onChange={(e) => setEditCommitMessage(e.target.value)}
+                className="h-8 text-xs bg-background"
+                required
+              />
+            </div>
           </div>
 
           <DialogFooter>
@@ -291,8 +355,71 @@ export const SecretItemRow = ({
             >
               Cancel
             </Button>
-            <Button onClick={handleSaveEdit} disabled={isSaving}>
+            <Button
+              onClick={handleSaveEdit}
+              disabled={isSaving || !editCommitMessage.trim()}
+            >
               {isSaving ? "Encrypting & Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleting} onOpenChange={setIsDeleting}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="size-5" /> Delete Secret: {decryptedKey}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              This will remove{" "}
+              <strong className="text-foreground">{decryptedKey}</strong> from
+              the{" "}
+              <Badge
+                variant="outline"
+                className="font-mono capitalize text-[10px] px-1.5 py-0"
+              >
+                {environment}
+              </Badge>{" "}
+              environment. You can restore it later from Audit Logs.
+            </p>
+
+            <div className="space-y-1.5 p-3 rounded-lg border bg-muted/20">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-semibold flex items-center gap-1.5 text-foreground">
+                  <GitCommit className="size-3.5 text-primary" /> Commit Message
+                  / Reason
+                  <span className="text-destructive">*</span>
+                </Label>
+                <span className="text-[10px] text-muted-foreground">
+                  Required
+                </span>
+              </div>
+              <Input
+                placeholder="e.g. chore: remove deprecated legacy API key"
+                value={deleteCommitMessage}
+                onChange={(e) => setDeleteCommitMessage(e.target.value)}
+                className="h-8 text-xs bg-background"
+                autoFocus
+                required
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleting(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={!deleteCommitMessage.trim()}
+            >
+              Confirm & Delete
             </Button>
           </DialogFooter>
         </DialogContent>

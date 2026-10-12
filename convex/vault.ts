@@ -362,6 +362,15 @@ export const getSecrets = query({
   },
 });
 
+function generateCommitHash(): string {
+  const chars = "0123456789abcdef";
+  let hash = "";
+  for (let i = 0; i < 7; i++) {
+    hash += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return hash;
+}
+
 export const setSecret = mutation({
   args: {
     workspaceId: v.id("workspaces"),
@@ -375,6 +384,7 @@ export const setSecret = mutation({
     encryptedComment: v.optional(v.string()),
     commentIv: v.optional(v.string()),
     keyVersion: v.number(),
+    commitMessage: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { userId } = await requireWorkspaceMember(ctx, args.workspaceId);
@@ -395,6 +405,12 @@ export const setSecret = mutation({
     const user = await ctx.db.get(userId);
     const now = Date.now();
     const version = existing ? (existing.keyVersion || 1) + 1 : 1;
+    const commitHash = generateCommitHash();
+    const commitMessage =
+      args.commitMessage?.trim() ||
+      (existing
+        ? `Update variable in ${args.environment}`
+        : `Create variable in ${args.environment}`);
 
     if (existing) {
       await ctx.db.patch(existing._id, {
@@ -421,6 +437,8 @@ export const setSecret = mutation({
         valueIv: args.valueIv,
         environment: args.environment,
         action: "update",
+        commitMessage,
+        commitHash,
         userId,
         userName: user?.name,
         userEmail: user?.email,
@@ -462,6 +480,8 @@ export const setSecret = mutation({
       valueIv: args.valueIv,
       environment: args.environment,
       action: "create",
+      commitMessage,
+      commitHash,
       userId,
       userName: user?.name,
       userEmail: user?.email,
@@ -478,6 +498,7 @@ export const setBatchSecrets = mutation({
   args: {
     workspaceId: v.id("workspaces"),
     boardId: v.optional(v.union(v.id("projectBoards"), v.null())),
+    commitMessage: v.optional(v.string()),
     secrets: v.array(
       v.object({
         environment: v.string(),
@@ -498,6 +519,10 @@ export const setBatchSecrets = mutation({
     const boardId = args.boardId || undefined;
     const now = Date.now();
     const ids: any[] = [];
+    const commitHash = generateCommitHash();
+    const commitMessage =
+      args.commitMessage?.trim() ||
+      `feat: save ${args.secrets.length} variable${args.secrets.length > 1 ? "s" : ""} to vault`;
 
     for (const item of args.secrets) {
       const existing = await ctx.db
@@ -558,6 +583,8 @@ export const setBatchSecrets = mutation({
         valueIv: item.valueIv,
         environment: item.environment,
         action: existing ? "update" : "create",
+        commitMessage,
+        commitHash,
         userId,
         userName: user?.name,
         userEmail: user?.email,
@@ -576,6 +603,7 @@ export const setBatchSecrets = mutation({
 export const deleteSecret = mutation({
   args: {
     id: v.id("vaultSecrets"),
+    commitMessage: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const secret = await ctx.db.get(args.id);
@@ -583,6 +611,9 @@ export const deleteSecret = mutation({
 
     const { userId } = await requireWorkspaceMember(ctx, secret.workspaceId);
     const user = await ctx.db.get(userId);
+    const commitHash = generateCommitHash();
+    const commitMessage =
+      args.commitMessage?.trim() || `Delete variable in ${secret.environment}`;
 
     // Record audit log before deletion
     await ctx.db.insert("vaultSecretLogs", {
@@ -596,6 +627,8 @@ export const deleteSecret = mutation({
       valueIv: secret.valueIv,
       environment: secret.environment,
       action: "delete",
+      commitMessage,
+      commitHash,
       userId,
       userName: user?.name,
       userEmail: user?.email,
@@ -605,6 +638,56 @@ export const deleteSecret = mutation({
     });
 
     await ctx.db.delete(args.id);
+  },
+});
+
+export const deleteBatchSecrets = mutation({
+  args: {
+    ids: v.array(v.id("vaultSecrets")),
+    commitMessage: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    if (args.ids.length === 0) return { deletedCount: 0 };
+    const now = Date.now();
+    const commitHash = generateCommitHash();
+    const commitMessage =
+      args.commitMessage?.trim() ||
+      `Batch delete ${args.ids.length} variable${args.ids.length > 1 ? "s" : ""}`;
+    let deletedCount = 0;
+
+    for (const id of args.ids) {
+      const secret = await ctx.db.get(id);
+      if (!secret) continue;
+
+      const { userId } = await requireWorkspaceMember(ctx, secret.workspaceId);
+      const user = await ctx.db.get(userId);
+
+      await ctx.db.insert("vaultSecretLogs", {
+        workspaceId: secret.workspaceId,
+        boardId: secret.boardId,
+        secretId: secret._id,
+        secretKeyHash: secret.secretKeyHash,
+        encryptedKey: secret.encryptedKey,
+        keyIv: secret.keyIv,
+        encryptedValue: secret.encryptedValue,
+        valueIv: secret.valueIv,
+        environment: secret.environment,
+        action: "delete",
+        commitMessage,
+        commitHash,
+        userId,
+        userName: user?.name,
+        userEmail: user?.email,
+        userImage: user?.image,
+        timestamp: now,
+        version: (secret.keyVersion || 1) + 1,
+      });
+
+      await ctx.db.delete(id);
+      deletedCount++;
+    }
+
+    return { deletedCount, commitHash };
   },
 });
 
@@ -641,6 +724,7 @@ export const getSecretLogs = query({
 export const rollbackSecret = mutation({
   args: {
     logId: v.id("vaultSecretLogs"),
+    commitMessage: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const log = await ctx.db.get(args.logId);
@@ -649,6 +733,10 @@ export const rollbackSecret = mutation({
     const { userId } = await requireWorkspaceMember(ctx, log.workspaceId);
     const user = await ctx.db.get(userId);
     const now = Date.now();
+    const commitHash = generateCommitHash();
+    const commitMessage =
+      args.commitMessage?.trim() ||
+      `Revert variable to v${log.version} in ${log.environment}`;
 
     const existing = await ctx.db
       .query("vaultSecrets")
@@ -703,7 +791,9 @@ export const rollbackSecret = mutation({
       encryptedValue: log.encryptedValue,
       valueIv: log.valueIv,
       environment: log.environment,
-      action: "rollback",
+      action: "restore",
+      commitMessage,
+      commitHash,
       userId,
       userName: user?.name,
       userEmail: user?.email,
@@ -713,6 +803,98 @@ export const rollbackSecret = mutation({
     });
 
     return secretId;
+  },
+});
+
+export const rollbackBatchSecrets = mutation({
+  args: {
+    logIds: v.array(v.id("vaultSecretLogs")),
+    commitMessage: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    if (args.logIds.length === 0) return { restoredCount: 0 };
+    const now = Date.now();
+    const commitHash = generateCommitHash();
+    const commitMessage =
+      args.commitMessage?.trim() ||
+      `Batch restore ${args.logIds.length} variable${args.logIds.length > 1 ? "s" : ""}`;
+    let restoredCount = 0;
+
+    for (const logId of args.logIds) {
+      const log = await ctx.db.get(logId);
+      if (!log) continue;
+
+      const { userId } = await requireWorkspaceMember(ctx, log.workspaceId);
+      const user = await ctx.db.get(userId);
+
+      const existing = await ctx.db
+        .query("vaultSecrets")
+        .withIndex("by_key_hash", (q) =>
+          q
+            .eq("workspaceId", log.workspaceId)
+            .eq("boardId", log.boardId)
+            .eq("environment", log.environment)
+            .eq("secretKeyHash", log.secretKeyHash),
+        )
+        .unique();
+
+      let secretId;
+      const nextVersion = (existing?.keyVersion || log.version || 1) + 1;
+
+      if (existing) {
+        await ctx.db.patch(existing._id, {
+          encryptedKey: log.encryptedKey,
+          keyIv: log.keyIv,
+          encryptedValue: log.encryptedValue,
+          valueIv: log.valueIv,
+          keyVersion: nextVersion,
+          updatedById: userId,
+          updatedAt: now,
+        });
+        secretId = existing._id;
+      } else {
+        secretId = await ctx.db.insert("vaultSecrets", {
+          workspaceId: log.workspaceId,
+          boardId: log.boardId,
+          environment: log.environment,
+          secretKeyHash: log.secretKeyHash,
+          encryptedKey: log.encryptedKey,
+          keyIv: log.keyIv,
+          encryptedValue: log.encryptedValue,
+          valueIv: log.valueIv,
+          keyVersion: nextVersion,
+          createdById: userId,
+          updatedById: userId,
+          createdAt: now,
+          updatedAt: now,
+        });
+      }
+
+      await ctx.db.insert("vaultSecretLogs", {
+        workspaceId: log.workspaceId,
+        boardId: log.boardId,
+        secretId,
+        secretKeyHash: log.secretKeyHash,
+        encryptedKey: log.encryptedKey,
+        keyIv: log.keyIv,
+        encryptedValue: log.encryptedValue,
+        valueIv: log.valueIv,
+        environment: log.environment,
+        action: "restore",
+        commitMessage,
+        commitHash,
+        userId,
+        userName: user?.name,
+        userEmail: user?.email,
+        userImage: user?.image,
+        timestamp: now,
+        version: nextVersion,
+      });
+
+      restoredCount++;
+    }
+
+    return { restoredCount, commitHash };
   },
 });
 
