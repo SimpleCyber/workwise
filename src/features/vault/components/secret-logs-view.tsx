@@ -20,6 +20,8 @@ import {
   PlusCircle,
   FileEdit,
   CheckSquare,
+  KeyRound,
+  FolderGit2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -168,9 +170,32 @@ export const SecretLogsView = ({
     setTimeout(() => setCopiedHash(null), 2000);
   };
 
-  // Toggle log diff expand
-  const toggleExpand = (id: string) => {
-    setExpandedLogIds((prev) => ({ ...prev, [id]: !prev[id] }));
+  // Commit Expansion State (collapsible/expandable on click)
+  const [expandedCommitIds, setExpandedCommitIds] = useState<
+    Record<string, boolean>
+  >({});
+
+  const toggleCommitExpand = (commitId: string) => {
+    setExpandedCommitIds((prev) => ({
+      ...prev,
+      [commitId]: !(prev[commitId] ?? false),
+    }));
+  };
+
+  const handleExpandAll = () => {
+    const all: Record<string, boolean> = {};
+    for (const c of groupedCommits) {
+      all[c.commitId] = true;
+    }
+    setExpandedCommitIds(all);
+  };
+
+  const handleCollapseAll = () => {
+    const none: Record<string, boolean> = {};
+    for (const c of groupedCommits) {
+      none[c.commitId] = false;
+    }
+    setExpandedCommitIds(none);
   };
 
   // Multi-selection handlers
@@ -295,37 +320,90 @@ export const SecretLogsView = ({
     return Array.from(new Set(logs.map((l) => l.environment)));
   }, [logs]);
 
-  // Group logs by Date (like GitHub: "Commits on Oct 12, 2026")
-  interface DateGroup {
-    dateLabel: string;
+  // Group filtered logs into Commits
+  interface CommitGroup {
+    commitId: string;
+    commitHash: string;
+    commitMessage: string;
+    userName?: string;
+    userEmail?: string;
+    userImage?: string;
+    timestamp: number;
+    environment: string;
+    action: string;
     logs: any[];
   }
 
-  const dateGroupedLogs = useMemo(() => {
-    const map = new Map<string, any[]>();
+  const groupedCommits = useMemo(() => {
+    const map = new Map<string, CommitGroup>();
+
     for (const log of filteredLogs) {
-      const d = new Date(log.timestamp);
+      // Group together if they share a commitHash or occurred in the same action batch (same user & message within 5s window)
+      const commitKey =
+        log.commitHash ||
+        (log.commitMessage
+          ? `${log.userId || "user"}_${log.commitMessage}_${Math.floor(log.timestamp / 5000)}`
+          : log._id);
+
+      if (!map.has(commitKey)) {
+        map.set(commitKey, {
+          commitId: commitKey,
+          commitHash: log.commitHash || log._id.slice(-7),
+          commitMessage:
+            log.commitMessage ||
+            (log.action === "create"
+              ? `Add variable to ${log.environment}`
+              : log.action === "delete"
+                ? `Remove variable from ${log.environment}`
+                : log.action === "update"
+                  ? `Update variable in ${log.environment}`
+                  : `Restore variable to v${log.version}`),
+          userName: log.userName,
+          userEmail: log.userEmail,
+          userImage: log.userImage,
+          timestamp: log.timestamp,
+          environment: log.environment,
+          action: log.action,
+          logs: [],
+        });
+      }
+      map.get(commitKey)!.logs.push(log);
+    }
+
+    return Array.from(map.values());
+  }, [filteredLogs]);
+
+  // Group commits by date
+  interface DateCommitGroup {
+    dateLabel: string;
+    commits: CommitGroup[];
+  }
+
+  const dateGroupedCommits = useMemo(() => {
+    const map = new Map<string, CommitGroup[]>();
+    for (const commit of groupedCommits) {
+      const d = new Date(commit.timestamp);
       let dateKey: string;
       if (isToday(d)) {
-        dateKey = "Commits today";
+        dateKey = "Today";
       } else if (isYesterday(d)) {
-        dateKey = "Commits yesterday";
+        dateKey = "Yesterday";
       } else {
-        dateKey = `Commits on ${format(d, "MMM d, yyyy")}`;
+        dateKey = format(d, "MMMM d, yyyy");
       }
 
       if (!map.has(dateKey)) {
         map.set(dateKey, []);
       }
-      map.get(dateKey)!.push(log);
+      map.get(dateKey)!.push(commit);
     }
 
-    const groups: DateGroup[] = [];
-    map.forEach((groupLogs, dateLabel) => {
-      groups.push({ dateLabel, logs: groupLogs });
+    const groups: DateCommitGroup[] = [];
+    map.forEach((commits, dateLabel) => {
+      groups.push({ dateLabel, commits });
     });
     return groups;
-  }, [filteredLogs]);
+  }, [groupedCommits]);
 
   // Restorable logs currently filtered
   const restorableFilteredLogs = useMemo(() => {
@@ -345,63 +423,70 @@ export const SecretLogsView = ({
     }
   };
 
-  const getActionBadge = (action: string) => {
+  const getStatusLetterBadge = (action: string) => {
     switch (action) {
       case "create":
         return (
-          <Badge
-            variant="outline"
-            className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[10px] py-0 px-1.5 font-medium"
+          <span
+            className="font-mono text-[11px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 shrink-0"
+            title="Added"
           >
-            + created
-          </Badge>
+            A
+          </span>
         );
       case "update":
         return (
-          <Badge
-            variant="outline"
-            className="bg-blue-500/10 text-blue-500 border-blue-500/20 text-[10px] py-0 px-1.5 font-medium"
+          <span
+            className="font-mono text-[11px] font-bold px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-500 border border-blue-500/30 shrink-0"
+            title="Modified"
           >
-            ~ updated
-          </Badge>
+            M
+          </span>
         );
       case "delete":
         return (
-          <Badge
-            variant="outline"
-            className="bg-rose-500/10 text-rose-500 border-rose-500/20 text-[10px] py-0 px-1.5 font-medium"
+          <span
+            className="font-mono text-[11px] font-bold px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-500 border border-rose-500/30 shrink-0"
+            title="Deleted"
           >
-            - deleted
-          </Badge>
+            D
+          </span>
         );
       case "rollback":
       case "restore":
         return (
-          <Badge
-            variant="outline"
-            className="bg-purple-500/10 text-purple-500 border-purple-500/20 text-[10px] py-0 px-1.5 font-medium"
+          <span
+            className="font-mono text-[11px] font-bold px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-500 border border-purple-500/30 shrink-0"
+            title="Restored"
           >
-            ↺ restored
-          </Badge>
+            R
+          </span>
         );
       default:
-        return <Badge variant="outline">{action}</Badge>;
+        return (
+          <span className="font-mono text-[11px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground border shrink-0">
+            M
+          </span>
+        );
     }
   };
 
-  const getActionNodeColor = (action: string) => {
+  const getNodeColor = (action: string, isExpanded: boolean) => {
+    if (isExpanded) {
+      return "bg-blue-500 border-blue-400 ring-2 ring-blue-500/40";
+    }
     switch (action) {
       case "create":
-        return "bg-emerald-500/15 text-emerald-500 border-emerald-500/30";
+        return "bg-emerald-500 border-emerald-400 ring-2 ring-emerald-500/30";
       case "update":
-        return "bg-blue-500/15 text-blue-500 border-blue-500/30";
+        return "bg-blue-500 border-blue-400 ring-2 ring-blue-500/30";
       case "delete":
-        return "bg-rose-500/15 text-rose-500 border-rose-500/30";
+        return "bg-rose-500 border-rose-400 ring-2 ring-rose-500/30";
       case "rollback":
       case "restore":
-        return "bg-purple-500/15 text-purple-500 border-purple-500/30";
+        return "bg-purple-500 border-purple-400 ring-2 ring-purple-500/30";
       default:
-        return "bg-muted text-muted-foreground border-border";
+        return "bg-primary border-primary ring-2 ring-primary/30";
     }
   };
 
@@ -410,7 +495,7 @@ export const SecretLogsView = ({
       <div className="flex flex-col items-center justify-center p-12 text-center">
         <Loader className="size-6 animate-spin text-primary mb-2" />
         <p className="text-xs text-muted-foreground font-mono">
-          Loading Git-style commit log tree...
+          Loading activity logs...
         </p>
       </div>
     );
@@ -418,9 +503,9 @@ export const SecretLogsView = ({
 
   return (
     <div className="space-y-4">
-      {/* GitHub-style Filters Bar */}
+      {/* Activity Filters Bar */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 p-3 rounded-xl border bg-card/60">
-        {/* Left: Search input */}
+        {/* Search input */}
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
           <Input
@@ -431,7 +516,7 @@ export const SecretLogsView = ({
           />
         </div>
 
-        {/* Right: Environment & Action Filters */}
+        {/* Action Filters and Controls */}
         <div className="flex items-center gap-2 flex-wrap">
           {/* Action Filter Pills */}
           <div className="flex rounded-md border bg-muted/30 p-0.5 text-xs">
@@ -443,7 +528,27 @@ export const SecretLogsView = ({
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              All ({logs.length})
+              All ({groupedCommits.length})
+            </button>
+            <button
+              onClick={() => setActionFilter("updated")}
+              className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
+                actionFilter === "updated"
+                  ? "bg-background text-blue-500 shadow-xs font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Modified
+            </button>
+            <button
+              onClick={() => setActionFilter("created")}
+              className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
+                actionFilter === "created"
+                  ? "bg-background text-emerald-500 shadow-xs font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Added
             </button>
             <button
               onClick={() => setActionFilter("deleted")}
@@ -455,36 +560,16 @@ export const SecretLogsView = ({
             >
               Deleted
             </button>
-            <button
-              onClick={() => setActionFilter("updated")}
-              className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
-                actionFilter === "updated"
-                  ? "bg-background text-blue-500 shadow-xs font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Updated
-            </button>
-            <button
-              onClick={() => setActionFilter("created")}
-              className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
-                actionFilter === "created"
-                  ? "bg-background text-emerald-500 shadow-xs font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Created
-            </button>
           </div>
 
-          {/* Environment dropdown/select */}
+          {/* Environment dropdown */}
           {availableEnvironments.length > 1 && (
             <select
               value={envFilter}
               onChange={(e) => setEnvFilter(e.target.value)}
               className="h-8 text-xs font-mono rounded-md border bg-background px-2.5 text-muted-foreground focus:outline-hidden"
             >
-              <option value="all">All Branches / Envs</option>
+              <option value="all">All Environments</option>
               {availableEnvironments.map((env) => (
                 <option key={env} value={env}>
                   env: {env}
@@ -492,10 +577,33 @@ export const SecretLogsView = ({
               ))}
             </select>
           )}
+
+          {/* Expand / Collapse All */}
+          <div className="flex items-center border rounded-md bg-muted/20">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleExpandAll}
+              className="h-8 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+              title="Expand all commits"
+            >
+              Expand All
+            </Button>
+            <span className="text-border">|</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCollapseAll}
+              className="h-8 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+              title="Collapse all commits"
+            >
+              Collapse All
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Bulk Restore Floating / Top Bar */}
+      {/* Bulk Restore Floating Bar */}
       {selectedLogIds.length > 0 && (
         <div className="flex items-center justify-between p-3 rounded-xl bg-purple-500/10 border border-purple-500/30 animate-in fade-in slide-in-from-top-1 duration-150 shadow-sm">
           <div className="flex items-center gap-2.5">
@@ -508,7 +616,7 @@ export const SecretLogsView = ({
                 restore
               </span>
               <span className="text-[11px] text-muted-foreground">
-                Will be revived and decrypted to active environment keys
+                Will be revived and decrypted into active environment keys
               </span>
             </div>
           </div>
@@ -533,7 +641,7 @@ export const SecretLogsView = ({
         </div>
       )}
 
-      {/* Select All Restorable Header (if deleted or restorable filter is active) */}
+      {/* Select All Restorable Header */}
       {restorableFilteredLogs.length > 0 && (
         <div className="flex items-center justify-between px-3 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
@@ -554,245 +662,342 @@ export const SecretLogsView = ({
           </div>
 
           <span className="text-[11px] font-mono">
-            {filteredLogs.length} commit{filteredLogs.length !== 1 ? "s" : ""}{" "}
-            recorded
+            {groupedCommits.length} commit
+            {groupedCommits.length !== 1 ? "s" : ""} recorded
           </span>
         </div>
       )}
 
-      {/* GitHub Commit Timeline */}
-      {dateGroupedLogs.length === 0 ? (
+      {/* Activity Commit Tree Timeline */}
+      {dateGroupedCommits.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/80 p-12 text-center bg-muted/5">
-          <GitCommit className="size-8 text-muted-foreground/40 mb-2" />
+          <FolderGit2 className="size-8 text-muted-foreground/40 mb-2" />
           <p className="text-sm font-semibold text-foreground">
-            No matching commits found
+            No activity records found
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Try adjusting your search query or filter tags.
+            Try adjusting your search query or filters.
           </p>
         </div>
       ) : (
         <div className="space-y-6">
-          {dateGroupedLogs.map((group) => (
-            <div key={group.dateLabel} className="space-y-2">
-              {/* GitHub Date Header */}
+          {dateGroupedCommits.map((group) => (
+            <div key={group.dateLabel} className="space-y-2.5">
+              {/* Date Header */}
               <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground px-2">
-                <GitCommit className="size-3.5 text-muted-foreground/70" />
+                <Calendar className="size-3.5 text-muted-foreground/70" />
                 <span>{group.dateLabel}</span>
               </div>
 
-              {/* Commit Items in this Date */}
-              <div className="rounded-xl border border-border/80 bg-card/60 divide-y divide-border/60 overflow-hidden shadow-xs">
-                {group.logs.map((log) => {
-                  const keyName = decryptedKeys[log._id] || "Decrypting...";
-                  const shortHash = log.commitHash || log._id.slice(-7);
-                  const isRevealed = !!revealedIds[log._id];
-                  const revealedVal = revealedIds[log._id] || "";
-                  const isExpanded = !!expandedLogIds[log._id];
-                  const isRestorable =
-                    log.action === "delete" ||
-                    log.action === "update" ||
-                    log.action === "rollback";
-                  const isSelected = selectedLogIds.includes(log._id);
+              {/* Commit Tree List with rounded square avatars & connecting lines */}
+              <div className="space-y-1">
+                {group.commits.map((commit, commitIdx) => {
+                  const isExpanded =
+                    expandedCommitIds[commit.commitId] ??
+                    (commitIdx === 0 && dateGroupedCommits.length === 1);
+                  const shortHash = commit.commitHash;
 
-                  // Default commit message if none entered in legacy records
-                  const displayCommitMessage =
-                    log.commitMessage ||
-                    (log.action === "create"
-                      ? `Add ${keyName} to ${log.environment}`
-                      : log.action === "delete"
-                        ? `Remove ${keyName} from ${log.environment}`
-                        : log.action === "update"
-                          ? `Update ${keyName} in ${log.environment}`
-                          : `Restore ${keyName} to v${log.version}`);
+                  // Format commit message with # prefix matching user reference
+                  const rawMsg = commit.commitMessage.trim();
+                  const displayMessage = rawMsg.startsWith("#")
+                    ? rawMsg
+                    : `# ${rawMsg}`;
+
+                  // Action presence & counts for header badges
+                  const hasCreate = commit.logs.some(
+                    (l) => l.action === "create",
+                  );
+                  const hasUpdate = commit.logs.some(
+                    (l) => l.action === "update",
+                  );
+                  const hasDelete = commit.logs.some(
+                    (l) => l.action === "delete",
+                  );
+                  const hasRestore = commit.logs.some(
+                    (l) => l.action === "rollback" || l.action === "restore",
+                  );
+                  const createCount = commit.logs.filter(
+                    (l) => l.action === "create",
+                  ).length;
+                  const updateCount = commit.logs.filter(
+                    (l) => l.action === "update",
+                  ).length;
+                  const deleteCount = commit.logs.filter(
+                    (l) => l.action === "delete",
+                  ).length;
+                  const restoreCount = commit.logs.filter(
+                    (l) => l.action === "rollback" || l.action === "restore",
+                  ).length;
 
                   return (
                     <div
-                      key={log._id}
-                      className={`p-3.5 transition-colors hover:bg-muted/20 ${
-                        isSelected ? "bg-purple-500/[0.04]" : ""
-                      }`}
+                      key={commit.commitId}
+                      className="relative flex items-stretch gap-3 group"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        {/* Left: Checkbox (for restore) + Avatar + Commit Info */}
-                        <div className="flex items-start gap-3 min-w-0 flex-1">
-                          {isRestorable && (
-                            <Checkbox
-                              checked={isSelected}
-                              onCheckedChange={() =>
-                                handleToggleSelectLog(log._id)
-                              }
-                              className="mt-1 size-3.5 shrink-0 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
-                              title="Select to restore"
-                            />
-                          )}
+                      {/* Left: User profile in rounded square + vertical connecting line | */}
+                      <div className="flex flex-col items-center shrink-0">
+                        <Avatar className="size-8 rounded-md border shadow-xs bg-background shrink-0">
+                          <AvatarImage
+                            src={commit.userImage}
+                            alt={commit.userName || "User"}
+                            className="rounded-md object-cover"
+                          />
+                          <AvatarFallback className="rounded-md text-[11px] font-semibold bg-primary/10 text-primary">
+                            {commit.userName
+                              ? commit.userName.charAt(0).toUpperCase()
+                              : "U"}
+                          </AvatarFallback>
+                        </Avatar>
 
-                          <Avatar className="size-7 border shrink-0 mt-0.5">
-                            <AvatarImage src={log.userImage} />
-                            <AvatarFallback className="text-[10px] font-semibold bg-primary/10 text-primary">
-                              {log.userName
-                                ? log.userName.charAt(0).toUpperCase()
-                                : "U"}
-                            </AvatarFallback>
-                          </Avatar>
+                        {/* Vertical line connecting to next commit | */}
+                        {commitIdx < group.commits.length - 1 && (
+                          <div className="w-[2px] flex-1 bg-border/80 my-1.5" />
+                        )}
+                      </div>
 
-                          <div className="min-w-0 flex-1 space-y-1">
-                            {/* Commit Message Heading */}
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span
-                                className="font-semibold text-xs text-foreground hover:underline cursor-pointer tracking-tight"
-                                onClick={() => toggleExpand(log._id)}
-                              >
-                                {displayCommitMessage}
+                      {/* Right: Commit card container */}
+                      <div
+                        className={`flex-1 min-w-0 ${
+                          commitIdx < group.commits.length - 1 ? "pb-3.5" : ""
+                        }`}
+                      >
+                        <div
+                          className={`rounded-lg border transition-all overflow-hidden ${
+                            isExpanded
+                              ? "border-primary/40 bg-accent/30 shadow-xs"
+                              : "border-border/70 bg-card/60 hover:border-border hover:bg-muted/20"
+                          }`}
+                        >
+                          {/* Commit Header Row (Click to toggle expansion) */}
+                          <div
+                            onClick={() => toggleCommitExpand(commit.commitId)}
+                            className="p-3 flex items-center justify-between gap-3 cursor-pointer select-none"
+                          >
+                            {/* Left: Expand icon + # Message + Author */}
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              {isExpanded ? (
+                                <ChevronDown className="size-4 shrink-0 text-primary transition-transform" />
+                              ) : (
+                                <ChevronRight className="size-4 shrink-0 text-muted-foreground group-hover:text-foreground transition-transform" />
+                              )}
+
+                              <span className="font-semibold text-xs font-mono text-foreground truncate tracking-tight">
+                                {displayMessage}
                               </span>
-                              {getActionBadge(log.action)}
+
+                              {commit.userName && (
+                                <span className="text-[11px] text-muted-foreground shrink-0 font-normal hidden sm:inline">
+                                  {commit.userName}
+                                </span>
+                              )}
                             </div>
 
-                            {/* Author & Timestamp & Target Environment */}
-                            <div className="flex items-center gap-2 text-[11px] text-muted-foreground flex-wrap">
-                              <span className="font-medium text-foreground">
-                                {log.userName || "Team Member"}
+                            {/* Right: Environment, Timestamp, SHA, Keys Count & D/M/A Badges */}
+                            <div
+                              className="flex items-center gap-2 shrink-0"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {/* Environment */}
+                              <span className="font-mono text-[10px] bg-muted/60 px-1.5 py-0.5 rounded border border-border/40 text-muted-foreground flex items-center gap-1 hidden md:flex">
+                                <GitBranch className="size-2.5" />
+                                {commit.environment}
                               </span>
-                              <span>
-                                committed{" "}
-                                {formatDistanceToNow(new Date(log.timestamp), {
-                                  addSuffix: true,
-                                })}
+
+                              {/* Relative Timestamp */}
+                              <span className="text-[11px] text-muted-foreground hidden sm:inline">
+                                {formatDistanceToNow(
+                                  new Date(commit.timestamp),
+                                  { addSuffix: true },
+                                )}
                               </span>
-                              <span>•</span>
-                              <span className="font-mono text-[10px] bg-muted/60 px-1.5 py-0.2 rounded border border-border/40 text-muted-foreground flex items-center gap-1">
-                                <GitBranch className="size-2.5" />{" "}
-                                {log.environment}
-                              </span>
-                              <span className="text-[10px] font-mono text-muted-foreground">
-                                v{log.version}
-                              </span>
+
+                              {/* Commit Hash badge */}
+                              <button
+                                type="button"
+                                onClick={() => handleCopyHash(shortHash)}
+                                className="font-mono text-[11px] px-2 py-0.5 rounded border bg-background/80 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                                title="Copy SHA"
+                              >
+                                <GitCommit className="size-3 text-primary/70" />
+                                <span>{shortHash}</span>
+                                {copiedHash === shortHash ? (
+                                  <Check className="size-2.5 text-emerald-500" />
+                                ) : (
+                                  <Copy className="size-2.5 opacity-50" />
+                                )}
+                              </button>
+
+                              {/* Changes Count & Side-by-side D, M, A, R Badges directly on header */}
+                              <div className="flex items-center gap-1.5">
+                                <Badge
+                                  variant="secondary"
+                                  className="font-mono text-[10px] py-0 px-1.5 font-normal"
+                                >
+                                  {commit.logs.length}{" "}
+                                  {commit.logs.length === 1 ? "key" : "keys"}
+                                </Badge>
+
+                                {/* Direct D, M, A, R status badges right here on the header */}
+                                <div className="flex items-center gap-1">
+                                  {hasCreate && (
+                                    <span
+                                      className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 shrink-0"
+                                      title={`${createCount} Added`}
+                                    >
+                                      A
+                                      {createCount > 1 ? ` ${createCount}` : ""}
+                                    </span>
+                                  )}
+                                  {hasUpdate && (
+                                    <span
+                                      className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-500 border border-blue-500/30 shrink-0"
+                                      title={`${updateCount} Modified`}
+                                    >
+                                      M
+                                      {updateCount > 1 ? ` ${updateCount}` : ""}
+                                    </span>
+                                  )}
+                                  {hasDelete && (
+                                    <span
+                                      className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-500 border border-rose-500/30 shrink-0"
+                                      title={`${deleteCount} Deleted`}
+                                    >
+                                      D
+                                      {deleteCount > 1 ? ` ${deleteCount}` : ""}
+                                    </span>
+                                  )}
+                                  {hasRestore && (
+                                    <span
+                                      className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-500 border border-purple-500/30 shrink-0"
+                                      title={`${restoreCount} Restored`}
+                                    >
+                                      R
+                                      {restoreCount > 1
+                                        ? ` ${restoreCount}`
+                                        : ""}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           </div>
-                        </div>
 
-                        {/* Right: Commit Hash SHA badge + Actions */}
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          {/* GitHub Commit Hash Badge */}
-                          <button
-                            type="button"
-                            onClick={() => handleCopyHash(shortHash)}
-                            className="font-mono text-[11px] px-2 py-0.5 rounded-md border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-                            title="Copy full SHA"
-                          >
-                            <GitCommit className="size-3 text-primary/70" />
-                            <span>{shortHash}</span>
-                            {copiedHash === shortHash ? (
-                              <Check className="size-2.5 text-emerald-500" />
-                            ) : (
-                              <Copy className="size-2.5 opacity-50" />
-                            )}
-                          </button>
+                          {/* Expanded Changed Keys List (Below Header) */}
+                          {isExpanded && (
+                            <div className="border-t border-border/50 bg-background/50 divide-y divide-border/40 animate-in fade-in duration-150">
+                              {commit.logs.map((log) => {
+                                const keyName =
+                                  decryptedKeys[log._id] || "Decrypting...";
+                                const isRevealed = !!revealedIds[log._id];
+                                const revealedVal = revealedIds[log._id] || "";
+                                const isRestorable =
+                                  log.action === "delete" ||
+                                  log.action === "update" ||
+                                  log.action === "rollback";
+                                const isSelected = selectedLogIds.includes(
+                                  log._id,
+                                );
 
-                          {/* Expand Diff / Variable button */}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 px-2 text-[11px] gap-1 text-muted-foreground hover:text-foreground"
-                            onClick={() => toggleExpand(log._id)}
-                          >
-                            {isExpanded ? (
-                              <>
-                                Hide Diff <ChevronDown className="size-3" />
-                              </>
-                            ) : (
-                              <>
-                                Diff <ChevronRight className="size-3" />
-                              </>
-                            )}
-                          </Button>
+                                return (
+                                  <div
+                                    key={log._id}
+                                    className={`p-2.5 pl-8 flex items-center justify-between gap-3 hover:bg-muted/30 transition-colors ${
+                                      isSelected ? "bg-purple-500/[0.06]" : ""
+                                    }`}
+                                  >
+                                    {/* Left: Checkbox (for restore) + Key icon + Key Name + Value Preview */}
+                                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                      {isRestorable && (
+                                        <Checkbox
+                                          checked={isSelected}
+                                          onCheckedChange={() =>
+                                            handleToggleSelectLog(log._id)
+                                          }
+                                          className="size-3.5 shrink-0 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
+                                          title="Select to restore"
+                                        />
+                                      )}
 
-                          {/* Restore button */}
-                          {isRestorable && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-7 px-2 text-[11px] gap-1 text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-950/30 border-purple-500/30 font-medium"
-                              onClick={() => handleOpenSingleRestore(log)}
-                            >
-                              <RotateCcw className="size-3" /> Restore
-                            </Button>
+                                      <KeyRound className="size-3.5 text-muted-foreground shrink-0" />
+
+                                      <span className="font-mono text-xs font-semibold text-foreground truncate">
+                                        {keyName}
+                                      </span>
+
+                                      {/* Value snapshot peek */}
+                                      <div className="flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground ml-1">
+                                        <span className="text-muted-foreground/60 select-none">
+                                          =
+                                        </span>
+                                        <span className="text-muted-foreground select-all truncate max-w-[120px] sm:max-w-[200px]">
+                                          {isRevealed
+                                            ? revealedVal || "<empty>"
+                                            : "••••••••••••"}
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {/* Right: Reveal Value, Copy, Restore, Status Badge M/A/D/R */}
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                      {/* Reveal toggle */}
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 px-1.5 text-[10px] gap-1 text-muted-foreground hover:text-foreground"
+                                        onClick={() => handleToggleReveal(log)}
+                                        title={
+                                          isRevealed
+                                            ? "Hide value"
+                                            : "Reveal value"
+                                        }
+                                      >
+                                        {isRevealed ? (
+                                          <EyeOff className="size-3" />
+                                        ) : (
+                                          <Eye className="size-3" />
+                                        )}
+                                      </Button>
+
+                                      {/* Copy value */}
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 px-1.5 text-[10px] gap-1 text-muted-foreground hover:text-foreground"
+                                        onClick={() => handleCopyOldValue(log)}
+                                        title="Copy value"
+                                      >
+                                        {copiedId === log._id ? (
+                                          <Check className="size-3 text-emerald-500" />
+                                        ) : (
+                                          <Copy className="size-3" />
+                                        )}
+                                      </Button>
+
+                                      {/* Single Restore button */}
+                                      {isRestorable && (
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="h-6 px-2 text-[10px] gap-1 text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-950/30 border-purple-500/30 font-medium"
+                                          onClick={() =>
+                                            handleOpenSingleRestore(log)
+                                          }
+                                        >
+                                          <RotateCcw className="size-2.5" />{" "}
+                                          Restore
+                                        </Button>
+                                      )}
+
+                                      {/* Status Letter Badge M / A / D / R */}
+                                      {getStatusLetterBadge(log.action)}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           )}
                         </div>
                       </div>
-
-                      {/* Expandable Git Diff / Value Box */}
-                      {isExpanded && (
-                        <div className="mt-3 pt-3 border-t border-border/50 pl-10 space-y-2 animate-in fade-in duration-150">
-                          <div className="rounded-lg border bg-black/30 p-2.5 font-mono text-xs space-y-2">
-                            {/* Changed Variable Header (Diff line) */}
-                            <div className="flex items-center justify-between gap-2 flex-wrap pb-1.5 border-b border-white/5">
-                              <div className="flex items-center gap-2">
-                                <span
-                                  className={`font-bold px-1.5 py-0.5 rounded text-[11px] ${
-                                    log.action === "delete"
-                                      ? "bg-rose-500/20 text-rose-400"
-                                      : log.action === "create"
-                                        ? "bg-emerald-500/20 text-emerald-400"
-                                        : "bg-blue-500/20 text-blue-400"
-                                  }`}
-                                >
-                                  {log.action === "delete"
-                                    ? `- ${keyName}`
-                                    : log.action === "create"
-                                      ? `+ ${keyName}`
-                                      : `~ ${keyName}`}
-                                </span>
-                                <span className="text-[10px] text-muted-foreground">
-                                  [{log.environment}]
-                                </span>
-                              </div>
-
-                              <div className="flex items-center gap-1.5">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 px-2 text-[10px] gap-1 text-muted-foreground hover:text-foreground"
-                                  onClick={() => handleToggleReveal(log)}
-                                >
-                                  {isRevealed ? (
-                                    <EyeOff className="size-3" />
-                                  ) : (
-                                    <Eye className="size-3" />
-                                  )}
-                                  {isRevealed ? "Hide" : "Reveal Value"}
-                                </Button>
-
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 px-2 text-[10px] gap-1 text-muted-foreground hover:text-foreground"
-                                  onClick={() => handleCopyOldValue(log)}
-                                >
-                                  {copiedId === log._id ? (
-                                    <Check className="size-3 text-emerald-500" />
-                                  ) : (
-                                    <Copy className="size-3" />
-                                  )}
-                                  Copy
-                                </Button>
-                              </div>
-                            </div>
-
-                            {/* Value snapshot */}
-                            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                              <span className="text-muted-foreground/60 select-none">
-                                value =
-                              </span>
-                              <span className="text-foreground select-all truncate">
-                                {isRevealed
-                                  ? revealedVal || "<empty>"
-                                  : "••••••••••••••••••••••••••••••••"}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   );
                 })}
