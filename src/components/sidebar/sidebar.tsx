@@ -9,6 +9,7 @@ import {
   Network,
   PanelLeftOpen,
   PanelLeftClose,
+  KeyRound,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { UserButton } from "@/features/auth/components/user-button";
@@ -51,6 +52,11 @@ export const Sidebar = ({
       label: "Project",
       path: `/projects/${workspaceId}`,
       flag: "projects",
+    },
+    {
+      icon: KeyRound,
+      label: "Project Keys",
+      path: `/secrets/${workspaceId}`,
     },
     {
       icon: MessagesSquare,
@@ -149,16 +155,28 @@ export const Sidebar = ({
         )}
 
         <div className="flex flex-1 flex-col items-center justify-center gap-y-2">
-          {visibleNavigationItems.map((item) => (
-            <div key={item.path}>
-              <SidebarButton
-                icon={item.icon}
-                label={item.label}
-                isActive={pathname.includes(item.path)}
-                onClick={() => handleNavigation(item.path, item.label)}
-              />
-            </div>
-          ))}
+          {visibleNavigationItems.map((item) => {
+            const isProject = item.path === `/projects/${workspaceId}`;
+            const isSecrets = item.path === `/secrets/${workspaceId}`;
+            const isActive = isProject
+              ? pathname.includes(`/projects/${workspaceId}`) &&
+                !pathname.includes(`/projects/${workspaceId}/secrets`)
+              : isSecrets
+                ? pathname.includes(`/secrets/${workspaceId}`) ||
+                  pathname.includes(`/projects/${workspaceId}/secrets`)
+                : pathname.includes(item.path);
+
+            return (
+              <div key={item.path}>
+                <SidebarButton
+                  icon={item.icon}
+                  label={item.label}
+                  isActive={isActive}
+                  onClick={() => handleNavigation(item.path, item.label)}
+                />
+              </div>
+            );
+          })}
         </div>
 
         <div className="mt-auto flex flex-col items-center justify-center gap-y-1">

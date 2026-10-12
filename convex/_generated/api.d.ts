@@ -39,6 +39,7 @@ import type * as todos from "../todos.js";
 import type * as tree from "../tree.js";
 import type * as upload from "../upload.js";
 import type * as users from "../users.js";
+import type * as vault from "../vault.js";
 import type * as workspaces from "../workspaces.js";
 
 /**
@@ -76,6 +77,7 @@ declare const fullApi: ApiFromModules<{
   tree: typeof tree;
   upload: typeof upload;
   users: typeof users;
+  vault: typeof vault;
   workspaces: typeof workspaces;
 }>;
 export declare const api: FilterApi<

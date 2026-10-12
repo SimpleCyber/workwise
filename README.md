@@ -160,9 +160,45 @@ Workwise is designed to be intuitive. Create a workspace, invite your team, and 
   <img src="https://github.com/user-attachments/assets/1aef2e47-14bf-438d-9963-eef0c5989ac1" alt="AI Planner" width="100%">
 </p>
 
+**Zero-Knowledge Secrets & Environment Vault (Infisical Architecture)**
+Workwise features a **Zero-Knowledge End-to-End Encrypted (E2EE) Secrets Engine** inspired by [Infisical](https://infisical.com/). Manage mission-critical API keys, database credentials, `.env` configurations, SSL certificates, and secret files with mathematical guarantees that **even database administrators and the owner of Workwise cannot decode your data**.
+
+```
++------------------------------------------------------------------------------------+
+|                                 CLIENT BROWSER                                     |
+|                                                                                    |
+|  Plaintext Secret  --->  Web Crypto API (AES-GCM)  --->  Ciphertext Blob           |
+|                               ^                                                    |
+|                               | (Project Key in memory only)                       |
++-------------------------------|----------------------------------------------------+
+                                | (Encrypted payload over HTTPS)
+                                v
++------------------------------------------------------------------------------------+
+|                         CONVEX BACKEND & DATABASE                                  |
+|                                                                                    |
+|  - Stores ONLY Base64 Ciphertext, IVs, and Auth Tags                                |
+|  - ZERO access to Private Keys or Passphrases                                      |
+|  - Database Admins & Workwise Owners see ONLY unreadable cryptographic noise       |
++------------------------------------------------------------------------------------+
+```
+
+#### Cryptographic Architecture & Security Guarantee:
+1. **Zero-Knowledge Identity (PBKDF2 + RSA-OAEP-2048)**:
+   - Each user generates an asymmetric RSA-OAEP key pair directly in their browser.
+   - The user's private key is encrypted client-side using a User Encryption Key derived from their master passphrase via **PBKDF2** (SHA-256, 100,000 iterations).
+   - Only the encrypted private key and the public key are sent to Convex. The server never receives the passphrase.
+2. **Project Master Key Envelope (AES-256-GCM)**:
+   - Each workspace/project generates a 256-bit symmetric Project Key in browser memory.
+   - The project key is wrapped using the user's RSA-OAEP public key. The database only ever stores ciphertext envelopes.
+3. **Multi-Party Safe Secrets Sharing**:
+   - Sharing access with a teammate wraps the Project Key with that teammate's personal public key.
+   - Teammates decrypt the key in their own browsers without the server ever intercepting it.
+4. **Environment Variables & Secret Files**:
+   - Environment keys, values, and comments are encrypted with AES-256-GCM (12-byte IV per secret).
+   - Sensitive files (`.env`, `.pem`, `.crt`, `.json` service accounts) are encrypted client-side before being uploaded to storage.
+   - One-click bulk `.env` import and decrypted `.env` export across Development, Staging, Production, and Testing environments.
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
 
 <!-- ROADMAP -->
 ## Roadmap
@@ -170,6 +206,7 @@ Workwise is designed to be intuitive. Create a workspace, invite your team, and 
 - [x] Real-time Messaging
 - [x] Kanban Board Integration
 - [x] AI Planner (Alpha)
+- [x] Zero-Knowledge Secrets & Environment Vault (E2EE)
 - [ ] Multi-language Support
 - [ ] Advanced Mobile Analytics
 

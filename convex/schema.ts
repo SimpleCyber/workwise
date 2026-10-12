@@ -627,6 +627,121 @@ const schema = defineSchema({
     updatedAt: v.number(),
     updatedBy: v.optional(v.string()),
   }).index("by_key", ["key"]),
+
+  // ==========================================
+  // Zero-Knowledge / E2EE Vault Tables (Infisical Architecture)
+  // ==========================================
+
+  // 1. User Cryptographic Profile (Identity Layer)
+  userVaultProfiles: defineTable({
+    userId: v.id("users"),
+    publicKey: v.string(), // Base64 exported SPKI Public Key (RSA-OAEP)
+    encryptedPrivateKey: v.string(), // Base64 AES-GCM ciphertext of PKCS#8 private key
+    privateKeyIv: v.string(), // 12-byte IV for private key encryption
+    salt: v.string(), // Base64 salt for PBKDF2 key derivation
+    iterations: v.number(), // PBKDF2 iteration count (e.g. 100000)
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_user_id", ["userId"]),
+
+  // 2. Project Key Envelope (Per authorized project/workspace member)
+  projectVaultKeys: defineTable({
+    workspaceId: v.id("workspaces"),
+    boardId: v.optional(v.id("projectBoards")),
+    userId: v.id("users"),
+    encryptedProjectKey: v.string(), // Project key wrapped with user's Public Key
+    keyVersion: v.number(), // Key rotation tracking
+    grantedById: v.id("users"),
+    createdAt: v.number(),
+  })
+    .index("by_project_user", ["workspaceId", "boardId", "userId"])
+    .index("by_workspace_user", ["workspaceId", "userId"])
+    .index("by_user", ["userId"])
+    .index("by_workspace_id", ["workspaceId"]),
+
+  // 3. Encrypted Environment Variables (Key-Value Secrets)
+  vaultSecrets: defineTable({
+    workspaceId: v.id("workspaces"),
+    boardId: v.optional(v.id("projectBoards")),
+    environment: v.string(), // Default: "development" | "production" | "testing" or custom added
+    secretKeyHash: v.string(), // Blind index (HMAC-SHA256) for search/deduplication
+    encryptedKey: v.string(), // AES-256-GCM ciphertext of the env variable key
+    keyIv: v.string(),
+    encryptedValue: v.string(), // AES-256-GCM ciphertext of the env variable value
+    valueIv: v.string(),
+    encryptedComment: v.optional(v.string()), // Optional encrypted note/description
+    commentIv: v.optional(v.string()),
+    keyVersion: v.number(),
+    createdById: v.id("users"),
+    updatedById: v.id("users"),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_project_env", ["workspaceId", "boardId", "environment"])
+    .index("by_workspace_env", ["workspaceId", "environment"])
+    .index("by_key_hash", [
+      "workspaceId",
+      "boardId",
+      "environment",
+      "secretKeyHash",
+    ]),
+
+  // 4. Encrypted Secret Files (.env, SSL certs, PEM keys, credentials)
+  vaultSecretFiles: defineTable({
+    workspaceId: v.id("workspaces"),
+    boardId: v.optional(v.id("projectBoards")),
+    environment: v.string(),
+    encryptedFileName: v.string(), // AES-256-GCM ciphertext of the original file name
+    fileNameIv: v.string(),
+    encryptedFileDescription: v.optional(v.string()),
+    storageId: v.id("_storage"), // Convex Storage holds the raw ENCRYPTED byte stream
+    fileIv: v.string(), // IV used to encrypt file bytes
+    fileSize: v.number(),
+    keyVersion: v.number(),
+    createdById: v.id("users"),
+    createdAt: v.number(),
+  })
+    .index("by_project_env", ["workspaceId", "boardId", "environment"])
+    .index("by_workspace_env", ["workspaceId", "environment"]),
+
+  // 5. Audit Logs & Version History (Infisical / Vercel style secret logs)
+  vaultSecretLogs: defineTable({
+    workspaceId: v.id("workspaces"),
+    boardId: v.optional(v.id("projectBoards")),
+    secretId: v.optional(v.id("vaultSecrets")),
+    secretKeyHash: v.string(),
+    encryptedKey: v.string(),
+    keyIv: v.string(),
+    encryptedValue: v.string(),
+    valueIv: v.string(),
+    environment: v.string(),
+    action: v.union(
+      v.literal("create"),
+      v.literal("update"),
+      v.literal("delete"),
+      v.literal("rollback"),
+    ),
+    userId: v.id("users"),
+    userName: v.optional(v.string()),
+    userEmail: v.optional(v.string()),
+    userImage: v.optional(v.string()),
+    timestamp: v.number(),
+    version: v.number(),
+  })
+    .index("by_workspace_id", ["workspaceId"])
+    .index("by_workspace_time", ["workspaceId", "timestamp"])
+    .index("by_key_hash", ["workspaceId", "secretKeyHash"])
+    .index("by_workspace_env", ["workspaceId", "environment"]),
+
+  // 6. Custom Workspace/Project Environments (e.g. staging, preview, qa)
+  vaultCustomEnvironments: defineTable({
+    workspaceId: v.id("workspaces"),
+    boardId: v.optional(v.id("projectBoards")),
+    name: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_workspace", ["workspaceId"])
+    .index("by_workspace_board", ["workspaceId", "boardId"]),
 });
 
 export default schema;

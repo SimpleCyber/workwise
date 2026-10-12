@@ -78,6 +78,7 @@ export const WorkspaceSidebarContent = () => {
         </Link>
       </div>
 
+
       {/* Active Project Boards */}
       <WorkspaceSection label="Project Boards">
         {boardsLoading ? (

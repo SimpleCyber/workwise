@@ -4,7 +4,8 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../../../convex/_generated/api";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
-import { Loader2, Plus, Upload, Copy, Check } from "lucide-react";
+import { Loader2, Plus, Upload, Copy, Check, KeyRound } from "lucide-react";
+import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProjectKanbanBoard } from "@/features/projects/components/project-kanban-board";
@@ -217,7 +218,18 @@ export default function ProjectBoardPage({
         </div>
 
         {/* Right Header Actions */}
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex items-center gap-2.5">
+          <Link href={`/secrets/${workspaceId}?boardId=${boardId}`}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs gap-1.5 font-medium text-muted-foreground hover:text-foreground"
+              title="Manage Secret Keys for this project"
+            >
+              <KeyRound className="size-3.5 text-emerald-500" />
+              Secret Keys
+            </Button>
+          </Link>
           {board.projectType === "sales" && (
             <>
               <div className="flex items-center gap-4 mr-2">
