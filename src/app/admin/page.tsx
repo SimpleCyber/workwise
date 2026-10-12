@@ -32,6 +32,7 @@ import {
   MousePointerClick,
   Network,
   MessagesSquare,
+  KeyRound,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,7 @@ const ICON_MAP: Record<string, any> = {
   planning_double_click_actions: MousePointerClick,
   projects: FolderKanban,
   project_tree_view: Network,
+  project_keys: KeyRound,
   todos: ListChecks,
   task_comments: MessageSquare,
   messaging: Users,
@@ -79,7 +81,13 @@ const FLAG_CATEGORIES = {
   },
   projects: {
     label: "Project Section",
-    keys: ["projects", "project_tree_view", "todos", "task_comments"],
+    keys: [
+      "projects",
+      "project_tree_view",
+      "project_keys",
+      "todos",
+      "task_comments",
+    ],
   },
   chats: {
     label: "Chats Section",
@@ -108,10 +116,22 @@ export default function AdminPage() {
   const seedFlags = useMutation(api.admin.seedFeatureFlags);
 
   useEffect(() => {
-    if (flags && flags.length === 0) {
-      seedFlags()
-        .then((r) => toast.success(`Seeded ${r.seeded} feature flags`))
-        .catch(() => toast.error("Failed to seed flags"));
+    if (flags) {
+      const allExpectedKeys = Object.values(FLAG_CATEGORIES).flatMap(
+        (c) => c.keys,
+      );
+      const hasMissing = allExpectedKeys.some(
+        (k) => !flags.some((f) => f.key === k),
+      );
+      if (hasMissing || flags.length === 0) {
+        seedFlags()
+          .then((r) => {
+            if (r.seeded > 0) {
+              toast.success(`Synced ${r.seeded} new feature flag(s)`);
+            }
+          })
+          .catch(() => {});
+      }
     }
   }, [flags, seedFlags]);
 

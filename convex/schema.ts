@@ -629,7 +629,7 @@ const schema = defineSchema({
   }).index("by_key", ["key"]),
 
   // ==========================================
-  // Zero-Knowledge / E2EE Vault Tables (Infisical Architecture)
+  // Zero-Knowledge / E2EE Vault Tables
   // ==========================================
 
   // 1. User Cryptographic Profile (Identity Layer)
@@ -704,7 +704,7 @@ const schema = defineSchema({
     .index("by_project_env", ["workspaceId", "boardId", "environment"])
     .index("by_workspace_env", ["workspaceId", "environment"]),
 
-  // 5. Audit Logs & Version History (Infisical / Vercel style secret logs)
+  // 5. Audit Logs & Version History
   vaultSecretLogs: defineTable({
     workspaceId: v.id("workspaces"),
     boardId: v.optional(v.id("projectBoards")),

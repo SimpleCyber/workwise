@@ -126,9 +126,9 @@ export const VaultUnlockCard = () => {
               <div className="rounded-lg bg-amber-500/10 p-3 text-xs text-amber-500 flex items-start gap-2 border border-amber-500/20">
                 <ShieldAlert className="size-4 shrink-0 mt-0.5" />
                 <span>
-                  <strong>Important:</strong> There is no &quot;forgot password&quot;. If
-                  you lose this passphrase, your encrypted secrets cannot be
-                  recovered by anyone.
+                  <strong>Important:</strong> There is no &quot;forgot
+                  password&quot;. If you lose this passphrase, your encrypted
+                  secrets cannot be recovered by anyone.
                 </span>
               </div>
 
@@ -198,8 +198,9 @@ export const VaultUnlockCard = () => {
               <div className="rounded-lg bg-primary/5 p-3 text-xs text-muted-foreground flex items-start gap-2 border border-primary/10">
                 <ShieldCheck className="size-4 shrink-0 text-primary mt-0.5" />
                 <span>
-                  Keys remain strictly inside your browser&apos;s private memory and
-                  are automatically cleared when you leave or lock the vault.
+                  Keys remain strictly inside your browser&apos;s private memory
+                  and are automatically cleared when you leave or lock the
+                  vault.
                 </span>
               </div>
 

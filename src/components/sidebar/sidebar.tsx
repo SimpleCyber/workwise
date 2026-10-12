@@ -57,6 +57,7 @@ export const Sidebar = ({
       icon: KeyRound,
       label: "Project Keys",
       path: `/secrets/${workspaceId}`,
+      flag: "project_keys",
     },
     {
       icon: MessagesSquare,

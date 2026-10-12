@@ -1,7 +1,7 @@
 /**
  * Zero-Knowledge Vault Cryptographic Engine
  *
- * Implements Infisical-style End-to-End Encryption (E2EE) using native Web Crypto API.
+ * Implements End-to-End Encryption (E2EE) using native Web Crypto API.
  *
  * Key Principles:
  * 1. User Encryption Key (UEK) is derived client-side via PBKDF2 (SHA-256, 100,000 iterations).
@@ -26,7 +26,7 @@ export function bufferToBase64(buffer: ArrayBuffer | Uint8Array): string {
   return btoa(binary);
 }
 
-export function base64ToBuffer(base64: string): Uint8Array {
+export function base64ToBuffer(base64: string): Uint8Array<ArrayBuffer> {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
@@ -35,15 +35,25 @@ export function base64ToBuffer(base64: string): Uint8Array {
   return bytes;
 }
 
+function getCrypto(): Crypto {
+  if (typeof window !== "undefined" && window.crypto) {
+    return window.crypto;
+  }
+  if (typeof globalThis !== "undefined" && globalThis.crypto) {
+    return globalThis.crypto as Crypto;
+  }
+  throw new Error("Web Crypto API is not supported in this environment");
+}
+
 export function generateRandomSalt(length = 16): string {
   const bytes = new Uint8Array(length);
-  window.crypto.getRandomValues(bytes);
+  getCrypto().getRandomValues(bytes);
   return bufferToBase64(bytes);
 }
 
-export function generateRandomIv(length = 12): Uint8Array {
+export function generateRandomIv(length = 12): Uint8Array<ArrayBuffer> {
   const bytes = new Uint8Array(length);
-  window.crypto.getRandomValues(bytes);
+  getCrypto().getRandomValues(bytes);
   return bytes;
 }
 
@@ -59,7 +69,7 @@ export async function deriveUserEncryptionKey(
   const enc = new TextEncoder();
   const salt = base64ToBuffer(saltBase64);
 
-  const baseKey = await window.crypto.subtle.importKey(
+  const baseKey = await getCrypto().subtle.importKey(
     "raw",
     enc.encode(passphrase),
     { name: "PBKDF2" },
@@ -67,7 +77,7 @@ export async function deriveUserEncryptionKey(
     ["deriveKey"],
   );
 
-  return await window.crypto.subtle.deriveKey(
+  return await getCrypto().subtle.deriveKey(
     {
       name: "PBKDF2",
       salt,
@@ -92,7 +102,7 @@ export interface UserKeyPairExport {
 }
 
 export async function generateUserKeyPair(): Promise<CryptoKeyPair> {
-  return await window.crypto.subtle.generateKey(
+  return await getCrypto().subtle.generateKey(
     {
       name: "RSA-OAEP",
       modulusLength: 2048,
@@ -105,13 +115,13 @@ export async function generateUserKeyPair(): Promise<CryptoKeyPair> {
 }
 
 export async function exportPublicKey(publicKey: CryptoKey): Promise<string> {
-  const spki = await window.crypto.subtle.exportKey("spki", publicKey);
+  const spki = await getCrypto().subtle.exportKey("spki", publicKey);
   return bufferToBase64(spki);
 }
 
 export async function importPublicKey(spkiBase64: string): Promise<CryptoKey> {
   const buffer = base64ToBuffer(spkiBase64);
-  return await window.crypto.subtle.importKey(
+  return await getCrypto().subtle.importKey(
     "spki",
     buffer,
     {
@@ -127,10 +137,10 @@ export async function encryptAndExportPrivateKey(
   privateKey: CryptoKey,
   uek: CryptoKey,
 ): Promise<{ encryptedPrivateKey: string; iv: string }> {
-  const pkcs8 = await window.crypto.subtle.exportKey("pkcs8", privateKey);
+  const pkcs8 = await getCrypto().subtle.exportKey("pkcs8", privateKey);
   const iv = generateRandomIv(12);
 
-  const ciphertext = await window.crypto.subtle.encrypt(
+  const ciphertext = await getCrypto().subtle.encrypt(
     { name: "AES-GCM", iv },
     uek,
     pkcs8,
@@ -150,13 +160,13 @@ export async function decryptPrivateKey(
   const ciphertext = base64ToBuffer(encryptedPrivateKeyBase64);
   const iv = base64ToBuffer(ivBase64);
 
-  const pkcs8 = await window.crypto.subtle.decrypt(
+  const pkcs8 = await getCrypto().subtle.decrypt(
     { name: "AES-GCM", iv },
     uek,
     ciphertext,
   );
 
-  return await window.crypto.subtle.importKey(
+  return await getCrypto().subtle.importKey(
     "pkcs8",
     pkcs8,
     {
@@ -173,7 +183,7 @@ export async function decryptPrivateKey(
 // ==========================================
 
 export async function generateProjectMasterKey(): Promise<CryptoKey> {
-  return await window.crypto.subtle.generateKey(
+  return await getCrypto().subtle.generateKey(
     { name: "AES-GCM", length: 256 },
     true,
     ["encrypt", "decrypt"],
@@ -187,8 +197,8 @@ export async function wrapProjectKey(
   projectKey: CryptoKey,
   userPublicKey: CryptoKey,
 ): Promise<string> {
-  const rawKey = await window.crypto.subtle.exportKey("raw", projectKey);
-  const wrapped = await window.crypto.subtle.encrypt(
+  const rawKey = await getCrypto().subtle.exportKey("raw", projectKey);
+  const wrapped = await getCrypto().subtle.encrypt(
     { name: "RSA-OAEP" },
     userPublicKey,
     rawKey,
@@ -204,13 +214,13 @@ export async function unwrapProjectKey(
   userPrivateKey: CryptoKey,
 ): Promise<CryptoKey> {
   const ciphertext = base64ToBuffer(encryptedProjectKeyBase64);
-  const rawKey = await window.crypto.subtle.decrypt(
+  const rawKey = await getCrypto().subtle.decrypt(
     { name: "RSA-OAEP" },
     userPrivateKey,
     ciphertext,
   );
 
-  return await window.crypto.subtle.importKey(
+  return await getCrypto().subtle.importKey(
     "raw",
     rawKey,
     { name: "AES-GCM", length: 256 },
@@ -230,7 +240,7 @@ export async function computeBlindHash(
   const enc = new TextEncoder();
   const normalized = keyName.trim().toUpperCase();
   const data = enc.encode(`${salt}:${normalized}`);
-  const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
+  const hashBuffer = await getCrypto().subtle.digest("SHA-256", data);
   return bufferToBase64(hashBuffer);
 }
 
@@ -245,7 +255,7 @@ export async function encryptSecretString(
   const enc = new TextEncoder();
   const iv = generateRandomIv(12);
 
-  const ciphertext = await window.crypto.subtle.encrypt(
+  const ciphertext = await getCrypto().subtle.encrypt(
     { name: "AES-GCM", iv },
     projectKey,
     enc.encode(plaintext),
@@ -266,7 +276,7 @@ export async function decryptSecretString(
   const iv = base64ToBuffer(ivBase64);
   const dec = new TextDecoder();
 
-  const decrypted = await window.crypto.subtle.decrypt(
+  const decrypted = await getCrypto().subtle.decrypt(
     { name: "AES-GCM", iv },
     projectKey,
     ciphertext,
@@ -285,7 +295,7 @@ export async function encryptSecretFile(
 ): Promise<{ encryptedBlob: Blob; iv: string }> {
   const iv = generateRandomIv(12);
 
-  const ciphertext = await window.crypto.subtle.encrypt(
+  const ciphertext = await getCrypto().subtle.encrypt(
     { name: "AES-GCM", iv },
     projectKey,
     fileBuffer,
@@ -304,7 +314,7 @@ export async function decryptSecretFile(
 ): Promise<ArrayBuffer> {
   const iv = base64ToBuffer(ivBase64);
 
-  return await window.crypto.subtle.decrypt(
+  return await getCrypto().subtle.decrypt(
     { name: "AES-GCM", iv },
     projectKey,
     encryptedBuffer,

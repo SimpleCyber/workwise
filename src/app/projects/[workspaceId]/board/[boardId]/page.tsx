@@ -16,6 +16,7 @@ import { useUpdateProjectTask } from "@/features/projects/api/use-update-project
 import { toast } from "sonner";
 
 import { useGetWorkspaceProjects } from "@/features/test/api/all-data-hook";
+import { useFeatureFlags } from "@/components/feature-flags";
 
 import { useCurrentUser } from "../../../../../features/auth/api/use-current-user";
 import {
@@ -31,6 +32,8 @@ export default function ProjectBoardPage({
   params: { workspaceId: Id<"workspaces">; boardId: Id<"projectBoards"> };
 }) {
   const { workspaceId, boardId } = params;
+  const { isEnabled } = useFeatureFlags();
+  const showProjectKeys = isEnabled("project_keys");
 
   // ✅ get the signed-in user directly from auth
   const { data: currentUser, isLoading: userLoading } = useCurrentUser();
@@ -219,17 +222,19 @@ export default function ProjectBoardPage({
 
         {/* Right Header Actions */}
         <div className="ml-auto flex items-center gap-2.5">
-          <Link href={`/secrets/${workspaceId}?boardId=${boardId}`}>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 text-xs gap-1.5 font-medium text-muted-foreground hover:text-foreground"
-              title="Manage Secret Keys for this project"
-            >
-              <KeyRound className="size-3.5 text-emerald-500" />
-              Secret Keys
-            </Button>
-          </Link>
+          {showProjectKeys && (
+            <Link href={`/secrets/${workspaceId}?boardId=${boardId}`}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs gap-1.5 font-medium text-muted-foreground hover:text-foreground"
+                title="Manage Secret Keys for this project"
+              >
+                <KeyRound className="size-3.5 text-emerald-500" />
+                Secret Keys
+              </Button>
+            </Link>
+          )}
           {board.projectType === "sales" && (
             <>
               <div className="flex items-center gap-4 mr-2">

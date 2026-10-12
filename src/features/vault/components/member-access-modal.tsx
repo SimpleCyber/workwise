@@ -107,9 +107,9 @@ export const MemberAccessModal = ({
             <DialogTitle>Team Key Sharing & Access Management</DialogTitle>
           </div>
           <DialogDescription className="text-xs text-muted-foreground mt-1">
-            Infisical-style Zero-Knowledge sharing: The Project Key is wrapped
-            directly with each team member&apos;s personal public key. The server
-            never sees the key in plaintext.
+            Zero-Knowledge sharing: The Project Key is wrapped directly with
+            each team member&apos;s personal public key. The server never sees
+            the key in plaintext.
           </DialogDescription>
         </DialogHeader>
 
@@ -197,9 +197,10 @@ export const MemberAccessModal = ({
           <div className="rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground flex items-start gap-2 border border-border/40">
             <ShieldCheck className="size-4 shrink-0 text-primary mt-0.5" />
             <span>
-              <strong>Cryptographic Guarantee:</strong> When you click &quot;Grant
-              Access&quot;, your browser encrypts the project key with that member&apos;s
-              asymmetric public key. Only their private key can decrypt it.
+              <strong>Cryptographic Guarantee:</strong> When you click
+              &quot;Grant Access&quot;, your browser encrypts the project key
+              with that member&apos;s asymmetric public key. Only their private
+              key can decrypt it.
             </span>
           </div>
         </div>

@@ -170,6 +170,13 @@ const DEFAULT_FLAGS = [
     enabled: true,
   },
   {
+    key: "project_keys",
+    label: "Project Keys & Secrets Vault",
+    description:
+      "Zero-knowledge encrypted secret vault and environment key management for projects",
+    enabled: true,
+  },
+  {
     key: "todos",
     label: "Todo Boards",
     description: "Personal and team kanban-style todo boards",

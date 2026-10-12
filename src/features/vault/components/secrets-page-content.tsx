@@ -29,6 +29,7 @@ import { ExportEnvButton } from "./export-env-button";
 import { SecretFilesView } from "./secret-files-view";
 import { MemberAccessModal } from "./member-access-modal";
 import { SecretLogsView } from "./secret-logs-view";
+import { useGetWorkspaceInfo } from "@/features/workspaces/api/use-get-workspace-info";
 
 interface SecretsPageContentProps {
   workspaceId: any;
@@ -50,6 +51,8 @@ export const SecretsPageContent = ({
 
   const searchParams = useSearchParams();
   const urlTab = searchParams?.get("tab");
+
+  const { data: workspace } = useGetWorkspaceInfo({ id: workspaceId });
 
   const [environment, setEnvironment] = useState<string>("development");
   const [activeTab, setActiveTab] = useState<"keys" | "files" | "logs">(
@@ -198,20 +201,15 @@ export const SecretsPageContent = ({
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-7xl mx-auto w-full">
-      {/* Top Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b pb-4">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">
-            Environment Variables
-          </h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Manage secret keys and environment variables for your application.
-          </p>
-        </div>
+    <div className="flex h-full flex-col bg-background/30">
+      {/* Standard Top Header */}
+      <div className="flex h-[49px] items-center justify-between border-b bg-background px-4 shrink-0">
+        <h1 className="text-lg font-semibold truncate">
+          Environment Variables{workspace?.name ? ` - ${workspace.name}` : ""}
+        </h1>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2">
           <MemberAccessModal
             workspaceId={workspaceId}
             boardId={normalizedBoardId}
@@ -229,173 +227,150 @@ export const SecretsPageContent = ({
         </div>
       </div>
 
-      {/* Environment Selector Tabs */}
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center gap-1 p-1 rounded-lg border bg-muted/30">
-              {allEnvironments.map((env) => {
-                const isSelected = environment === env;
-                const customRecord = customEnvs?.find((c) => c.name === env);
-                return (
-                  <div
-                    key={env}
-                    className={`group relative flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-                      isSelected
-                        ? "bg-background text-foreground shadow-sm font-semibold"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/40 cursor-pointer"
-                    }`}
-                    onClick={() => setEnvironment(env)}
-                  >
-                    <span className="capitalize">{env}</span>
-                    {customRecord && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteEnvironment(customRecord._id, env);
-                        }}
-                        className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-destructive/10 hover:text-destructive text-muted-foreground transition-all ml-0.5"
-                        title="Remove custom environment"
-                      >
-                        <X className="size-3" />
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
+      {/* Main Page Content Body */}
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 max-w-7xl mx-auto w-full space-y-6">
+        {/* Environment Selector Tabs */}
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1 p-1 rounded-lg border bg-muted/30">
+                {allEnvironments.map((env) => {
+                  const isSelected = environment === env;
+                  const customRecord = customEnvs?.find((c) => c.name === env);
+                  return (
+                    <div
+                      key={env}
+                      className={`group relative flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                        isSelected
+                          ? "bg-background text-foreground shadow-sm font-semibold"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/40 cursor-pointer"
+                      }`}
+                      onClick={() => setEnvironment(env)}
+                    >
+                      <span className="capitalize">{env}</span>
+                      {customRecord && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteEnvironment(customRecord._id, env);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-destructive/10 hover:text-destructive text-muted-foreground transition-all ml-0.5"
+                          title="Remove custom environment"
+                        >
+                          <X className="size-3" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
 
-              {/* Add custom environment trigger */}
-              {isAddingEnv ? (
-                <form
-                  onSubmit={handleAddEnvironment}
-                  className="flex items-center gap-1 pl-1"
-                >
-                  <Input
-                    autoFocus
-                    placeholder="e.g. staging"
-                    value={newEnvName}
-                    onChange={(e) => setNewEnvName(e.target.value)}
-                    className="h-6 w-24 text-[11px] px-2 lowercase font-mono"
-                  />
-                  <Button
-                    type="submit"
-                    size="sm"
-                    className="h-6 px-2 text-[10px]"
+                {/* Add custom environment trigger */}
+                {isAddingEnv ? (
+                  <form
+                    onSubmit={handleAddEnvironment}
+                    className="flex items-center gap-1 pl-1"
                   >
-                    Add
-                  </Button>
+                    <Input
+                      autoFocus
+                      placeholder="e.g. staging"
+                      value={newEnvName}
+                      onChange={(e) => setNewEnvName(e.target.value)}
+                      className="h-6 w-24 text-[11px] px-2 lowercase font-mono"
+                    />
+                    <Button
+                      type="submit"
+                      size="sm"
+                      className="h-6 px-2 text-[10px]"
+                    >
+                      Add
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-1.5 text-[10px]"
+                      onClick={() => {
+                        setIsAddingEnv(false);
+                        setNewEnvName("");
+                      }}
+                    >
+                      <X className="size-3" />
+                    </Button>
+                  </form>
+                ) : (
                   <Button
-                    type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-6 px-1.5 text-[10px]"
-                    onClick={() => {
-                      setIsAddingEnv(false);
-                      setNewEnvName("");
-                    }}
+                    className="h-6 px-2 text-[11px] gap-1 text-muted-foreground hover:text-foreground font-normal"
+                    onClick={() => setIsAddingEnv(true)}
+                    title="Add custom environment"
                   >
-                    <X className="size-3" />
+                    <Plus className="size-3" /> Add
                   </Button>
-                </form>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 px-2 text-[11px] gap-1 text-muted-foreground hover:text-foreground font-normal"
-                  onClick={() => setIsAddingEnv(true)}
-                  title="Add custom environment"
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <div className="flex rounded-lg border bg-muted/40 p-0.5 text-xs">
+                <button
+                  type="button"
+                  className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors ${
+                    activeTab === "keys"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  onClick={() => setActiveTab("keys")}
                 >
-                  <Plus className="size-3" /> Add
-                </Button>
-              )}
+                  <FileCode className="size-3.5" /> Env Keys
+                </button>
+                <button
+                  type="button"
+                  className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors ${
+                    activeTab === "files"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  onClick={() => setActiveTab("files")}
+                >
+                  <FileKey className="size-3.5" /> Secret Files
+                </button>
+                <button
+                  type="button"
+                  className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors ${
+                    activeTab === "logs"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  onClick={() => setActiveTab("logs")}
+                >
+                  <History className="size-3.5" /> Audit Logs
+                </button>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-            <div className="flex rounded-lg border bg-muted/40 p-0.5 text-xs">
-              <button
-                type="button"
-                className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors ${
-                  activeTab === "keys"
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-                onClick={() => setActiveTab("keys")}
-              >
-                <FileCode className="size-3.5" /> Env Keys
-              </button>
-              <button
-                type="button"
-                className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors ${
-                  activeTab === "files"
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-                onClick={() => setActiveTab("files")}
-              >
-                <FileKey className="size-3.5" /> Secret Files
-              </button>
-              <button
-                type="button"
-                className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors ${
-                  activeTab === "logs"
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-                onClick={() => setActiveTab("logs")}
-              >
-                <History className="size-3.5" /> Audit Logs
-              </button>
-            </div>
-          </div>
-        </div>
+          {/* Tab Content: Env Keys */}
+          {activeTab === "keys" && (
+            <div className="space-y-4">
+              {/* Toolbar */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <div className="relative flex-1 max-w-sm">
+                  <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Filter keys in memory..."
+                    className="pl-8 h-9 text-xs"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
 
-        {/* Tab Content: Env Keys */}
-        {activeTab === "keys" && (
-          <div className="space-y-4">
-            {/* Toolbar */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-                <Input
-                  placeholder="Filter keys in memory..."
-                  className="pl-8 h-9 text-xs"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <ExportEnvButton
-                  secrets={secrets || []}
-                  environment={environment}
-                />
-                <CreateSecretModal
-                  workspaceId={workspaceId}
-                  boardId={normalizedBoardId}
-                  currentEnvironment={environment}
-                  availableEnvironments={allEnvironments}
-                />
-              </div>
-            </div>
-
-            {/* Secrets List */}
-            {secrets === undefined ? (
-              <div className="flex h-40 items-center justify-center">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-              </div>
-            ) : secrets.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/80 p-8 text-center bg-muted/10">
-                <KeyRound className="size-7 text-muted-foreground/60 mb-2" />
-                <p className="text-sm font-semibold text-foreground">
-                  No variables in {environment}
-                </p>
-                <p className="text-xs text-muted-foreground max-w-sm mt-0.5">
-                  Add variables or paste `.env` contents to encrypt and store
-                  them.
-                </p>
-                <div className="mt-4">
+                <div className="flex items-center gap-2">
+                  <ExportEnvButton
+                    secrets={secrets || []}
+                    environment={environment}
+                  />
                   <CreateSecretModal
                     workspaceId={workspaceId}
                     boardId={normalizedBoardId}
@@ -404,40 +379,66 @@ export const SecretsPageContent = ({
                   />
                 </div>
               </div>
-            ) : (
-              <div className="grid gap-2.5">
-                {secrets.map((secret) => (
-                  <SecretItemRow
-                    key={secret._id}
-                    secret={secret}
-                    projectKey={projectKey!}
-                    workspaceId={workspaceId}
-                    boardId={normalizedBoardId}
-                    environment={environment}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
 
-        {/* Tab Content: Secret Files */}
-        {activeTab === "files" && (
-          <SecretFilesView
-            workspaceId={workspaceId}
-            boardId={normalizedBoardId}
-            environment={environment}
-          />
-        )}
+              {/* Secrets List */}
+              {secrets === undefined ? (
+                <div className="flex h-40 items-center justify-center">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+                </div>
+              ) : secrets.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/80 p-8 text-center bg-muted/10">
+                  <KeyRound className="size-7 text-muted-foreground/60 mb-2" />
+                  <p className="text-sm font-semibold text-foreground">
+                    No variables in {environment}
+                  </p>
+                  <p className="text-xs text-muted-foreground max-w-sm mt-0.5">
+                    Add variables or paste `.env` contents to encrypt and store
+                    them.
+                  </p>
+                  <div className="mt-4">
+                    <CreateSecretModal
+                      workspaceId={workspaceId}
+                      boardId={normalizedBoardId}
+                      currentEnvironment={environment}
+                      availableEnvironments={allEnvironments}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="grid gap-2.5">
+                  {secrets.map((secret) => (
+                    <SecretItemRow
+                      key={secret._id}
+                      secret={secret}
+                      projectKey={projectKey!}
+                      workspaceId={workspaceId}
+                      boardId={normalizedBoardId}
+                      environment={environment}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
-        {/* Tab Content: Audit Logs & Version History */}
-        {activeTab === "logs" && (
-          <SecretLogsView
-            workspaceId={workspaceId}
-            boardId={normalizedBoardId}
-            projectKey={projectKey!}
-          />
-        )}
+          {/* Tab Content: Secret Files */}
+          {activeTab === "files" && (
+            <SecretFilesView
+              workspaceId={workspaceId}
+              boardId={normalizedBoardId}
+              environment={environment}
+            />
+          )}
+
+          {/* Tab Content: Audit Logs & Version History */}
+          {activeTab === "logs" && (
+            <SecretLogsView
+              workspaceId={workspaceId}
+              boardId={normalizedBoardId}
+              projectKey={projectKey!}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
