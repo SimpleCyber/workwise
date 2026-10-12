@@ -108,7 +108,9 @@ const SecretFileCard = ({
   };
 
   const handleDelete = async () => {
-    if (confirm(`Are you sure you want to delete secret file ${decryptedName}?`)) {
+    if (
+      confirm(`Are you sure you want to delete secret file ${decryptedName}?`)
+    ) {
       try {
         setIsDeleting(true);
         await deleteFileMutation({ id: fileRecord._id });
@@ -259,11 +261,13 @@ export const SecretFilesView = ({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-base font-semibold">Secret Files & Certificates</h3>
+          <h3 className="text-base font-semibold">
+            Secret Files & Certificates
+          </h3>
           <p className="text-xs text-muted-foreground">
             Store `.env`, private keys (`.pem`, `.key`), SSL certificates, or
-            configuration JSON files. Every file is encrypted before leaving your
-            browser.
+            configuration JSON files. Every file is encrypted before leaving
+            your browser.
           </p>
         </div>
 

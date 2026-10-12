@@ -1,8 +1,8 @@
 /**
  * Zero-Knowledge Vault Cryptographic Engine
- * 
+ *
  * Implements Infisical-style End-to-End Encryption (E2EE) using native Web Crypto API.
- * 
+ *
  * Key Principles:
  * 1. User Encryption Key (UEK) is derived client-side via PBKDF2 (SHA-256, 100,000 iterations).
  * 2. Asymmetric RSA-OAEP key pair represents user's identity.

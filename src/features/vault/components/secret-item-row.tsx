@@ -303,7 +303,8 @@ export const SecretItemRow = ({
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <History className="size-5 text-primary" /> Revision History: {decryptedKey}
+              <History className="size-5 text-primary" /> Revision History:{" "}
+              {decryptedKey}
             </DialogTitle>
           </DialogHeader>
           <div className="py-2">

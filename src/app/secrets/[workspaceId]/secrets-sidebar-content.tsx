@@ -1,11 +1,7 @@
 "use client";
 
 import React from "react";
-import {
-  KeyRound,
-  FileKey,
-  History,
-} from "lucide-react";
+import { KeyRound, FileKey, History } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { WorkspaceSection } from "@/app/workspace/[workspaceId]/workspace-section";

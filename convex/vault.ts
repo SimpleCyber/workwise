@@ -4,10 +4,7 @@ import { mutation, query } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 
 // Helper to authenticate user and verify workspace membership
-async function requireWorkspaceMember(
-  ctx: any,
-  workspaceId: Id<"workspaces">,
-) {
+async function requireWorkspaceMember(ctx: any, workspaceId: Id<"workspaces">) {
   const userId = await getAuthUserId(ctx);
   if (!userId) {
     throw new Error("Unauthorized");
@@ -237,7 +234,9 @@ export const grantProjectVaultKey = mutation({
       : await ctx.db
           .query("projectVaultKeys")
           .withIndex("by_workspace_user", (q) =>
-            q.eq("workspaceId", args.workspaceId).eq("userId", args.targetUserId),
+            q
+              .eq("workspaceId", args.workspaceId)
+              .eq("userId", args.targetUserId),
           )
           .filter((q) => q.eq(q.field("boardId"), undefined))
           .unique();
@@ -630,8 +629,10 @@ export const getSecretLogs = query({
       .take(limit);
 
     return logs.filter((log) => {
-      if (args.environment && log.environment !== args.environment) return false;
-      if (args.secretKeyHash && log.secretKeyHash !== args.secretKeyHash) return false;
+      if (args.environment && log.environment !== args.environment)
+        return false;
+      if (args.secretKeyHash && log.secretKeyHash !== args.secretKeyHash)
+        return false;
       return true;
     });
   },
@@ -853,7 +854,10 @@ export const addCustomEnvironment = mutation({
   handler: async (ctx, args) => {
     await requireWorkspaceMember(ctx, args.workspaceId);
     const boardId = args.boardId || undefined;
-    const normalizedName = args.name.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
+    const normalizedName = args.name
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, "");
 
     if (!normalizedName) {
       throw new Error("Invalid environment name");
@@ -870,7 +874,9 @@ export const addCustomEnvironment = mutation({
           .first()
       : await ctx.db
           .query("vaultCustomEnvironments")
-          .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
+          .withIndex("by_workspace", (q) =>
+            q.eq("workspaceId", args.workspaceId),
+          )
           .filter((q) =>
             q.and(
               q.eq(q.field("boardId"), undefined),
@@ -901,4 +907,3 @@ export const deleteCustomEnvironment = mutation({
     await ctx.db.delete(args.id);
   },
 });
-

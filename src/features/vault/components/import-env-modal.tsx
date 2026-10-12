@@ -37,7 +37,10 @@ export const ImportEnvModal = ({
   const [open, setOpen] = useState(false);
   const [rawText, setRawText] = useState("");
   const [isImporting, setIsImporting] = useState(false);
-  const [progress, setProgress] = useState<{ current: number; total: number } | null>(null);
+  const [progress, setProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
 
   const setSecretMutation = useMutation(api.vault.setSecret);
 
@@ -179,7 +182,8 @@ export const ImportEnvModal = ({
             <div className="flex items-center gap-2 rounded-lg bg-primary/10 p-2.5 text-xs text-primary">
               <CheckCircle2 className="size-4 animate-pulse" />
               <span>
-                Encrypting & storing: {progress.current} / {progress.total} keys...
+                Encrypting & storing: {progress.current} / {progress.total}{" "}
+                keys...
               </span>
             </div>
           )}
@@ -193,7 +197,10 @@ export const ImportEnvModal = ({
           >
             Cancel
           </Button>
-          <Button onClick={handleImport} disabled={isImporting || !rawText.trim()}>
+          <Button
+            onClick={handleImport}
+            disabled={isImporting || !rawText.trim()}
+          >
             {isImporting ? "Importing..." : "Encrypt & Import All"}
           </Button>
         </DialogFooter>

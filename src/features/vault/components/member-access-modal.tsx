@@ -67,7 +67,10 @@ export const MemberAccessModal = ({
       const memberPubKey = await importPublicKey(member.publicKey);
 
       // 2. Wrap project key with member's public key (RSA-OAEP)
-      const encryptedProjectKey = await wrapProjectKey(projectKey, memberPubKey);
+      const encryptedProjectKey = await wrapProjectKey(
+        projectKey,
+        memberPubKey,
+      );
 
       // 3. Save wrapped envelope in Convex
       await grantKeyMutation({
@@ -78,9 +81,7 @@ export const MemberAccessModal = ({
         keyVersion: 1,
       });
 
-      toast.success(
-        `Granted zero-knowledge secret access to ${member.name}!`,
-      );
+      toast.success(`Granted zero-knowledge secret access to ${member.name}!`);
     } catch (err: any) {
       console.error("Grant key error:", err);
       toast.error(err.message || "Failed to grant key access");
@@ -169,7 +170,8 @@ export const MemberAccessModal = ({
                       >
                         {grantingUserId === member.userId ? (
                           <>
-                            <Loader className="size-3 animate-spin" /> Sharing...
+                            <Loader className="size-3 animate-spin" />{" "}
+                            Sharing...
                           </>
                         ) : (
                           <>

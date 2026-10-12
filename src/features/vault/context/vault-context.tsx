@@ -170,7 +170,13 @@ export const VaultProvider = ({
       toast.error(err.message || "Failed to generate project key");
       return false;
     }
-  }, [userPrivateKey, publicKeySpki, workspaceId, normalizedBoardId, initProjectKeyMutation]);
+  }, [
+    userPrivateKey,
+    publicKeySpki,
+    workspaceId,
+    normalizedBoardId,
+    initProjectKeyMutation,
+  ]);
 
   // Unlock existing vault using passphrase
   const unlockVault = useCallback(

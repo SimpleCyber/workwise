@@ -75,15 +75,22 @@ export const SecretsPageContent = ({
     boardId: normalizedBoardId,
   });
   const addCustomEnvMutation = useMutation(api.vault.addCustomEnvironment);
-  const deleteCustomEnvMutation = useMutation(api.vault.deleteCustomEnvironment);
+  const deleteCustomEnvMutation = useMutation(
+    api.vault.deleteCustomEnvironment,
+  );
 
   const DEFAULT_ENVS = ["development", "production", "testing"];
   const customEnvNames = customEnvs?.map((c) => c.name) || [];
-  const allEnvironments = Array.from(new Set([...DEFAULT_ENVS, ...customEnvNames]));
+  const allEnvironments = Array.from(
+    new Set([...DEFAULT_ENVS, ...customEnvNames]),
+  );
 
   const handleAddEnvironment = async (e: React.FormEvent) => {
     e.preventDefault();
-    const clean = newEnvName.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
+    const clean = newEnvName
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, "");
     if (!clean) return;
     if (allEnvironments.includes(clean)) {
       toast.error(`Environment "${clean}" already exists`);
@@ -177,8 +184,8 @@ export const SecretsPageContent = ({
           <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
             The project master key is already active, but your account has not
             received a wrapped key envelope yet. Ask any active project
-            administrator to open{" "}
-            <strong>Team Key Sharing</strong> and grant you access.
+            administrator to open <strong>Team Key Sharing</strong> and grant
+            you access.
           </p>
           <div className="mt-4">
             <Button variant="outline" size="sm" onClick={() => lockVault()}>
@@ -385,7 +392,8 @@ export const SecretsPageContent = ({
                   No variables in {environment}
                 </p>
                 <p className="text-xs text-muted-foreground max-w-sm mt-0.5">
-                  Add variables or paste `.env` contents to encrypt and store them.
+                  Add variables or paste `.env` contents to encrypt and store
+                  them.
                 </p>
                 <div className="mt-4">
                   <CreateSecretModal

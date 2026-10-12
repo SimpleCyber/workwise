@@ -47,7 +47,9 @@ export const SecretLogsView = ({
   const [revealedIds, setRevealedIds] = useState<Record<string, string>>({});
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isRestoringId, setIsRestoringId] = useState<string | null>(null);
-  const [decryptedKeys, setDecryptedKeys] = useState<Record<string, string>>({});
+  const [decryptedKeys, setDecryptedKeys] = useState<Record<string, string>>(
+    {},
+  );
 
   const logs = useQuery(api.vault.getSecretLogs, {
     workspaceId,
@@ -57,7 +59,9 @@ export const SecretLogsView = ({
 
   const rollbackMutation = useMutation(api.vault.rollbackSecret);
 
-  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  const [collapsedGroups, setCollapsedGroups] = useState<
+    Record<string, boolean>
+  >({});
 
   // Decrypt key names on the fly
   useEffect(() => {
@@ -259,7 +263,9 @@ export const SecretLogsView = ({
         className="rounded-lg border border-border/60 bg-card/60 p-2.5 text-xs space-y-2"
       >
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-muted-foreground font-medium">Changes made:</span>
+          <span className="text-muted-foreground font-medium">
+            Changes made:
+          </span>
           {getActionBadge(log.action)}
           <span className="font-mono font-bold text-foreground bg-muted/60 px-1.5 py-0.5 rounded text-[11px]">
             {keyName}
@@ -372,7 +378,9 @@ export const SecretLogsView = ({
         <div className="space-y-3 divide-y divide-border/30">
           {groupedLogs.map((group) => {
             const isMultiple = group.logs.length > 1;
-            const isCollapsed = isMultiple ? (collapsedGroups[group.id] ?? true) : false;
+            const isCollapsed = isMultiple
+              ? (collapsedGroups[group.id] ?? true)
+              : false;
 
             return (
               <div
@@ -383,7 +391,9 @@ export const SecretLogsView = ({
                 <Avatar className="size-8 border mt-0.5 shrink-0">
                   <AvatarImage src={group.userImage} />
                   <AvatarFallback className="text-[11px] font-semibold bg-primary/10 text-primary">
-                    {group.userName ? group.userName.charAt(0).toUpperCase() : "U"}
+                    {group.userName
+                      ? group.userName.charAt(0).toUpperCase()
+                      : "U"}
                   </AvatarFallback>
                 </Avatar>
 
@@ -444,14 +454,17 @@ export const SecretLogsView = ({
                       {/* Few preview changes only */}
                       <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
                         {group.logs.slice(0, 3).map((log) => {
-                          const keyName = decryptedKeys[log._id] || "Decrypting...";
+                          const keyName =
+                            decryptedKeys[log._id] || "Decrypting...";
                           return (
                             <div
                               key={log._id}
                               className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted/60 border border-border/40 text-[11px] font-mono"
                             >
                               {getActionBadge(log.action)}
-                              <span className="font-bold text-foreground">{keyName}</span>
+                              <span className="font-bold text-foreground">
+                                {keyName}
+                              </span>
                               <span className="text-[9px] text-muted-foreground uppercase">
                                 ({log.environment})
                               </span>

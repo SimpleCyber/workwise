@@ -9,7 +9,8 @@ import type { Id } from "@/../convex/_generated/dataModel";
 export default function SecretsPage() {
   const workspaceId = useWorkspaceId() as Id<"workspaces">;
   const searchParams = useSearchParams();
-  const boardId = (searchParams?.get("boardId") as Id<"projectBoards">) || undefined;
+  const boardId =
+    (searchParams?.get("boardId") as Id<"projectBoards">) || undefined;
 
   if (!workspaceId) {
     return null;

@@ -56,8 +56,14 @@ interface CreateSecretModalProps {
 }
 
 const DEFAULT_ENV_METADATA: Record<string, { label: string; color: string }> = {
-  development: { label: "Development", color: "text-emerald-400 border-emerald-500/30" },
-  production: { label: "Production", color: "text-rose-400 border-rose-500/30" },
+  development: {
+    label: "Development",
+    color: "text-emerald-400 border-emerald-500/30",
+  },
+  production: {
+    label: "Production",
+    color: "text-rose-400 border-rose-500/30",
+  },
   testing: { label: "Testing", color: "text-amber-400 border-amber-500/30" },
 };
 
@@ -67,13 +73,18 @@ export const CreateSecretModal = ({
   currentEnvironment,
   availableEnvironments,
 }: CreateSecretModalProps) => {
-  const envOptions = (availableEnvironments?.length
-    ? availableEnvironments
-    : ["development", "production", "testing"]
+  const envOptions = (
+    availableEnvironments?.length
+      ? availableEnvironments
+      : ["development", "production", "testing"]
   ).map((env) => ({
     id: env,
-    label: DEFAULT_ENV_METADATA[env]?.label || env.charAt(0).toUpperCase() + env.slice(1),
-    color: DEFAULT_ENV_METADATA[env]?.color || "text-purple-400 border-purple-500/30",
+    label:
+      DEFAULT_ENV_METADATA[env]?.label ||
+      env.charAt(0).toUpperCase() + env.slice(1),
+    color:
+      DEFAULT_ENV_METADATA[env]?.color ||
+      "text-purple-400 border-purple-500/30",
   }));
 
   const { projectKey } = useVault();
@@ -138,7 +149,7 @@ export const CreateSecretModal = ({
   };
 
   // Toggle environment for a row
-  const handleToggleRowEnv = (rowId: string, env: EnvironmentType) => {
+  const handleToggleRowEnv = (rowId: string, env: string) => {
     setRows((prev) =>
       prev.map((r) => {
         if (r.id !== rowId) return r;
@@ -189,7 +200,8 @@ export const CreateSecretModal = ({
           key,
           value,
           comment: "",
-          environments: pasteEnvs.length > 0 ? [...pasteEnvs] : [currentEnvironment],
+          environments:
+            pasteEnvs.length > 0 ? [...pasteEnvs] : [currentEnvironment],
           isMasked: true,
         });
       }
@@ -233,7 +245,10 @@ export const CreateSecretModal = ({
         const encVal = await encryptSecretString(row.value, projectKey);
         let encComment;
         if (row.comment.trim()) {
-          encComment = await encryptSecretString(row.comment.trim(), projectKey);
+          encComment = await encryptSecretString(
+            row.comment.trim(),
+            projectKey,
+          );
         }
         const secretKeyHash = await computeBlindHash(cleanKey);
 
@@ -487,7 +502,8 @@ export const CreateSecretModal = ({
               >
                 {isSaving ? (
                   <>
-                    <Loader className="size-4 animate-spin" /> Encrypting & Saving...
+                    <Loader className="size-4 animate-spin" /> Encrypting &
+                    Saving...
                   </>
                 ) : (
                   <>
